@@ -31,7 +31,7 @@
 ### Details:
 Install ESLint and Prettier as dev dependencies. Create configuration files (.eslintrc, .prettierrc). Add scripts to package.json for linting and formatting. Test by running lint and format scripts to ensure no errors are reported.
 
-## 2. Integrate TanStack Query [pending]
+## 2. Integrate TanStack Query [in-progress]
 ### Dependencies: 1.1
 ### Description: Install and configure TanStack Query for efficient server state management in React.
 ### Details:
@@ -43,11 +43,32 @@ Install @tanstack/react-query. Set up QueryClient and QueryClientProvider in the
 ### Details:
 Install @supabase/supabase-js. Create a supabaseClient.ts file with environment variable integration for keys. Test by connecting to Supabase and fetching sample data.
 
-## 4. Configure React Router [pending]
+## 4. Configure React Router [done]
 ### Dependencies: 1.2
 ### Description: Install and set up React Router for client-side routing.
 ### Details:
 Install react-router-dom. Define basic routes in App.tsx. Test by navigating between routes and verifying correct component rendering.
+<info added on 2025-06-05T06:56:56.539Z>
+Installed ESLint and Prettier for code quality and formatting:
+
+**Installed Packages:**
+- eslint, @typescript-eslint/eslint-plugin, @typescript-eslint/parser
+- eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-jsx-a11y  
+- prettier, eslint-config-prettier, eslint-plugin-prettier
+
+**Created Configuration Files:**
+- .eslintrc.json: TypeScript + React linting rules
+- .prettierrc: Code formatting rules (no semicolons, single quotes, etc.)
+- .eslintignore: Excluded template and build folders
+
+**Added package.json Scripts:**
+- lint, lint:fix, format, format:check scripts
+
+**Results:**
+- Formatted all project files in src/
+- Excluded reference and .taskmaster/templates folders from linting
+- Committed changes to Git (59 files changed)
+</info added on 2025-06-05T06:56:56.539Z>
 
 ## 5. Set Up Environment Variables [pending]
 ### Dependencies: 1.3

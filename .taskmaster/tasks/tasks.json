@@ -26,7 +26,7 @@
             1
           ],
           "details": "Install @tanstack/react-query. Set up QueryClient and QueryClientProvider in the main application entry point. Test by creating a sample query hook and verifying data fetching and caching.",
-          "status": "pending"
+          "status": "in-progress"
         },
         {
           "id": 3,
@@ -45,8 +45,8 @@
           "dependencies": [
             2
           ],
-          "details": "Install react-router-dom. Define basic routes in App.tsx. Test by navigating between routes and verifying correct component rendering.",
-          "status": "pending"
+          "details": "Install react-router-dom. Define basic routes in App.tsx. Test by navigating between routes and verifying correct component rendering.\n<info added on 2025-06-05T06:56:56.539Z>\nInstalled ESLint and Prettier for code quality and formatting:\n\n**Installed Packages:**\n- eslint, @typescript-eslint/eslint-plugin, @typescript-eslint/parser\n- eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-jsx-a11y  \n- prettier, eslint-config-prettier, eslint-plugin-prettier\n\n**Created Configuration Files:**\n- .eslintrc.json: TypeScript + React linting rules\n- .prettierrc: Code formatting rules (no semicolons, single quotes, etc.)\n- .eslintignore: Excluded template and build folders\n\n**Added package.json Scripts:**\n- lint, lint:fix, format, format:check scripts\n\n**Results:**\n- Formatted all project files in src/\n- Excluded reference and .taskmaster/templates folders from linting\n- Committed changes to Git (59 files changed)\n</info added on 2025-06-05T06:56:56.539Z>",
+          "status": "done"
         },
         {
           "id": 5,
