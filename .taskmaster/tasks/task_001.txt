@@ -25,19 +25,43 @@
 6. Run a sample Playwright test
 
 # Subtasks:
-## 1. Configure ESLint and Prettier [pending]
+## 1. Configure ESLint and Prettier [done]
 ### Dependencies: None
 ### Description: Set up ESLint for code linting and Prettier for code formatting. Integrate both tools to ensure consistent code style and catch syntax errors.
 ### Details:
 Install ESLint and Prettier as dev dependencies. Create configuration files (.eslintrc, .prettierrc). Add scripts to package.json for linting and formatting. Test by running lint and format scripts to ensure no errors are reported.
 
-## 2. Integrate TanStack Query [in-progress]
+## 2. Integrate TanStack Query [done]
 ### Dependencies: 1.1
 ### Description: Install and configure TanStack Query for efficient server state management in React.
 ### Details:
 Install @tanstack/react-query. Set up QueryClient and QueryClientProvider in the main application entry point. Test by creating a sample query hook and verifying data fetching and caching.
+<info added on 2025-06-05T07:01:10.657Z>
+✅ TanStack Query 통합 완료:
 
-## 3. Set Up Supabase Client [pending]
+**설치된 패키지:**
+- @tanstack/react-query: 서버 상태 관리를 위한 메인 라이브러리
+- @tanstack/react-query-devtools: 개발 환경 디버깅 도구
+
+**구성 파일 생성:**
+- src/lib/queryClient.ts: QueryClient 설정
+  - staleTime: 5분, gcTime: 10분
+  - 4xx 에러 시 재시도 방지 (429 제외)
+  - 창 포커스 시 재요청 비활성화
+
+**Provider 설정:**
+- main.tsx에 QueryClientProvider 추가
+- 개발 환경에서만 DevTools 표시 설정
+
+**검증 완료:**
+- 빌드 성공 (dist/assets 생성 확인)
+- 개발 서버 실행 가능
+- 7개 파일 변경, Git 커밋 완료
+
+다음 단계: Supabase 클라이언트 설정
+</info added on 2025-06-05T07:01:10.657Z>
+
+## 3. Set Up Supabase Client [in-progress]
 ### Dependencies: 1.2
 ### Description: Install and configure the Supabase client for backend connectivity and authentication.
 ### Details:

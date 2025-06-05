@@ -16,7 +16,7 @@
           "description": "Set up ESLint for code linting and Prettier for code formatting. Integrate both tools to ensure consistent code style and catch syntax errors.",
           "dependencies": [],
           "details": "Install ESLint and Prettier as dev dependencies. Create configuration files (.eslintrc, .prettierrc). Add scripts to package.json for linting and formatting. Test by running lint and format scripts to ensure no errors are reported.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 2,
@@ -25,8 +25,8 @@
           "dependencies": [
             1
           ],
-          "details": "Install @tanstack/react-query. Set up QueryClient and QueryClientProvider in the main application entry point. Test by creating a sample query hook and verifying data fetching and caching.",
-          "status": "in-progress"
+          "details": "Install @tanstack/react-query. Set up QueryClient and QueryClientProvider in the main application entry point. Test by creating a sample query hook and verifying data fetching and caching.\n<info added on 2025-06-05T07:01:10.657Z>\n✅ TanStack Query 통합 완료:\n\n**설치된 패키지:**\n- @tanstack/react-query: 서버 상태 관리를 위한 메인 라이브러리\n- @tanstack/react-query-devtools: 개발 환경 디버깅 도구\n\n**구성 파일 생성:**\n- src/lib/queryClient.ts: QueryClient 설정\n  - staleTime: 5분, gcTime: 10분\n  - 4xx 에러 시 재시도 방지 (429 제외)\n  - 창 포커스 시 재요청 비활성화\n\n**Provider 설정:**\n- main.tsx에 QueryClientProvider 추가\n- 개발 환경에서만 DevTools 표시 설정\n\n**검증 완료:**\n- 빌드 성공 (dist/assets 생성 확인)\n- 개발 서버 실행 가능\n- 7개 파일 변경, Git 커밋 완료\n\n다음 단계: Supabase 클라이언트 설정\n</info added on 2025-06-05T07:01:10.657Z>",
+          "status": "done"
         },
         {
           "id": 3,
@@ -36,7 +36,7 @@
             2
           ],
           "details": "Install @supabase/supabase-js. Create a supabaseClient.ts file with environment variable integration for keys. Test by connecting to Supabase and fetching sample data.",
-          "status": "pending"
+          "status": "in-progress"
         },
         {
           "id": 4,
