@@ -61,11 +61,43 @@ Install @tanstack/react-query. Set up QueryClient and QueryClientProvider in the
 다음 단계: Supabase 클라이언트 설정
 </info added on 2025-06-05T07:01:10.657Z>
 
-## 3. Set Up Supabase Client [in-progress]
+## 3. Set Up Supabase Client [done]
 ### Dependencies: 1.2
 ### Description: Install and configure the Supabase client for backend connectivity and authentication.
 ### Details:
 Install @supabase/supabase-js. Create a supabaseClient.ts file with environment variable integration for keys. Test by connecting to Supabase and fetching sample data.
+<info added on 2025-06-05T07:04:40.376Z>
+✅ Supabase client setup completed:
+
+**Installed packages:**
+- @supabase/supabase-js: Supabase JavaScript client library
+
+**Created files:**
+- src/lib/supabase.ts: Supabase client configuration
+  - Authentication settings (persistSession, autoRefreshToken, detectSessionInUrl)
+  - Connection test function (testSupabaseConnection)
+  - Database type definitions (to be created later)
+
+- src/lib/env.ts: Environment variable helper
+  - Environment variable validation function (validateEnvironment)
+  - Development environment status logging (logEnvironmentStatus)
+  - Type-safe environment variable access
+
+**App.tsx updates:**
+- Display Supabase connection status in development environment
+- Log environment variable status
+- Real-time connection status UI display
+
+**Environment variables required:**
+Users need to create a .env file in the project root with the following values:
+- VITE_SUPABASE_URL=https://jsilzrsiieswiskzcriy.supabase.co
+- VITE_SUPABASE_ANON_KEY=actual-supabase-anon-key
+- VITE_N8N_WEBHOOK_URL=actual-n8n-webhook-url
+
+**Validation completed:**
+- TypeScript build successful
+- 7 files changed, Git commit completed
+</info added on 2025-06-05T07:04:40.376Z>
 
 ## 4. Configure React Router [done]
 ### Dependencies: 1.2
@@ -94,7 +126,7 @@ Installed ESLint and Prettier for code quality and formatting:
 - Committed changes to Git (59 files changed)
 </info added on 2025-06-05T06:56:56.539Z>
 
-## 5. Set Up Environment Variables [pending]
+## 5. Set Up Environment Variables [in-progress]
 ### Dependencies: 1.3
 ### Description: Configure environment variables for API keys and sensitive configuration.
 ### Details:
