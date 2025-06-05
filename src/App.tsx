@@ -1,34 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Button } from "@/components/ui/button"
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-white text-gray-900">
+      <div className="container mx-auto p-8">
+        <h1 className="text-4xl font-bold mb-8 text-center text-blue-600">
+          정신장애인 재활 목표 관리 플랫폼
+        </h1>
+        <div className="flex flex-col items-center space-y-4">
+          <p className="text-lg text-gray-600 text-center max-w-2xl">
+            정신과 사회복지사가 환자의 재활 목표를 체계적으로 관리하는 웹 플랫폼입니다.
+            AI 기반 목표 추천과 계층적 목표 관리 시스템을 제공합니다.
+          </p>
+          <div className="flex space-x-4">
+            <Button>시작하기</Button>
+            <Button variant="outline">더 알아보기</Button>
+          </div>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 

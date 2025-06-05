@@ -8,7 +8,7 @@
     },
     "research": {
       "provider": "perplexity",
-      "modelId": "sonar-pro",
+      "modelId": "deep-research",
       "maxTokens": 8700,
       "temperature": 0.1
     },
