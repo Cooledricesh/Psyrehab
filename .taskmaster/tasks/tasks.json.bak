@@ -9,7 +9,61 @@
       "priority": "high",
       "dependencies": [],
       "status": "in-progress",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Initialize React 18 Project with TypeScript using Vite",
+          "description": "Set up a new React 18 project with TypeScript using Vite as the build tool",
+          "dependencies": [],
+          "details": "Run 'npm create vite@latest' and select React-TypeScript template. Navigate to the project directory, run 'npm install' to install dependencies, and 'npm run dev' to verify the setup works correctly. Create a basic project structure with folders for components, hooks, and utilities.\n<info added on 2025-06-05T06:35:58.346Z>\n✅ Project initialization completed successfully:\n- Executed 'npm create vite@latest . --template react-ts'\n- Generated package.json and all configuration files\n- Installed dependencies with 'npm install'\n- Verified development server works with 'npm run dev'\n- Basic React components created in src/ directory\n</info added on 2025-06-05T06:35:58.346Z>",
+          "status": "done",
+          "testStrategy": "Verify the development server starts without errors and the React application loads in the browser"
+        },
+        {
+          "id": 2,
+          "title": "Configure Git Repository and Version Control",
+          "description": "Initialize Git repository, set up .gitignore, and make initial commit",
+          "dependencies": [
+            1
+          ],
+          "details": "Initialize Git repository with 'git init', create a .gitignore file with appropriate entries for node_modules, build directories, and environment files. Make an initial commit with the base project structure.\n<info added on 2025-06-05T06:38:58.714Z>\n✅ 완료: Git 저장소 설정 및 초기 커밋\n- Git 저장소가 이미 초기화되어 있음을 확인\n- .gitignore 파일에 환경 변수, Supabase, Task Master 관련 항목 추가\n- .env.example 파일 생성 (Supabase 설정용)\n- git add . 로 모든 파일 스테이징\n- 초기 커밋 완료: \"feat: initial project setup with Vite React TypeScript\"\n- 101개 파일이 커밋됨 (프로젝트 구조, 설정 파일, 템플릿 등)\n</info added on 2025-06-05T06:38:58.714Z>",
+          "status": "done",
+          "testStrategy": "Verify Git repository is properly initialized and tracking files correctly"
+        },
+        {
+          "id": 3,
+          "title": "Set up Tailwind CSS and shadcn/ui",
+          "description": "Install and configure Tailwind CSS with shadcn/ui component library",
+          "dependencies": [
+            1
+          ],
+          "details": "Install Tailwind CSS dependencies, create configuration files (tailwind.config.js and postcss.config.js), and set up the necessary imports in the main CSS file. Install and configure shadcn/ui following their documentation for a Vite project.\n<info added on 2025-06-05T06:47:30.397Z>\n✅ 완료: Tailwind CSS와 shadcn/ui 설정 성공\n- Tailwind CSS 및 PostCSS 의존성 설치 완료\n- @tailwindcss/postcss 플러그인으로 최신 버전 호환성 확보\n- tailwind.config.js 설정 (darkMode, 색상 시스템, 애니메이션)\n- components.json 설정으로 shadcn/ui 구성\n- src/lib/utils.ts에 cn() 유틸리티 함수 생성\n- Button 컴포넌트 생성 (variant, size 지원)\n- TypeScript 경로 별칭 설정 (@/* -> ./src/*)\n- Vite 설정에 경로 별칭 추가\n- 표준 Tailwind 클래스 사용으로 CSS 변수 이슈 해결\n- 빌드 및 개발 서버 정상 작동 확인\n</info added on 2025-06-05T06:47:30.397Z>",
+          "status": "done",
+          "testStrategy": "Verify Tailwind classes work in components and shadcn/ui components render correctly"
+        },
+        {
+          "id": 4,
+          "title": "Configure ESLint and Prettier",
+          "description": "Set up code quality tools including ESLint and Prettier with appropriate configurations",
+          "dependencies": [
+            1
+          ],
+          "details": "Install ESLint, Prettier, and related plugins. Create configuration files (.eslintrc.js, .prettierrc) with rules that align with the project requirements. Set up pre-commit hooks using husky if needed.",
+          "status": "in-progress",
+          "testStrategy": "Run linting commands to verify rules are properly enforced"
+        },
+        {
+          "id": 5,
+          "title": "Set up TanStack Query and Supabase Client",
+          "description": "Configure TanStack Query for state management and integrate Supabase client for backend communication",
+          "dependencies": [
+            1
+          ],
+          "details": "Install TanStack Query and Supabase client packages. Set up TanStack Query provider in the application root. Configure Supabase client with environment variables for connecting to the existing Supabase database. Create utility functions for common Supabase operations. Reference existing projects for structural guidance.",
+          "status": "pending",
+          "testStrategy": "Create a simple query to verify connection to Supabase and proper functioning of TanStack Query"
+        }
+      ]
     },
     {
       "id": 2,

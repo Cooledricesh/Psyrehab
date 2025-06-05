@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 
 function App() {
   return (
@@ -9,8 +9,9 @@ function App() {
         </h1>
         <div className="flex flex-col items-center space-y-4">
           <p className="text-lg text-gray-600 text-center max-w-2xl">
-            정신과 사회복지사가 환자의 재활 목표를 체계적으로 관리하는 웹 플랫폼입니다.
-            AI 기반 목표 추천과 계층적 목표 관리 시스템을 제공합니다.
+            정신과 사회복지사가 환자의 재활 목표를 체계적으로 관리하는 웹
+            플랫폼입니다. AI 기반 목표 추천과 계층적 목표 관리 시스템을
+            제공합니다.
           </p>
           <div className="flex space-x-4">
             <Button>시작하기</Button>
