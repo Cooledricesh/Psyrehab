@@ -1,0 +1,65 @@
+# Task ID: 1
+# Title: Setup Project Repository and Development Environment
+# Status: in-progress
+# Dependencies: None
+# Priority: high
+# Description: Initialize the project repository and set up the development environment with the specified tech stack.
+# Details:
+1. Create a new Git repository
+2. Initialize a React 18 project with TypeScript using Create React App or Vite
+3. Set up Tailwind CSS for styling
+4. Configure ESLint and Prettier for code quality
+5. Set up Tanstack Query (React Query) for state management
+6. Configure Supabase client for backend integration
+7. Set up Playwright for E2E testing
+8. Configure Vercel or Replit for deployment
+9. Set up Cursor as the recommended IDE
+10. Create a basic project structure with folders for components, hooks, and utilities
+
+# Test Strategy:
+1. Verify that all dependencies are correctly installed
+2. Ensure that the development server runs without errors
+3. Confirm that Tailwind CSS classes are working
+4. Test that Tanstack Query can make a simple API call
+5. Verify Supabase connection
+6. Run a sample Playwright test
+
+# Subtasks:
+## 1. Initialize React 18 Project with TypeScript using Vite [done]
+### Dependencies: None
+### Description: Set up a new React 18 project with TypeScript using Vite as the build tool
+### Details:
+Run 'npm create vite@latest' and select React-TypeScript template. Navigate to the project directory, run 'npm install' to install dependencies, and 'npm run dev' to verify the setup works correctly. Create a basic project structure with folders for components, hooks, and utilities.
+<info added on 2025-06-05T06:35:58.346Z>
+✅ Project initialization completed successfully:
+- Executed 'npm create vite@latest . --template react-ts'
+- Generated package.json and all configuration files
+- Installed dependencies with 'npm install'
+- Verified development server works with 'npm run dev'
+- Basic React components created in src/ directory
+</info added on 2025-06-05T06:35:58.346Z>
+
+## 2. Configure Git Repository and Version Control [pending]
+### Dependencies: 1.1
+### Description: Initialize Git repository, set up .gitignore, and make initial commit
+### Details:
+Initialize Git repository with 'git init', create a .gitignore file with appropriate entries for node_modules, build directories, and environment files. Make an initial commit with the base project structure.
+
+## 3. Set up Tailwind CSS and shadcn/ui [pending]
+### Dependencies: 1.1
+### Description: Install and configure Tailwind CSS with shadcn/ui component library
+### Details:
+Install Tailwind CSS dependencies, create configuration files (tailwind.config.js and postcss.config.js), and set up the necessary imports in the main CSS file. Install and configure shadcn/ui following their documentation for a Vite project.
+
+## 4. Configure ESLint and Prettier [pending]
+### Dependencies: 1.1
+### Description: Set up code quality tools including ESLint and Prettier with appropriate configurations
+### Details:
+Install ESLint, Prettier, and related plugins. Create configuration files (.eslintrc.js, .prettierrc) with rules that align with the project requirements. Set up pre-commit hooks using husky if needed.
+
+## 5. Set up TanStack Query and Supabase Client [pending]
+### Dependencies: 1.1
+### Description: Configure TanStack Query for state management and integrate Supabase client for backend communication
+### Details:
+Install TanStack Query and Supabase client packages. Set up TanStack Query provider in the application root. Configure Supabase client with environment variables for connecting to the existing Supabase database. Create utility functions for common Supabase operations. Reference existing projects for structural guidance.
+

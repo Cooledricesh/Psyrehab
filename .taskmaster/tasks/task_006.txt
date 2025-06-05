@@ -1,0 +1,21 @@
+# Task ID: 6
+# Title: Integrate AI Goal Recommendation System
+# Status: pending
+# Dependencies: 2, 3, 5
+# Priority: high
+# Description: Implement the AI-based goal recommendation system using N8N workflow and webhook.
+# Details:
+1. Set up N8N workflow for AI processing
+2. Implement webhook endpoint for sending assessment data to N8N
+3. Create logic to process N8N response and generate structured rehabilitation plans
+4. Develop UI for displaying and comparing 3 recommended plans
+5. Implement functionality to select and save chosen plan
+6. Create automatic goal generation based on selected plan
+7. Implement error handling and fallback options for AI API failures
+
+# Test Strategy:
+1. Test webhook communication with N8N
+2. Verify correct parsing and display of AI recommendations
+3. Test plan selection and goal generation process
+4. Ensure error handling works correctly for API failures
+5. Verify that generated goals are correctly saved to the database

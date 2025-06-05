@@ -1,0 +1,21 @@
+# Task ID: 2
+# Title: Design and Implement Database Schema
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create the database schema for the application using Supabase (PostgreSQL).
+# Details:
+1. Design tables for: users, patients, assessments, assessment_options, ai_goal_recommendations, rehabilitation_goals, goal_categories, goal_history, weekly_check_ins, goal_evaluations, service_records
+2. Implement foreign key relationships
+3. Set up indexes for frequently queried columns
+4. Implement Row Level Security (RLS) policies
+5. Create views for social_worker_dashboard, patient_current_progress, goal_metrics
+6. Set up Supabase realtime subscriptions for relevant tables
+7. Implement database functions and triggers as needed
+
+# Test Strategy:
+1. Verify all tables are created with correct columns and relationships
+2. Test RLS policies with different user roles
+3. Benchmark query performance and optimize if necessary
+4. Ensure realtime subscriptions are working correctly
+5. Test database functions and triggers

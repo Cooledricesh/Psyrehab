@@ -1,0 +1,21 @@
+# Task ID: 8
+# Title: Implement Progress Tracking System
+# Status: pending
+# Dependencies: 2, 3, 7
+# Priority: high
+# Description: Develop the weekly check-in system and progress tracking functionality.
+# Details:
+1. Create weekly check-in form with completion status, obstacles, support needs, and mood evaluation
+2. Implement automatic progress calculation based on check-ins
+3. Develop logic to update higher-level goal progress automatically
+4. Create UI for displaying progress over time
+5. Implement notifications for upcoming and overdue check-ins
+6. Add functionality to adjust goals based on progress
+
+# Test Strategy:
+1. Test weekly check-in form submission
+2. Verify automatic progress calculation accuracy
+3. Ensure higher-level goal progress updates correctly
+4. Test progress visualization components
+5. Verify notification system for check-ins
+6. Test goal adjustment functionality based on progress

@@ -1,0 +1,22 @@
+# Task ID: 7
+# Title: Develop Hierarchical Goal Management System
+# Status: pending
+# Dependencies: 2, 3, 6
+# Priority: high
+# Description: Implement the 3-tier goal management system with 6-month, monthly, and weekly goals.
+# Details:
+1. Implement data structures for 6-month, monthly, and weekly goals
+2. Create UI for displaying and managing hierarchical goals
+3. Develop logic for automatic breakdown of 6-month goals into monthly and weekly goals
+4. Implement CRUD operations for goals at each level
+5. Add functionality for setting goal categories and priorities
+6. Implement goal status management (pending, active, completed, on_hold, cancelled)
+7. Create a goal history tracking system
+
+# Test Strategy:
+1. Test creation and management of goals at each level
+2. Verify automatic goal breakdown functionality
+3. Test CRUD operations on goals
+4. Ensure goal categorization and prioritization work correctly
+5. Verify goal status changes are reflected correctly
+6. Test goal history tracking for accuracy

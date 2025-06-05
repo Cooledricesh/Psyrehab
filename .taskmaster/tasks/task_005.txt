@@ -1,0 +1,20 @@
+# Task ID: 5
+# Title: Implement Assessment System
+# Status: pending
+# Dependencies: 2, 3, 4
+# Priority: high
+# Description: Develop the 5-step assessment system for evaluating patient status.
+# Details:
+1. Create assessment form with 5 categories: concentration time, motivation level, past successes, constraints, and social preference
+2. Implement dynamic form rendering based on assessment options
+3. Develop logic to save and retrieve assessment results
+4. Create an assessment history view
+5. Implement assessment result visualization
+6. Add functionality to compare assessments over time
+
+# Test Strategy:
+1. Test assessment form submission with various input combinations
+2. Verify that assessment results are correctly saved to the database
+3. Test retrieval and display of assessment history
+4. Ensure visualization components accurately represent assessment data
+5. Verify assessment comparison functionality

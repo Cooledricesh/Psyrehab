@@ -1,0 +1,315 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Setup Project Repository and Development Environment",
+      "description": "Initialize the project repository and set up the development environment with the specified tech stack.",
+      "details": "1. Create a new Git repository\n2. Initialize a React 18 project with TypeScript using Create React App or Vite\n3. Set up Tailwind CSS for styling\n4. Configure ESLint and Prettier for code quality\n5. Set up Tanstack Query (React Query) for state management\n6. Configure Supabase client for backend integration\n7. Set up Playwright for E2E testing\n8. Configure Vercel or Replit for deployment\n9. Set up Cursor as the recommended IDE\n10. Create a basic project structure with folders for components, hooks, and utilities",
+      "testStrategy": "1. Verify that all dependencies are correctly installed\n2. Ensure that the development server runs without errors\n3. Confirm that Tailwind CSS classes are working\n4. Test that Tanstack Query can make a simple API call\n5. Verify Supabase connection\n6. Run a sample Playwright test",
+      "priority": "high",
+      "dependencies": [],
+      "status": "in-progress",
+      "subtasks": []
+    },
+    {
+      "id": 2,
+      "title": "Design and Implement Database Schema",
+      "description": "Create the database schema for the application using Supabase (PostgreSQL).",
+      "details": "1. Design tables for: users, patients, assessments, assessment_options, ai_goal_recommendations, rehabilitation_goals, goal_categories, goal_history, weekly_check_ins, goal_evaluations, service_records\n2. Implement foreign key relationships\n3. Set up indexes for frequently queried columns\n4. Implement Row Level Security (RLS) policies\n5. Create views for social_worker_dashboard, patient_current_progress, goal_metrics\n6. Set up Supabase realtime subscriptions for relevant tables\n7. Implement database functions and triggers as needed",
+      "testStrategy": "1. Verify all tables are created with correct columns and relationships\n2. Test RLS policies with different user roles\n3. Benchmark query performance and optimize if necessary\n4. Ensure realtime subscriptions are working correctly\n5. Test database functions and triggers",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 3,
+      "title": "Implement Authentication and Authorization",
+      "description": "Set up user authentication and authorization using Supabase Auth.",
+      "details": "1. Configure Supabase Auth settings\n2. Implement sign up, sign in, and sign out functionality\n3. Create user roles (social worker, admin)\n4. Implement JWT-based authentication\n5. Set up protected routes in the frontend\n6. Implement role-based access control (RBAC)\n7. Create a user profile management page",
+      "testStrategy": "1. Test user registration process\n2. Verify login functionality with correct and incorrect credentials\n3. Test token refresh mechanism\n4. Ensure protected routes are not accessible without authentication\n5. Verify that different user roles have appropriate access levels",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 4,
+      "title": "Develop Patient Management Module",
+      "description": "Create the patient management module for registering and managing patient information.",
+      "details": "1. Create a patient registration form\n2. Implement CRUD operations for patient records\n3. Develop a patient list view with search and filter functionality\n4. Create a detailed patient profile view\n5. Implement the ability to assign social workers to patients\n6. Add functionality to update patient status (active, discharged)\n7. Implement data validation and error handling",
+      "testStrategy": "1. Test patient registration with valid and invalid data\n2. Verify CRUD operations on patient records\n3. Test search and filter functionality in the patient list\n4. Ensure patient-social worker assignments are working correctly\n5. Verify patient status updates are reflected correctly in the database",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 5,
+      "title": "Implement Assessment System",
+      "description": "Develop the 5-step assessment system for evaluating patient status.",
+      "details": "1. Create assessment form with 5 categories: concentration time, motivation level, past successes, constraints, and social preference\n2. Implement dynamic form rendering based on assessment options\n3. Develop logic to save and retrieve assessment results\n4. Create an assessment history view\n5. Implement assessment result visualization\n6. Add functionality to compare assessments over time",
+      "testStrategy": "1. Test assessment form submission with various input combinations\n2. Verify that assessment results are correctly saved to the database\n3. Test retrieval and display of assessment history\n4. Ensure visualization components accurately represent assessment data\n5. Verify assessment comparison functionality",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 6,
+      "title": "Integrate AI Goal Recommendation System",
+      "description": "Implement the AI-based goal recommendation system using N8N workflow and webhook.",
+      "details": "1. Set up N8N workflow for AI processing\n2. Implement webhook endpoint for sending assessment data to N8N\n3. Create logic to process N8N response and generate structured rehabilitation plans\n4. Develop UI for displaying and comparing 3 recommended plans\n5. Implement functionality to select and save chosen plan\n6. Create automatic goal generation based on selected plan\n7. Implement error handling and fallback options for AI API failures",
+      "testStrategy": "1. Test webhook communication with N8N\n2. Verify correct parsing and display of AI recommendations\n3. Test plan selection and goal generation process\n4. Ensure error handling works correctly for API failures\n5. Verify that generated goals are correctly saved to the database",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3,
+        5
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 7,
+      "title": "Develop Hierarchical Goal Management System",
+      "description": "Implement the 3-tier goal management system with 6-month, monthly, and weekly goals.",
+      "details": "1. Implement data structures for 6-month, monthly, and weekly goals\n2. Create UI for displaying and managing hierarchical goals\n3. Develop logic for automatic breakdown of 6-month goals into monthly and weekly goals\n4. Implement CRUD operations for goals at each level\n5. Add functionality for setting goal categories and priorities\n6. Implement goal status management (pending, active, completed, on_hold, cancelled)\n7. Create a goal history tracking system",
+      "testStrategy": "1. Test creation and management of goals at each level\n2. Verify automatic goal breakdown functionality\n3. Test CRUD operations on goals\n4. Ensure goal categorization and prioritization work correctly\n5. Verify goal status changes are reflected correctly\n6. Test goal history tracking for accuracy",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3,
+        6
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 8,
+      "title": "Implement Progress Tracking System",
+      "description": "Develop the weekly check-in system and progress tracking functionality.",
+      "details": "1. Create weekly check-in form with completion status, obstacles, support needs, and mood evaluation\n2. Implement automatic progress calculation based on check-ins\n3. Develop logic to update higher-level goal progress automatically\n4. Create UI for displaying progress over time\n5. Implement notifications for upcoming and overdue check-ins\n6. Add functionality to adjust goals based on progress",
+      "testStrategy": "1. Test weekly check-in form submission\n2. Verify automatic progress calculation accuracy\n3. Ensure higher-level goal progress updates correctly\n4. Test progress visualization components\n5. Verify notification system for check-ins\n6. Test goal adjustment functionality based on progress",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3,
+        7
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 9,
+      "title": "Develop Dashboard and Analytics Module",
+      "description": "Create comprehensive dashboards for social workers and system-wide analytics.",
+      "details": "1. Design and implement social worker dashboard with patient list, check-in schedules, and progress overview\n2. Create patient-specific analysis views with goal achievement trends and assessment score changes\n3. Implement system-wide statistics for administrators\n4. Develop data visualization components for various metrics\n5. Implement filtering and date range selection for dashboard data\n6. Create export functionality for dashboard data\n7. Implement real-time updates using Supabase Realtime",
+      "testStrategy": "1. Verify dashboard data accuracy for different user roles\n2. Test data visualization components with various data sets\n3. Ensure filtering and date range selection work correctly\n4. Test export functionality for different data types\n5. Verify real-time updates are working as expected",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 10,
+      "title": "Implement Service Records Management",
+      "description": "Develop the system for managing and tracking service records and consultations.",
+      "details": "1. Create service record entry form with fields for date, duration, service type, category, and notes\n2. Implement CRUD operations for service records\n3. Develop a calendar view for scheduling and viewing service records\n4. Create a list view of service records with search and filter functionality\n5. Implement service type and category management\n6. Add reporting functionality for service record statistics",
+      "testStrategy": "1. Test service record creation, editing, and deletion\n2. Verify calendar view accurately displays scheduled services\n3. Test search and filter functionality in the list view\n4. Ensure service type and category management works correctly\n5. Verify accuracy of service record statistics and reports",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 11,
+      "title": "Develop Notification System",
+      "description": "Implement a comprehensive notification system for various events and reminders.",
+      "details": "1. Design and implement notification data structure\n2. Create notification generation logic for events like upcoming check-ins, goal deadlines, and system updates\n3. Implement in-app notification center\n4. Develop email notification system using a service like SendGrid or Amazon SES\n5. Create notification preferences management for users\n6. Implement real-time notification updates using Supabase Realtime",
+      "testStrategy": "1. Test notification generation for various events\n2. Verify in-app notification display and management\n3. Test email notification delivery and content\n4. Ensure notification preferences are respected\n5. Verify real-time updates for notifications",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3,
+        7,
+        8
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 12,
+      "title": "Implement Reporting and Export Functionality",
+      "description": "Develop comprehensive reporting and data export features for the platform.",
+      "details": "1. Design report templates for various data types (patient progress, goal achievement, service records)\n2. Implement report generation logic\n3. Create UI for customizing and generating reports\n4. Develop data export functionality for different formats (CSV, PDF)\n5. Implement scheduling for automated report generation\n6. Create an archive system for generated reports",
+      "testStrategy": "1. Test report generation with various parameters\n2. Verify accuracy of generated reports\n3. Test data export in different formats\n4. Ensure automated report scheduling works correctly\n5. Verify the report archive system functions as expected",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 13,
+      "title": "Develop Admin Panel",
+      "description": "Create an administrative panel for system management and configuration.",
+      "details": "1. Design and implement admin dashboard\n2. Create user management interface (create, edit, delete users, manage roles)\n3. Implement system configuration settings\n4. Develop interface for managing assessment options and categories\n5. Create logs viewer for system events and errors\n6. Implement backup and restore functionality\n7. Add system-wide announcements feature",
+      "testStrategy": "1. Test user management operations\n2. Verify system configuration changes are applied correctly\n3. Ensure assessment options and categories can be managed effectively\n4. Test log viewing and filtering functionality\n5. Verify backup and restore processes\n6. Test system-wide announcement creation and display",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 14,
+      "title": "Implement Data Validation and Error Handling",
+      "description": "Develop comprehensive data validation and error handling throughout the application.",
+      "details": "1. Implement client-side form validation using a library like Yup or Zod\n2. Create server-side validation for all API endpoints\n3. Develop a centralized error handling system\n4. Implement user-friendly error messages and notifications\n5. Create error logging and monitoring system\n6. Implement data sanitization to prevent XSS and injection attacks\n7. Develop input masking for sensitive data fields",
+      "testStrategy": "1. Test form submissions with valid and invalid data\n2. Verify server-side validation catches all potential issues\n3. Ensure error messages are clear and helpful\n4. Test error logging and monitoring functionality\n5. Verify data sanitization prevents common attack vectors\n6. Test input masking for correctness and usability",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 15,
+      "title": "Optimize Performance and Implement Caching",
+      "description": "Enhance application performance through optimization techniques and caching.",
+      "details": "1. Implement code splitting and lazy loading for React components\n2. Set up a service worker for offline functionality and caching\n3. Implement memoization for expensive computations\n4. Optimize database queries and add necessary indexes\n5. Implement client-side caching using Tanstack Query\n6. Set up server-side caching for frequently accessed data\n7. Optimize assets (images, CSS, JavaScript) for faster loading",
+      "testStrategy": "1. Measure and compare load times before and after optimization\n2. Test offline functionality and caching behavior\n3. Verify that memoization improves performance for complex operations\n4. Benchmark database query performance\n5. Test caching behavior for both client and server-side implementations\n6. Verify optimized assets load faster and don't impact quality",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 16,
+      "title": "Implement Accessibility Features",
+      "description": "Ensure the application is accessible to users with disabilities by implementing necessary accessibility features.",
+      "details": "1. Implement proper semantic HTML structure\n2. Ensure all interactive elements are keyboard accessible\n3. Add ARIA labels and roles where necessary\n4. Implement focus management for modals and dynamic content\n5. Ensure proper color contrast ratios\n6. Add skip navigation links\n7. Implement text alternatives for non-text content\n8. Test and fix any accessibility issues using tools like axe-core",
+      "testStrategy": "1. Conduct manual keyboard navigation testing\n2. Use screen readers to test the application\n3. Run automated accessibility tests using axe-core or similar tools\n4. Verify color contrast meets WCAG standards\n5. Test with various assistive technologies\n6. Conduct user testing with individuals with disabilities",
+      "priority": "medium",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 17,
+      "title": "Implement Internationalization (i18n)",
+      "description": "Add support for multiple languages and locales in the application.",
+      "details": "1. Set up i18next or a similar internationalization library\n2. Extract all user-facing strings into language files\n3. Implement language switching functionality\n4. Add support for RTL languages\n5. Implement locale-specific date and number formatting\n6. Create a translation management system or integrate with a translation service\n7. Implement dynamic loading of language packs",
+      "testStrategy": "1. Verify all user-facing text is correctly translated\n2. Test language switching functionality\n3. Ensure RTL layout works correctly for supported languages\n4. Verify date and number formatting for different locales\n5. Test dynamic loading of language packs\n6. Conduct user testing with native speakers of supported languages",
+      "priority": "low",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 18,
+      "title": "Implement Advanced Security Measures",
+      "description": "Enhance the security of the application by implementing advanced security features.",
+      "details": "1. Implement HTTPS and configure proper SSL/TLS settings\n2. Set up Content Security Policy (CSP) headers\n3. Implement rate limiting for API endpoints\n4. Add protection against CSRF attacks\n5. Implement secure session management\n6. Set up security headers (X-Frame-Options, X-XSS-Protection, etc.)\n7. Implement IP blocking for suspicious activity\n8. Set up regular security audits and penetration testing",
+      "testStrategy": "1. Verify HTTPS is enforced across the application\n2. Test CSP headers are working as expected\n3. Verify rate limiting prevents abuse of API endpoints\n4. Test CSRF protection mechanisms\n5. Ensure session management is secure and follows best practices\n6. Verify all security headers are properly set\n7. Test IP blocking functionality\n8. Conduct regular security audits and penetration tests",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 19,
+      "title": "Develop Comprehensive Testing Suite",
+      "description": "Create a robust testing suite covering unit, integration, and end-to-end tests.",
+      "details": "1. Set up Jest for unit and integration testing\n2. Implement unit tests for utility functions and hooks\n3. Create integration tests for complex components\n4. Set up Playwright for end-to-end testing\n5. Implement E2E tests for critical user flows\n6. Set up API testing using a tool like Supertest\n7. Implement snapshot testing for UI components\n8. Set up continuous integration (CI) pipeline for automated testing\n9. Implement code coverage reporting",
+      "testStrategy": "1. Aim for high code coverage (>80%) for unit and integration tests\n2. Ensure all critical user flows are covered by E2E tests\n3. Verify API endpoints are thoroughly tested\n4. Regularly update snapshot tests as UI evolves\n5. Set up CI to run all tests on each pull request\n6. Monitor and maintain code coverage over time",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 20,
+      "title": "Prepare for Deployment and Monitoring",
+      "description": "Set up the deployment pipeline and implement monitoring and logging solutions.",
+      "details": "1. Set up deployment pipeline using Vercel or Replit\n2. Implement environment-specific configuration management\n3. Set up database migration scripts\n4. Implement application health checks\n5. Set up error tracking and monitoring (e.g., Sentry)\n6. Implement application performance monitoring\n7. Set up centralized logging system\n8. Create runbooks for common operational tasks\n9. Implement automated backups for the database",
+      "testStrategy": "1. Verify deployment process works correctly for all environments\n2. Test environment-specific configurations\n3. Ensure database migrations run smoothly\n4. Verify health checks accurately reflect application status\n5. Test error tracking by intentionally triggering errors\n6. Verify performance monitoring captures relevant metrics\n7. Ensure logs are properly captured and searchable\n8. Test backup and restore procedures",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3,
+        15,
+        18,
+        19
+      ],
+      "status": "pending",
+      "subtasks": []
+    }
+  ]
+}

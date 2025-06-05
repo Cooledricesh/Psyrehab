@@ -1,0 +1,21 @@
+# Task ID: 4
+# Title: Develop Patient Management Module
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Create the patient management module for registering and managing patient information.
+# Details:
+1. Create a patient registration form
+2. Implement CRUD operations for patient records
+3. Develop a patient list view with search and filter functionality
+4. Create a detailed patient profile view
+5. Implement the ability to assign social workers to patients
+6. Add functionality to update patient status (active, discharged)
+7. Implement data validation and error handling
+
+# Test Strategy:
+1. Test patient registration with valid and invalid data
+2. Verify CRUD operations on patient records
+3. Test search and filter functionality in the patient list
+4. Ensure patient-social worker assignments are working correctly
+5. Verify patient status updates are reflected correctly in the database
