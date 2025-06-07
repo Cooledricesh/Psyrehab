@@ -1,0 +1,68 @@
+{
+  "timestamp": "2025-06-07T15:01:16.909Z",
+  "dependencies": {
+    "auditReportVersion": 2,
+    "vulnerabilities": {},
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "dependencies": {
+        "prod": 567,
+        "dev": 417,
+        "optional": 69,
+        "peer": 9,
+        "peerOptional": 0,
+        "total": 1006
+      }
+    }
+  },
+  "codeAnalysis": {
+    "issues": [
+      {
+        "file": ".env.example",
+        "issue": "Missing .env.example file",
+        "severity": "low",
+        "line": "N/A"
+      },
+      {
+        "file": ".env",
+        "issue": ".env file should not be committed",
+        "severity": "medium",
+        "line": "N/A"
+      }
+    ],
+    "totalIssues": 2
+  },
+  "configuration": {
+    "issues": [
+      {
+        "file": "package.json",
+        "issue": "Missing security dependency: bcrypt",
+        "severity": "medium"
+      },
+      {
+        "file": ".gitignore",
+        "issue": "Missing ignore pattern: build",
+        "severity": "low"
+      }
+    ],
+    "totalIssues": 2
+  },
+  "certificates": {
+    "issues": [],
+    "totalIssues": 0
+  },
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 2,
+    "passed": 14
+  }
+}

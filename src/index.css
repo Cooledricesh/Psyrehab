@@ -1,3 +1,293 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CSS Variables for Accessible Colors */
+:root {
+  /* Light theme colors with WCAG AA compliance (4.5:1 contrast ratio) */
+  --background: 255 255 255; /* #ffffff */
+  --foreground: 15 23 42; /* #0f172a - slate-900 */
+  
+  --card: 255 255 255; /* #ffffff */
+  --card-foreground: 15 23 42; /* #0f172a */
+  
+  --popover: 255 255 255; /* #ffffff */
+  --popover-foreground: 15 23 42; /* #0f172a */
+  
+  --primary: 37 99 235; /* #2563eb - blue-600 */
+  --primary-foreground: 255 255 255; /* #ffffff */
+  
+  --secondary: 241 245 249; /* #f1f5f9 - slate-100 */
+  --secondary-foreground: 15 23 42; /* #0f172a */
+  
+  --muted: 248 250 252; /* #f8fafc - slate-50 */
+  --muted-foreground: 100 116 139; /* #64748b - slate-500 */
+  
+  --accent: 239 246 255; /* #eff6ff - blue-50 */
+  --accent-foreground: 30 64 175; /* #1e40af - blue-700 */
+  
+  --destructive: 220 38 38; /* #dc2626 - red-600 */
+  --destructive-foreground: 255 255 255; /* #ffffff */
+  
+  --border: 226 232 240; /* #e2e8f0 - slate-200 */
+  --input: 226 232 240; /* #e2e8f0 - slate-200 */
+  --ring: 37 99 235; /* #2563eb - blue-600 */
+  
+  /* Success colors */
+  --success: 22 163 74; /* #16a34a - green-600 */
+  --success-foreground: 255 255 255; /* #ffffff */
+  
+  /* Warning colors */
+  --warning: 245 158 11; /* #f59e0b - amber-500 */
+  --warning-foreground: 15 23 42; /* #0f172a */
+  
+  /* Info colors */
+  --info: 59 130 246; /* #3b82f6 - blue-500 */
+  --info-foreground: 255 255 255; /* #ffffff */
+  
+  /* Chart colors with good contrast */
+  --chart-1: 37 99 235; /* #2563eb - blue-600 */
+  --chart-2: 22 163 74; /* #16a34a - green-600 */
+  --chart-3: 245 158 11; /* #f59e0b - amber-500 */
+  --chart-4: 220 38 38; /* #dc2626 - red-600 */
+  --chart-5: 147 51 234; /* #9333ea - purple-600 */
+  
+  --radius: 0.5rem;
+}
+
+/* Dark theme colors with WCAG AA compliance */
+.dark {
+  --background: 2 6 23; /* #020617 - slate-950 */
+  --foreground: 248 250 252; /* #f8fafc - slate-50 */
+  
+  --card: 15 23 42; /* #0f172a - slate-900 */
+  --card-foreground: 248 250 252; /* #f8fafc */
+  
+  --popover: 15 23 42; /* #0f172a */
+  --popover-foreground: 248 250 252; /* #f8fafc */
+  
+  --primary: 59 130 246; /* #3b82f6 - blue-500 */
+  --primary-foreground: 15 23 42; /* #0f172a */
+  
+  --secondary: 30 41 59; /* #1e293b - slate-800 */
+  --secondary-foreground: 248 250 252; /* #f8fafc */
+  
+  --muted: 30 41 59; /* #1e293b - slate-800 */
+  --muted-foreground: 148 163 184; /* #94a3b8 - slate-400 */
+  
+  --accent: 30 41 59; /* #1e293b - slate-800 */
+  --accent-foreground: 147 197 253; /* #93c5fd - blue-300 */
+  
+  --destructive: 239 68 68; /* #ef4444 - red-500 */
+  --destructive-foreground: 248 250 252; /* #f8fafc */
+  
+  --border: 30 41 59; /* #1e293b - slate-800 */
+  --input: 30 41 59; /* #1e293b - slate-800 */
+  --ring: 59 130 246; /* #3b82f6 - blue-500 */
+  
+  /* Success colors for dark mode */
+  --success: 34 197 94; /* #22c55e - green-500 */
+  --success-foreground: 15 23 42; /* #0f172a */
+  
+  /* Warning colors for dark mode */
+  --warning: 251 191 36; /* #fbbf24 - amber-400 */
+  --warning-foreground: 15 23 42; /* #0f172a */
+  
+  /* Info colors for dark mode */
+  --info: 96 165 250; /* #60a5fa - blue-400 */
+  --info-foreground: 15 23 42; /* #0f172a */
+  
+  /* Chart colors for dark mode */
+  --chart-1: 59 130 246; /* #3b82f6 - blue-500 */
+  --chart-2: 34 197 94; /* #22c55e - green-500 */
+  --chart-3: 251 191 36; /* #fbbf24 - amber-400 */
+  --chart-4: 239 68 68; /* #ef4444 - red-500 */
+  --chart-5: 168 85 247; /* #a855f7 - purple-500 */
+}
+
+/* Accessibility and Keyboard Navigation Styles */
+@layer base {
+  /* Apply color variables */
+  * {
+    border-color: hsl(var(--border));
+  }
+  
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* Enhance focus visibility for better keyboard navigation */
+  *:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Skip link styling */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    padding: 8px;
+    text-decoration: none;
+    z-index: 9999;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .skip-link:focus {
+    top: 6px;
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Focus-visible for modern browsers */
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Button focus styles */
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Link focus styles */
+  a:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Form element focus styles */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-color: hsl(var(--ring));
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    :root {
+      --foreground: 0 0 0; /* Pure black */
+      --background: 255 255 255; /* Pure white */
+      --primary: 0 0 0; /* Pure black */
+      --primary-foreground: 255 255 255; /* Pure white */
+      --border: 0 0 0; /* Pure black */
+    }
+    
+    .dark {
+      --foreground: 255 255 255; /* Pure white */
+      --background: 0 0 0; /* Pure black */
+      --primary: 255 255 255; /* Pure white */
+      --primary-foreground: 0 0 0; /* Pure black */
+      --border: 255 255 255; /* Pure white */
+    }
+    
+    *:focus-visible {
+      outline: 3px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Ensure sufficient color contrast for text */
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+  
+  .text-destructive {
+    color: hsl(var(--destructive));
+  }
+  
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  
+  .text-info {
+    color: hsl(var(--info));
+  }
+}
+
+@layer components {
+  /* Custom focus ring for interactive elements */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Skip navigation button */
+  .skip-nav {
+    @apply absolute -top-10 left-2 bg-foreground text-background px-3 py-2 rounded text-sm z-50 focus:top-2 font-semibold;
+  }
+
+  /* High contrast button variants */
+  .btn-high-contrast {
+    @apply border-2 border-current font-semibold;
+  }
+  
+  /* Accessible color combinations */
+  .bg-success {
+    background-color: hsl(var(--success));
+    color: hsl(var(--success-foreground));
+  }
+  
+  .bg-warning {
+    background-color: hsl(var(--warning));
+    color: hsl(var(--warning-foreground));
+  }
+  
+  .bg-info {
+    background-color: hsl(var(--info));
+    color: hsl(var(--info-foreground));
+  }
+  
+  /* Error state with sufficient contrast */
+  .error-state {
+    @apply border-destructive text-destructive bg-destructive/10;
+  }
+  
+  /* Success state with sufficient contrast */
+  .success-state {
+    @apply border-success text-success bg-success/10;
+  }
+  
+  /* Warning state with sufficient contrast */
+  .warning-state {
+    @apply border-warning text-warning bg-warning/10;
+  }
+}

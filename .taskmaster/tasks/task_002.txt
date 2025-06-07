@@ -1,6 +1,6 @@
 # Task ID: 2
 # Title: Design and Implement Database Schema
-# Status: pending
+# Status: done
 # Dependencies: 1
 # Priority: high
 # Description: Create the database schema for the application using Supabase (PostgreSQL).
@@ -19,3 +19,488 @@
 3. Benchmark query performance and optimize if necessary
 4. Ensure realtime subscriptions are working correctly
 5. Test database functions and triggers
+
+# Subtasks:
+## 1. Design User and Patient Tables [done]
+### Dependencies: None
+### Description: Create schema for users (social workers, administrators) and patients tables
+### Details:
+Define columns for user roles, authentication, patient demographics, and relevant medical information
+<info added on 2025-06-05T08:00:49.470Z>
+✅ User and Patient Table Schema Verification Completed:
+
+**Database Schema Analysis:**
+- Confirmed that a complete schema is already built in the existing Supabase database
+- 13 tables + 7 views + multiple functions defined
+- Structure optimized for mental health rehabilitation platform
+
+**Key Tables Verified:**
+- social_workers: Social worker information (user_id, full_name, employee_id, department, contact_number)
+- administrators: Administrator information (user_id, full_name, admin_level)
+- patients: Patient information (patient_identifier, full_name, date_of_birth, contact_info, primary_social_worker_id)
+- user_roles: User role management (user_id, role_id)
+- roles: Role definitions (role_name, description)
+
+**TypeScript Type Generation:**
+- Generated complete TypeScript type definitions from Supabase
+- Stored Database type in src/types/supabase.ts
+- Updated src/types/database.ts to use actual schema types
+- Defined additional convenience types (UserProfile, PatientWithProgress, etc.)
+
+**Supabase Client Update:**
+- Using generated Database type in lib/supabase.ts
+- Ensured type safety
+
+**Constants Update:**
+- Updated utils/constants.ts to match actual database constraints
+- Added FOCUS_TIME_OPTIONS, SOCIAL_PREFERENCE_OPTIONS, GOAL_STATUS, etc.
+
+Schema verification completed.
+</info added on 2025-06-05T08:00:49.470Z>
+
+## 2. Implement Assessment Tables [done]
+### Dependencies: 2.1
+### Description: Design and create tables for the 5-stage assessment system
+### Details:
+Include fields for assessment type, date, scores, and link to patients
+<info added on 2025-06-05T08:11:52.689Z>
+Assessment 테이블 구현 완료:
+
+**데이터베이스 스키마 확인:**
+- assessments 테이블: 5단계 평가 시스템 구현 (focus_time, motivation_level, past_successes, constraints, social_preference)
+- assessment_options 테이블: 평가 옵션들이 한국어로 완벽하게 구성됨
+- 19개 옵션 확인: 집중시간(4개), 사회적 선호도(3개), 과거 성공경험(6개), 제약사항(6개)
+
+**프론트엔드 통합:**
+- src/utils/assessment-options.ts: 평가 옵션 상수 및 헬퍼 함수 생성
+- src/services/assessment.ts: 완전한 Assessment CRUD API 서비스 함수들
+- src/hooks/assessments/useAssessments.ts: React Query 기반 Assessment hooks
+- 모든 평가 관련 기능 구현: 생성, 조회, 수정, 삭제, AI 추천 연동
+
+**주요 기능:**
+- getPatientAssessments: 환자별 평가 이력 조회
+- createAssessmentAndGetRecommendations: 평가 생성 + AI 추천 자동 생성
+- getAssessmentWithRecommendations: 평가와 AI 추천 함께 조회
+- checkAssessmentDue: 평가 주기 확인 (기본 30일)
+- getAssessmentOptions: 평가 옵션 동적 로딩
+
+**타입 안전성:**
+- TypeScript 타입 정의 완료
+- Supabase 생성 타입과 연동
+- 빌드 성공 확인
+</info added on 2025-06-05T08:11:52.689Z>
+
+## 3. Develop AI Goal Recommendations Table [done]
+### Dependencies: 2.1, 2.2
+### Description: Create schema for AI-generated goal recommendations
+### Details:
+Include fields for recommendation text, date, associated assessment, and patient
+<info added on 2025-06-05T08:25:08.372Z>
+The AI Goal Recommendations Table has been implemented with the following components:
+
+1. AI Recommendation Constants Module:
+   - 10 goal categories (social function, cognitive function, emotion regulation, independent living, etc.)
+   - 5 priority levels (urgent, high, medium, low, maintenance)
+   - 7 achievement levels (not started to regression)
+   - 12 intervention types (individual therapy, group therapy, functional training, etc.)
+   - 6 success indicator types (behavioral, cognitive, social, etc.)
+   - Measurement frequency options and confidence levels
+   - Validation rules and default structure templates
+
+2. AI Recommendation API Service:
+   - Complete CRUD operations
+   - Patient-specific AI recommendation retrieval and active recommendation viewing
+   - Advanced filtering (active status, date range, assessment connection, etc.)
+   - AI recommendation application/deactivation functionality
+   - Assessment-based AI recommendation generation
+   - Statistical data generation (recommendation count, application rate, unique patient count)
+   - Recent AI recommendation retrieval
+
+3. React Query Hooks:
+   - Hooks integrated with all API services
+   - Patient recommendation workflow hook
+   - Bulk operation support (apply/deactivate/delete)
+   - Performance optimization prefetch functions
+   - Caching and invalidation strategy implementation
+
+Database integration includes:
+- ai_goal_recommendations table structure (16 columns)
+- JSONB field support for structured data storage
+- Foreign key relationships with patients, assessments, and social workers
+- Recommendation application tracking and active status management
+
+The AI recommendation generation system:
+- Automatic recommendation generation based on assessment data
+- Structured 6-month goals, monthly plans, and weekly plans
+- Patient analysis (strengths, challenges, risk factors, protective factors)
+- Automatic generation of implementation strategies and success indicators
+- Extensible AI integration structure (OpenAI, Claude, etc.)
+</info added on 2025-06-05T08:25:08.372Z>
+
+## 4. Design Rehabilitation Goals Tables [done]
+### Dependencies: 2.1, 2.3
+### Description: Implement hierarchical structure for 6-month, monthly, and weekly goals
+### Details:
+Create tables with appropriate foreign key relationships and goal hierarchy
+<info added on 2025-06-05T08:50:00.398Z>
+# Rehabilitation Goals Tables Implementation
+
+## Database Schema Components
+
+1. **rehabilitation_goals Table**:
+   - Primary structure with 25 columns
+   - Foreign key relationships to patients, social workers, and AI recommendations
+   - Hierarchical structure support via parent_goal_id
+   - JSONB fields for AI recommendation details and evaluation criteria
+   - Sequence numbers and week/month numbering for goal structuring
+
+2. **Goal Relationship Structure**:
+   - Supports 3-level depth hierarchy (long-term → short-term → weekly)
+   - Parent-child relationships between goals
+   - Sequential ordering within each hierarchy level
+
+3. **Goal Metadata Tables**:
+   - Goal status options (6): waiting, in progress, completed, on hold, canceled, postponed
+   - Goal types (6): long-term, short-term, weekly, daily, milestone, other
+   - Priority levels (5): very high to minimum
+   - Categories (12): social function, cognitive function, emotional regulation, etc.
+   - Completion rate ranges (6): not started to completed
+   - Evaluation criteria types (8): behavioral observation, self-reporting, standardized assessment, etc.
+   - Duration options (7): 1 week to 1 year
+
+4. **AI Integration Support**:
+   - Foreign key relationship to AI recommendation table
+   - JSONB storage for recommendation details and intervention strategies
+   - Structure for hierarchical goal generation (6-month goals → monthly plans → weekly plans)
+
+All tables include appropriate timestamps, audit fields, and indexing for optimal query performance.
+</info added on 2025-06-05T08:50:00.398Z>
+
+## 5. Create Goal Categories Table [done]
+### Dependencies: 2.4
+### Description: Design and implement table for categorizing rehabilitation goals
+### Details:
+Include fields for category name, description, and any relevant metadata
+<info added on 2025-06-05T08:53:55.766Z>
+The Goal Categories table has been successfully implemented with the following structure and features:
+
+- Table schema with 8 columns including category name, description, icon, color, and is_active flag
+- 7 pre-defined default categories covering key rehabilitation areas:
+  * Health Management (red, heart icon)
+  * Social Relationships (green, user icon)
+  * Occupational Competence (orange, briefcase icon)
+  * Independent Daily Living (blue, home icon)
+  * Leisure Activities (purple, music icon)
+  * Education and Learning (gray)
+  * Medication Management (gray)
+
+Complete API service implementation in src/services/goal-categories.ts with:
+- Full CRUD operations
+- Soft delete functionality
+- Category-based goal filtering and statistics
+- Bulk update capabilities
+- Default category auto-generation
+
+React Query hooks for frontend integration with:
+- Category management workflow
+- Filtering capabilities
+- Performance optimization with prefetching
+- Caching and invalidation strategies
+
+Visual identification system with:
+- 16 predefined icon options
+- 12 color palette options
+- Category-specific visual identifiers
+
+Statistical features:
+- Automatic calculation of goal statistics by category
+- Completion rates and status distribution
+- Category distribution analysis
+
+Foreign key relationship established with rehabilitation_goals table through category_id.
+</info added on 2025-06-05T08:53:55.766Z>
+
+## 6. Implement Goal Evaluations Table [done]
+### Dependencies: 2.4
+### Description: Create schema for tracking goal evaluations and progress
+### Details:
+Include fields for evaluation date, progress metrics, and comments
+<info added on 2025-06-05T08:57:29.407Z>
+The Goal Evaluations Table has been implemented with the following structure:
+
+- 12 columns including evaluation date, progress metrics, and comments
+- JSONB fields for structured data storage:
+  * strengths - patient's evaluated strengths
+  * challenges - areas needing improvement
+  * next_steps - future plans and recommendations
+- Foreign key relationships with rehabilitation_goals and social_workers tables
+
+The implementation includes:
+1. Complete API service (src/services/goal-evaluations.ts) with:
+   - Full CRUD operations
+   - Advanced filtering by evaluation type, date range, completion rate, evaluator
+   - Progress tracking functionality
+   - Statistical analysis (monthly trends, distribution by evaluation type)
+   - Bulk evaluation creation support
+   - Six defined evaluation types (initial, weekly, monthly, milestone, final, ad-hoc)
+
+2. React Query Hooks (src/hooks/goal-evaluations/useGoalEvaluations.ts) for:
+   - Integration with all API services
+   - Workflow management
+   - Patient evaluation overview
+   - Filtering and sorting
+   - Performance optimization with prefetching
+   - Caching and invalidation strategies
+
+The system enables social workers to conduct systematic evaluations of rehabilitation goals, track progress in real-time, and establish data-driven improvement directions.
+</info added on 2025-06-05T08:57:29.407Z>
+
+## 7. Design Weekly Check-ins Table [done]
+### Dependencies: 2.1, 2.4
+### Description: Implement table for recording weekly patient check-ins
+### Details:
+Include fields for check-in date, notes, and link to relevant goals
+<info added on 2025-06-05T09:01:40.509Z>
+Weekly Check-ins Table implemented with the following components:
+
+- Table structure with 12 columns including check-in date, notes, and links to relevant goals
+- Foreign key relationships with rehabilitation_goals (goal_id) and social_workers (checked_by)
+- Fields for week_number, is_completed, and mood_rating (1-5 scale)
+- Text fields for obstacles_faced, support_needed, and completion_notes
+
+API service implementation in src/services/weekly-check-ins.ts:
+- Complete CRUD operations
+- Goal-specific check-in retrieval and management
+- Advanced filtering by week, date range, completion status, and mood rating
+- Patient and check-in administrator filtering
+
+React Query Hooks in src/hooks/weekly-check-ins/useWeeklyCheckIns.ts:
+- Integration with all API services
+- Specialized hooks for check-in management workflow, patient weekly overview, and filtering/sorting
+- Performance optimization with prefetch functions
+- Caching and invalidation strategies
+
+The system enables social workers to perform systematic weekly check-ins for patients' rehabilitation goals, monitor emotional states through the mood rating system, track obstacles faced, document needed support, and provide timely assistance.
+</info added on 2025-06-05T09:01:40.509Z>
+
+## 8. Create Service Records Table [done]
+### Dependencies: 2.1
+### Description: Design schema for tracking services provided to patients
+### Details:
+Include fields for service type, date, duration, and provider
+<info added on 2025-06-05T08:18:59.211Z>
+The Service Records Table has been successfully implemented with the following components:
+
+1. Service Records constants module (src/utils/service-constants.ts):
+   - 10 service types (individual counseling, group counseling, functional training, etc.)
+   - 6 service categories (counseling, training, support, assessment, intervention, treatment)
+   - 8 service location options (in-center, home visit, etc.)
+   - Duration options and participant count options
+   - Helper functions (label conversion, validation, etc.)
+
+2. Service Records API service (src/services/service-records.ts):
+   - Complete CRUD operations (create, read, update, delete)
+   - Patient-specific service record retrieval
+   - Social worker-specific service record retrieval
+   - Advanced filtering (by service type, category, date range, etc.)
+   - Statistical data generation (by patient/social worker)
+   - Recent service records retrieval
+
+3. React Query Hooks (src/hooks/service-records/useServiceRecords.ts):
+   - Hooks integrated with all API services
+   - Caching and invalidation strategies
+   - Support for bulk operations
+   - Prefetch functions for performance optimization
+
+Database integration verified:
+- Service_records table structure validated (13 columns)
+- Foreign key relationships with patients and social workers confirmed
+- Created_at/updated_at timestamp support
+
+Key features:
+- Individual/group session distinction
+- Automatic service statistics calculation
+- Various filtering options
+- Real-time cache management
+- Type safety assurance
+</info added on 2025-06-05T08:18:59.211Z>
+
+## 9. Implement Goal History Table [done]
+### Dependencies: 2.4, 2.6
+### Description: Create table for maintaining historical goal data
+### Details:
+Design schema to track changes and progress over time
+<info added on 2025-06-05T09:06:13.614Z>
+# Goal History Table Implementation
+
+## Database Structure
+- Implemented goal_history table with 8 columns
+- JSONB fields for storing before/after values:
+  * previous_values - values before change
+  * new_values - values after change
+- Foreign key relationships with rehabilitation_goals and social_workers
+- Support for recording change types and reasons
+
+## API Services
+- Created goal history service (src/services/goal-history.ts)
+- Features include:
+  * Goal-specific history retrieval
+  * Advanced filtering (change type, date range, modifier)
+  * Change timeline tracking
+  * Change statistics generation
+  * Automatic change tracking utility
+  * Recent history queries for dashboard
+  * 8 defined change types (creation, modification, status change, progress updates, etc.)
+
+## React Query Integration
+- Implemented hooks in src/hooks/goal-history/useGoalHistory.ts
+- Hooks for goal history management workflow
+- Patient history overview
+- History filtering and analysis
+- Change analysis
+- Automatic change tracking mutation
+- Performance optimization with prefetch functions
+
+## Change Tracking & Analysis
+- Complete change timeline per goal
+- Change frequency calculation
+- Identification of most frequent change types
+- Monthly change activity trend analysis
+- Change activity level assessment
+- Before/after value comparison and formatting
+
+## System Integration
+- Full integration with rehabilitation goal system
+- Automatic tracking of all goal changes
+- Social worker change history tracking
+- Patient-specific goal change history overview
+
+## Visualization
+- Color coding for 8 change types
+- Korean labels for change types
+- Visual distinction by change activity level
+</info added on 2025-06-05T09:06:13.614Z>
+
+## 10. Establish Table Relationships [done]
+### Dependencies: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9
+### Description: Implement foreign key constraints and relationships between all tables
+### Details:
+Ensure proper linkage between related entities in the database
+<info added on 2025-06-05T09:06:53.288Z>
+# Database Table Relationships Verification and Implementation
+
+## 1. **User & Patient Relationships:**
+- social_workers ↔ patients (case manager relationship)
+- social_workers ↔ assessments (evaluator relationship)
+- patients ↔ assessments (patient evaluation relationship)
+
+## 2. **AI Recommendations Relationships:**
+- ai_goal_recommendations ↔ patients (patient-specific recommendations)
+- ai_goal_recommendations ↔ assessments (assessment-based recommendations)
+- ai_goal_recommendations ↔ social_workers (creator)
+
+## 3. **Rehabilitation Goals Central Relationships:**
+- rehabilitation_goals ↔ patients (patient-specific goals)
+- rehabilitation_goals ↔ social_workers (creator)
+- rehabilitation_goals ↔ goal_categories (categorization)
+- rehabilitation_goals ↔ ai_goal_recommendations (AI recommendation basis)
+- rehabilitation_goals ↔ rehabilitation_goals (parent-child goal relationship)
+
+## 4. **Goal Evaluations Relationships:**
+- goal_evaluations ↔ rehabilitation_goals (goal-specific evaluations)
+- goal_evaluations ↔ social_workers (evaluator)
+
+## 5. **Weekly Check-ins Relationships:**
+- weekly_check_ins ↔ rehabilitation_goals (goal-specific check-ins)
+- weekly_check_ins ↔ social_workers (check-in manager)
+
+## 6. **Service Records Relationships:**
+- service_records ↔ patients (patient-specific services)
+- service_records ↔ social_workers (service provider)
+
+## 7. **Goal History Relationships:**
+- goal_history ↔ rehabilitation_goals (goal-specific history)
+- goal_history ↔ social_workers (modifier)
+
+## **Relationship Utilization Verification:**
+All service functions confirm proper operation of JOIN queries such as:
+- `rehabilitation_goals!rehabilitation_goals_patient_id_fkey`
+- `social_workers!ai_goal_recommendations_created_by_fkey`
+- `goal_categories!rehabilitation_goals_category_id_fkey`
+- `goal_evaluations!goal_evaluations_goal_id_fkey`
+- `weekly_check_ins!weekly_check_ins_goal_id_fkey`
+- `goal_history!goal_history_goal_id_fkey`
+
+## **Foreign Key Constraints:**
+Referential integrity is ensured across all tables, with service functions leveraging these relationships for efficient data retrieval.
+
+## **Performance Optimization:**
+- Appropriate select clauses used in all relational queries
+- JOINs implemented to prevent N+1 problems
+- Indexes automatically created on foreign keys for performance optimization
+</info added on 2025-06-05T09:06:53.288Z>
+
+## 11. Implement Security Policies [done]
+### Dependencies: 2.10
+### Description: Design and apply Row Level Security (RLS) policies for data protection
+### Details:
+Create policies to restrict data access based on user roles and permissions
+
+## 12. Optimize Database Performance [done]
+### Dependencies: 2.10, 2.11
+### Description: Implement indexes, views, and performance tuning measures
+### Details:
+Create appropriate indexes, materialized views, and analyze query performance
+<info added on 2025-06-05T10:00:10.914Z>
+# Database Performance Optimization Implementation Complete
+
+## Comprehensive Performance Optimization Implemented:
+
+### 1. **Performance Indexes Created (50+ indexes)**:
+- **B-tree indexes**: Primary key, foreign key, and commonly queried columns
+- **Composite indexes**: Multi-column indexes for complex query patterns
+- **Partial indexes**: Filtered indexes for common WHERE conditions
+- **JSONB GIN indexes**: Optimized JSONB field querying
+- **Array GIN indexes**: Assessment arrays optimization
+
+### 2. **Materialized Views for Analytics (4 views)**:
+- **social_worker_performance_analytics**: Complete social worker metrics
+- **patient_comprehensive_analytics**: Patient progress and engagement
+- **goal_category_performance_analytics**: Category-based success metrics
+- **monthly_activity_trends**: 12-month historical trends
+
+### 3. **Performance Monitoring Functions (7 functions)**:
+- **refresh_all_materialized_views()**: Automated view refresh
+- **get_detailed_performance_stats()**: Table size and performance stats
+- **get_index_usage_stats()**: Index efficiency monitoring
+- **analyze_table_maintenance()**: Maintenance recommendations
+- **get_table_access_patterns()**: Query pattern analysis
+- **get_database_activity_stats()**: Connection and activity metrics
+- **perform_automated_maintenance()**: Automated maintenance tasks
+
+### 4. **Performance Monitoring Views (3 views)**:
+- **database_performance_summary**: Overall database health metrics
+- **performance_optimizations_summary**: Optimization implementation status
+- **maintenance_recommendations**: Ongoing maintenance guidelines
+
+### 5. **Database Optimization Features**:
+- **System logging**: Performance and maintenance activity tracking
+- **Automated statistics**: Table statistics update automation
+- **Comprehensive documentation**: Detailed function and view comments
+- **Maintenance scheduling**: Guidelines for ongoing performance
+
+### 6. **Performance Improvements Achieved**:
+- **Query optimization**: Faster data retrieval through strategic indexing
+- **Analytics acceleration**: Pre-computed materialized views
+- **JSONB optimization**: Enhanced structured data querying
+- **Monitoring infrastructure**: Complete performance visibility
+- **Maintenance automation**: Reduced manual intervention
+
+### 7. **Implementation Results**:
+- All indexes created successfully
+- All materialized views populated with initial data
+- All performance functions tested and working
+- Complete documentation and monitoring infrastructure
+- Database ready for production workloads
+</info added on 2025-06-05T10:00:10.914Z>
+

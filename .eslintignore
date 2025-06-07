@@ -9,7 +9,7 @@ node_modules/
 
 # Reference and template folders
 reference/
-.taskmaster/templates/
+.taskmaster/
 
 # Environment files
 .env*

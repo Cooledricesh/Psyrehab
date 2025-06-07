@@ -1,6 +1,6 @@
 # Task ID: 1
 # Title: Setup Project Repository and Development Environment
-# Status: in-progress
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Initialize the project repository and set up the development environment with the specified tech stack.
@@ -149,21 +149,86 @@ Documented environment variables:
 Verified successful TypeScript build, completed changes to 4 files with Git commit, and confirmed environment variable status display functionality in development environment.
 </info added on 2025-06-05T07:07:15.182Z>
 
-## 6. Configure Testing Framework (Vitest & React Testing Library) [in-progress]
+## 6. Configure Testing Framework (Vitest & React Testing Library) [done]
 ### Dependencies: 1.1
 ### Description: Set up Vitest and React Testing Library for unit and integration testing.
 ### Details:
 Install vitest, @testing-library/react, @testing-library/jest-dom, and jsdom. Update vite.config.ts with test configuration. Create setupTests.ts. Test by running sample tests and verifying output.
 
-## 7. Establish Project Structure and Aliases [pending]
+## 7. Establish Project Structure and Aliases [done]
 ### Dependencies: 1.1
 ### Description: Organize the project directory structure and configure path aliases for cleaner imports.
 ### Details:
 Create folders for components, hooks, utils, and services. Update tsconfig.json and vite.config.ts for path aliases. Test by importing modules using aliases and ensuring successful builds.
+<info added on 2025-06-05T07:33:31.028Z>
+✅ Project structure and path aliases setup completed:
 
-## 8. Set Up Deployment Configuration [pending]
+**Created folder structure:**
+- src/components/{auth,dashboard,patients,goals,assessments,reports,layout,forms,common}
+- src/hooks/{auth,patients,goals,assessments,api}
+- src/pages/{auth,dashboard,patients,goals,assessments,reports}
+- src/services/{auth,api,ai,notifications}
+- src/utils/{validation,formatting,constants}
+- src/store/
+- src/types/{api,database,components}
+
+**Path Aliases configuration:**
+- tsconfig.app.json: @/components, @/hooks, @/pages, @/services, @/utils, @/types, @/lib, @/store, @/assets
+- vite.config.ts: Same aliases configuration
+- vitest.config.ts: Aliases setup for test environment
+
+**Implemented utilities:**
+- constants.ts: Application constants (assessment stages, goal types, statuses, roles, routes, etc.)
+- validation.ts: Form validation functions (email, password, phone number, patient ID, etc.)
+- formatting.ts: Data formatting functions (dates, numbers, text, status indicators, etc.)
+
+**Type definitions:**
+- database.ts: Database types based on Supabase schema
+- api.ts: API request/response, pagination, authentication related types
+
+**Verification completed:**
+- TypeScript build successful
+- Vite development server running normally
+- Path aliases working correctly
+- 7 files changed, awaiting Git commit
+
+Next step: Subtask 1.8 deployment configuration
+</info added on 2025-06-05T07:33:31.028Z>
+
+## 8. Set Up Deployment Configuration [done]
 ### Dependencies: 1.5, 1.6, 1.7
 ### Description: Prepare the project for deployment by configuring build scripts and environment-specific settings.
 ### Details:
 Update package.json with build and preview scripts. Configure Vite output directory and environment-specific settings. Test by running the build and serving the production build locally.
+<info added on 2025-06-05T07:48:29.754Z>
+✅ 배포 설정 완료:
+
+**Vite 프로덕션 최적화:**
+- 청크 분할: vendor(React), query(TanStack), ui(shadcn), supabase, main 코드별로 분리
+- terser를 통한 코드 압축 및 console.log 제거
+- 소스맵 생성으로 프로덕션 디버깅 지원
+- 500KB 청크 크기 경고 설정
+
+**npm scripts 추가:**
+- build:production: NODE_ENV=production 빌드
+- build:staging: 스테이징 환경용 빌드  
+- build:analyze: 번들 분석
+- serve: 프로덕션 빌드 로컬 서빙
+- ci: 전체 CI 파이프라인 (타입체크+린트+테스트+빌드)
+- deploy:preview: 빌드+서빙 통합
+
+**DEPLOYMENT.md 생성:**
+- Vercel, Netlify, 전통적 서버 배포 가이드
+- 환경변수 설정 방법
+- 성능 테스트 및 모니터링 체크리스트
+- 보안 설정 가이드
+- GitHub Actions CI/CD 예제
+
+**테스트 검증:**
+- 프로덕션 빌드 성공 (1.94초, 5개 청크)
+- 로컬 프로덕션 서버 정상 실행 (port 4173)
+- ESLint 설정 수정으로 메인 코드만 린팅
+
+배포 준비 완료!
+</info added on 2025-06-05T07:48:29.754Z>
 

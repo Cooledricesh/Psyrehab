@@ -30,6 +30,12 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# SSL Certificates (development only)
+certs/
+*.pem
+*.key
+*.crt
+
 # Supabase
 .supabase
 
