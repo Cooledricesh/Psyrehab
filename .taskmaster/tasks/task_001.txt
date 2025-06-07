@@ -126,13 +126,30 @@ Installed ESLint and Prettier for code quality and formatting:
 - Committed changes to Git (59 files changed)
 </info added on 2025-06-05T06:56:56.539Z>
 
-## 5. Set Up Environment Variables [in-progress]
+## 5. Set Up Environment Variables [done]
 ### Dependencies: 1.3
 ### Description: Configure environment variables for API keys and sensitive configuration.
 ### Details:
 Create .env and .env.example files. Reference variables in Vite using import.meta.env. Test by logging environment variables in the app and ensuring correct values are loaded.
+<info added on 2025-06-05T07:07:15.182Z>
+Created README.md with project introduction, tech stack documentation, environment variable setup guide, development server execution and build methods, project structure explanation, npm script list, and development environment setup information (ESLint, Prettier, TanStack Query, Supabase).
 
-## 6. Configure Testing Framework (Vitest & React Testing Library) [pending]
+Defined TypeScript types in src/types/env.d.ts for environment variables, providing type safety for Vite environment variables including VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, and VITE_N8N_WEBHOOK_URL.
+
+Established project structure with directories for:
+- src/hooks/: Custom React hooks
+- src/pages/: Page components
+- src/types/: TypeScript type definitions
+
+Documented environment variables:
+- Supabase URL: https://jsilzrsiieswiskzcriy.supabase.co
+- Supabase anonymous key (user configuration required)
+- n8n webhook URL (optional, for AI functionality)
+
+Verified successful TypeScript build, completed changes to 4 files with Git commit, and confirmed environment variable status display functionality in development environment.
+</info added on 2025-06-05T07:07:15.182Z>
+
+## 6. Configure Testing Framework (Vitest & React Testing Library) [in-progress]
 ### Dependencies: 1.1
 ### Description: Set up Vitest and React Testing Library for unit and integration testing.
 ### Details:
