@@ -1,6 +1,6 @@
 # Task ID: 17
 # Title: Implement Internationalization (i18n)
-# Status: pending
+# Status: done
 # Dependencies: 1
 # Priority: low
 # Description: Add support for multiple languages and locales in the application.

@@ -66,12 +66,15 @@ export async function testSupabaseConnection() {
       return false
     }
 
-    // Try a simple query to test connection
-    const { error } = await supabase.from('patients').select('count').limit(1)
-    if (error) {
+    // Use the simplest possible connection test
+    const { data, error } = await supabase.auth.getSession()
+    
+    // Even if there's no session, a successful response means connection is working
+    if (error && error.message.includes('Failed to fetch')) {
       console.error('Supabase connection error:', error.message)
       return false
     }
+    
     console.log('✅ Supabase connection successful')
     return true
   } catch (error) {

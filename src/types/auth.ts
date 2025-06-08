@@ -8,7 +8,7 @@ type Patient = Database['public']['Tables']['patients']['Row']
 type Role = Database['public']['Tables']['roles']['Row']
 
 // User roles
-export type UserRole = 'administrator' | 'social_worker' | 'patient'
+export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest'
 
 // User profile based on role
 export interface UserProfile {
@@ -55,6 +55,8 @@ export interface AuthState {
   profile: AnyUserProfile | null
   loading: boolean
   initialized: boolean
+  isAuthenticated: boolean
+  error: string | null
 }
 
 // Authentication context
@@ -91,9 +93,90 @@ export type Permission =
   | 'update_own_profile'
   | 'view_own_goals'
   | 'submit_check_ins'
+  | 'user:create'
+  | 'user:read'
+  | 'user:update'
+  | 'user:delete'
+  | 'patient:create'
+  | 'patient:read'
+  | 'patient:update'
+  | 'patient:delete'
+  | 'session:create'
+  | 'session:read'
+  | 'session:update'
+  | 'session:delete'
+  | 'system:config:read'
+  | 'system:config:update'
+  | 'system:logs:read'
+  | 'system:backup:create'
+  | 'system:backup:restore'
+  | 'announcement:create'
+  | 'announcement:read'
+  | 'announcement:update'
+  | 'announcement:delete'
+  | 'assessment:create'
+  | 'assessment:read'
+  | 'assessment:update'
+  | 'assessment:delete'
+  | 'report:read'
+  | 'report:export'
 
 // Role permissions mapping
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  super_admin: Object.values(Permission),
+  admin: [
+    'user:create',
+    'user:read',
+    'user:update',
+    'patient:create',
+    'patient:read',
+    'patient:update',
+    'patient:delete',
+    'session:create',
+    'session:read',
+    'session:update',
+    'session:delete',
+    'system:config:read',
+    'system:logs:read',
+    'announcement:create',
+    'announcement:read',
+    'announcement:update',
+    'announcement:delete',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'assessment:delete',
+    'report:read',
+    'report:export',
+  ],
+  therapist: [
+    'patient:read',
+    'patient:update',
+    'session:create',
+    'session:read',
+    'session:update',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'announcement:read',
+    'report:read',
+  ],
+  manager: [
+    'user:read',
+    'patient:read',
+    'session:read',
+    'announcement:read',
+    'report:read',
+    'report:export',
+  ],
+  user: [
+    'patient:read',
+    'session:read',
+    'announcement:read',
+  ],
+  guest: [
+    'announcement:read',
+  ],
   administrator: [
     'manage_users',
     'manage_social_workers',
@@ -209,4 +292,84 @@ export const isSocialWorker = (profile: AnyUserProfile | null): profile is Socia
 
 export const isPatient = (profile: AnyUserProfile | null): profile is PatientProfile => {
   return profile?.role === 'patient'
-} 
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  permissions: Permission[];
+  status: UserStatus;
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastLogin?: string;
+  emailVerified: boolean;
+  phone?: string;
+  department?: string;
+}
+
+export enum UserStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+  PENDING = 'pending'
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  role: UserRole;
+  department?: string;
+  phone?: string;
+}
+
+export interface PasswordResetData {
+  email: string;
+  token: string;
+  password: string;
+}
+
+// 관리자 역할 체크
+export const isAdminRole = (role: UserRole): boolean => {
+  return ['super_admin', 'admin'].includes(role);
+};
+
+// 권한 체크 함수
+export const hasPermission = (userPermissions: Permission[], requiredPermission: Permission): boolean => {
+  return userPermissions.includes(requiredPermission);
+};
+
+// 다중 권한 체크 함수
+export const hasAnyPermission = (userPermissions: Permission[], requiredPermissions: Permission[]): boolean => {
+  return requiredPermissions.some(permission => userPermissions.includes(permission));
+};
+
+// 모든 권한 체크 함수
+export const hasAllPermissions = (userPermissions: Permission[], requiredPermissions: Permission[]): boolean => {
+  return requiredPermissions.every(permission => userPermissions.includes(permission));
+};
+
+export default {
+  User,
+  UserRole,
+  Permission,
+  UserStatus,
+  AuthState,
+  LoginCredentials,
+  RegisterData,
+  PasswordResetData,
+  ROLE_PERMISSIONS,
+  isAdminRole,
+  hasPermission,
+  hasAnyPermission,
+  hasAllPermissions,
+}; 
