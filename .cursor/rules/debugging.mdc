@@ -1,0 +1,157 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 디버깅 및 문제 해결 방법론
+
+## **단계적 문제 해결 접근법**
+
+### **1. 최소 테스트부터 시작**
+- 복잡한 컴포넌트에 문제가 있을 때, 가장 간단한 버전부터 테스트
+- 예: 웹페이지가 로드되지 않으면 간단한 "Hello World" 컴포넌트부터 확인
+
+```tsx
+// ✅ DO: 문제 발생 시 간단한 테스트 컴포넌트로 시작
+function TestApp() {
+  return (
+    <div>
+      <h1>테스트 메시지</h1>
+      <p>현재 시간: {new Date().toLocaleString()}</p>
+    </div>
+  )
+}
+
+// ❌ DON'T: 처음부터 복잡한 컴포넌트로 디버깅 시도
+```
+
+### **2. 단계적 기능 추가**
+- 기본 기능이 작동하면 하나씩 추가
+- 각 단계에서 정상 작동 확인 후 다음 단계 진행
+
+```tsx
+// 1단계: 기본 레이아웃
+<div>Basic Layout</div>
+
+// 2단계: 라우팅 추가
+<Router>
+  <Routes>
+    <Route path="/" element={<Home />} />
+  </Routes>
+</Router>
+
+// 3단계: Header 추가
+<div>
+  <Header />
+  <Routes>...</Routes>
+</div>
+
+// 4단계: Sidebar 추가
+<div className="flex">
+  <Sidebar />
+  <main><Routes>...</Routes></main>
+</div>
+```
+
+## **일반적인 문제와 해결책**
+
+### **Import 경로 문제**
+- `src/` 절대 경로 대신 `@/` 별칭 사용
+- Vite 설정에서 별칭이 올바르게 구성되어 있는지 확인
+
+```tsx
+// ✅ DO: 별칭 사용
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+
+// ❌ DON'T: 절대 경로 사용
+import { cn } from "src/lib/utils"
+```
+
+### **포트 및 서버 관련**
+- Vite 개발 서버는 기본적으로 **5173 포트** 사용
+- Next.js는 3000 포트, Vite는 5173 포트임을 명확히 구분
+
+```bash
+# ✅ DO: Vite 프로젝트에서 올바른 포트 사용
+npm run dev  # localhost:5173
+
+# ❌ DON'T: 잘못된 포트로 접속 시도
+# localhost:3000 (Next.js 포트)
+```
+
+### **외부 서비스 연결 문제 우회**
+- Supabase, API 등 외부 서비스 연결 실패 시 mock 데이터로 우회
+- 기본 기능부터 구현하고 나중에 실제 데이터 연결
+
+```tsx
+// ✅ DO: 외부 서비스 실패 시 fallback 제공
+const fetchPatients = async () => {
+  try {
+    const { data, error } = await supabase.from('patients').select('*')
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.warn('Using mock data due to connection issue')
+    return mockPatients // fallback 데이터
+  }
+}
+
+// ❌ DON'T: 외부 서비스 실패로 전체 기능 중단
+```
+
+## **개발자 도구 활용**
+
+### **브라우저 콘솔 확인**
+- JavaScript 에러는 브라우저 개발자 도구 Console에서 확인
+- 네트워크 탭에서 API 호출 실패 확인
+
+### **단계별 로그 추가**
+```tsx
+// ✅ DO: 중요한 단계마다 로그 추가
+console.log('✅ Component mounted')
+console.log('🔍 Fetching data...')
+console.log('📊 Data received:', data)
+```
+
+## **에러 메시지 해석**
+
+### **일반적인 에러 패턴**
+- `A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received`
+  → 주로 비동기 처리나 외부 서비스 연결 문제
+
+- `Cannot resolve module` 에러
+  → import 경로 문제, 별칭 설정 확인
+
+- `Failed to fetch` 에러  
+  → 네트워크 연결 또는 API 엔드포인트 문제
+
+## **문제 해결 체크리스트**
+
+### **웹페이지 로드 문제**
+1. [ ] 서버가 정상 실행 중인가?
+2. [ ] 올바른 포트로 접속하고 있는가?
+3. [ ] import 경로가 정확한가?
+4. [ ] 외부 서비스 의존성이 문제인가?
+5. [ ] 브라우저 콘솔에 에러가 있는가?
+
+### **컴포넌트 문제**
+1. [ ] 간단한 테스트 컴포넌트로 교체해봤는가?
+2. [ ] 하나씩 기능을 추가하며 어디서 문제인지 확인했는가?
+3. [ ] 필요한 props가 모두 전달되고 있는가?
+4. [ ] 타입 에러는 없는가?
+
+## **성공적인 문제 해결 사례**
+
+이 프로젝트에서 성공적으로 해결한 문제들:
+
+1. **Import 경로 수정**: `src/lib/utils` → `@/lib/utils`
+2. **단계적 레이아웃 구성**: 기본 → 라우팅 → Header → Sidebar → 페이지들
+3. **Supabase 연결 우회**: Mock 데이터로 기본 기능 구현 먼저
+4. **포트 혼동 해결**: Next.js(3000) vs Vite(5173) 구분
+
+## **지속적인 개선**
+
+- 문제 해결 후 동일한 문제 재발 방지를 위한 규칙 정리
+- 성공적인 해결 패턴을 템플릿으로 문서화
+- 팀원들과 문제 해결 경험 공유

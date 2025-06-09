@@ -1,0 +1,309 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 컴포넌트 통합 및 단계적 추가
+
+## **레이아웃 구성 단계**
+
+### **1단계: 기본 구조 확립**
+```tsx
+// ✅ DO: 가장 간단한 구조부터 시작
+function App() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <h1>기본 테스트</h1>
+    </div>
+  )
+}
+```
+
+### **2단계: 라우팅 추가**
+```tsx
+// ✅ DO: 라우팅 기능 확인
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <Routes>
+          <Route path="/" element={<SimpleHome />} />
+          <Route path="/dashboard" element={<SimpleDashboard />} />
+        </Routes>
+      </div>
+    </Router>
+  )
+}
+```
+
+### **3단계: Header 추가**
+```tsx
+// ✅ DO: Header 컴포넌트 통합
+import { Header } from '@/components/layout/Header'
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="p-6">
+          <Routes>...</Routes>
+        </main>
+      </div>
+    </Router>
+  )
+}
+```
+
+### **4단계: Sidebar 추가**
+```tsx
+// ✅ DO: 완전한 레이아웃 구성
+import { Header } from '@/components/layout/Header'
+import { Sidebar } from '@/components/layout/Sidebar'
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen flex bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1 p-6 bg-gray-50 overflow-auto">
+            <Routes>...</Routes>
+          </main>
+        </div>
+      </div>
+    </Router>
+  )
+}
+```
+
+## **페이지 컴포넌트 통합 전략**
+
+### **복잡한 컴포넌트 대응**
+복잡한 의존성이 있는 컴포넌트는 간단한 버전으로 대체
+
+```tsx
+// ❌ DON'T: 처음부터 복잡한 컴포넌트 사용
+import ComplexPatientManagement from '@/pages/PatientManagement'  // Supabase 의존성
+
+// ✅ DO: 간단한 버전으로 시작
+function SimplePatientManagement() {
+  const mockPatients = [
+    { id: '1', name: '김○○', age: 28, diagnosis: '조현병' },
+    // ... mock data
+  ]
+  
+  return (
+    <div className="p-6">
+      <h1>환자 관리</h1>
+      {/* 간단한 테이블 구현 */}
+    </div>
+  )
+}
+```
+
+### **점진적 기능 추가**
+```tsx
+// 1단계: 기본 컴포넌트만
+<Route path="/patients" element={<SimplePatientList />} />
+
+// 2단계: 실제 컴포넌트 교체 (문제없으면)
+<Route path="/patients" element={<PatientManagement />} />
+
+// 3단계: 추가 기능들
+<Route path="/patients/:id" element={<PatientDetail />} />
+<Route path="/patients/new" element={<PatientForm />} />
+```
+
+## **의존성 문제 해결**
+
+### **외부 서비스 의존성 우회**
+```tsx
+// ✅ DO: Fallback 메커니즘 구현
+const PatientManagement = () => {
+  const [patients, setPatients] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const { data, error } = await supabase.from('patients').select('*')
+        if (error) throw error
+        setPatients(data)
+      } catch (err) {
+        console.warn('Using mock data:', err)
+        setPatients(mockData)  // Fallback
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchPatients()
+  }, [])
+
+  // 컴포넌트 렌더링...
+}
+```
+
+### **점진적 실제 데이터 연결**
+```tsx
+// 1단계: Mock 데이터만 사용
+const useMockData = true
+
+// 2단계: 환경변수로 제어
+const useMockData = !import.meta.env.VITE_SUPABASE_URL
+
+// 3단계: 실제 연결 후 fallback 제거
+// mock 관련 코드 삭제
+```
+
+## **컴포넌트 import 전략**
+
+### **조건부 import**
+```tsx
+// ✅ DO: 안전한 컴포넌트부터 추가
+import Home from '@/pages/Home'
+import GoalSetting from '@/pages/GoalSetting'         // 의존성 적음
+import ProgressTracking from '@/pages/ProgressTracking' // 의존성 적음
+import Reports from '@/pages/Reports'                 // 의존성 적음
+import Settings from '@/pages/Settings'               // 의존성 적음
+// import PatientManagement from '@/pages/PatientManagement'  // 복잡함, 나중에 추가
+```
+
+### **라우트 추가 순서**
+```tsx
+<Routes>
+  {/* 1순위: 기본 페이지들 */}
+  <Route path="/" element={<Home />} />
+  <Route path="/dashboard" element={<SimpleDashboard />} />
+  
+  {/* 2순위: 안전한 기능 페이지들 */}
+  <Route path="/goal-setting" element={<GoalSetting />} />
+  <Route path="/progress-tracking" element={<ProgressTracking />} />
+  <Route path="/reports" element={<Reports />} />
+  <Route path="/settings" element={<Settings />} />
+  
+  {/* 3순위: 복잡한 페이지들 (마지막에 추가) */}
+  <Route path="/patient-management" element={<SimplePatientManagement />} />
+</Routes>
+```
+
+## **에러 처리 및 안정성**
+
+### **컴포넌트 레벨 에러 경계**
+```tsx
+// ✅ DO: 각 페이지에 에러 경계 추가
+import { ErrorBoundary } from 'react-error-boundary'
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen flex bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <main className="flex-1 p-6">
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Routes>...</Routes>
+            </ErrorBoundary>
+          </main>
+        </div>
+      </div>
+    </Router>
+  )
+}
+```
+
+### **로딩 상태 관리**
+```tsx
+// ✅ DO: 각 페이지에서 로딩 상태 처리
+const PatientManagement = () => {
+  const [loading, setLoading] = useState(true)
+  
+  if (loading) {
+    return <div className="p-6">데이터를 불러오는 중...</div>
+  }
+  
+  return <div>{/* 실제 컨텐츠 */}</div>
+}
+```
+
+## **성능 최적화**
+
+### **지연 로딩 (Lazy Loading)**
+```tsx
+// ✅ DO: 복잡한 컴포넌트는 지연 로딩
+import { lazy, Suspense } from 'react'
+
+const PatientManagement = lazy(() => import('@/pages/PatientManagement'))
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/patients" element={<PatientManagement />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </Suspense>
+  )
+}
+```
+
+## **통합 테스트 체크리스트**
+
+### **각 단계별 확인사항**
+1. **기본 레이아웃**
+   - [ ] 페이지가 렌더링되는가?
+   - [ ] 콘솔 에러가 없는가?
+
+2. **라우팅 추가**
+   - [ ] 각 경로로 이동이 되는가?
+   - [ ] URL이 올바르게 변경되는가?
+
+3. **Header 추가**
+   - [ ] Header가 모든 페이지에서 보이는가?
+   - [ ] 검색, 알림, 프로필 기능이 작동하는가?
+
+4. **Sidebar 추가**
+   - [ ] 네비게이션 메뉴가 작동하는가?
+   - [ ] 모바일에서도 정상 작동하는가?
+
+5. **페이지 컴포넌트**
+   - [ ] 각 페이지가 에러 없이 로드되는가?
+   - [ ] 데이터가 올바르게 표시되는가?
+   - [ ] 사용자 인터랙션이 작동하는가?
+
+## **문제 발생 시 대응**
+
+### **롤백 전략**
+```tsx
+// 문제 발생 시 이전 단계로 롤백
+// 예: Sidebar 추가 후 문제 → Header만 있는 버전으로 롤백
+const App_Rollback = () => (
+  <Router>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <main className="p-6">
+        <Routes>...</Routes>
+      </main>
+    </div>
+  </Router>
+)
+```
+
+### **격리 테스트**
+```tsx
+// 문제 컴포넌트 격리 테스트
+const TestComponent = () => (
+  <div>
+    <PatientManagement />  {/* 문제가 되는 컴포넌트만 테스트 */}
+  </div>
+)
+```
+
+이러한 단계적 접근법으로 안정적인 컴포넌트 통합이 가능합니다.

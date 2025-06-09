@@ -1,0 +1,171 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 환경 변수 및 .env 파일 처리 규칙
+
+## **AI 접근 제한 사항**
+
+### **.env 파일 접근 불가**
+- **`.env` 파일은 `.gitignore`에 포함되어 AI가 직접 읽을 수 없음**
+- **환경 변수가 올바르게 설정되어 있다고 가정하고 작업 진행**
+
+```bash
+# ❌ DON'T: .env 파일에 접근하려고 시도
+cat .env
+touch .env
+
+# ✅ DO: 환경 변수 상태를 간접적으로 확인
+console.log('Environment check:', !!process.env.VITE_SUPABASE_URL)
+```
+
+## **환경 변수 진단 방법**
+
+### **브라우저 콘솔 활용**
+- **런타임에서 환경 변수 상태 확인**
+- [src/lib/env.ts](mdc:src/lib/env.ts) 파일의 `logEnvironmentStatus()` 함수 활용
+
+```typescript
+// ✅ DO: 런타임 환경 변수 확인
+import { logEnvironmentStatus } from '@/lib/env'
+
+// 개발 중 임시 진단
+console.log('🔍 환경 변수 진단 시작...')
+logEnvironmentStatus()
+```
+
+### **연결 테스트 함수 사용**
+```typescript
+// ✅ DO: Supabase 연결 테스트
+import { testSupabaseConnection } from '@/lib/supabase'
+
+testSupabaseConnection().then(isConnected => {
+  if (isConnected) {
+    console.log('✅ Supabase 연결 성공')
+  } else {
+    console.log('❌ Supabase 연결 실패')
+  }
+})
+```
+
+## **Vite 환경 변수 규칙**
+
+### **명명 규칙**
+- **Vite에서는 `VITE_` 접두사 필수**
+- 클라이언트에서 접근 가능한 환경 변수만 `VITE_` 사용
+
+```bash
+# ✅ DO: Vite 프로젝트 환경 변수
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=xxx
+VITE_N8N_WEBHOOK_URL=https://xxx
+
+# ❌ DON'T: VITE_ 접두사 없음 (클라이언트에서 접근 불가)
+SUPABASE_URL=https://xxx.supabase.co
+```
+
+### **필수 환경 변수 목록**
+```bash
+# Supabase 연결
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+
+# AI 워크플로우
+VITE_N8N_WEBHOOK_URL=
+
+# 선택적 (Service Role Key - 서버 사이드용)
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+## **문제 해결 접근법**
+
+### **1단계: 환경 변수 확인 우선**
+```typescript
+// ✅ DO: 환경 변수 부터 확인
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ 환경 변수 누락:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey })
+  return
+}
+```
+
+### **2단계: 연결 테스트**
+```typescript
+// ✅ DO: 실제 연결 테스트 후 문제 진단
+try {
+  const { data, error } = await supabase
+    .from('patients')
+    .select('count')
+    .single()
+    
+  if (error) {
+    console.error('❌ Supabase 연결 에러:', error.message)
+  }
+} catch (err) {
+  console.error('❌ 연결 실패:', err)
+}
+```
+
+## **일반적인 문제와 해결책**
+
+### **RLS (Row Level Security) 이슈**
+```sql
+-- ✅ DO: 테스트용 임시 정책 생성
+CREATE POLICY "temp_anon_read" ON patients
+    FOR SELECT TO anon USING (true);
+
+-- 🔄 나중에 실제 인증 구현 시 제거 필요
+```
+
+### **빈 데이터 반환 문제**
+1. **환경 변수 설정 확인**
+2. **RLS 정책 확인**
+3. **데이터베이스에 실제 데이터 존재 확인**
+4. **네트워크 연결 확인**
+
+## **개발 환경 베스트 프랙티스**
+
+### **환경 변수 검증**
+```typescript
+// ✅ DO: 환경 변수 필수 검증
+const requiredEnvVars = {
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+}
+
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([_, value]) => !value)
+  .map(([key]) => key)
+
+if (missingVars.length > 0) {
+  throw new Error(`환경 변수 누락: ${missingVars.join(', ')}`)
+}
+```
+
+### **에러 처리 및 Fallback**
+```typescript
+// ✅ DO: 환경 변수 문제 시 명확한 에러 메시지
+if (!supabaseUrl) {
+  return {
+    error: '환경 변수 VITE_SUPABASE_URL이 설정되지 않았습니다.',
+    suggestion: '.env 파일의 환경 변수를 확인해주세요.'
+  }
+}
+```
+
+## **사용자와의 소통 가이드라인**
+
+### **DO**
+- 환경 변수가 설정되어 있다고 가정하고 코드 작성
+- 브라우저 콘솔을 통한 진단 요청
+- 구체적인 에러 메시지 기반 해결책 제시
+
+### **DON'T**
+- ".env 파일을 만들어야 한다" 반복 언급
+- ".env 파일에 접근할 수 없다" 반복 설명
+- 이미 확인된 환경 변수 설정을 다시 의심
+
+**참고**: [vite-project.mdc](mdc:.cursor/rules/vite-project.mdc)와 [debugging.mdc](mdc:.cursor/rules/debugging.mdc)의 관련 규칙들도 함께 참조하세요.

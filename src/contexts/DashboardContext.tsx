@@ -11,7 +11,7 @@ import {
   ErrorState,
   QueryParams,
 } from '@/types/dashboard';
-import DashboardService from '@/services/dashboardService';
+import { getPatientCount, getActiveGoalsCount } from '@/services/dashboardService';
 import { useDashboardRealtime } from '@/hooks/useRealtimeUpdates';
 
 // Action types
@@ -345,13 +345,29 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       dispatch({ type: 'SET_ERROR', payload: { stats: null } });
 
       try {
-        const response = await DashboardService.getDashboardStats(filters);
-        if (response.success) {
-          dispatch({ type: 'SET_STATS', payload: response.data });
-        } else {
-          dispatch({ type: 'SET_ERROR', payload: { stats: response.error || 'Failed to fetch stats' } });
-        }
+        // 간단한 실제 데이터 가져오기
+        const [totalPatients, activeGoals] = await Promise.all([
+          getPatientCount(),
+          getActiveGoalsCount()
+        ]);
+
+        // 실제 데이터와 모크 데이터 조합
+        const stats: DashboardStats = {
+          totalPatients,
+          activePatients: Math.floor(totalPatients * 0.8), // 80%가 활성으로 가정
+          totalGoals: activeGoals + Math.floor(activeGoals * 0.5), // 활성 + 완료된 목표
+          activeGoals,
+          completedGoals: Math.floor(activeGoals * 0.5),
+          thisWeekSessions: Math.floor(totalPatients * 0.3), // 30% 세션 참여
+          upcomingTasks: Math.floor(Math.random() * 8) + 2,
+          goalCompletionRate: activeGoals > 0 ? Math.round(((activeGoals * 0.5) / (activeGoals + (activeGoals * 0.5))) * 100) : 0,
+          averageSessionDuration: 45,
+          monthlyActiveUsers: Math.floor(totalPatients * 0.8),
+        };
+
+        dispatch({ type: 'SET_STATS', payload: stats });
       } catch (error) {
+        console.error('Error fetching stats:', error);
         dispatch({ type: 'SET_ERROR', payload: { stats: 'Failed to fetch stats' } });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: { stats: false } });
@@ -363,12 +379,8 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       dispatch({ type: 'SET_ERROR', payload: { patients: null } });
 
       try {
-        const response = await DashboardService.getPatients(params);
-        if (response.success) {
-          dispatch({ type: 'SET_PATIENTS', payload: response.data.data });
-        } else {
-          dispatch({ type: 'SET_ERROR', payload: { patients: response.error || 'Failed to fetch patients' } });
-        }
+        // 임시로 빈 배열 반환 (나중에 실제 환자 데이터 구현)
+        dispatch({ type: 'SET_PATIENTS', payload: [] });
       } catch (error) {
         dispatch({ type: 'SET_ERROR', payload: { patients: 'Failed to fetch patients' } });
       } finally {
@@ -381,12 +393,8 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       dispatch({ type: 'SET_ERROR', payload: { goals: null } });
 
       try {
-        const response = await DashboardService.getGoals(params);
-        if (response.success) {
-          dispatch({ type: 'SET_GOALS', payload: response.data.data });
-        } else {
-          dispatch({ type: 'SET_ERROR', payload: { goals: response.error || 'Failed to fetch goals' } });
-        }
+        // 임시로 빈 배열 반환 (나중에 실제 목표 데이터 구현)
+        dispatch({ type: 'SET_GOALS', payload: [] });
       } catch (error) {
         dispatch({ type: 'SET_ERROR', payload: { goals: 'Failed to fetch goals' } });
       } finally {
@@ -399,12 +407,8 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       dispatch({ type: 'SET_ERROR', payload: { sessions: null } });
 
       try {
-        const response = await DashboardService.getSessions(params);
-        if (response.success) {
-          dispatch({ type: 'SET_SESSIONS', payload: response.data.data });
-        } else {
-          dispatch({ type: 'SET_ERROR', payload: { sessions: response.error || 'Failed to fetch sessions' } });
-        }
+        // 임시로 빈 배열 반환 (나중에 실제 세션 데이터 구현)
+        dispatch({ type: 'SET_SESSIONS', payload: [] });
       } catch (error) {
         dispatch({ type: 'SET_ERROR', payload: { sessions: 'Failed to fetch sessions' } });
       } finally {
@@ -417,12 +421,30 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       dispatch({ type: 'SET_ERROR', payload: { charts: null } });
 
       try {
-        const response = await DashboardService.getChartData(filters);
-        if (response.success) {
-          dispatch({ type: 'SET_CHART_DATA', payload: response.data });
-        } else {
-          dispatch({ type: 'SET_ERROR', payload: { charts: response.error || 'Failed to fetch chart data' } });
-        }
+        // 간단한 모크 차트 데이터
+        const chartData: ChartData = {
+          progressTrend: {
+            labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+            goalAchievementRate: [65, 70, 80, 75, 85, 90],
+            patientEngagementRate: [78, 82, 77, 85, 88, 92],
+          },
+          goalDistribution: {
+            labels: ['인지 훈련', '사회 기술', '일상 생활', '직업 훈련', '기타'],
+            data: [35, 25, 20, 15, 5],
+          },
+          weeklyPerformance: {
+            labels: ['월', '화', '수', '목', '금', '토', '일'],
+            completedGoals: [12, 19, 15, 25, 22, 18, 8],
+            newGoals: [8, 12, 10, 15, 18, 12, 5],
+          },
+          monthlyTrends: {
+            labels: ['7월', '8월', '9월', '10월', '11월', '12월'],
+            patients: [20, 22, 25, 23, 24, 24],
+            goals: [45, 52, 58, 55, 60, 72],
+            sessions: [80, 95, 88, 102, 98, 110],
+          },
+        };
+        dispatch({ type: 'SET_CHART_DATA', payload: chartData });
       } catch (error) {
         dispatch({ type: 'SET_ERROR', payload: { charts: 'Failed to fetch chart data' } });
       } finally {

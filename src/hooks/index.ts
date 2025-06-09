@@ -1,6 +1,9 @@
 // Custom hooks exports
 // This file serves as the central export point for all custom React hooks
 
+// Progress tracking hooks
+export * from './useProgressTracking'
+
 // Authentication hooks
 // export * from './auth'
 

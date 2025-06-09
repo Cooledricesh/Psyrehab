@@ -1,0 +1,318 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Vite React 프로젝트 관리
+
+## **Vite vs Next.js 구분**
+
+### **포트 및 개발 서버**
+```bash
+# ✅ DO: Vite 프로젝트에서 올바른 포트 사용
+npm run dev          # Vite: localhost:5173
+npm run preview      # Vite: localhost:4173
+
+# ❌ DON'T: Next.js 포트와 혼동
+# localhost:3000 (Next.js 기본 포트)
+```
+
+### **설정 파일 구분**
+```typescript
+// ✅ DO: Vite 설정 (vite.config.ts)
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    port: 5173,
+    host: true
+  }
+})
+
+// ❌ DON'T: Next.js 설정과 혼동
+// next.config.js 파일은 Vite에서 사용하지 않음
+```
+
+## **Import 경로 설정**
+
+### **Path Alias 구성**
+프로젝트의 [vite.config.ts](mdc:vite.config.ts)에서 alias 설정 확인
+
+```typescript
+// vite.config.ts에서 설정
+resolve: {
+  alias: {
+    '@': path.resolve(__dirname, './src'),
+  },
+},
+```
+
+### **올바른 Import 사용**
+```tsx
+// ✅ DO: @ alias 사용
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Header } from "@/components/layout/Header"
+
+// ❌ DON'T: 절대 경로 사용 (Vite에서 작동하지 않음)
+import { cn } from "src/lib/utils"
+import { Button } from "src/components/ui/button"
+```
+
+### **TypeScript 경로 매핑**
+[tsconfig.json](mdc:tsconfig.json)에서 paths 설정 확인
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+## **환경 변수 관리**
+
+### **Vite 환경 변수 규칙**
+```bash
+# ✅ DO: VITE_ 접두사 사용 (클라이언트에서 접근 가능)
+VITE_API_URL=http://localhost:3000/api
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+
+# ✅ DO: 서버 사이드만 (VITE_ 접두사 없음)
+DATABASE_URL=your_database_url
+SUPABASE_SERVICE_KEY=your_service_key
+```
+
+### **환경 변수 접근**
+```tsx
+// ✅ DO: Vite 환경 변수 접근
+const apiUrl = import.meta.env.VITE_API_URL
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+
+// ❌ DON'T: Next.js 방식 사용
+const apiUrl = process.env.NEXT_PUBLIC_API_URL  // Vite에서 작동하지 않음
+```
+
+## **빌드 및 배포**
+
+### **빌드 명령어**
+```bash
+# ✅ DO: Vite 빌드 명령어
+npm run build        # 프로덕션 빌드
+npm run preview      # 빌드 결과 미리보기
+
+# ❌ DON'T: Next.js 명령어 혼동
+npm run start        # Next.js에서만 사용
+```
+
+### **빌드 출력 디렉토리**
+```typescript
+// vite.config.ts
+export default defineConfig({
+  build: {
+    outDir: 'dist',        // Vite 기본값
+    sourcemap: true,
+  },
+})
+
+// Next.js는 .next/ 디렉토리 사용 (다름)
+```
+
+## **개발 도구 및 HMR**
+
+### **Hot Module Replacement**
+```tsx
+// ✅ DO: Vite HMR 활용
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+// Vite는 자동으로 HMR 제공
+```
+
+### **개발 서버 설정**
+```typescript
+// vite.config.ts에서 개발 서버 커스터마이징
+server: {
+  port: 5173,
+  host: true,           // 네트워크 접근 허용
+  open: true,           # 자동으로 브라우저 열기
+  cors: true,           # CORS 활성화
+}
+```
+
+## **Static Assets 처리**
+
+### **Public 폴더 사용**
+```typescript
+// ✅ DO: public 폴더의 파일 참조
+<img src="/logo.svg" alt="Logo" />
+<link rel="icon" href="/favicon.ico" />
+
+// ❌ DON'T: src 폴더의 static assets
+<img src="./assets/logo.svg" />  // 동적 import 필요
+```
+
+### **동적 Assets Import**
+```tsx
+// ✅ DO: src 폴더의 assets는 import
+import logo from '@/assets/logo.svg'
+import profileImg from '@/assets/images/profile.jpg'
+
+function Header() {
+  return (
+    <div>
+      <img src={logo} alt="Logo" />
+      <img src={profileImg} alt="Profile" />
+    </div>
+  )
+}
+```
+
+## **플러그인 및 확장**
+
+### **주요 Vite 플러그인**
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    // 추가 플러그인들...
+  ],
+})
+```
+
+### **자주 사용하는 플러그인들**
+```bash
+# PWA 지원
+npm install vite-plugin-pwa
+
+# Bundle 분석
+npm install rollup-plugin-visualizer
+
+# ESLint 통합
+npm install vite-plugin-eslint
+```
+
+## **성능 최적화**
+
+### **Code Splitting**
+```tsx
+// ✅ DO: Lazy loading으로 코드 분할
+import { lazy, Suspense } from 'react'
+
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const PatientManagement = lazy(() => import('@/pages/PatientManagement'))
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/patients" element={<PatientManagement />} />
+      </Routes>
+    </Suspense>
+  )
+}
+```
+
+### **Bundle 최적화**
+```typescript
+// vite.config.ts
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'react-vendor': ['react', 'react-dom'],
+        'router-vendor': ['react-router-dom'],
+        'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+      }
+    }
+  }
+}
+```
+
+## **문제 해결**
+
+### **일반적인 문제들**
+
+1. **Import 경로 오류**
+   ```bash
+   # 에러: Cannot resolve module
+   # 해결: @ alias 설정 확인, tsconfig.json paths 확인
+   ```
+
+2. **환경 변수 접근 불가**
+   ```bash
+   # 에러: undefined
+   # 해결: VITE_ 접두사 확인, import.meta.env 사용
+   ```
+
+3. **포트 충돌**
+   ```bash
+   # 에러: Port 5173 is already in use
+   # 해결: 다른 Vite 프로세스 종료 또는 다른 포트 사용
+   ```
+
+### **디버깅 도구**
+```bash
+# 개발 서버 로그 확인
+npm run dev -- --debug
+
+# 빌드 분석
+npm run build -- --debug
+npx vite-bundle-analyzer dist
+```
+
+## **Vite 특화 Best Practices**
+
+### **개발 환경 설정**
+```typescript
+// ✅ DO: 개발/프로덕션 구분
+const isDev = import.meta.env.DEV
+const isProd = import.meta.env.PROD
+
+if (isDev) {
+  console.log('개발 모드에서만 표시')
+}
+```
+
+### **타입 안전성**
+```typescript
+// ✅ DO: 환경 변수 타입 정의
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string
+  readonly VITE_SUPABASE_URL: string
+  readonly VITE_SUPABASE_ANON_KEY: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+```
+
+이러한 Vite 특화 설정을 통해 안정적인 개발 환경을 구축할 수 있습니다.

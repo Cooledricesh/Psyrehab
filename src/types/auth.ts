@@ -1,4 +1,4 @@
-import type { User, Session } from '@supabase/supabase-js'
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import type { Database } from './supabase'
 
 // Database table types
@@ -50,7 +50,7 @@ export type AnyUserProfile = SocialWorkerProfile | AdministratorProfile | Patien
 
 // Authentication state
 export interface AuthState {
-  user: User | null
+  user: SupabaseUser | null
   session: Session | null
   profile: AnyUserProfile | null
   loading: boolean
@@ -121,9 +121,59 @@ export type Permission =
   | 'report:read'
   | 'report:export'
 
+// All permissions array
+const ALL_PERMISSIONS: Permission[] = [
+  'manage_users',
+  'manage_social_workers',
+  'manage_patients',
+  'view_all_data',
+  'manage_system_settings',
+  'view_analytics',
+  'manage_goals',
+  'manage_assessments',
+  'manage_services',
+  'manage_assigned_patients',
+  'create_goals',
+  'update_goals',
+  'view_patient_data',
+  'create_assessments',
+  'view_own_analytics',
+  'view_own_data',
+  'update_own_profile',
+  'view_own_goals',
+  'submit_check_ins',
+  'user:create',
+  'user:read',
+  'user:update',
+  'user:delete',
+  'patient:create',
+  'patient:read',
+  'patient:update',
+  'patient:delete',
+  'session:create',
+  'session:read',
+  'session:update',
+  'session:delete',
+  'system:config:read',
+  'system:config:update',
+  'system:logs:read',
+  'system:backup:create',
+  'system:backup:restore',
+  'announcement:create',
+  'announcement:read',
+  'announcement:update',
+  'announcement:delete',
+  'assessment:create',
+  'assessment:read',
+  'assessment:update',
+  'assessment:delete',
+  'report:read',
+  'report:export'
+]
+
 // Role permissions mapping
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  super_admin: Object.values(Permission),
+  super_admin: ALL_PERMISSIONS,
   admin: [
     'user:create',
     'user:read',
@@ -275,7 +325,7 @@ export interface UsePermissionsReturn {
 // Auth action types for reducers
 export type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_USER'; payload: User | null }
+  | { type: 'SET_USER'; payload: SupabaseUser | null }
   | { type: 'SET_SESSION'; payload: Session | null }
   | { type: 'SET_PROFILE'; payload: AnyUserProfile | null }
   | { type: 'SET_INITIALIZED'; payload: boolean }
@@ -358,18 +408,4 @@ export const hasAllPermissions = (userPermissions: Permission[], requiredPermiss
   return requiredPermissions.every(permission => userPermissions.includes(permission));
 };
 
-export default {
-  User,
-  UserRole,
-  Permission,
-  UserStatus,
-  AuthState,
-  LoginCredentials,
-  RegisterData,
-  PasswordResetData,
-  ROLE_PERMISSIONS,
-  isAdminRole,
-  hasPermission,
-  hasAnyPermission,
-  hasAllPermissions,
-}; 
+ 

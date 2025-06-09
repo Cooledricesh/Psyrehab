@@ -19,8 +19,8 @@
       "command": "npx",
       "args": ["-y", "--package=@hrishioa/supabase-mcp", "supabase-mcp"],
       "env": {
-        "SUPABASE_URL": "https://yvkfrqtdmkdczldfxcgi.supabase.co",
-        "SUPABASE_SERVICE_ROLE_KEY": "YOUR_SERVICE_ROLE_KEY_HERE"
+        "SUPABASE_URL": "https://jsilzrsiieswiskzcriy.supabase.co",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzaWx6cnNpaWVzd2lza3pjcml5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODcwNDA2MywiZXhwIjoyMDY0MjgwMDYzfQ.eOV7xEkonxltVxAlFTS6C_jxtgxjasckIYKQlXZBIPU"
       }
     }
   }

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { SimpleDashboard } from '@/components/dashboard/SimpleDashboard'
 
 // 실제 페이지 컴포넌트들
 import Home from '@/pages/Home'
@@ -8,7 +9,10 @@ import GoalSetting from '@/pages/GoalSetting'
 import ProgressTracking from '@/pages/ProgressTracking'
 import Reports from '@/pages/Reports'
 import Settings from '@/pages/Settings'
-// import PatientManagement from '@/pages/PatientManagement'  // 임시 비활성화
+import PatientManagement from '@/pages/PatientManagement'
+import { SystemLogs } from '@/pages/admin/SystemLogs'
+import { BackupRestore } from '@/pages/admin/BackupRestore'
+import AnnouncementsManagement from '@/pages/admin/AnnouncementsManagement'
 
 // 임시 환자 관리 (Supabase 문제 해결 후 실제 컴포넌트 사용)
 function SimplePatientManagement() {
@@ -91,40 +95,7 @@ function SimplePatientManagement() {
   )
 }
 
-// 임시 대시보드 (실제 Dashboard는 복잡해서 단계적으로 추가)
-function SimpleDashboard() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">대시보드</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">총 환자 수</h3>
-          <p className="text-3xl font-bold text-blue-600">127</p>
-          <p className="text-sm text-gray-500 mt-1">이번 달 +12</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">활성 목표</h3>
-          <p className="text-3xl font-bold text-green-600">58</p>
-          <p className="text-sm text-gray-500 mt-1">진행 중인 목표</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">이번 주 세션</h3>
-          <p className="text-3xl font-bold text-purple-600">32</p>
-          <p className="text-sm text-gray-500 mt-1">완료된 세션</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">완료율</h3>
-          <p className="text-3xl font-bold text-orange-600">78%</p>
-          <p className="text-sm text-gray-500 mt-1">목표 달성률</p>
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">최근 활동</h2>
-        <p className="text-gray-600">최근 환자 활동 및 진행 상황이 여기에 표시됩니다.</p>
-      </div>
-    </div>
-  )
-}
+// SimpleDashboard는 별도 컴포넌트로 분리함
 
 function App() {
   return (
@@ -137,11 +108,14 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/dashboard" element={<SimpleDashboard />} />
-              <Route path="/patient-management" element={<SimplePatientManagement />} />
+              <Route path="/patient-management" element={<PatientManagement />} />
               <Route path="/goal-setting" element={<GoalSetting />} />
               <Route path="/progress-tracking" element={<ProgressTracking />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/admin/logs" element={<SystemLogs />} />
+              <Route path="/admin/backup-restore" element={<BackupRestore />} />
+              <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
             </Routes>
           </main>
         </div>

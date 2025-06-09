@@ -145,8 +145,7 @@ export function PatientList({ onPatientSelect, onPatientEdit, onPatientDelete }:
               <option value="created_at_asc">등록일 (오래된순)</option>
               <option value="full_name_asc">이름 (가나다순)</option>
               <option value="full_name_desc">이름 (역순)</option>
-              <option value="admission_date_desc">입원일 (최신순)</option>
-              <option value="admission_date_asc">입원일 (오래된순)</option>
+              
             </Select>
           </div>
         </div>
@@ -190,12 +189,7 @@ export function PatientList({ onPatientSelect, onPatientEdit, onPatientDelete }:
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   성별
                 </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('admission_date')}
-                >
-                  입원일 {getSortIcon('admission_date')}
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   담당 사회복지사
                 </th>
@@ -229,9 +223,7 @@ export function PatientList({ onPatientSelect, onPatientEdit, onPatientDelete }:
                      patient.gender === 'female' ? '여성' : 
                      patient.gender === 'other' ? '기타' : '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {patient.admission_date ? formatDate(patient.admission_date) : '-'}
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {patient.primary_social_worker?.full_name || '미배정'}
                   </td>

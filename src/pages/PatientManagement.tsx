@@ -1,228 +1,369 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Link } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
-
-interface Patient {
-  id: string
-  name: string
-  age?: number
-  birth_date?: string
-  gender?: string
-  diagnosis: string
-  registration_date?: string
-  created_at?: string
-  status: 'active' | 'inactive' | 'completed'
-}
+import { getPatients, getPatientStats, updatePatientStatus } from '@/services/patient-management'
+import type { Patient, PatientStats } from '@/services/patient-management'
+import PatientRegistrationModal from '@/components/PatientRegistrationModal'
+import PatientDetailModal from '@/components/PatientDetailModal'
+import PatientEditModal from '@/components/PatientEditModal'
 
 export default function PatientManagement() {
   const [patients, setPatients] = useState<Patient[]>([])
+  const [stats, setStats] = useState<PatientStats>({
+    totalPatients: 0,
+    activePatients: 0,
+    inactivePatients: 0,
+    completedPatients: 0
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // 모달 상태 관리
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchPatients()
+    fetchData()
   }, [])
 
-  const fetchPatients = async () => {
+  const fetchData = async () => {
     try {
-      // Try to fetch from Supabase with basic query first
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-
-      if (error) {
-        console.error('Error fetching patients:', error)
-        setError('환자 데이터를 가져오는데 실패했습니다.')
-        
-        // Use fallback mock data
-        setPatients([
-          {
-            id: '1',
-            name: '김○○',
-            age: 28,
-            diagnosis: '조현병',
-            registration_date: '2024-01-15',
-            status: 'active'
-          },
-          {
-            id: '2',
-            name: '이○○',
-            age: 34,
-            diagnosis: '양극성 장애',
-            registration_date: '2024-02-20',
-            status: 'active'
-          },
-          {
-            id: '3',
-            name: '박○○',
-            age: 31,
-            diagnosis: '우울증',
-            registration_date: '2024-03-10',
-            status: 'inactive'
-          },
-          {
-            id: '4',
-            name: '최○○',
-            age: 25,
-            diagnosis: '사회불안장애',
-            registration_date: '2024-03-25',
-            status: 'active'
-          }
-        ])
-      } else if (data && data.length > 0) {
-        // Process real data and ensure proper format
-        const processedData = data.map(patient => ({
-          id: patient.id?.toString() || '',
-          name: patient.name || '이름 없음',
-          age: patient.age || (patient.birth_date ? calculateAge(patient.birth_date) : undefined),
-          diagnosis: patient.diagnosis || '진단 없음',
-          registration_date: patient.registration_date || patient.created_at || new Date().toISOString().split('T')[0],
-          status: patient.status || 'active'
-        }))
-        
-        // Sort by registration_date if available, otherwise by id
-        processedData.sort((a, b) => {
-          const dateA = new Date(a.registration_date || '1900-01-01')
-          const dateB = new Date(b.registration_date || '1900-01-01')
-          return dateB.getTime() - dateA.getTime()
-        })
-        
-        setPatients(processedData)
-        setError(null)
-      } else {
-        // No data but no error - show empty state
-        setPatients([])
-        setError(null)
-      }
-    } catch (err) {
-      console.error('Error:', err)
-      setError('데이터를 가져오는 중 오류가 발생했습니다.')
+      setLoading(true)
+      console.log('🔍 환자 데이터 가져오기 시작...')
       
-      // Use fallback mock data
-      setPatients([
-        {
-          id: '1',
-          name: '김○○',
-          age: 28,
-          diagnosis: '조현병',
-          registration_date: '2024-01-15',
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: '이○○',
-          age: 34,
-          diagnosis: '양극성 장애',
-          registration_date: '2024-02-20',
-          status: 'active'
-        }
+      // 환자 목록과 통계를 병렬로 가져오기
+      const [patientsResult, statsResult] = await Promise.all([
+        getPatients(),
+        getPatientStats()
       ])
+
+      console.log('✅ 환자 목록 로드 성공:', patientsResult.length, '명')
+      console.log('✅ 환자 통계 로드 성공:', statsResult)
+
+      setPatients(patientsResult)
+      setStats(statsResult)
+      setError(null)
+    } catch (err: any) {
+      console.error('❌ 환자 데이터 로드 실패:', err)
+      setError(err.message || '환자 데이터를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
   }
 
-  const calculateAge = (birthDate: string) => {
-    const today = new Date()
-    const birth = new Date(birthDate)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDifference = today.getMonth() - birth.getMonth()
-    
-    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birth.getDate())) {
-      age--
-    }
-    
-    return age
+  // 모달 핸들러들
+  const handleViewDetail = (patientId: string) => {
+    setSelectedPatientId(patientId)
+    setIsDetailModalOpen(true)
   }
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      active: { label: '활성', class: 'bg-green-100 text-green-800' },
-      inactive: { label: '비활성', class: 'bg-yellow-100 text-yellow-800' },
-      completed: { label: '완료', class: 'bg-blue-100 text-blue-800' }
+  const handleEditPatient = (patientId: string) => {
+    setSelectedPatientId(patientId)
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditFromDetail = () => {
+    setIsDetailModalOpen(false)
+    setIsEditModalOpen(true)
+  }
+
+  const handleStatusChange = async (patientId: string, newStatus: string) => {
+    try {
+      // UI 상태를 DB 상태로 변환
+      let dbStatus: 'active' | 'inactive' | 'discharged'
+      if (newStatus === 'completed') {
+        dbStatus = 'discharged'
+      } else if (newStatus === 'inactive') {
+        dbStatus = 'inactive'
+      } else {
+        dbStatus = 'active'
+      }
+      
+      await updatePatientStatus(patientId, dbStatus)
+      await fetchData() // 데이터 새로고침
+    } catch (error) {
+      console.error('상태 변경 실패:', error)
+      alert('상태 변경에 실패했습니다. 다시 시도해주세요.')
     }
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.active
+  }
+
+  const handleCloseModals = () => {
+    setIsRegistrationModalOpen(false)
+    setIsDetailModalOpen(false)
+    setIsEditModalOpen(false)
+    setSelectedPatientId(null)
+  }
+
+  const handleRefreshData = () => {
+    fetchData()
+  }
+
+  const getGenderText = (gender: string) => {
+    if (!gender) return '정보 없음'
+    
+    switch (gender.toLowerCase()) {
+      case 'male':
+      case 'm':
+      case '남성':
+      case '남':
+      case 'man':
+      case '1':
+        return '남성'
+      case 'female':
+      case 'f':
+      case '여성':
+      case '여':
+      case 'woman':
+      case '2':
+        return '여성'
+      case 'other':
+      case '기타':
+      case '0':
+        return '기타'
+      default:
+        return gender
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active':
+        return '활성'
+      case 'inactive':
+        return '비활성'
+      case 'completed':
+        return '완료'
+      default:
+        return '알 수 없음'
+    }
+  }
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800'
+      case 'inactive':
+        return 'bg-red-100 text-red-800'
+      case 'completed':
+        return 'bg-blue-100 text-blue-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  if (loading) {
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.class}`}>
-        {config.label}
-      </span>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-600">환자 데이터를 불러오는 중...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center">
+        <div className="text-red-600 mb-4">{error}</div>
+        <Button onClick={fetchData} variant="outline">다시 시도</Button>
+      </div>
     )
   }
 
   return (
     <div className="space-y-6">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">환자 관리</h1>
-          <p className="text-gray-600">등록된 환자들을 관리하고 정보를 확인하세요</p>
-        </header>
-        
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">환자 목록</h2>
-              <Button>+ 새 환자 등록</Button>
+      {/* 페이지 헤더 */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">환자 관리</h1>
+          <p className="text-gray-600 mt-1">등록된 환자들을 조회하고 관리할 수 있습니다.</p>
+        </div>
+        <Button onClick={() => setIsRegistrationModalOpen(true)}>
+          새 환자 등록
+        </Button>
+      </div>
+
+      {/* 통계 카드 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600">전체 환자</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalPatients}</p>
+            </div>
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
             </div>
           </div>
-          
-          <div className="p-6">
-            {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">데이터를 불러오는 중...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-8">
-                <p className="text-red-500 mb-4">{error}</p>
-                <p className="text-sm text-gray-500">
-                  아래는 개발용 샘플 데이터입니다.
-                </p>
-              </div>
-            ) : null}
-            
-            {patients.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4">이름</th>
-                      <th className="text-left py-3 px-4">나이</th>
-                      <th className="text-left py-3 px-4">진단</th>
-                      <th className="text-left py-3 px-4">등록일</th>
-                      <th className="text-left py-3 px-4">상태</th>
-                      <th className="text-left py-3 px-4">작업</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {patients.map((patient) => (
-                      <tr key={patient.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium">{patient.name}</td>
-                        <td className="py-3 px-4">
-                          {patient.age ? `${patient.age}세` : '나이 정보 없음'}
-                        </td>
-                        <td className="py-3 px-4">{patient.diagnosis}</td>
-                        <td className="py-3 px-4">
-                          {patient.registration_date || '날짜 정보 없음'}
-                        </td>
-                        <td className="py-3 px-4">{getStatusBadge(patient.status)}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">상세보기</Button>
-                            <Button variant="outline" size="sm">편집</Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">등록된 환자가 없습니다.</p>
-                <Button>첫 번째 환자 등록하기</Button>
-              </div>
-            )}
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600">활성 환자</p>
+              <p className="text-2xl font-bold text-green-600">{stats.activePatients}</p>
+            </div>
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
           </div>
         </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600">비활성 환자</p>
+              <p className="text-2xl font-bold text-red-600">{stats.inactivePatients}</p>
+            </div>
+            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600">완료 환자</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.completedPatients}</p>
+            </div>
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 환자 목록 테이블 */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">환자 목록</h2>
+        </div>
+        
+        {patients.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">등록된 환자가 없습니다.</p>
+            <Button 
+              onClick={() => setIsRegistrationModalOpen(true)}
+              className="mt-4"
+            >
+              첫 번째 환자 등록하기
+            </Button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    환자명
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    나이
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    성별
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    진단명
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    등록일
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    상태
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    작업
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {patients.map((patient) => (
+                  <tr key={patient.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{patient.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {patient.age ? `${patient.age}세` : '정보 없음'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{getGenderText(patient.gender || '')}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{patient.diagnosis}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{patient.registration_date}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={patient.status}
+                        onChange={(e) => handleStatusChange(patient.id, e.target.value)}
+                        className={`text-xs font-semibold rounded px-2 py-1 border-none ${getStatusBadgeColor(patient.status)}`}
+                      >
+                        <option value="active">활성</option>
+                        <option value="inactive">비활성</option>
+                        <option value="completed">완료</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewDetail(patient.id)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          상세보기
+                        </button>
+                        <button
+                          onClick={() => handleEditPatient(patient.id)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          편집
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* 모달들 */}
+      <PatientRegistrationModal
+        isOpen={isRegistrationModalOpen}
+        onClose={handleCloseModals}
+        onSuccess={handleRefreshData}
+      />
+
+      {selectedPatientId && (
+        <>
+          <PatientDetailModal
+            isOpen={isDetailModalOpen}
+            onClose={handleCloseModals}
+            patientId={selectedPatientId}
+            onEdit={handleEditFromDetail}
+          />
+
+          <PatientEditModal
+            isOpen={isEditModalOpen}
+            onClose={handleCloseModals}
+            patientId={selectedPatientId}
+            onSuccess={handleRefreshData}
+          />
+        </>
+      )}
     </div>
   )
 } 

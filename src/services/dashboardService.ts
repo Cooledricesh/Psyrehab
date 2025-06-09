@@ -1,17 +1,31 @@
 import { supabase } from '@/lib/supabase';
-import {
-  Patient,
-  Goal,
-  Session,
-  DashboardStats,
-  ChartData,
-  ApiResponse,
-  PaginatedResponse,
-  QueryParams,
-  DashboardFilters,
-  ProgressData,
-} from '@/types/dashboard';
 
+// 간단한 환자 수 가져오기 함수
+export const getPatientCount = async (): Promise<number> => {
+  try {
+    const { data, error } = await supabase.from('patients').select('id');
+    if (error) throw error;
+    return data?.length || 0;
+  } catch (error) {
+    console.error('Error fetching patient count:', error);
+    return 0;
+  }
+};
+
+// 간단한 활성 목표 수 가져오기 함수  
+export const getActiveGoalsCount = async (): Promise<number> => {
+  try {
+    const { data, error } = await supabase.from('goals').select('id').eq('status', 'in_progress');
+    if (error) throw error;
+    return data?.length || 0;
+  } catch (error) {
+    console.error('Error fetching active goals count:', error);
+    return 0;
+  }
+};
+
+// 기존 복잡한 클래스는 주석처리하고 나중에 사용
+/*
 // Dashboard API Service
 export class DashboardService {
   // Stats endpoints
@@ -418,4 +432,15 @@ export class DashboardService {
   }
 }
 
-export default DashboardService; 
+export default DashboardService;
+*/
+
+// 간단한 Supabase 연결 테스트 함수
+export const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('patients').select('count').limit(1);
+    return !error;
+  } catch {
+    return false;
+  }
+}; 

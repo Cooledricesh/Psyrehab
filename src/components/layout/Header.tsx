@@ -4,6 +4,13 @@ import { Search, Bell, User, ChevronDown } from 'lucide-react'
 export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  
+  // 임시로 김사회님 정보 표시
+  const currentUser = {
+    name: '김사회',
+    role: '사회복지사',
+    initial: '김'
+  }
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 h-16 flex items-center justify-between sticky top-0 z-10 shadow-sm">
@@ -43,11 +50,11 @@ export const Header = () => {
             aria-expanded={isProfileOpen}
             aria-haspopup="true"
           >
-                         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              전
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+              {currentUser.initial}
             </div>
             <span className="text-gray-700 font-medium text-sm hidden md:block">
-              전문가님
+              {currentUser.name}님
             </span>
             <ChevronDown
               size={16}

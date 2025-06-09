@@ -124,8 +124,8 @@ export const Sidebar = () => {
 
           <footer className="p-4 border-t border-gray-200">
             <div className="text-center">
-              <p className="font-medium text-sm">전문가님</p>
-              <p className="text-xs text-gray-600">정신건강 전문가</p>
+              <p className="font-medium text-sm">김사회님</p>
+              <p className="text-xs text-gray-600">사회복지사</p>
             </div>
           </footer>
         </div>

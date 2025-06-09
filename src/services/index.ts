@@ -1,6 +1,9 @@
 // Service layer exports
 // This file serves as the central export point for all service modules
 
+// Progress tracking services
+export * from './progress-tracking'
+
 // Authentication services
 // export * from './auth'
 
