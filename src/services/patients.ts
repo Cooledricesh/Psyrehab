@@ -74,15 +74,7 @@ export class PatientService {
 
     let query = supabase
       .from('patients')
-      .select(`
-        *,
-        primary_social_worker:social_workers!primary_social_worker_id(
-          id,
-          full_name,
-          employee_id,
-          department
-        )
-      `)
+      .select('*')
 
     // 검색 필터 적용
     if (filters.search) {

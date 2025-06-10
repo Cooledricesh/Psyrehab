@@ -56,7 +56,7 @@ function transformAssessmentForAI(assessment: any) {
       urgencyLevel: assessment.urgency_level || 'medium'
     },
     // AI 모델이 응답을 보낼 웹훅 URL
-    callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/webhook/n8n`
+    callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://606a-119-201-55-170.ngrok-free.app'}/api/webhook/n8n`
   }
 }
 

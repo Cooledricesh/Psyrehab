@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { SimpleDashboard } from '@/components/dashboard/SimpleDashboard'
@@ -13,6 +14,16 @@ import PatientManagement from '@/pages/PatientManagement'
 import { SystemLogs } from '@/pages/admin/SystemLogs'
 import { BackupRestore } from '@/pages/admin/BackupRestore'
 import AnnouncementsManagement from '@/pages/admin/AnnouncementsManagement'
+
+// QueryClient 인스턴스 생성
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5분
+      retry: 1,
+    },
+  },
+})
 
 // 임시 환자 관리 (Supabase 문제 해결 후 실제 컴포넌트 사용)
 function SimplePatientManagement() {
@@ -99,28 +110,30 @@ function SimplePatientManagement() {
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen flex bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1 p-6 bg-gray-50 overflow-auto">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={<SimpleDashboard />} />
-              <Route path="/patient-management" element={<PatientManagement />} />
-              <Route path="/goal-setting" element={<GoalSetting />} />
-              <Route path="/progress-tracking" element={<ProgressTracking />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/admin/logs" element={<SystemLogs />} />
-              <Route path="/admin/backup-restore" element={<BackupRestore />} />
-              <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
-            </Routes>
-          </main>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <div className="min-h-screen flex bg-gray-50">
+          <Sidebar />
+          <div className="flex-1 flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1 p-6 bg-gray-50 overflow-auto">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/dashboard" element={<SimpleDashboard />} />
+                <Route path="/patient-management" element={<PatientManagement />} />
+                <Route path="/goal-setting" element={<GoalSetting />} />
+                <Route path="/progress-tracking" element={<ProgressTracking />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/admin/logs" element={<SystemLogs />} />
+                <Route path="/admin/backup-restore" element={<BackupRestore />} />
+                <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
+              </Routes>
+            </main>
+          </div>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </QueryClientProvider>
   )
 }
 

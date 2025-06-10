@@ -894,6 +894,72 @@ app.post('/api/webhook/n8n', webhookLimiter, async (req, res) => {
   }
 });
 
+// AI 추천 결과 조회 API (DB에서 직접)
+app.get('/api/patients/:id/ai-response', apiLimiter, async (req, res) => {
+  try {
+    const patientId = req.params.id;
+    console.log(`[ai-response] Patient ${patientId} AI 추천 조회 요청`);
+    
+    // 환자 ID를 UUID로 변환 (필요한 경우)
+    let patientUuid = patientId;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    
+    if (!uuidRegex.test(patientId)) {
+      // String identifier인 경우 UUID 조회
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('patient_identifier', patientId)
+        .single();
+        
+      if (patientError || !patient) {
+        console.log(`[ai-response] ❌ 환자를 찾을 수 없음: ${patientId}`);
+        return res.json(null);
+      }
+      patientUuid = patient.id;
+    }
+
+    // 최신 AI 추천 조회
+    const { data: aiRecommendation, error } = await supabase
+      .from('ai_goal_recommendations')
+      .select('*')
+      .eq('patient_id', patientUuid)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error(`[ai-response] DB 에러:`, error);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (!aiRecommendation) {
+      console.log(`[ai-response] ❌ AI 추천 없음 (Patient: ${patientUuid})`);
+      return res.json(null);
+    }
+
+    // 응답 데이터 포맷팅 (React 앱에서 예상하는 형식으로)
+    const responseData = {
+      goals: aiRecommendation.six_month_goals || [],
+      patientAnalysis: aiRecommendation.patient_analysis || {},
+      monthlyPlans: aiRecommendation.monthly_plans || {},
+      weeklyPlans: aiRecommendation.weekly_plans || {},
+      executionStrategy: aiRecommendation.execution_strategy || {},
+      successIndicators: aiRecommendation.success_indicators || {},
+      timestamp: aiRecommendation.created_at,
+      recommendationId: aiRecommendation.id
+    };
+
+    console.log(`[ai-response] ✅ AI 추천 반환 (goals: ${responseData.goals?.length || 0}개)`);
+    res.json(responseData);
+
+  } catch (error) {
+    console.error(`[ai-response] 에러:`, error);
+    res.status(500).json({ message: 'Error fetching AI response' });
+  }
+});
+
 // AI recommendation status endpoint with API rate limiting
 app.get('/api/ai/recommendation/status/:assessmentId', apiLimiter, (req, res) => {
   const { assessmentId } = req.params;
