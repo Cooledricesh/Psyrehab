@@ -1,6 +1,6 @@
 # Task ID: 15
 # Title: Optimize Performance and Implement Caching
-# Status: pending
+# Status: in-progress
 # Dependencies: 1, 2
 # Priority: medium
 # Description: Enhance application performance through optimization techniques and caching.

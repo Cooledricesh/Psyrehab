@@ -1,322 +1,335 @@
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  getProgressStats, 
-  getPatientProgress, 
-  getWeeklyActivities, 
-  getProgressAlerts,
-  type PatientProgress,
-  type WeeklyActivity,
-  type ProgressAlert
-} from '@/services/progress-tracking'
+  ChevronRight, 
+  ChevronDown, 
+  Target, 
+  Calendar,
+  CheckCircle2,
+  Circle,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  User,
+  Activity
+} from 'lucide-react';
+import { 
+  useActivePatients, 
+  usePatientGoals, 
+  useProgressStats,
+  useWeeklyCheckIns 
+} from '@/hooks/queries/useProgressTracking';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { eventBus, EVENTS } from '@/lib/eventBus';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function ProgressTracking() {
-  const [stats, setStats] = useState({
-    averageProgress: 53,
-    achievementRate: 23,
-    participationRate: 87,
-    trend: 'up' as 'up' | 'down' | 'stable'
-  })
-  const [progressData, setProgressData] = useState<PatientProgress[]>([])
-  const [weeklyActivities, setWeeklyActivities] = useState<WeeklyActivity[]>([])
-  const [alerts, setAlerts] = useState<ProgressAlert[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isProgressLoading, setIsProgressLoading] = useState(true)
-  const [isActivitiesLoading, setIsActivitiesLoading] = useState(true)
-  const [isAlertsLoading, setIsAlertsLoading] = useState(true)
+  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  const [expandedGoals, setExpandedGoals] = useState<Record<string, boolean>>({});
+  const [selectedWeeklyGoal, setSelectedWeeklyGoal] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
+  // 데이터 조회
+  const { data: patients, isLoading: patientsLoading } = useActivePatients();
+  const { data: patientGoals, isLoading: goalsLoading } = usePatientGoals(selectedPatient);
+  const { data: stats, isLoading: statsLoading } = useProgressStats();
+  const { data: weeklyCheckIns } = useWeeklyCheckIns(selectedWeeklyGoal);
+
+  // 환자 상태 변경 이벤트 리스너
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await getProgressStats()
-        setStats(data)
-      } catch (error) {
-        console.error('Failed to fetch progress stats:', error)
-        // 에러 시 기본값 유지
-      } finally {
-        setIsLoading(false)
-      }
-    }
+    const handlePatientStatusChanged = (data: { patientId: string; newStatus: string }) => {
+      console.log('진행 추적: 환자 상태 변경 감지:', data);
+      // 관련 쿼리들 새로고침
+      queryClient.invalidateQueries({ queryKey: ['activePatients'] });
+      queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+      queryClient.invalidateQueries({ queryKey: ['patientGoals'] });
+    };
 
-    fetchStats()
-  }, [])
+    eventBus.on(EVENTS.PATIENT_STATUS_CHANGED, handlePatientStatusChanged);
 
+    return () => {
+      eventBus.off(EVENTS.PATIENT_STATUS_CHANGED, handlePatientStatusChanged);
+    };
+  }, [queryClient]);
+
+  // 첫 번째 환자 자동 선택
   useEffect(() => {
-    const fetchProgressData = async () => {
-      try {
-        const data = await getPatientProgress()
-        setProgressData(data)
-      } catch (error) {
-        console.error('Failed to fetch patient progress:', error)
-        // 에러 시 빈 배열 유지
-        setProgressData([])
-      } finally {
-        setIsProgressLoading(false)
-      }
+    if (patients && patients.length > 0 && !selectedPatient) {
+      setSelectedPatient(patients[0].id);
     }
+  }, [patients, selectedPatient]);
 
-    fetchProgressData()
-  }, [])
+  const toggleGoalExpansion = (goalId: string) => {
+    setExpandedGoals(prev => ({
+      ...prev,
+      [goalId]: !prev[goalId]
+    }));
+  };
 
-  useEffect(() => {
-    const fetchWeeklyActivities = async () => {
-      try {
-        const data = await getWeeklyActivities()
-        setWeeklyActivities(data)
-      } catch (error) {
-        console.error('Failed to fetch weekly activities:', error)
-        setWeeklyActivities([])
-      } finally {
-        setIsActivitiesLoading(false)
-      }
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      active: { label: '진행중', variant: 'default' as const },
+      completed: { label: '완료', variant: 'success' as const },
+      pending: { label: '대기중', variant: 'secondary' as const },
+      on_hold: { label: '보류', variant: 'warning' as const },
+      cancelled: { label: '취소', variant: 'destructive' as const },
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
+    switch (trend) {
+      case 'up': return <TrendingUp className="h-4 w-4 text-green-500" />;
+      case 'down': return <TrendingDown className="h-4 w-4 text-red-500" />;
+      default: return <Minus className="h-4 w-4 text-gray-500" />;
     }
-
-    fetchWeeklyActivities()
-  }, [])
-
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const data = await getProgressAlerts()
-        setAlerts(data)
-      } catch (error) {
-        console.error('Failed to fetch alerts:', error)
-        setAlerts([])
-      } finally {
-        setIsAlertsLoading(false)
-      }
-    }
-
-    fetchAlerts()
-  }, [])
+  };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'bg-green-500'
-    if (progress >= 60) return 'bg-blue-500'
-    if (progress >= 40) return 'bg-yellow-500'
-    return 'bg-red-500'
-  }
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up': return '↗️'
-      case 'down': return '↘️'
-      default: return '➡️'
-    }
-  }
-
-  const getTrendText = (trend: 'up' | 'down' | 'stable') => {
-    switch (trend) {
-      case 'up': return '상승 중'
-      case 'down': return '하락 중'
-      default: return '안정'
-    }
-  }
-
-  const getActivityStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'in-progress': return 'bg-blue-100 text-blue-800'
-      case 'scheduled': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case 'warning': return '⚠️'
-      case 'info': return '📅'
-      case 'success': return '🎉'
-      default: return 'ℹ️'
-    }
-  }
-
-  const getAlertStyle = (type: string) => {
-    switch (type) {
-      case 'warning': return 'bg-yellow-50 border-l-4 border-yellow-400'
-      case 'info': return 'bg-blue-50 border-l-4 border-blue-400'
-      case 'success': return 'bg-green-50 border-l-4 border-green-400'
-      default: return 'bg-gray-50 border-l-4 border-gray-400'
-    }
-  }
+    if (progress >= 80) return 'bg-green-500';
+    if (progress >= 60) return 'bg-blue-500';
+    if (progress >= 40) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
 
   return (
     <div className="space-y-6">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">진행 추적</h1>
-          <p className="text-gray-600">환자별 목표 달성 진행상황을 실시간으로 모니터링하세요</p>
-        </header>
-        
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-2">전체 평균 진행률</h3>
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {isLoading ? '...' : `${stats.averageProgress.toFixed(1)}%`}
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">진행 추적</h1>
+        <p className="text-gray-600">회원 별 목표 달성 진행상황</p>
+      </header>
+
+      {/* 통계 카드 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              전체 평균 진행률
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold">
+                {statsLoading ? '...' : `${stats?.averageProgress.toFixed(1)}%`}
+              </span>
+              {stats && getTrendIcon(stats.trend)}
             </div>
-            <div className="text-sm text-gray-500">
-              {getTrendIcon(stats.trend)} {getTrendText(stats.trend)}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              목표 달성률
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold text-green-600">
+                {statsLoading ? '...' : `${stats?.achievementRate.toFixed(1)}%`}
+              </span>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-2">목표 달성률</h3>
-            <div className="text-3xl font-bold text-green-600 mb-2">
-              {isLoading ? '...' : `${stats.achievementRate.toFixed(1)}%`}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              참여 활성도
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold text-purple-600">
+                {statsLoading ? '...' : `${stats?.participationRate.toFixed(1)}%`}
+              </span>
+              <Activity className="h-4 w-4 text-purple-600" />
             </div>
-            <div className="text-sm text-gray-500">완료된 목표</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-2">참여 활성도</h3>
-            <div className="text-3xl font-bold text-purple-600 mb-2">
-              {isLoading ? '...' : `${stats.participationRate.toFixed(1)}%`}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              활성 회원 수
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold">
+                {patientsLoading ? '...' : patients?.length || 0}
+              </span>
+              <User className="h-4 w-4 text-gray-600" />
             </div>
-            <div className="text-sm text-gray-500">주간 평균</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-2">개선 추세</h3>
-            <div className="text-3xl font-bold text-orange-600 mb-2">
-              {getTrendIcon(stats.trend)}
-            </div>
-            <div className="text-sm text-gray-500">{getTrendText(stats.trend)}</div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">개별 진행 현황</h2>
-              <Button variant="outline">📊 차트 보기</Button>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            {isProgressLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="text-gray-500">환자 진행 현황을 불러오는 중...</div>
-              </div>
-            ) : progressData.length === 0 ? (
-              <div className="text-center h-32 flex items-center justify-center">
-                <div className="text-gray-500">아직 진행 중인 목표가 없습니다.</div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {progressData.map((item, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="font-semibold">{item.patientName}</h3>
-                        <p className="text-sm text-gray-600">{item.goalTitle}</p>
-                        <p className="text-xs text-gray-500 mt-1">{item.goalDescription}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 메인 콘텐츠 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* 환자 목록 */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle>목표 진행 중</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[600px]">
+              {patientsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  환자 목록을 불러오는 중...
+                </div>
+              ) : patients && patients.length > 0 ? (
+                <div className="space-y-2">
+                  {patients.map((patient) => (
+                    <button
+                      key={patient.id}
+                      onClick={() => setSelectedPatient(patient.id)}
+                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                        selectedPatient === patient.id
+                          ? 'bg-primary/10 border-primary'
+                          : 'hover:bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      <div className="font-medium">{patient.full_name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        담당: {patient.social_workers?.full_name}
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-2xl font-bold">{item.progressPercentage}%</span>
-                          <span className="text-lg">{getTrendIcon(item.trend)}</span>
-                        </div>
-                        <p className="text-xs text-gray-500">현재: {item.currentValue}</p>
-                        <p className="text-xs text-gray-400">상태: {item.status}</p>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {patient.diagnosis}
                       </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  활성 상태의 회원이 없습니다.
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* 목표 계층 구조 */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>목표 계층 구조</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedPatient ? (
+              goalsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  목표를 불러오는 중...
+                </div>
+              ) : patientGoals ? (
+                <div className="space-y-4">
+                  {/* 6개월 목표 */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Target className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold">6개월 목표</h3>
+                      </div>
+                      {getStatusBadge(patientGoals.sixMonthGoal.status)}
                     </div>
-                    
-                    <div className="mb-3">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>목표: {item.targetValue}</span>
-                        <span>{item.progressPercentage}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full ${getProgressColor(item.progressPercentage)}`} 
-                          style={{ width: `${item.progressPercentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">세부사항</Button>
-                        <Button variant="outline" size="sm">기록 추가</Button>
-                        <Button variant="outline" size="sm">차트 보기</Button>
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        최종 업데이트: {new Date(item.lastUpdated).toLocaleDateString('ko-KR')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">주간 활동 요약</h3>
-            {isActivitiesLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="text-gray-500">주간 활동을 불러오는 중...</div>
-              </div>
-            ) : weeklyActivities.length === 0 ? (
-              <div className="text-center h-32 flex items-center justify-center">
-                <div className="text-gray-500">이번 주 활동 기록이 없습니다.</div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {weeklyActivities.map((activity, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span className="font-medium">{activity.date}</span>
-                    <div className="flex space-x-2 flex-wrap">
-                      {activity.activities.map((item, actIndex) => (
-                        <span 
-                          key={actIndex}
-                          className={`px-2 py-1 rounded text-xs ${getActivityStatusColor(item.status)}`}
-                        >
-                          {item.patientName} {item.activityType}
-                        </span>
-                      ))}
-                      {activity.activities.length === 0 && (
-                        <span className="text-xs text-gray-500">활동 없음</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">알림 및 주의사항</h3>
-            {isAlertsLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="text-gray-500">알림을 불러오는 중...</div>
-              </div>
-            ) : alerts.length === 0 ? (
-              <div className="text-center h-32 flex items-center justify-center">
-                <div className="text-gray-500">현재 알림이 없습니다.</div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {alerts.slice(0, 5).map((alert, index) => (
-                  <div key={alert.id} className={`p-3 ${getAlertStyle(alert.type)}`}>
-                    <p className="text-sm">
-                      {getAlertIcon(alert.type)} {alert.message}
-                    </p>
-                    {alert.dueDate && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        마감: {new Date(alert.dueDate).toLocaleDateString('ko-KR')}
+                    <p className="text-sm mb-2">{patientGoals.sixMonthGoal.title}</p>
+                    {patientGoals.sixMonthGoal.description && (
+                      <p className="text-xs text-muted-foreground mb-2">
+                        {patientGoals.sixMonthGoal.description}
                       </p>
                     )}
+                    <Progress 
+                      value={patientGoals.sixMonthGoal.progress || 0} 
+                      className="h-2"
+                    />
+                    <div className="text-xs text-muted-foreground mt-1">
+                      진행률: {patientGoals.sixMonthGoal.progress || 0}%
+                    </div>
                   </div>
-                ))}
-                {alerts.length > 5 && (
-                  <div className="text-center pt-2">
-                    <Button variant="outline" size="sm">
-                      더 보기 ({alerts.length - 5}개)
-                    </Button>
+
+                  {/* 월간 목표들 */}
+                  <div className="space-y-3">
+                    {patientGoals.monthlyGoals.map((monthlyGoal) => (
+                      <div key={monthlyGoal.id} className="border rounded-lg p-3">
+                        <button
+                          onClick={() => toggleGoalExpansion(monthlyGoal.id)}
+                          className="w-full"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center space-x-2 text-left">
+                              {expandedGoals[monthlyGoal.id] ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              <Calendar className="h-4 w-4 text-blue-500" />
+                              <span className="font-medium text-sm">
+                                {monthlyGoal.sequence_number}개월차: {monthlyGoal.title}
+                              </span>
+                            </div>
+                            {getStatusBadge(monthlyGoal.status)}
+                          </div>
+                        </button>
+
+                        {expandedGoals[monthlyGoal.id] && (
+                          <div className="mt-3 ml-6 space-y-2">
+                            {monthlyGoal.weeklyGoals?.map((weeklyGoal) => (
+                              <div
+                                key={weeklyGoal.id}
+                                className="p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                                onClick={() => setSelectedWeeklyGoal(weeklyGoal.id)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2">
+                                    {weeklyGoal.status === 'completed' ? (
+                                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                    ) : (
+                                      <Circle className="h-3 w-3 text-gray-400" />
+                                    )}
+                                    <span className="text-sm">
+                                      {weeklyGoal.sequence_number}주차: {weeklyGoal.title}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {weeklyGoal.weekly_check_ins?.length > 0 && (
+                                      <Badge variant="outline" className="text-xs">
+                                        체크인 {weeklyGoal.weekly_check_ins.length}
+                                      </Badge>
+                                    )}
+                                    {getStatusBadge(weeklyGoal.status)}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  이 환자의 활성 목표가 없습니다.
+                </div>
+              )
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                환자를 선택해주세요.
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 주간 체크인 모달/섹션은 추후 구현 */}
     </div>
-  )
-} 
+  );
+}

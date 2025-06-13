@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Brain, Target, History, AlertTriangle, Users, ChevronRight, Check, Loader2, User, Calendar } from 'lucide-react';
 // import ReactMarkdown from 'react-markdown'; // 임시 제거
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import useAIResponseParser from '@/hooks/useAIResponseParser';
 import { useAIRecommendationByAssessment } from '@/hooks/useAIRecommendations';
 import { ENV } from '@/lib/env';
+import { eventBus, EVENTS } from '@/lib/eventBus';
 
 interface AssessmentFormData {
   focusTime: string;
@@ -86,11 +87,28 @@ const GoalSetting: React.FC = () => {
     autoLogin();
   }, []);
 
-  // 환자 데이터 가져오기
-  const { data: patientsResponse, isLoading: patientsLoading, error } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => PatientService.getPatients(),
+  // 환자 데이터 가져오기 - inactive 상태의 환자만
+  const { data: patientsResponse, isLoading: patientsLoading, error, refetch } = useQuery({
+    queryKey: ['patients', 'inactive'],
+    queryFn: () => PatientService.getPatients({
+      filters: { status: 'inactive' }
+    }),
   });
+
+  // 환자 상태 변경 이벤트 리스너
+  useEffect(() => {
+    const handlePatientStatusChanged = (data: { patientId: string; newStatus: string }) => {
+      console.log('환자 상태 변경 감지:', data);
+      // 모든 상태 변경에 대해 목록 새로고침
+      refetch();
+    };
+
+    eventBus.on(EVENTS.PATIENT_STATUS_CHANGED, handlePatientStatusChanged);
+
+    return () => {
+      eventBus.off(EVENTS.PATIENT_STATUS_CHANGED, handlePatientStatusChanged);
+    };
+  }, [refetch]);
 
   const patients = patientsResponse?.data || [];
 
@@ -181,6 +199,9 @@ const GoalSetting: React.FC = () => {
       console.log('⚠️ 다른 평가의 추천 데이터입니다.');
       return;
     }
+
+    // 추천 ID 저장
+    setRecommendationId(aiRecommendationData.id);
 
     // 구조화된 데이터 처리
     if (aiRecommendationData.recommendations && Array.isArray(aiRecommendationData.recommendations)) {
@@ -482,6 +503,233 @@ const GoalSetting: React.FC = () => {
     return formData.focusTime && formData.socialPreference;
   };
 
+  // 목표 저장 함수
+  const handleSaveGoals = async () => {
+    console.log('🎯 목표 저장 시작!');
+    console.log('선택된 환자:', selectedPatient);
+    console.log('상세 목표:', detailedGoals);
+    console.log('현재 평가 ID:', currentAssessmentId);
+    console.log('AI 추천 ID:', recommendationId);
+    
+    if (!selectedPatient || !detailedGoals || !currentAssessmentId) {
+      alert('저장할 목표 정보가 없습니다.');
+      return;
+    }
+
+    try {
+      // 저장 중임을 표시
+      setIsProcessing(true);
+      
+      // 디버깅을 위한 로그
+      console.log('detailedGoals 전체 구조:', detailedGoals);
+      console.log('monthlyGoals:', detailedGoals.monthlyGoals);
+      console.log('weeklyGoals:', detailedGoals.weeklyGoals);
+
+      // 현재 사용자 ID 가져오기
+      const { data: userData } = await supabase.auth.getUser();
+      const currentUserId = userData.user?.id;
+
+      // 1. 기존 active 계획을 inactive로 변경
+      const { error: deactivateError } = await supabase
+        .from('rehabilitation_goals')
+        .update({ plan_status: 'inactive' })
+        .eq('patient_id', selectedPatient)
+        .eq('plan_status', 'active');
+
+      if (deactivateError) {
+        console.error('기존 계획 비활성화 실패:', deactivateError);
+        throw deactivateError;
+      }
+
+      // 2. AI 추천 ID 가져오기 (평가 ID로 조회)
+      let aiRecommendationId = recommendationId;
+      
+      if (!aiRecommendationId && currentAssessmentId) {
+        // recommendationId가 없으면 평가 ID로 AI 추천 조회
+        const { data: aiRec, error: aiError } = await supabase
+          .from('ai_goal_recommendations')
+          .select('id')
+          .eq('assessment_id', currentAssessmentId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+          
+        if (aiRec) {
+          aiRecommendationId = aiRec.id;
+          console.log('AI 추천 ID 조회됨:', aiRecommendationId);
+        }
+      }
+
+      // 3. AI 추천 상태 업데이트
+      if (aiRecommendationId) {
+        const { error: updateError } = await supabase
+          .from('ai_goal_recommendations')
+          .update({
+            is_active: true,
+            applied_at: new Date().toISOString(),
+            applied_by: currentUserId,
+            selected_plan_number: detailedGoals.selectedIndex + 1
+          })
+          .eq('id', aiRecommendationId);
+
+        if (updateError) {
+          console.error('AI 추천 상태 업데이트 실패:', updateError);
+          // 실패해도 계속 진행
+        }
+      }
+
+      // 3. 목표들을 데이터베이스에 저장
+      const goalsToInsert = [];
+      
+      // 6개월 목표
+      const sixMonthGoalId = crypto.randomUUID();
+      const sixMonthGoal = detailedGoals.sixMonthGoal;
+      
+      console.log('💾 저장할 6개월 목표:', sixMonthGoal);
+      console.log('💾 사용할 AI 추천 ID:', aiRecommendationId);
+      
+      // 6개월 목표 저장
+      goalsToInsert.push({
+        id: sixMonthGoalId,
+        patient_id: selectedPatient,
+        parent_goal_id: null,
+        title: sixMonthGoal.goal || sixMonthGoal.title || '6개월 목표',
+        description: sixMonthGoal.details || sixMonthGoal.description || '',
+        goal_type: 'six_month',
+        sequence_number: 1,
+        start_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+        end_date: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
+        status: 'active',
+        plan_status: 'active',
+        is_ai_suggested: true,
+        source_recommendation_id: aiRecommendationId || null, // AI 추천 ID 사용
+        is_from_ai_recommendation: true,
+        created_by_social_worker_id: currentUserId
+      });
+
+      // 월간 목표들
+      console.log('💾 저장할 월간 목표들:', detailedGoals.monthlyGoals);
+      
+      detailedGoals.monthlyGoals?.forEach((monthlyPlan, monthIndex) => {
+          const monthlyGoalId = crypto.randomUUID();
+          
+          goalsToInsert.push({
+            id: monthlyGoalId,
+            patient_id: selectedPatient,
+            parent_goal_id: sixMonthGoalId,
+            title: monthlyPlan.goal || monthlyPlan.title || `${monthIndex + 1}개월차 목표`,
+            description: monthlyPlan.activities?.join(', ') || monthlyPlan.description || '',
+            goal_type: 'monthly',
+            sequence_number: monthIndex + 1,
+            start_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
+            end_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex + 1)).toISOString().split('T')[0],
+            status: monthIndex === 0 ? 'active' : 'pending',
+            plan_status: 'active',
+            is_ai_suggested: true,
+            source_recommendation_id: aiRecommendationId || null,
+            is_from_ai_recommendation: true,
+            created_by_social_worker_id: currentUserId
+          });
+
+          // 주간 목표들
+          console.log('💾 저장할 주간 목표들:', detailedGoals.weeklyGoals);
+          
+          detailedGoals.weeklyGoals
+            ?.filter(weeklyPlan => {
+              // month 속성이 없을 수도 있으므로, monthIndex로 필터링
+              const weekNumber = parseInt(weeklyPlan.week || '0');
+              const weekMonth = Math.floor((weekNumber - 1) / 4);
+              return weekMonth === monthIndex;
+            })
+            ?.forEach((weeklyPlan, weekIndex) => {
+              goalsToInsert.push({
+                id: crypto.randomUUID(),
+                patient_id: selectedPatient,
+                parent_goal_id: monthlyGoalId,
+                title: weeklyPlan.plan || weeklyPlan.title || `${weeklyPlan.week}주차 목표`,
+                description: weeklyPlan.description || '',
+                goal_type: 'weekly',
+                sequence_number: parseInt(weeklyPlan.week || `${weekIndex + 1}`),
+                start_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
+                end_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
+                status: monthIndex === 0 && weekIndex === 0 ? 'active' : 'pending',
+                plan_status: 'active',
+                is_ai_suggested: true,
+                source_recommendation_id: aiRecommendationId || null,
+                is_from_ai_recommendation: true,
+                created_by_social_worker_id: currentUserId
+              });
+            });
+        });
+
+      // 목표들을 DB에 저장
+      console.log('💾 저장할 목표 개수:', goalsToInsert.length);
+      console.log('💾 저장할 목표 데이터:', goalsToInsert);
+      
+      const { error: goalsError } = await supabase
+        .from('rehabilitation_goals')
+        .insert(goalsToInsert);
+
+      if (goalsError) {
+        console.error('목표 저장 실패:', goalsError);
+        throw goalsError;
+      }
+
+      // 3. 환자 상태를 active로 변경
+      const { error: patientError } = await supabase
+        .from('patients')
+        .update({ status: 'active' })
+        .eq('id', selectedPatient);
+
+      if (patientError) {
+        console.error('환자 상태 업데이트 실패:', patientError);
+        throw patientError;
+      }
+
+      // 성공 메시지
+      alert('목표가 성공적으로 저장되었습니다!');
+      
+      // 초기 상태로 리셋
+      setSelectedPatient(null);
+      setCurrentStep(1);
+      setRecommendationId(null);
+      setCurrentAssessmentId(null);
+      setAiRecommendations(null);
+      setDetailedGoals(null);
+      setSelectedGoal('');
+      setFormData({
+        focusTime: '',
+        motivationLevel: 5,
+        pastSuccesses: [],
+        pastSuccessesOther: '',
+        constraints: [],
+        constraintsOther: '',
+        socialPreference: '',
+      });
+      
+      // 환자 목록 새로고침
+      refetch();
+
+    } catch (error: any) {
+      console.error('목표 저장 중 오류:', error);
+      
+      // 구체적인 오류 메시지 표시
+      let errorMessage = '목표 저장 중 오류가 발생했습니다.';
+      
+      if (error.message) {
+        errorMessage += '\n\n상세 오류: ' + error.message;
+      }
+      
+      if (error.code) {
+        errorMessage += '\n오류 코드: ' + error.code;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const getMotivationText = (level: number) => {
     if (level <= 2) return '현재 상태 유지가 우선';
     if (level <= 4) return '작은 변화라면 시도해볼 만함';
@@ -573,11 +821,11 @@ const GoalSetting: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {currentStep === 1 && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">환자를 선택하세요</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">회원을 선택하세요</h2>
             {patientsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">환자 목록을 불러오는 중...</span>
+                <span className="ml-3 text-gray-600">회원 목록을 불러오는 중...</span>
               </div>
             ) : (
               <div className="space-y-3">
@@ -587,14 +835,26 @@ const GoalSetting: React.FC = () => {
                     onClick={() => handlePatientSelect(patient.id)}
                     className="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
                   >
-                    <div className="font-medium text-gray-900">{patient.full_name}</div>
-                    <div className="text-sm text-gray-500">환자 ID: {patient.patient_identifier}</div>
-                    <div className="text-sm text-gray-500">상태: {patient.status}</div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium text-gray-900">{patient.full_name}</div>
+                        <div className="text-sm text-gray-500">IDNO: {patient.patient_identifier}</div>
+                      </div>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        목표 설정 대기
+                      </span>
+                    </div>
                   </button>
                 ))}
                 {patients?.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    등록된 환자가 없습니다.
+                  <div className="text-center py-12">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
+                      <User className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-2">목표 설정이 필요한 회원이 없습니다</h3>
+                    <p className="text-sm text-gray-500">
+                      새로운 회원을 등록하거나, 기존 회원의 상태를 '목표 설정 대기(inactive)'로 변경해주세요.
+                    </p>
                   </div>
                 )}
               </div>
@@ -971,22 +1231,8 @@ const GoalSetting: React.FC = () => {
                             <div>
                               <span className="font-medium text-gray-700">6개월 목표:</span>
                               <span className="text-gray-600 ml-1">
-                                {(goal.sixMonthTarget || goal.description?.split('\n')[1] || goal.description?.split('\n')[0])?.replace(/^\*\s*6개월\s*목표:\s*/, '').replace(/^\*\s*/, '').substring(0, 100) || '목표 설명'}
+                                {goal.sixMonthGoal || goal.goal || goal.goals?.[0] || '목표 설정 중'}
                               </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-2">
-                            <span className="text-red-600 mt-0.5">📋</span>
-                            <div>
-                              <span className="font-medium text-gray-700">실행 계획:</span>
-                              <div className="text-gray-600 ml-1">
-                                {goal.description && goal.description.split('\n').slice(1).filter((line: string) => 
-                                  line.trim() && (line.includes('•') || line.includes('-') || line.includes('*'))
-                                ).slice(0, 3).map((line: string, idx: number) => (
-                                  <div key={idx}>• {line.replace(/^[•\-*]\s*/, '').trim()}</div>
-                                ))}
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -1114,9 +1360,6 @@ const GoalSetting: React.FC = () => {
                       <div key={goal.month} className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
                           <h5 className="font-semibold text-green-900 text-sm">{goal.month}개월차</h5>
-                          <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
-                            {goal.month}월
-                          </span>
                         </div>
                         <p className="text-green-800 text-xs">{goal.goal}</p>
                       </div>
@@ -1139,9 +1382,6 @@ const GoalSetting: React.FC = () => {
                               <div key={goal.week} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
                                 <div className="flex items-center justify-between mb-1">
                                   <h6 className="font-medium text-orange-900 text-xs">{goal.week}주차</h6>
-                                  <span className="text-xs bg-orange-200 text-orange-800 px-1 py-0.5 rounded">
-                                    {goal.week}주
-                                  </span>
                                 </div>
                                 <p className="text-orange-800 text-xs">{goal.plan}</p>
                               </div>
@@ -1167,13 +1407,18 @@ const GoalSetting: React.FC = () => {
               </button>
               <div className="space-x-3">
                 <button
-                  onClick={() => {
-                    // TODO: 목표를 DB에 저장
-                    alert('목표가 성공적으로 저장되었습니다!');
-                  }}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  onClick={handleSaveGoals}
+                  disabled={isProcessing}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
                 >
-                  목표 저장하기
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                      저장 중...
+                    </>
+                  ) : (
+                    '목표 저장하기'
+                  )}
                 </button>
                 <button
                   onClick={() => {

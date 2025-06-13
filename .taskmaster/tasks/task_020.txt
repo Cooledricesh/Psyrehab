@@ -1,6 +1,6 @@
 # Task ID: 20
 # Title: Prepare for Deployment and Monitoring
-# Status: pending
+# Status: in-progress
 # Dependencies: 1, 2, 3, 15, 18, 19
 # Priority: high
 # Description: Set up the deployment pipeline and implement monitoring and logging solutions.

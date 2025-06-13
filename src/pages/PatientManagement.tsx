@@ -5,6 +5,8 @@ import type { Patient, PatientStats } from '@/services/patient-management'
 import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import PatientDetailModal from '@/components/PatientDetailModal'
 import PatientEditModal from '@/components/PatientEditModal'
+import { eventBus, EVENTS } from '@/lib/eventBus'
+import { supabase } from '@/lib/supabase'
 
 export default function PatientManagement() {
   const [patients, setPatients] = useState<Patient[]>([])
@@ -72,8 +74,21 @@ export default function PatientManagement() {
     try {
       // UI 상태를 DB 상태로 변환
       let dbStatus: 'active' | 'inactive' | 'discharged'
-      if (newStatus === 'completed') {
+      if (newStatus === 'discharged') {
         dbStatus = 'discharged'
+        
+        // 입원 처리 시 활성 목표들을 비활성화
+        const { error: goalsError } = await supabase
+          .from('rehabilitation_goals')
+          .update({ status: 'on_hold' })
+          .eq('patient_id', patientId)
+          .eq('status', 'active')
+        
+        if (goalsError) {
+          console.error('목표 비활성화 실패:', goalsError)
+          alert('목표 상태 변경에 실패했습니다.')
+          return
+        }
       } else if (newStatus === 'inactive') {
         dbStatus = 'inactive'
       } else {
@@ -82,6 +97,9 @@ export default function PatientManagement() {
       
       await updatePatientStatus(patientId, dbStatus)
       await fetchData() // 데이터 새로고침
+      
+      // 상태 변경 이벤트 발생
+      eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, { patientId, newStatus: dbStatus })
     } catch (error) {
       console.error('상태 변경 실패:', error)
       alert('상태 변경에 실패했습니다. 다시 시도해주세요.')
@@ -152,6 +170,19 @@ export default function PatientManagement() {
     }
   }
 
+  // 환자의 실제 상태를 계산하는 함수 추가
+  const getPatientDisplayStatus = (patient: Patient): string => {
+    // 환자 목록에서 각 환자의 목표 상태를 확인하여 표시 상태 결정
+    // 이 정보는 서버에서 계산해서 보내주는 것이 이상적이지만,
+    // 현재는 클라이언트에서 처리
+    if (patient.status === 'completed') {
+      return 'completed'
+    }
+    // TODO: 목표 유무에 따른 상태 구분 필요
+    // 현재는 DB status를 그대로 사용
+    return patient.status
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -174,11 +205,11 @@ export default function PatientManagement() {
       {/* 페이지 헤더 */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">환자 관리</h1>
-          <p className="text-gray-600 mt-1">등록된 환자들을 조회하고 관리할 수 있습니다.</p>
+          <h1 className="text-2xl font-bold text-gray-900">회원 관리</h1>
+          <p className="text-gray-600 mt-1">등록된 회원들을 조회하고 관리할 수 있습니다.</p>
         </div>
         <Button onClick={() => setIsRegistrationModalOpen(true)}>
-          새 환자 등록
+          새 회원 등록
         </Button>
       </div>
 
@@ -187,7 +218,7 @@ export default function PatientManagement() {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">전체 환자</p>
+              <p className="text-sm font-medium text-gray-600">담당 회원수</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalPatients}</p>
             </div>
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -201,7 +232,7 @@ export default function PatientManagement() {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">활성 환자</p>
+              <p className="text-sm font-medium text-gray-600">목표 진행 중</p>
               <p className="text-2xl font-bold text-green-600">{stats.activePatients}</p>
             </div>
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -215,7 +246,7 @@ export default function PatientManagement() {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">비활성 환자</p>
+              <p className="text-sm font-medium text-gray-600">목표 설정 대기</p>
               <p className="text-2xl font-bold text-red-600">{stats.inactivePatients}</p>
             </div>
             <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
@@ -229,7 +260,7 @@ export default function PatientManagement() {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">완료 환자</p>
+              <p className="text-sm font-medium text-gray-600">입원 중</p>
               <p className="text-2xl font-bold text-blue-600">{stats.completedPatients}</p>
             </div>
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -244,17 +275,17 @@ export default function PatientManagement() {
       {/* 환자 목록 테이블 */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">환자 목록</h2>
+          <h2 className="text-lg font-medium text-gray-900">회원 목록</h2>
         </div>
         
         {patients.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">등록된 환자가 없습니다.</p>
+            <p className="text-gray-500 text-lg">등록된 회원이 없습니다.</p>
             <Button 
               onClick={() => setIsRegistrationModalOpen(true)}
               className="mt-4"
             >
-              첫 번째 환자 등록하기
+              첫 번째 회원 등록하기
             </Button>
           </div>
         ) : (
@@ -263,7 +294,7 @@ export default function PatientManagement() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    환자명
+                    회원명
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     나이
@@ -306,15 +337,21 @@ export default function PatientManagement() {
                       <div className="text-sm text-gray-900">{patient.registration_date}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={patient.status}
-                        onChange={(e) => handleStatusChange(patient.id, e.target.value)}
-                        className={`text-xs font-semibold rounded px-2 py-1 border-none ${getStatusBadgeColor(patient.status)}`}
-                      >
-                        <option value="active">활성</option>
-                        <option value="inactive">비활성</option>
-                        <option value="completed">완료</option>
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold rounded px-2 py-1 ${
+                          patient.status === 'completed' 
+                            ? 'bg-blue-100 text-blue-800'
+                            : patient.hasActiveGoal 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {patient.status === 'completed' 
+                            ? '입원 중' 
+                            : patient.hasActiveGoal 
+                              ? '목표 진행 중' 
+                              : '목표 설정 대기'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
@@ -330,6 +367,22 @@ export default function PatientManagement() {
                         >
                           편집
                         </button>
+                        {patient.status !== 'completed' && (
+                          <button
+                            onClick={() => handleStatusChange(patient.id, 'discharged')}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            입원
+                          </button>
+                        )}
+                        {patient.status === 'completed' && (
+                          <button
+                            onClick={() => handleStatusChange(patient.id, 'active')}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            퇴원
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

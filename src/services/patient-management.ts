@@ -12,6 +12,7 @@ export interface Patient {
   status: 'active' | 'inactive' | 'completed'
   contact_info?: string
   emergency_contact?: string
+  hasActiveGoal?: boolean  // 활성 목표 유무 추가
 }
 
 export interface PatientStats {
@@ -52,9 +53,13 @@ export const getPatients = async (): Promise<Patient[]> => {
       .select(`
         *,
         rehabilitation_goals (
+          id,
           title,
           description,
-          category_id
+          category_id,
+          goal_type,
+          plan_status,
+          status
         )
       `)
       .order('created_at', { ascending: false })
@@ -69,12 +74,20 @@ export const getPatients = async (): Promise<Patient[]> => {
     console.log('🔍 모든 환자 데이터:', data)
 
     return data?.map((patient: any) => {
+      // 활성 6개월 목표가 있는지 확인
+      const hasActiveGoal = patient.rehabilitation_goals?.some((goal: any) => 
+        goal.goal_type === 'six_month' && 
+        goal.plan_status === 'active' && 
+        goal.status === 'active'
+      )
+
       // 각 환자별로 매핑 과정 로깅
       console.log(`📝 환자 ${patient.full_name} 매핑:`, {
         원본_성별: patient.gender,
         매핑된_성별: mapGender(patient.gender),
         원본_additional_info: patient.additional_info,
         재활목표들: patient.rehabilitation_goals,
+        활성목표여부: hasActiveGoal,
         원본_전체: patient
       })
 
@@ -88,7 +101,8 @@ export const getPatients = async (): Promise<Patient[]> => {
         registration_date: patient.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
         status: mapPatientStatus(patient.status),
         contact_info: patient.contact_info,
-        emergency_contact: patient.emergency_contact
+        emergency_contact: patient.emergency_contact,
+        hasActiveGoal: hasActiveGoal
       }
     }) || []
   } catch (error) {
@@ -300,12 +314,13 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       console.log('⚠️ 관리자 로그인 실패:', signInError.message)
     }
 
-    const { data, error } = await supabase
+    // 모든 환자 조회
+    const { data: allPatients, error: allPatientsError } = await supabase
       .from('patients')
-      .select('status')
+      .select('id, status, additional_info')
 
-    if (error) {
-      console.error('Error fetching patient stats:', error)
+    if (allPatientsError) {
+      console.error('Error fetching all patients:', allPatientsError)
       return {
         totalPatients: 0,
         activePatients: 0,
@@ -314,13 +329,41 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       }
     }
 
-    const totalPatients = data?.length || 0
-    const activePatients = data?.filter(p => p.status === 'active').length || 0
-    const inactivePatients = data?.filter(p => p.status === 'inactive').length || 0
-    // 완료된 환자는 discharged, on_hold, transferred 상태를 모두 포함
-    const completedPatients = data?.filter(p => 
-      p.status === 'discharged' || p.status === 'on_hold' || p.status === 'transferred'
-    ).length || 0
+    // active/inactive 환자만 필터링 (discharged 제외)
+    const activeInactivePatients = allPatients?.filter(p => 
+      p.status === 'active' || p.status === 'inactive'
+    ) || []
+
+    // 활성 목표가 있는 환자 조회
+    const { data: activeGoals, error: goalsError } = await supabase
+      .from('rehabilitation_goals')
+      .select('patient_id')
+      .eq('goal_type', 'six_month')
+      .eq('plan_status', 'active')
+      .eq('status', 'active')
+
+    if (goalsError) {
+      console.error('Error fetching active goals:', goalsError)
+    }
+
+    // 입원 중인 환자 (status가 discharged인 환자)
+    const dischargedPatients = allPatients?.filter(p => p.status === 'discharged') || []
+
+    // 목표가 있는 환자 ID 목록
+    const patientsWithGoals = new Set(activeGoals?.map(g => g.patient_id) || [])
+
+    // 통계 계산
+    const totalPatients = allPatients?.length || 0
+    const activePatients = activeInactivePatients.filter(p => patientsWithGoals.has(p.id)).length  // 목표가 있는 환자
+    const inactivePatients = activeInactivePatients.filter(p => !patientsWithGoals.has(p.id)).length  // 목표가 없는 환자
+    const completedPatients = dischargedPatients.length  // 입원 중인 환자 (discharged 상태)
+
+    console.log('📊 환자 통계:', {
+      전체: totalPatients,
+      목표진행중: activePatients,
+      목표설정대기: inactivePatients,
+      입원중: completedPatients
+    })
 
     return {
       totalPatients,
@@ -409,6 +452,7 @@ const mapPatientStatus = (dbStatus: string): 'active' | 'inactive' | 'completed'
     case 'inactive':
       return 'inactive'
     case 'discharged':
+      return 'completed'  // discharged를 completed로 매핑
     case 'on_hold':
     case 'transferred':
       return 'completed'
