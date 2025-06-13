@@ -46,14 +46,17 @@ export type Database = {
           execution_strategy: Json | null
           id: string
           is_active: boolean | null
-          monthly_plans: Json
+          // New structured format
+          recommendations: Json
           patient_analysis: Json
           patient_id: string
           recommendation_date: string
-          six_month_goals: Json
           success_indicators: Json | null
           updated_at: string
-          weekly_plans: Json
+          // Legacy fields (deprecated but kept for backward compatibility)
+          monthly_plans: Json | null
+          six_month_goals: Json | null
+          weekly_plans: Json | null
         }
         Insert: {
           applied_at?: string | null
@@ -64,14 +67,17 @@ export type Database = {
           execution_strategy?: Json | null
           id?: string
           is_active?: boolean | null
-          monthly_plans: Json
+          // New structured format
+          recommendations: Json
           patient_analysis: Json
           patient_id: string
           recommendation_date: string
-          six_month_goals: Json
           success_indicators?: Json | null
           updated_at?: string
-          weekly_plans: Json
+          // Legacy fields (deprecated but kept for backward compatibility)
+          monthly_plans?: Json | null
+          six_month_goals?: Json | null
+          weekly_plans?: Json | null
         }
         Update: {
           applied_at?: string | null
@@ -82,14 +88,17 @@ export type Database = {
           execution_strategy?: Json | null
           id?: string
           is_active?: boolean | null
-          monthly_plans?: Json
+          // New structured format
+          recommendations?: Json
           patient_analysis?: Json
           patient_id?: string
           recommendation_date?: string
-          six_month_goals?: Json
           success_indicators?: Json | null
           updated_at?: string
-          weekly_plans?: Json
+          // Legacy fields (deprecated but kept for backward compatibility)
+          monthly_plans?: Json | null
+          six_month_goals?: Json | null
+          weekly_plans?: Json | null
         }
         Relationships: []
       }
@@ -134,6 +143,9 @@ export type Database = {
           patient_id: string
           social_preference: string
           updated_at: string
+          // AI recommendation tracking fields
+          ai_recommendation_status: string | null
+          ai_recommendation_id: string | null
         }
         Insert: {
           assessed_by: string
@@ -148,6 +160,9 @@ export type Database = {
           patient_id: string
           social_preference: string
           updated_at?: string
+          // AI recommendation tracking fields
+          ai_recommendation_status?: string | null
+          ai_recommendation_id?: string | null
         }
         Update: {
           assessed_by?: string
@@ -162,6 +177,9 @@ export type Database = {
           patient_id?: string
           social_preference?: string
           updated_at?: string
+          // AI recommendation tracking fields
+          ai_recommendation_status?: string | null
+          ai_recommendation_id?: string | null
         }
         Relationships: []
       }

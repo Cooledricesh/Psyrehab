@@ -5,7 +5,6 @@ import {
   useAIRecommendationByAssessment,
   useUpdateAIRecommendationStatus,
   useGenerateGoalsFromRecommendation,
-  parseAIRecommendationGoals,
   type AIRecommendation,
   type ParsedGoal
 } from '@/hooks/useAIRecommendations'
@@ -21,17 +20,17 @@ export function AIRecommendationDisplay({
   patientId,
   onGoalsGenerated
 }: AIRecommendationDisplayProps) {
-  const [selectedGoalIds, setSelectedGoalIds] = useState<number[]>([])
+  const [selectedPlanNumbers, setSelectedPlanNumbers] = useState<number[]>([])
   
   const { data: recommendation, isLoading, error } = useAIRecommendationByAssessment(assessmentId, patientId)
   const updateStatusMutation = useUpdateAIRecommendationStatus()
   const generateGoalsMutation = useGenerateGoalsFromRecommendation()
 
-  // 마크다운을 파싱하여 목표 추출
-  const parsedGoals = useMemo(() => {
-    if (!recommendation?.six_month_goals) return []
-    return parseAIRecommendationGoals(recommendation.six_month_goals)
-  }, [recommendation?.six_month_goals])
+  // 구조화된 recommendations 배열에서 직접 데이터 사용
+  const plans = useMemo(() => {
+    if (!recommendation?.recommendations) return []
+    return recommendation.recommendations
+  }, [recommendation?.recommendations])
 
   if (isLoading) {
     return (
@@ -53,7 +52,7 @@ export function AIRecommendationDisplay({
     )
   }
 
-  if (!recommendation) {
+  if (!recommendation || !recommendation.recommendations) {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
         <h3 className="text-gray-800 font-medium">AI 추천 없음</h3>
@@ -64,17 +63,17 @@ export function AIRecommendationDisplay({
     )
   }
 
-  const handleGoalToggle = (goalId: number) => {
-    setSelectedGoalIds(prev => 
-      prev.includes(goalId) 
-        ? prev.filter(id => id !== goalId)
-        : [...prev, goalId]
+  const handlePlanToggle = (planNumber: number) => {
+    setSelectedPlanNumbers(prev => 
+      prev.includes(planNumber) 
+        ? prev.filter(id => id !== planNumber)
+        : [...prev, planNumber]
     )
   }
 
   const handleApprove = async () => {
-    if (selectedGoalIds.length === 0) {
-      alert('적어도 하나의 목표를 선택해주세요.')
+    if (selectedPlanNumbers.length === 0) {
+      alert('적어도 하나의 계획을 선택해주세요.')
       return
     }
 
@@ -91,8 +90,8 @@ export function AIRecommendationDisplay({
   }
 
   const handleGenerateGoals = async () => {
-    if (selectedGoalIds.length === 0) {
-      alert('적어도 하나의 목표를 선택해주세요.')
+    if (selectedPlanNumbers.length === 0) {
+      alert('적어도 하나의 계획을 선택해주세요.')
       return
     }
 
@@ -100,7 +99,7 @@ export function AIRecommendationDisplay({
       const result = await generateGoalsMutation.mutateAsync({
         recommendationId: recommendation.id,
         patientId,
-        selectedGoalIds
+        selectedPlanNumbers
       })
       
       onGoalsGenerated?.()
@@ -125,16 +124,6 @@ export function AIRecommendationDisplay({
     }
   }
 
-  // 실행 전략과 성공 지표 추출 (마크다운에서)
-  const executionStrategy = useMemo(() => {
-    const strategySections = recommendation.six_month_goals.match(/## 실행 전략([\s\S]*?)(?=##|$)/)?.[1] || ''
-    const strategies = strategySections.match(/\* ([^:]+): (.+)/g) || []
-    return strategies.map(strategy => {
-      const match = strategy.match(/\* ([^:]+): (.+)/)
-      return match ? { type: match[1].trim(), description: match[2].trim() } : null
-    }).filter(Boolean)
-  }, [recommendation.six_month_goals])
-
   return (
     <div className="space-y-6">
       {/* 추천 시스템 정보 */}
@@ -148,7 +137,7 @@ export function AIRecommendationDisplay({
           </div>
           <div className="text-right">
             <div className="text-sm text-blue-600">
-              추천일: {new Date(recommendation.recommendation_date).toLocaleDateString('ko-KR')}
+              추천일: {new Date(recommendation.created_at).toLocaleDateString('ko-KR')}
             </div>
             <div className="text-xs text-blue-500 mt-1">
               {recommendation.is_active ? '활성' : '비활성'} | 
@@ -158,40 +147,36 @@ export function AIRecommendationDisplay({
         </div>
         
         {/* 환자 분석 요약 표시 */}
-        {recommendation.six_month_goals.includes('## 환자 분석 요약') && (
+        {recommendation.patient_analysis && (
           <div className="mt-3 p-3 bg-blue-25 rounded border-l-4 border-blue-400">
             <h4 className="text-sm font-medium text-blue-800 mb-1">AI 분석 결과</h4>
             <div className="text-sm text-blue-700">
-              {recommendation.six_month_goals
-                .match(/## 환자 분석 요약([\s\S]*?)(?=##|$)/)?.[1]
-                ?.split('\n')
-                .filter(line => line.trim().startsWith('*'))
-                .map((line, index) => (
-                  <div key={index} className="mb-1">{line.trim()}</div>
-                ))
+              {typeof recommendation.patient_analysis === 'string' 
+                ? recommendation.patient_analysis 
+                : JSON.stringify(recommendation.patient_analysis)
               }
             </div>
           </div>
         )}
       </div>
 
-      {/* 3가지 목표 옵션 */}
+      {/* 3가지 계획 옵션 */}
       <div className="space-y-4">
-        <h4 className="text-lg font-semibold text-gray-900">추천 목표 ({parsedGoals.length}개)</h4>
+        <h4 className="text-lg font-semibold text-gray-900">추천 계획 ({plans.length}개)</h4>
         <p className="text-sm text-gray-600 mb-4">
-          원하는 목표를 선택하여 재활 계획에 추가할 수 있습니다. 여러 목표를 동시에 선택 가능합니다.
+          원하는 계획을 선택하여 재활 목표에 추가할 수 있습니다. 여러 계획을 동시에 선택 가능합니다.
         </p>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {parsedGoals.map((goal) => {
-            const isSelected = selectedGoalIds.includes(goal.id)
+          {plans.map((plan) => {
+            const isSelected = selectedPlanNumbers.includes(plan.plan_number)
             
             return (
-              <GoalCard 
-                key={goal.id}
-                goal={goal}
+              <PlanCard 
+                key={plan.plan_number}
+                plan={plan}
                 isSelected={isSelected}
-                onSelect={() => handleGoalToggle(goal.id)}
+                onSelect={() => handlePlanToggle(plan.plan_number)}
               />
             )
           })}
@@ -199,27 +184,25 @@ export function AIRecommendationDisplay({
       </div>
 
       {/* 실행 전략 */}
-      {executionStrategy.length > 0 && (
+      {recommendation.execution_strategy && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <h4 className="text-green-800 font-medium mb-3">실행 전략</h4>
-          <div className="space-y-2">
-            {executionStrategy.map((strategy, index) => (
-              <div key={index} className="text-sm">
-                <span className="font-medium text-green-800">{strategy.type}:</span>
-                <span className="text-green-700 ml-2">{strategy.description}</span>
-              </div>
-            ))}
+          <div className="text-sm text-green-700">
+            {typeof recommendation.execution_strategy === 'string' 
+              ? recommendation.execution_strategy 
+              : JSON.stringify(recommendation.execution_strategy)
+            }
           </div>
         </div>
       )}
 
       {/* 액션 버튼 */}
-      {recommendation.is_active && !recommendation.applied_at && (
+      {!recommendation.applied_at && (
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-600">
-            {selectedGoalIds.length > 0 ? 
-              `${selectedGoalIds.length}개 목표가 선택되었습니다.` : 
-              '목표를 선택해 주세요.'
+            {selectedPlanNumbers.length > 0 ? 
+              `${selectedPlanNumbers.length}개 계획이 선택되었습니다.` : 
+              '계획을 선택해 주세요.'
             }
           </div>
           
@@ -234,7 +217,7 @@ export function AIRecommendationDisplay({
             
             <button
               onClick={handleGenerateGoals}
-              disabled={selectedGoalIds.length === 0 || generateGoalsMutation.isPending}
+              disabled={selectedPlanNumbers.length === 0 || generateGoalsMutation.isPending}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {generateGoalsMutation.isPending ? '생성 중...' : '목표 생성'}
@@ -266,14 +249,14 @@ export function AIRecommendationDisplay({
   )
 }
 
-// 개별 목표 카드 컴포넌트
-interface GoalCardProps {
-  goal: ParsedGoal
+// 개별 계획 카드 컴포넌트
+interface PlanCardProps {
+  plan: ParsedGoal
   isSelected: boolean
   onSelect: () => void
 }
 
-function GoalCard({ goal, isSelected, onSelect }: GoalCardProps) {
+function PlanCard({ plan, isSelected, onSelect }: PlanCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
@@ -291,9 +274,9 @@ function GoalCard({ goal, isSelected, onSelect }: GoalCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="font-semibold text-lg text-gray-900">
-            목표 {goal.id}
+            계획 {plan.plan_number}
           </h3>
-          <h4 className="text-blue-600 font-medium mt-1">{goal.title}</h4>
+          <h4 className="text-blue-600 font-medium mt-1">{plan.title}</h4>
         </div>
         {isSelected && (
           <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center ml-2">
@@ -307,29 +290,29 @@ function GoalCard({ goal, isSelected, onSelect }: GoalCardProps) {
       {/* 목적 */}
       <div className="mb-4">
         <h5 className="font-medium text-gray-900 text-sm mb-1">목적</h5>
-        <p className="text-gray-600 text-sm">{goal.purpose}</p>
+        <p className="text-gray-600 text-sm">{plan.purpose}</p>
       </div>
 
       {/* 6개월 목표 */}
       <div className="mb-4">
         <h5 className="font-medium text-gray-900 text-sm mb-1">6개월 목표</h5>
-        <p className="text-gray-600 text-sm">{goal.sixMonthTarget}</p>
+        <p className="text-gray-600 text-sm">{plan.sixMonthGoal}</p>
       </div>
 
       {/* 월간 계획 미리보기 */}
-      {goal.monthlyPlans.length > 0 && (
+      {plan.monthlyGoals.length > 0 && (
         <div className="mb-4">
           <h5 className="font-medium text-gray-900 text-sm mb-2">월간 계획</h5>
           <div className="space-y-1">
-            {goal.monthlyPlans.slice(0, 2).map((plan) => (
-              <div key={plan.month} className="bg-gray-50 rounded p-2">
-                <div className="text-xs font-medium text-gray-700">{plan.month}개월차</div>
-                <div className="text-xs text-gray-600">{plan.description}</div>
+            {plan.monthlyGoals.slice(0, 2).map((monthlyGoal) => (
+              <div key={monthlyGoal.month} className="bg-gray-50 rounded p-2">
+                <div className="text-xs font-medium text-gray-700">{monthlyGoal.month}개월차</div>
+                <div className="text-xs text-gray-600">{monthlyGoal.goal}</div>
               </div>
             ))}
-            {goal.monthlyPlans.length > 2 && (
+            {plan.monthlyGoals.length > 2 && (
               <div className="text-xs text-gray-500 text-center">
-                +{goal.monthlyPlans.length - 2}개 계획 더보기
+                +{plan.monthlyGoals.length - 2}개 계획 더보기
               </div>
             )}
           </div>
@@ -337,7 +320,7 @@ function GoalCard({ goal, isSelected, onSelect }: GoalCardProps) {
       )}
 
       {/* 주간 계획 미리보기 */}
-      {goal.weeklyPlans.length > 0 && (
+      {plan.weeklyPlans.length > 0 && (
         <div>
           <button
             onClick={(e) => {
@@ -359,10 +342,10 @@ function GoalCard({ goal, isSelected, onSelect }: GoalCardProps) {
           
           {isExpanded && (
             <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
-              {goal.weeklyPlans.map((plan) => (
-                <div key={plan.week} className="bg-gray-50 rounded p-2">
-                  <div className="text-xs font-medium text-gray-700">{plan.week}주차</div>
-                  <div className="text-xs text-gray-600">{plan.description}</div>
+              {plan.weeklyPlans.map((weeklyPlan) => (
+                <div key={weeklyPlan.week} className="bg-gray-50 rounded p-2">
+                  <div className="text-xs font-medium text-gray-700">{weeklyPlan.week}주차</div>
+                  <div className="text-xs text-gray-600">{weeklyPlan.plan}</div>
                 </div>
               ))}
             </div>

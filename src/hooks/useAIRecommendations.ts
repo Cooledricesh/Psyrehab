@@ -1,42 +1,52 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase'
+import { ENV } from '@/lib/env'
 
-const supabase = createClient()
-
-// 실제 데이터베이스 스키마에 맞춘 AI 추천 데이터 타입 정의
+// 새로운 AI 추천 데이터 타입 정의 (n8n이 직접 구조화된 데이터를 저장)
 export interface AIRecommendation {
   id: string
   patient_id: string
   assessment_id: string | null
   recommendation_date: string
-  patient_analysis: any // JSONB
-  six_month_goals: string // 마크다운 형식의 목표
-  monthly_plans: any // JSONB
-  weekly_plans: any // JSONB
-  execution_strategy: any // JSONB
-  success_indicators: any // JSONB
+  recommendations: Array<{
+    plan_number: number
+    title: string
+    purpose: string
+    sixMonthGoal: string
+    monthlyGoals: Array<{
+      month: number
+      goal: string
+    }>
+    weeklyPlans: Array<{
+      week: number
+      month: number
+      plan: string
+    }>
+  }>
+  patient_analysis?: any
+  success_indicators?: any
+  execution_strategy?: any
   is_active: boolean
   applied_at: string | null
   applied_by: string | null
   created_at: string
   updated_at: string
-  assessment_data: any // JSONB
 }
 
-// 마크다운에서 파싱된 목표 구조
+// 파싱된 목표 구조 (이제 직접 recommendations 배열에서 가져옴)
 export interface ParsedGoal {
-  id: number
+  plan_number: number
   title: string
-  description: string
   purpose: string
-  sixMonthTarget: string
-  monthlyPlans: Array<{
+  sixMonthGoal: string
+  monthlyGoals: Array<{
     month: number
-    description: string
+    goal: string
   }>
   weeklyPlans: Array<{
     week: number
-    description: string
+    month: number
+    plan: string
   }>
 }
 
@@ -46,7 +56,7 @@ export function useRequestAIRecommendation() {
 
   return useMutation({
     mutationFn: async (assessmentId: string) => {
-      const response = await fetch('/api/ai/recommend', {
+      const response = await fetch(`${ENV.API_URL}/api/ai/recommend`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,55 +107,40 @@ export function useAIRecommendationsByPatient(patientId: string | null) {
   })
 }
 
-// 평가의 AI 추천 조회 훅 (평가 ID가 없으면 환자 ID로 폴백)
+// 평가의 AI 추천 조회 훅 - 평가 ID만으로 조회하도록 수정
 export function useAIRecommendationByAssessment(
   assessmentId: string | null, 
   patientId?: string | null
 ) {
   return useQuery({
-    queryKey: ['ai-recommendation-by-assessment', assessmentId, patientId],
+    queryKey: ['ai-recommendation-by-assessment', assessmentId],
     queryFn: async () => {
-      // 먼저 평가 ID로 조회 시도
-      if (assessmentId) {
-        const { data, error } = await supabase
-          .from('ai_goal_recommendations')
-          .select('*')
-          .eq('assessment_id', assessmentId)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        if (error) {
-          throw new Error(error.message)
-        }
-
-        if (data) {
-          return data as AIRecommendation
-        }
+      // 평가 ID가 없으면 null 반환
+      if (!assessmentId) {
+        return null;
       }
 
-      // 평가 ID로 찾지 못했거나 평가 ID가 없으면 환자 ID로 조회
-      if (patientId) {
-        const { data, error } = await supabase
-          .from('ai_goal_recommendations')
-          .select('*')
-          .eq('patient_id', patientId)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
+      // 평가 ID로만 조회 (환자 ID 조건 제거)
+      const { data, error } = await supabase
+        .from('ai_goal_recommendations')
+        .select('*')
+        .eq('assessment_id', assessmentId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
 
-        if (error) {
-          throw new Error(error.message)
-        }
-
-        return data as AIRecommendation | null
+      if (error) {
+        console.error('AI 추천 조회 오류:', error);
+        throw new Error(error.message)
       }
 
-      return null
+      console.log('AI 추천 조회 결과:', data);
+      return data as AIRecommendation | null
     },
-    enabled: !!(assessmentId || patientId),
+    enabled: !!assessmentId,  // assessmentId가 있을 때만 실행
+    refetchInterval: false,    // 자동 리페치 비활성화
+    staleTime: 0,             // 항상 새로운 데이터 요청
+    cacheTime: 0,             // 캐시 시간도 0으로
   })
 }
 
@@ -232,96 +227,29 @@ export function useUpdateAIRecommendationStatus() {
 }
 
 // 마크다운 형식의 목표를 파싱하여 구조화된 데이터로 변환하는 함수
-export function parseAIRecommendationGoals(markdownText: string): ParsedGoal[] {
-  const goals: ParsedGoal[] = []
+// 파싱 함수들은 더 이상 필요하지 않음 (n8n이 구조화된 데이터를 직접 저장)
+export function parseAIRecommendationGoals(data: any): ParsedGoal[] {
+  console.warn('parseAIRecommendationGoals is deprecated. Data is now structured by n8n.')
   
-  // 목표 섹션을 찾아서 파싱
-  const goalSections = markdownText.match(/### 목표 \d+:[^#]*/g)
+  // 기존 코드와의 호환성을 위해 빈 배열 반환
+  if (!data || !Array.isArray(data)) return []
   
-  if (!goalSections) return goals
-
-  goalSections.forEach((section, index) => {
-    const goalMatch = section.match(/### 목표 (\d+): (.+)/)
-    if (!goalMatch) return
-
-    const goalId = parseInt(goalMatch[1])
-    const title = goalMatch[2].trim()
-
-    // 목적 추출
-    const purposeMatch = section.match(/\* 목적: (.+)/)
-    const purpose = purposeMatch ? purposeMatch[1].trim() : ''
-
-    // 6개월 목표 추출
-    const sixMonthMatch = section.match(/\* 6개월 목표: (.+)/)
-    const sixMonthTarget = sixMonthMatch ? sixMonthMatch[1].trim() : ''
-
-    // 전체 설명 (목적 + 6개월 목표)
-    const description = `${purpose} ${sixMonthTarget}`.trim()
-
-    // 월간 계획 추출
-    const monthlySection = section.match(/#### 월간 소목표([\s\S]*?)(?=#### |$)/)?.[1] || ''
-    const monthlyPlans = extractMonthlyPlans(monthlySection)
-
-    // 주간 계획 추출
-    const weeklySection = section.match(/#### 주간 계획[^#]*/)?.[0] || ''
-    const weeklyPlans = extractWeeklyPlans(weeklySection)
-
-    goals.push({
-      id: goalId,
-      title,
-      description,
-      purpose,
-      sixMonthTarget,
-      monthlyPlans,
-      weeklyPlans
-    })
-  })
-
-  return goals
+  // 만약 이미 구조화된 데이터라면 그대로 반환
+  return data as ParsedGoal[]
 }
 
-// 월간 계획 파싱 헬퍼 함수
-function extractMonthlyPlans(monthlySection: string): Array<{ month: number; description: string }> {
-  const plans: Array<{ month: number; description: string }> = []
-  const monthlyMatches = monthlySection.match(/\* (\d+)개월차: (.+)/g)
-  
-  if (monthlyMatches) {
-    monthlyMatches.forEach(match => {
-      const monthMatch = match.match(/\* (\d+)개월차: (.+)/)
-      if (monthMatch) {
-        plans.push({
-          month: parseInt(monthMatch[1]),
-          description: monthMatch[2].trim()
-        })
-      }
-    })
-  }
-  
-  return plans
+// 더 이상 사용하지 않는 파싱 헬퍼 함수들
+function extractMonthlyPlans(monthlySection: string): Array<{ month: number; goal: string }> {
+  console.warn('extractMonthlyPlans is deprecated. Data is now structured by n8n.')
+  return []
 }
 
-// 주간 계획 파싱 헬퍼 함수
-function extractWeeklyPlans(weeklySection: string): Array<{ week: number; description: string }> {
-  const plans: Array<{ week: number; description: string }> = []
-  const weeklyMatches = weeklySection.match(/\* (\d+)주차: (.+)/g)
-  
-  if (weeklyMatches) {
-    // 처음 8주만 표시 (너무 많으면 UI가 복잡해짐)
-    weeklyMatches.slice(0, 8).forEach(match => {
-      const weekMatch = match.match(/\* (\d+)주차: (.+)/)
-      if (weekMatch) {
-        plans.push({
-          week: parseInt(weekMatch[1]),
-          description: weekMatch[2].trim()
-        })
-      }
-    })
-  }
-  
-  return plans
+function extractWeeklyPlans(weeklySection: string): Array<{ week: number; month: number; plan: string }> {
+  console.warn('extractWeeklyPlans is deprecated. Data is now structured by n8n.')
+  return []
 }
 
-// AI 추천으로부터 재활 목표 생성 훅
+// AI 추천으로부터 재활 목표 생성 훅 (구조화된 데이터 사용)
 export function useGenerateGoalsFromRecommendation() {
   const queryClient = useQueryClient()
 
@@ -329,11 +257,11 @@ export function useGenerateGoalsFromRecommendation() {
     mutationFn: async ({
       recommendationId,
       patientId,
-      selectedGoalIds
+      selectedPlanNumbers
     }: {
       recommendationId: string
       patientId: string
-      selectedGoalIds: number[]
+      selectedPlanNumbers: number[]
     }) => {
       // AI 추천 데이터 조회
       const { data: recommendation, error: fetchError } = await supabase
@@ -346,17 +274,16 @@ export function useGenerateGoalsFromRecommendation() {
         throw new Error('Failed to fetch AI recommendation')
       }
 
-      // 마크다운을 파싱하여 목표 추출
-      const parsedGoals = parseAIRecommendationGoals(recommendation.six_month_goals)
-      
-      // 선택된 목표들만 필터링
-      const selectedGoals = parsedGoals.filter(goal => selectedGoalIds.includes(goal.id))
+      // 구조화된 recommendations 배열에서 선택된 계획들만 필터링
+      const selectedGoals = recommendation.recommendations.filter(
+        (plan: any) => selectedPlanNumbers.includes(plan.plan_number)
+      )
       
       // 각 목표를 개별 재활 목표로 변환
-      const goals = selectedGoals.map(goal => ({
+      const goals = selectedGoals.map((plan: any) => ({
         patient_id: patientId,
-        title: goal.title,
-        description: goal.description,
+        title: plan.title,
+        description: plan.purpose,
         target_date: calculateTargetDate('6개월'),
         priority: 'medium' as const,
         status: 'active' as const,

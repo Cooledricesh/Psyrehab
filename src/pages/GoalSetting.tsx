@@ -5,6 +5,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { PatientService } from '@/services/patients';
 import { supabase } from '@/lib/supabase';
 import useAIResponseParser from '@/hooks/useAIResponseParser';
+import { useAIRecommendationByAssessment } from '@/hooks/useAIRecommendations';
+import { ENV } from '@/lib/env';
 
 interface AssessmentFormData {
   focusTime: string;
@@ -21,6 +23,7 @@ const GoalSetting: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
+  const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
   const [aiRecommendations, setAiRecommendations] = useState<any>(null);
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [pollingAttempts, setPollingAttempts] = useState(0);
@@ -91,61 +94,110 @@ const GoalSetting: React.FC = () => {
 
   const patients = patientsResponse?.data || [];
 
-  // AI 추천 결과 폴링
-  const { data: memoryAIResponse, refetch: refetchMemoryAI } = useQuery({
-    queryKey: [`ai-response-${selectedPatient}`],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`http://localhost:3001/api/patients/${selectedPatient}/ai-response`);
-        if (!response.ok) {
-          return null;
-        }
-        const data = await response.json();
-        console.log('✅ AI 추천 결과 받음:', data);
-        return data;
-      } catch (error) {
-        console.log('⚠️ AI 추천 결과 조회 실패:', error);
-        return null;
-      }
-    },
-    enabled: false, // 수동으로만 호출되도록 변경
-    refetchInterval: 8000, // 8초마다 폴링 (AI 처리가 25초+ 걸리므로)
-    retry: 1,
-  });
+  // AI 추천 결과 조회 (평가 ID 기반으로 수정)
+  const { data: aiRecommendationData, refetch: refetchAIRecommendation } = useAIRecommendationByAssessment(
+    currentAssessmentId,  // currentAssessmentId 사용
+    null  // 환자 ID를 null로 설정
+  );
 
-  // AI 추천 결과 변화 감지 (단순화됨)
+  // AI 처리 상태 폴링을 위한 별도 effect
   React.useEffect(() => {
-    if (!memoryAIResponse) {
-      if (currentStep === 3) {
-        setPollingAttempts(prev => prev + 1);
+    if (currentStep !== 3 || !currentAssessmentId) return;
+
+    let pollInterval: NodeJS.Timeout;
+    let pollCount = 0;
+    const maxPolls = 30; // 최대 30번 (2.5분)
+
+    const pollAIStatus = async () => {
+      try {
+        pollCount++;
+        console.log(`📊 AI 처리 상태 폴링 ${pollCount}/${maxPolls}:`, currentAssessmentId);
+        
+        // ai_goal_recommendations 테이블에서 AI 처리 상태 확인
+        const { data: recommendation, error } = await supabase
+          .from('ai_goal_recommendations')
+          .select('id, n8n_processing_status, assessment_id')
+          .eq('assessment_id', currentAssessmentId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('❌ AI 추천 상태 조회 실패:', error);
+          return;
+        }
+
+        console.log('📋 AI 처리 상태:', recommendation);
+
+        if (recommendation && recommendation.n8n_processing_status === 'completed') {
+          console.log('✅ AI 처리 완료! 추천 ID:', recommendation.id);
+          clearInterval(pollInterval);
+          
+          // AI 추천 데이터 다시 조회
+          refetchAIRecommendation();
+          setIsProcessing(false);
+          
+        } else if (recommendation && recommendation.n8n_processing_status === 'failed') {
+          console.error('❌ AI 처리 실패');
+          clearInterval(pollInterval);
+          alert('AI 추천 처리가 실패했습니다. 다시 시도해주세요.');
+          setCurrentStep(2);
+          setIsProcessing(false);
+          
+        } else if (pollCount >= maxPolls) {
+          console.log('⏰ 폴링 횟수 초과');
+          clearInterval(pollInterval);
+          alert('AI 분석이 예상보다 오래 걸리고 있습니다. 잠시 후 다시 확인해주세요.');
+          setIsProcessing(false);
+        } else {
+          console.log('⏳ AI 처리 진행 중... 상태:', recommendation?.n8n_processing_status || 'waiting');
+        }
+      } catch (error) {
+        console.error('폴링 중 오류:', error);
       }
+    };
+
+    // 즉시 한 번 확인
+    pollAIStatus();
+    
+    // 5초마다 폴링
+    pollInterval = setInterval(pollAIStatus, 5000);
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [currentStep, currentAssessmentId, refetchAIRecommendation]);
+
+  // AI 추천 결과 변화 감지 (구조화된 데이터 사용)
+  React.useEffect(() => {
+    if (!aiRecommendationData || !currentAssessmentId) return;
+
+    console.log('📊 AI 추천 데이터 수신:', aiRecommendationData);
+
+    // 현재 평가 ID와 일치하는 추천인지 확인
+    if (aiRecommendationData.assessment_id !== currentAssessmentId) {
+      console.log('⚠️ 다른 평가의 추천 데이터입니다.');
       return;
     }
 
-    // 이미 4단계 이상이면 처리하지 않음
-    if (currentStep >= 4) {
-      console.log('🚫 이미 4단계 이상이므로 AI 응답 처리 건너뜀');
-      return;
-    }
-
-    console.log('🔍 AI 응답 파싱 시작');
-    const parsedResult = parseAIResponse(memoryAIResponse);
-
-    if (parsedResult.goals.length >= 3) {
-      console.log('✅ 파싱 성공! 3개 목표로 분리됨');
+    // 구조화된 데이터 처리
+    if (aiRecommendationData.recommendations && Array.isArray(aiRecommendationData.recommendations)) {
+      console.log('✅ AI 추천 데이터 처리 성공!', aiRecommendationData.recommendations.length, '개 계획');
       setAiRecommendations({
-        ...memoryAIResponse,
-        goals: parsedResult.goals,
-        reasoning: parsedResult.reasoning
+        goals: aiRecommendationData.recommendations,
+        reasoning: aiRecommendationData.patient_analysis?.insights || 'AI가 생성한 맞춤형 재활 계획입니다.',
+        patient_analysis: aiRecommendationData.patient_analysis
       });
-      setCurrentStep(4);
-    } else {
-      console.log('⚠️ 목표 파싱 실패');
-      // 빈 결과라도 4단계로 이동하여 사용자가 확인할 수 있게 함
-      setAiRecommendations(memoryAIResponse);
-      setCurrentStep(4);
+      
+      // AI 처리 단계에서 추천 단계로 이동
+      if (currentStep === 3) {
+        setCurrentStep(4);
+        setIsProcessing(false);
+      }
     }
-  }, [memoryAIResponse, currentStep, parseAIResponse]);
+  }, [aiRecommendationData, currentAssessmentId, currentStep]);
 
   // 평가 데이터 저장 mutation
   const saveAssessmentMutation = useMutation({
@@ -160,10 +212,40 @@ const GoalSetting: React.FC = () => {
           patient_id: selectedPatient!,
           focus_time: assessmentData.focusTime,
           motivation_level: assessmentData.motivationLevel,
-          past_successes: assessmentData.pastSuccesses.length > 0 ? assessmentData.pastSuccesses : null,
-          constraints: assessmentData.constraints.length > 0 ? assessmentData.constraints : null,
+          past_successes: [
+            ...(assessmentData.pastSuccesses.map((value: string) => {
+              // 값을 라벨로 변환
+              const mapping: Record<string, string> = {
+                'cooking': '요리/베이킹',
+                'exercise': '운동/산책',
+                'reading': '독서/공부',
+                'crafting': '만들기/그리기',
+                'socializing': '사람 만나기/대화',
+                'entertainment': '음악/영화 감상',
+                'organizing': '정리/청소',
+                'none': '특별히 없음'
+              };
+              return mapping[value] || value;
+            })),
+            ...(assessmentData.pastSuccessesOther ? [assessmentData.pastSuccessesOther] : [])
+          ].filter(Boolean),
+          constraints: [
+            ...(assessmentData.constraints.map((value: string) => {
+              // 값을 라벨로 변환
+              const mapping: Record<string, string> = {
+                'transport': '교통편 문제 (대중교통 이용 어려움)',
+                'financial': '경제적 부담 (비용 지출 어려움)',
+                'time': '시간 제약 (다른 일정으로 바쁨)',
+                'physical': '신체적 제약 (거동 불편, 체력 부족)',
+                'family': '가족 반대 (가족이 활동 반대)',
+                'none': '별다른 제약 없음'
+              };
+              return mapping[value] || value;
+            })),
+            ...(assessmentData.constraintsOther ? [assessmentData.constraintsOther] : [])
+          ].filter(Boolean),
           social_preference: assessmentData.socialPreference,
-          notes: [assessmentData.pastSuccessesOther, assessmentData.constraintsOther].filter(Boolean).join('; ') || null,
+          notes: null,
           assessed_by: userId,
         })
         .select()
@@ -203,10 +285,40 @@ const GoalSetting: React.FC = () => {
                 patient_id: selectedPatient!,
                 focus_time: assessmentData.focusTime,
                 motivation_level: assessmentData.motivationLevel,
-                past_successes: assessmentData.pastSuccesses.length > 0 ? assessmentData.pastSuccesses : null,
-                constraints: assessmentData.constraints.length > 0 ? assessmentData.constraints : null,
+                past_successes: [
+                  ...(assessmentData.pastSuccesses.map((value: string) => {
+                    // 값을 라벨로 변환
+                    const mapping: Record<string, string> = {
+                      'cooking': '요리/베이킹',
+                      'exercise': '운동/산책',
+                      'reading': '독서/공부',
+                      'crafting': '만들기/그리기',
+                      'socializing': '사람 만나기/대화',
+                      'entertainment': '음악/영화 감상',
+                      'organizing': '정리/청소',
+                      'none': '특별히 없음'
+                    };
+                    return mapping[value] || value;
+                  })),
+                  ...(assessmentData.pastSuccessesOther ? [assessmentData.pastSuccessesOther] : [])
+                ].filter(Boolean),
+                constraints: [
+                  ...(assessmentData.constraints.map((value: string) => {
+                    // 값을 라벨로 변환
+                    const mapping: Record<string, string> = {
+                      'transport': '교통편 문제 (대중교통 이용 어려움)',
+                      'financial': '경제적 부담 (비용 지출 어려움)',
+                      'time': '시간 제약 (다른 일정으로 바쁨)',
+                      'physical': '신체적 제약 (거동 불편, 체력 부족)',
+                      'family': '가족 반대 (가족이 활동 반대)',
+                      'none': '별다른 제약 없음'
+                    };
+                    return mapping[value] || value;
+                  })),
+                  ...(assessmentData.constraintsOther ? [assessmentData.constraintsOther] : [])
+                ].filter(Boolean),
                 social_preference: assessmentData.socialPreference,
-                notes: [assessmentData.pastSuccessesOther, assessmentData.constraintsOther].filter(Boolean).join('; ') || null,
+                notes: null,
                 assessed_by: newUserId,
               })
               .select()
@@ -238,45 +350,33 @@ const GoalSetting: React.FC = () => {
     }
   });
 
-  // AI 추천 요청 mutation
+  // AI 추천 요청 mutation (새로운 API 엔드포인트 사용)
   const requestAIRecommendationMutation = useMutation({
     mutationFn: async (assessmentId: string) => {
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      console.log('🔗 AI 추천 요청 시작:', assessmentId);
+      console.log('🌐 API URL:', ENV.API_URL);
+      console.log('📍 전체 URL:', `${ENV.API_URL}/api/ai/recommend`);
       
-      if (!webhookUrl) {
-        throw new Error('N8N Webhook URL이 환경변수에 설정되어 있지 않습니다.');
-      }
-      
-      console.log('🔗 N8N Webhook URL:', webhookUrl);
-      console.log('📝 Request Data:', {
-        patientId: selectedPatient,
-        assessmentId: assessmentId,
-        assessmentData: formData,
-      });
-
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(`${ENV.API_URL}/api/ai/recommend`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          patientId: selectedPatient,
           assessmentId: assessmentId,
-          assessmentData: formData,
         }),
       });
 
-      console.log('📡 N8N Response Status:', response.status);
-      console.log('📡 N8N Response Headers:', response.headers);
+      console.log('📡 AI API Response Status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ N8N Error Response:', errorText);
+        console.error('❌ AI API Error Response:', errorText);
         throw new Error(`AI 추천 요청 실패: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('✅ N8N Success Response:', result);
+      console.log('✅ AI API Success Response:', result);
       return result;
     },
   });
@@ -287,41 +387,31 @@ const GoalSetting: React.FC = () => {
 
     try {
       setIsProcessing(true);
+      
+      // 기존 AI 추천 데이터 초기화
+      setAiRecommendations(null);
+      setRecommendationId(null);
+      setCurrentAssessmentId(null);
+      
       setCurrentStep(3); // AI 처리 단계로 이동
       setPollingAttempts(0); // 폴링 시도 횟수 초기화
 
       // 1. 평가 데이터 저장
       const savedAssessment = await saveAssessmentMutation.mutateAsync(formData);
       
+      // 현재 평가 ID 저장
+      setCurrentAssessmentId(savedAssessment.id);
+      
       // 2. AI 추천 요청
+      console.log('🚀 AI 추천 요청 시작:', savedAssessment.id);
       const aiResponse = await requestAIRecommendationMutation.mutateAsync(savedAssessment.id);
       
-      // 3. 폴링 시작 (수동으로 refetch 호출)
-      const startPolling = () => {
-        const pollInterval = setInterval(async () => {
-          try {
-            const result = await refetchMemoryAI();
-            if (result.data && result.data.goals) {
-              clearInterval(pollInterval);
-            }
-          } catch (error) {
-            console.log('폴링 중 오류:', error);
-          }
-        }, 8000);
-
-        // 최대 폴링 시간 설정 (2분)
-        setTimeout(() => {
-          clearInterval(pollInterval);
-        }, 120000);
-      };
-
-      startPolling();
+      // 폴링은 useEffect에서 자동으로 시작됨
       
     } catch (error) {
       console.error('AI 추천 처리 중 오류:', error);
       alert('AI 추천 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       setCurrentStep(2); // 평가 단계로 되돌리기
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -340,6 +430,7 @@ const GoalSetting: React.FC = () => {
     // 모든 상태 완전 초기화
     setAiRecommendations(null);
     setRecommendationId(null);
+    setCurrentAssessmentId(null);  // 추가
     setSelectedGoal('');
     setDetailedGoals(null);
     setPollingAttempts(0);
@@ -779,7 +870,7 @@ const GoalSetting: React.FC = () => {
                 <button
                   onClick={() => {
                     setPollingAttempts(0);
-                    refetchMemoryAI();
+                    refetchAIRecommendation();
                   }}
                   className="mt-3 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
                 >
@@ -814,11 +905,13 @@ const GoalSetting: React.FC = () => {
                   </summary>
                   <div className="px-4 pb-4 border-t border-gray-100">
                     <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 mt-3">
-                      <ul className="space-y-1">
-                        <li>• 주요 강점: 사회적 활동에 대한 흥미</li>
-                        <li>• 핵심 제약: 시간과 금전적 제약</li>
-                        <li>• 목표 설정 방향: 집단활동 활동을 통한 작은 성취 경험 쌓기</li>
-                      </ul>
+                      {typeof aiRecommendations.reasoning === 'string' ? (
+                        <div className="whitespace-pre-line">{aiRecommendations.reasoning}</div>
+                      ) : (
+                        <ul className="space-y-1">
+                          <li>• 분석 진행 중...</li>
+                        </ul>
+                      )}
                     </div>
                   </div>
                 </details>
@@ -934,21 +1027,8 @@ const GoalSetting: React.FC = () => {
                   const detailed = {
                     selectedIndex: parseInt(selectedGoal),
                     sixMonthGoal: selectedGoalData,
-                    monthlyGoals: Array.from({ length: 6 }, (_, i) => ({
-                      id: i + 1,
-                      month: i + 1,
-                      title: `${i + 1}개월차 단계`,
-                      description: `${selectedGoalData.title}의 ${i + 1}개월차 세부 목표입니다.`,
-                      status: 'pending'
-                    })),
-                    weeklyGoals: Array.from({ length: 24 }, (_, i) => ({
-                      id: i + 1,
-                      week: i + 1,
-                      month: Math.ceil((i + 1) / 4),
-                      title: `${i + 1}주차 실행`,
-                      description: `${selectedGoalData.title}의 ${i + 1}주차 실행 목표입니다.`,
-                      status: 'pending'
-                    }))
+                    monthlyGoals: selectedGoalData.monthlyGoals || [],
+                    weeklyGoals: selectedGoalData.weeklyPlans || []
                   };
                   
                   console.log('생성된 상세 목표:', detailed);
@@ -992,7 +1072,9 @@ const GoalSetting: React.FC = () => {
               <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
                 <h5 className="font-semibold text-blue-900 mb-2">{detailedGoals.sixMonthGoal.title}</h5>
                 <div className="text-blue-800 text-sm">
-                  {detailedGoals.sixMonthGoal.description?.split('\n').slice(0, 3).join('\n')}
+                  <p className="font-medium mb-1">6개월 목표:</p>
+                  <p>{detailedGoals.sixMonthGoal.sixMonthGoal}</p>
+                  <p className="mt-2">목적: {detailedGoals.sixMonthGoal.purpose}</p>
                 </div>
               </div>
             </div>
@@ -1009,7 +1091,7 @@ const GoalSetting: React.FC = () => {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    월간 목표 (6개)
+                    월간 목표 ({detailedGoals.monthlyGoals.length}개)
                   </button>
                   <button
                     onClick={() => setViewMode('weekly')}
@@ -1019,7 +1101,7 @@ const GoalSetting: React.FC = () => {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    주간 목표 (24주)
+                    주간 목표 ({detailedGoals.weeklyGoals.length}주)
                   </button>
                 </div>
               </div>
@@ -1029,14 +1111,14 @@ const GoalSetting: React.FC = () => {
                 {(!viewMode || viewMode === 'monthly') && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {detailedGoals.monthlyGoals.map((goal: any) => (
-                      <div key={goal.id} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div key={goal.month} className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-semibold text-green-900 text-sm">{goal.title}</h5>
+                          <h5 className="font-semibold text-green-900 text-sm">{goal.month}개월차</h5>
                           <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
                             {goal.month}월
                           </span>
                         </div>
-                        <p className="text-green-800 text-xs">{goal.description}</p>
+                        <p className="text-green-800 text-xs">{goal.goal}</p>
                       </div>
                     ))}
                   </div>
@@ -1054,14 +1136,14 @@ const GoalSetting: React.FC = () => {
                           {detailedGoals.weeklyGoals
                             .filter((goal: any) => goal.month === month)
                             .map((goal: any) => (
-                              <div key={goal.id} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                              <div key={goal.week} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
                                 <div className="flex items-center justify-between mb-1">
-                                  <h6 className="font-medium text-orange-900 text-xs">{goal.title}</h6>
+                                  <h6 className="font-medium text-orange-900 text-xs">{goal.week}주차</h6>
                                   <span className="text-xs bg-orange-200 text-orange-800 px-1 py-0.5 rounded">
                                     {goal.week}주
                                   </span>
                                 </div>
-                                <p className="text-orange-800 text-xs">{goal.description}</p>
+                                <p className="text-orange-800 text-xs">{goal.plan}</p>
                               </div>
                             ))}
                         </div>

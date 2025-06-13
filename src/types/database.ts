@@ -31,6 +31,39 @@ export type {
   WeeklyProgressOverview,
 } from './supabase'
 
+// AI Recommendation structured data types (n8n stores structured data directly)
+export interface AIRecommendationPlan {
+  plan_number: number
+  title: string
+  purpose: string
+  sixMonthGoal: string
+  monthlyGoals: Array<{
+    month: number
+    goal: string
+  }>
+  weeklyPlans: Array<{
+    week: number
+    month: number
+    plan: string
+  }>
+}
+
+export interface StructuredAIRecommendation {
+  id: string
+  patient_id: string
+  assessment_id: string | null
+  recommendation_date: string
+  recommendations: AIRecommendationPlan[]
+  patient_analysis?: any
+  success_indicators?: any
+  execution_strategy?: any
+  is_active: boolean
+  applied_at: string | null
+  applied_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 // Additional derived types for the application
 export interface UserProfile {
   id: string
@@ -73,7 +106,15 @@ export interface AssessmentWithRecommendations {
   id: string
   patient_id: string
   assessment_date: string
-  ai_recommendations?: any[] // AIGoalRecommendation[]
+  ai_recommendation_status?: 'pending' | 'processing' | 'completed' | 'failed'
+  ai_recommendation_id?: string | null
+  ai_recommendations?: StructuredAIRecommendation[]
+}
+
+// Assessment status checking types
+export interface AIRecommendationStatus {
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  recommendationId: string | null
 }
 
 // Goal hierarchy types

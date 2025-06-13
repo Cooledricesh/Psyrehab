@@ -360,11 +360,11 @@ export async function updateGoalCompletion(goalId: string, completionRate: numbe
   return data
 }
 
-// Create goals from AI recommendation
+// Create goals from AI recommendation (updated for structured data)
 export async function createGoalsFromAIRecommendation(
   recommendationId: string,
   socialWorkerId: string,
-  selectedGoals?: string[] // Optional array of goal IDs from the recommendation
+  selectedPlanNumbers?: number[] // Optional array of plan numbers from the recommendation
 ) {
   // First, get the AI recommendation
   const { data: recommendation, error: recommendationError } = await supabase
@@ -375,44 +375,40 @@ export async function createGoalsFromAIRecommendation(
 
   if (recommendationError) throw recommendationError
 
-  const sixMonthGoals = recommendation.six_month_goals || []
-  const monthlyPlans = recommendation.monthly_plans || []
-  const weeklyPlans = recommendation.weekly_plans || []
+  // Get structured recommendations array
+  const allPlans = recommendation.recommendations || []
 
-  // Filter goals if specific ones are selected
-  const goalsToCreate = selectedGoals 
-    ? sixMonthGoals.filter((goal: any) => selectedGoals.includes(goal.id))
-    : sixMonthGoals
+  // Filter plans if specific ones are selected
+  const plansToCreate = selectedPlanNumbers 
+    ? allPlans.filter((plan: any) => selectedPlanNumbers.includes(plan.plan_number))
+    : allPlans
 
   const createdGoals = []
 
-  for (const aiGoal of goalsToCreate) {
-    // Create the main goal
+  for (const plan of plansToCreate) {
+    // Create the main 6-month goal
     const mainGoal = {
       patient_id: recommendation.patient_id,
       created_by_social_worker_id: socialWorkerId,
-      title: aiGoal.title,
-      description: aiGoal.description,
+      title: plan.title,
+      description: plan.purpose,
       goal_type: 'long_term',
       status: 'pending',
-      priority: aiGoal.priority === 'high' ? 4 : aiGoal.priority === 'medium' ? 3 : 2,
+      priority: 3, // Default to medium priority
       target_completion_rate: 100,
       is_ai_suggested: true,
       is_from_ai_recommendation: true,
       source_recommendation_id: recommendationId,
       ai_suggestion_details: {
-        original_ai_goal: aiGoal,
-        interventions: aiGoal.interventions,
-        success_criteria: aiGoal.success_criteria,
-        potential_barriers: aiGoal.potential_barriers,
-        adaptation_strategies: aiGoal.adaptation_strategies,
+        original_ai_plan: plan,
+        plan_number: plan.plan_number,
+        six_month_goal: plan.sixMonthGoal,
       },
       evaluation_criteria: {
         type: 'behavioral_observation',
-        description: `${aiGoal.title} 달성을 위한 평가`,
-        measurement_method: 'weekly_assessment',
-        target_value: aiGoal.target_outcome,
-        success_criteria: aiGoal.success_criteria,
+        description: `${plan.title} 달성을 위한 평가`,
+        measurement_method: 'monthly_assessment',
+        target_value: plan.sixMonthGoal,
       },
     }
 
@@ -426,80 +422,75 @@ export async function createGoalsFromAIRecommendation(
     createdGoals.push(createdMainGoal)
 
     // Create monthly sub-goals
-    const relevantMonthlyPlans = monthlyPlans.filter((plan: any) => 
-      plan.goals.some((goalRef: any) => goalRef.includes(aiGoal.id))
-    )
-
-    for (const monthPlan of relevantMonthlyPlans) {
-      const monthlyGoal = {
-        patient_id: recommendation.patient_id,
-        created_by_social_worker_id: socialWorkerId,
-        parent_goal_id: createdMainGoal.id,
-        title: `${monthPlan.month}개월차: ${aiGoal.title}`,
-        description: `월별 목표: ${monthPlan.focus_areas?.join(', ')}`,
-        goal_type: 'short_term',
-        status: 'pending',
-        priority: mainGoal.priority,
-        month_number: monthPlan.month,
-        sequence_number: monthPlan.month,
-        target_completion_rate: 100,
-        is_ai_suggested: true,
-        is_from_ai_recommendation: true,
-        source_recommendation_id: recommendationId,
-        ai_suggestion_details: {
-          monthly_plan: monthPlan,
-          interventions: monthPlan.interventions,
-          milestones: monthPlan.milestones,
-        },
-      }
-
-      const { data: createdMonthlyGoal, error: monthlyGoalError } = await supabase
-        .from('rehabilitation_goals')
-        .insert(monthlyGoal)
-        .select()
-        .single()
-
-      if (monthlyGoalError) throw monthlyGoalError
-      createdGoals.push(createdMonthlyGoal)
-
-      // Create weekly sub-goals for this month
-      const relevantWeeklyPlans = weeklyPlans.filter((plan: any) => 
-        plan.month === monthPlan.month
-      )
-
-      for (const weekPlan of relevantWeeklyPlans) {
-        const weeklyGoal = {
+    if (plan.monthlyGoals && plan.monthlyGoals.length > 0) {
+      for (const monthlyGoal of plan.monthlyGoals) {
+        const monthlyGoalData = {
           patient_id: recommendation.patient_id,
           created_by_social_worker_id: socialWorkerId,
-          parent_goal_id: createdMonthlyGoal.id,
-          title: `${weekPlan.week}주차: ${weekPlan.objectives[0] || '주간 목표'}`,
-          description: `주간 활동: ${weekPlan.activities?.join(', ')}`,
-          goal_type: 'weekly',
+          parent_goal_id: createdMainGoal.id,
+          title: `${monthlyGoal.month}개월차: ${plan.title}`,
+          description: monthlyGoal.goal,
+          goal_type: 'short_term',
           status: 'pending',
           priority: mainGoal.priority,
-          week_number: weekPlan.week,
-          month_number: weekPlan.month,
-          sequence_number: weekPlan.week,
+          month_number: monthlyGoal.month,
+          sequence_number: monthlyGoal.month,
           target_completion_rate: 100,
           is_ai_suggested: true,
           is_from_ai_recommendation: true,
           source_recommendation_id: recommendationId,
           ai_suggestion_details: {
-            weekly_plan: weekPlan,
-            objectives: weekPlan.objectives,
-            activities: weekPlan.activities,
-            measurements: weekPlan.measurements,
+            monthly_goal: monthlyGoal,
+            plan_number: plan.plan_number,
           },
         }
 
-        const { data: createdWeeklyGoal, error: weeklyGoalError } = await supabase
+        const { data: createdMonthlyGoal, error: monthlyGoalError } = await supabase
           .from('rehabilitation_goals')
-          .insert(weeklyGoal)
+          .insert(monthlyGoalData)
           .select()
           .single()
 
-        if (weeklyGoalError) throw weeklyGoalError
-        createdGoals.push(createdWeeklyGoal)
+        if (monthlyGoalError) throw monthlyGoalError
+        createdGoals.push(createdMonthlyGoal)
+
+        // Create weekly sub-goals for this month
+        const relevantWeeklyPlans = plan.weeklyPlans?.filter((weekPlan: any) => 
+          weekPlan.month === monthlyGoal.month
+        ) || []
+
+        for (const weekPlan of relevantWeeklyPlans) {
+          const weeklyGoalData = {
+            patient_id: recommendation.patient_id,
+            created_by_social_worker_id: socialWorkerId,
+            parent_goal_id: createdMonthlyGoal.id,
+            title: `${weekPlan.week}주차: ${plan.title}`,
+            description: weekPlan.plan,
+            goal_type: 'weekly',
+            status: 'pending',
+            priority: mainGoal.priority,
+            week_number: weekPlan.week,
+            month_number: weekPlan.month,
+            sequence_number: weekPlan.week,
+            target_completion_rate: 100,
+            is_ai_suggested: true,
+            is_from_ai_recommendation: true,
+            source_recommendation_id: recommendationId,
+            ai_suggestion_details: {
+              weekly_plan: weekPlan,
+              plan_number: plan.plan_number,
+            },
+          }
+
+          const { data: createdWeeklyGoal, error: weeklyGoalError } = await supabase
+            .from('rehabilitation_goals')
+            .insert(weeklyGoalData)
+            .select()
+            .single()
+
+          if (weeklyGoalError) throw weeklyGoalError
+          createdGoals.push(createdWeeklyGoal)
+        }
       }
     }
   }

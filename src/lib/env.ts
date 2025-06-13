@@ -3,6 +3,7 @@ export const ENV = {
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   N8N_WEBHOOK_URL: import.meta.env.VITE_N8N_WEBHOOK_URL,
+  API_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
 } as const
 
 // Validation function
@@ -36,4 +37,5 @@ export function logEnvironmentStatus() {
   console.log('- SUPABASE_URL:', ENV.SUPABASE_URL ? '✅ Set' : '❌ Missing')
   console.log('- SUPABASE_ANON_KEY:', ENV.SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing')
   console.log('- N8N_WEBHOOK_URL:', ENV.N8N_WEBHOOK_URL ? '✅ Set' : '❌ Missing')
+  console.log('- API_URL:', ENV.API_URL ? `✅ Set (${ENV.API_URL})` : '❌ Missing')
 } 

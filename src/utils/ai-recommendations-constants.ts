@@ -195,33 +195,50 @@ export const getConfidenceLevelLabel = (level: string) =>
 export const getTimeFrameLabel = (timeFrame: string) =>
   TIME_FRAME_LABELS[timeFrame as keyof typeof TIME_FRAME_LABELS] || timeFrame
 
-// Validation rules
+// Validation rules (updated for structured data from n8n)
 export const AI_RECOMMENDATION_VALIDATION = {
   patient_analysis: {
     required: ['strengths', 'challenges', 'risk_factors', 'protective_factors'],
     maxLength: 5000,
   },
-  six_month_goals: {
-    minGoals: 1,
-    maxGoals: 8,
-    requiredFields: ['id', 'title', 'category', 'priority', 'description'],
+  recommendations: {
+    minPlans: 1,
+    maxPlans: 5,
+    requiredFields: ['plan_number', 'title', 'purpose', 'sixMonthGoal', 'monthlyGoals', 'weeklyPlans'],
   },
-  monthly_plans: {
+  monthlyGoals: {
     requiredMonths: 6,
-    requiredFields: ['month', 'goals', 'interventions', 'milestones'],
+    requiredFields: ['month', 'goal'],
   },
-  weekly_plans: {
+  weeklyPlans: {
     weeksPerMonth: 4,
-    requiredFields: ['week', 'objectives', 'activities', 'measurements'],
+    requiredFields: ['week', 'month', 'plan'],
   },
   success_indicators: {
     minIndicators: 3,
     maxIndicators: 15,
     requiredFields: ['id', 'type', 'description', 'measurement_method', 'frequency'],
   },
+  // Legacy validation rules (deprecated but kept for backward compatibility)
+  six_month_goals: {
+    minGoals: 1,
+    maxGoals: 8,
+    requiredFields: ['id', 'title', 'category', 'priority', 'description'],
+    deprecated: true,
+  },
+  monthly_plans: {
+    requiredMonths: 6,
+    requiredFields: ['month', 'goals', 'interventions', 'milestones'],
+    deprecated: true,
+  },
+  weekly_plans: {
+    weeksPerMonth: 4,
+    requiredFields: ['week', 'objectives', 'activities', 'measurements'],
+    deprecated: true,
+  },
 } as const
 
-// Default structures for AI recommendations
+// Default structures for AI recommendations (updated for structured data)
 export const DEFAULT_PATIENT_ANALYSIS = {
   strengths: [],
   challenges: [],
@@ -233,6 +250,28 @@ export const DEFAULT_PATIENT_ANALYSIS = {
   insights: '',
 } as const
 
+// New structured recommendation format
+export const DEFAULT_RECOMMENDATION_PLAN = {
+  plan_number: 1,
+  title: '',
+  purpose: '',
+  sixMonthGoal: '',
+  monthlyGoals: [],
+  weeklyPlans: [],
+} as const
+
+export const DEFAULT_MONTHLY_GOAL = {
+  month: 1,
+  goal: '',
+} as const
+
+export const DEFAULT_WEEKLY_PLAN = {
+  week: 1,
+  month: 1,
+  plan: '',
+} as const
+
+// Legacy default structures (deprecated but kept for backward compatibility)
 export const DEFAULT_GOAL_STRUCTURE = {
   id: '',
   title: '',
@@ -245,6 +284,7 @@ export const DEFAULT_GOAL_STRUCTURE = {
   success_criteria: [],
   potential_barriers: [],
   adaptation_strategies: [],
+  deprecated: true,
 } as const
 
 export const DEFAULT_SUCCESS_INDICATOR = {

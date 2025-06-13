@@ -38,9 +38,7 @@ export async function getAssessmentWithRecommendations(assessmentId: string): Pr
         id,
         recommendation_date,
         patient_analysis,
-        six_month_goals,
-        monthly_plans,
-        weekly_plans,
+        recommendations,
         execution_strategy,
         success_indicators,
         is_active,
@@ -175,4 +173,28 @@ export async function checkAssessmentDue(patientId: string, daysSinceLastAssessm
   const daysSince = Math.floor((Date.now() - lastAssessmentDate.getTime()) / (1000 * 60 * 60 * 24))
   
   return daysSince >= daysSinceLastAssessment
+}
+
+// Check AI recommendation status for an assessment
+export async function checkAIRecommendationStatus(assessmentId: string) {
+  const { data, error } = await supabase
+    .from('assessments')
+    .select('ai_recommendation_status, ai_recommendation_id')
+    .eq('id', assessmentId)
+    .single()
+
+  if (error) throw error
+
+  // completed 상태면 ai_recommendation_id로 데이터 조회
+  if (data.ai_recommendation_status === 'completed' && data.ai_recommendation_id) {
+    return {
+      status: 'completed',
+      recommendationId: data.ai_recommendation_id
+    }
+  }
+
+  return {
+    status: data.ai_recommendation_status || 'pending',
+    recommendationId: null
+  }
 } 

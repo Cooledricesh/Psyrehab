@@ -1,4 +1,4 @@
-// AI 응답 파싱을 위한 타입 정의
+// AI 응답 파싱을 위한 타입 정의 (n8n에서 구조화된 데이터를 직접 저장하므로 파싱이 더 이상 필요하지 않음)
 interface AIGoal {
   id: number;
   title: string;
@@ -11,8 +11,7 @@ interface AIGoal {
 
 interface AIResponse {
   goals?: any;
-  six_month_goals?: any;
-  recommendations?: any;
+  recommendations?: any; // 새로운 구조화된 데이터
   response?: any;
   content?: any;
   reasoning?: string;
@@ -25,8 +24,25 @@ interface ParsedAIResponse {
 
 const useAIResponseParser = () => {
   
-  // 데이터 구조 정규화 (단순화)
+  // 구조화된 추천 데이터를 목표 형식으로 변환
+  const normalizeRecommendationsData = (recommendations: any[]): AIGoal[] => {
+    if (!Array.isArray(recommendations)) return [];
+    
+    return recommendations.map((plan, index) => ({
+      id: plan.plan_number || index + 1,
+      title: plan.title || `계획 ${index + 1}`,
+      description: plan.purpose || '',
+      purpose: plan.purpose,
+      sixMonthTarget: plan.sixMonthGoal,
+      monthlyPlans: plan.monthlyGoals,
+      weeklyPlans: plan.weeklyPlans
+    }));
+  };
+
+  // 데이터 구조 정규화 (이전 버전과의 호환성을 위해 유지)
   const normalizeGoalsData = (data: any): any[] => {
+    console.warn('normalizeGoalsData is deprecated. Use structured recommendations array instead.');
+    
     if (Array.isArray(data)) return data;
     if (typeof data === 'object' && data !== null) return Object.values(data);
     if (typeof data === 'string') {
@@ -40,8 +56,10 @@ const useAIResponseParser = () => {
     return [];
   };
 
-  // 3개 목표 파싱 (단순화된 버전)
+  // 3개 목표 파싱 (더 이상 사용되지 않음 - n8n이 구조화된 데이터를 제공)
   const parseThreeGoals = (text: string): AIGoal[] => {
+    console.warn('parseThreeGoals is deprecated. Data is now structured by n8n.');
+    
     if (!text) return [];
     
     // 패턴 1: ### 목표 N 형식
@@ -82,11 +100,12 @@ const useAIResponseParser = () => {
     return [];
   };
 
-  // 텍스트 소스 추출 (우선순위 순)
+  // 텍스트 소스 추출 (더 이상 사용되지 않음)
   const extractTextSources = (response: AIResponse): string[] => {
+    console.warn('extractTextSources is deprecated. Use structured recommendations array instead.');
+    
     const sources = [
       response.goals,
-      response.six_month_goals,
       response.recommendations,
       response.response,
       response.content
@@ -97,17 +116,27 @@ const useAIResponseParser = () => {
       .map(source => typeof source === 'string' ? source : JSON.stringify(source));
   };
 
-  // 메인 파싱 함수
+  // 메인 파싱 함수 (구조화된 데이터를 위해 업데이트됨)
   const parseAIResponse = (response: AIResponse): ParsedAIResponse => {
     console.log('🔍 AI 응답 파싱 시작:', response);
 
-    // 1. 직접적인 goals 구조 확인
+    // 1. 새로운 구조화된 recommendations 배열 확인
+    if (response.recommendations && Array.isArray(response.recommendations)) {
+      console.log('✅ 구조화된 추천 데이터 발견');
+      const normalizedGoals = normalizeRecommendationsData(response.recommendations);
+      return {
+        goals: normalizedGoals,
+        reasoning: response.reasoning
+      };
+    }
+
+    // 2. 직접적인 goals 구조 확인 (이전 버전과의 호환성)
     if (response.goals) {
       const normalizedGoals = normalizeGoalsData(response.goals);
       if (normalizedGoals.length > 0) {
         // 이미 구조화된 데이터라면 그대로 사용
         if (normalizedGoals.length >= 3 && normalizedGoals[0]?.title) {
-          console.log('✅ 구조화된 목표 데이터 발견');
+          console.log('✅ 기존 구조화된 목표 데이터 발견');
           return {
             goals: normalizedGoals.slice(0, 3).map((goal, index) => ({
               id: index + 1,
@@ -122,7 +151,7 @@ const useAIResponseParser = () => {
           };
         }
 
-        // 텍스트 파싱 필요
+        // 텍스트 파싱 필요 (deprecated)
         const firstGoal = normalizedGoals[0];
         const textToParse = typeof firstGoal === 'string' 
           ? firstGoal 
@@ -130,18 +159,18 @@ const useAIResponseParser = () => {
         
         const parsedGoals = parseThreeGoals(textToParse);
         if (parsedGoals.length >= 3) {
-          console.log('✅ 첫 번째 목표에서 3개 파싱 성공');
+          console.log('✅ 첫 번째 목표에서 3개 파싱 성공 (deprecated)');
           return { goals: parsedGoals, reasoning: response.reasoning };
         }
       }
     }
 
-    // 2. 텍스트 소스에서 파싱 시도
+    // 3. 텍스트 소스에서 파싱 시도 (deprecated)
     const textSources = extractTextSources(response);
     for (const text of textSources) {
       const parsedGoals = parseThreeGoals(text);
       if (parsedGoals.length >= 3) {
-        console.log('✅ 텍스트 소스에서 3개 파싱 성공');
+        console.log('✅ 텍스트 소스에서 3개 파싱 성공 (deprecated)');
         return { goals: parsedGoals, reasoning: response.reasoning };
       }
     }
@@ -152,8 +181,9 @@ const useAIResponseParser = () => {
 
   return {
     parseAIResponse,
-    normalizeGoalsData,
-    parseThreeGoals
+    normalizeGoalsData, // deprecated but kept for compatibility
+    parseThreeGoals, // deprecated but kept for compatibility
+    normalizeRecommendationsData // new function for structured data
   };
 };
 

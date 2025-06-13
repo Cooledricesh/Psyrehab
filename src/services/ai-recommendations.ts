@@ -104,6 +104,51 @@ export async function getActivePatientRecommendation(patientId: string) {
   return data
 }
 
+// Get AI recommendation by assessment ID and patient ID
+export async function getAIRecommendationByAssessment(
+  assessmentId: string,
+  patientId: string
+): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('ai_goal_recommendations')
+    .select(`
+      *,
+      patient:patients!inner(full_name),
+      assessment:assessments!inner(*),
+      applied_by_social_worker:social_workers(full_name)
+    `)
+    .eq('assessment_id', assessmentId)
+    .eq('patient_id', patientId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error || !data) {
+    console.error('Error fetching AI recommendation:', error)
+    return null
+  }
+
+  // recommendations 배열에서 데이터 추출
+  const recommendations = data.recommendations || []
+  
+  return {
+    ...data,
+    // recommendations 배열은 이미 구조화된 데이터이므로 그대로 사용
+    // 호환성을 위해 legacy 필드들도 포함 (deprecated)
+    six_month_goals: recommendations,
+    monthly_plans: recommendations.flatMap((rec: any) => rec.monthlyGoals || []),
+    weekly_plans: recommendations.flatMap((rec: any) => rec.weeklyPlans || []),
+    parsed_recommendations: recommendations.map((rec: any) => ({
+      plan_number: rec.plan_number,
+      title: rec.title,
+      purpose: rec.purpose,
+      six_month_goal: rec.sixMonthGoal,
+      monthly_goals: rec.monthlyGoals,
+      weekly_plans: rec.weeklyPlans
+    }))
+  }
+}
+
 // Create a new AI recommendation
 export async function createAIRecommendation(recommendation: TablesInsert<'ai_goal_recommendations'>) {
   const { data, error } = await supabase
@@ -331,35 +376,88 @@ export async function generateAIRecommendationFromAssessment(
       support_system_quality: "medium",
       insights: "평가 결과를 종합한 전반적 분석"
     },
-    six_month_goals: [
+    recommendations: [
       {
-        id: "goal_1",
-        title: "사회적 기능 향상",
-        category: "social_functioning",
-        priority: "high",
-        description: "대인관계 기술 개발 및 사회적 참여 증대",
-        target_outcome: "주 2회 이상 사회적 활동 참여",
-        time_frame: "six_months",
-        interventions: ["social_skills_training", "group_therapy"],
-        success_criteria: ["사회적 상호작용 빈도 증가", "자신감 향상"],
-        potential_barriers: ["사회적 불안", "과거 부정적 경험"],
-        adaptation_strategies: ["점진적 노출", "지지적 환경 조성"]
+        plan_number: 1,
+        title: "사회적 기능 향상 계획",
+        purpose: "대인관계 기술 개발 및 사회적 참여 증대를 통한 전반적인 사회적 기능 향상",
+        sixMonthGoal: "6개월 후 주 2회 이상 지속적인 사회적 활동 참여 및 대인관계 만족도 향상",
+        monthlyGoals: [
+          { month: 1, goal: "기본적인 사회적 기술 습득 및 불안 감소" },
+          { month: 2, goal: "소규모 그룹 활동 참여 시작" },
+          { month: 3, goal: "대화 기술 향상 및 관계 형성" },
+          { month: 4, goal: "다양한 사회적 상황에서의 적응력 증진" },
+          { month: 5, goal: "독립적인 사회적 활동 계획 및 실행" },
+          { month: 6, goal: "장기적인 관계 유지 및 네트워크 구축" }
+        ],
+        weeklyPlans: [
+          { week: 1, month: 1, plan: "개별 상담을 통한 현재 상태 평가 및 목표 설정" },
+          { week: 2, month: 1, plan: "사회적 불안 관리 기법 학습" },
+          { week: 3, month: 1, plan: "기본적인 대화 기술 연습" },
+          { week: 4, month: 1, plan: "소규모 그룹 활동 관찰 및 준비" },
+          { week: 5, month: 2, plan: "첫 번째 그룹 활동 참여" },
+          { week: 6, month: 2, plan: "그룹 활동 경험 평가 및 피드백" },
+          { week: 7, month: 2, plan: "대화 주제 확장 연습" },
+          { week: 8, month: 2, plan: "갈등 상황 대처 방법 학습" },
+          { week: 9, month: 3, plan: "새로운 관계 형성 도전" },
+          { week: 10, month: 3, plan: "감정 표현 기술 향상" },
+          { week: 11, month: 3, plan: "상호 지지적 관계 구축" },
+          { week: 12, month: 3, plan: "관계 만족도 평가 및 조정" },
+          { week: 13, month: 4, plan: "다양한 사회적 환경 경험" },
+          { week: 14, month: 4, plan: "스트레스 관리 및 적응 기술" },
+          { week: 15, month: 4, plan: "리더십 기술 개발" },
+          { week: 16, month: 4, plan: "팀워크 및 협력 기술 향상" },
+          { week: 17, month: 5, plan: "개인적인 사회적 목표 설정" },
+          { week: 18, month: 5, plan: "독립적인 활동 계획 수립" },
+          { week: 19, month: 5, plan: "자기 주도적 관계 관리" },
+          { week: 20, month: 5, plan: "사회적 네트워크 확장" },
+          { week: 21, month: 6, plan: "장기적 관계 유지 전략" },
+          { week: 22, month: 6, plan: "지속적인 사회적 참여 계획" },
+          { week: 23, month: 6, plan: "성과 평가 및 미래 계획" },
+          { week: 24, month: 6, plan: "졸업 후 지속 관리 방안 수립" }
+        ]
+      },
+      {
+        plan_number: 2,
+        title: "일상생활 기능 향상 계획",
+        purpose: "독립적인 일상생활 수행 능력 향상 및 자립 준비",
+        sixMonthGoal: "6개월 후 독립적인 일상생활 관리 및 기본적인 자립 기술 습득",
+        monthlyGoals: [
+          { month: 1, goal: "기본적인 일상생활 기술 평가 및 개선" },
+          { month: 2, goal: "시간 관리 및 일정 계획 능력 향상" },
+          { month: 3, goal: "금전 관리 및 예산 수립 기술 습득" },
+          { month: 4, goal: "요리 및 가사 관리 기술 개발" },
+          { month: 5, goal: "교통 이용 및 지역사회 자원 활용" },
+          { month: 6, goal: "종합적인 자립생활 시뮬레이션" }
+        ],
+        weeklyPlans: [
+          { week: 1, month: 1, plan: "현재 일상생활 기능 평가 및 목표 설정" },
+          { week: 2, month: 1, plan: "개인 위생 및 건강 관리 기술 향상" },
+          { week: 3, month: 1, plan: "기본적인 가사일 기술 학습" },
+          { week: 4, month: 1, plan: "안전 관리 및 응급 상황 대처" }
+        ]
+      },
+      {
+        plan_number: 3,
+        title: "직업 준비 및 기술 개발 계획",
+        purpose: "취업을 위한 기본 역량 개발 및 직업 탐색 활동",
+        sixMonthGoal: "6개월 후 자신에게 적합한 직업 분야 탐색 완료 및 기본 직무 기술 습득",
+        monthlyGoals: [
+          { month: 1, goal: "진로 탐색 및 직업 관심 분야 파악" },
+          { month: 2, goal: "기본적인 직업 기술 및 태도 개발" },
+          { month: 3, goal: "의사소통 및 대인관계 기술 향상" },
+          { month: 4, goal: "실무 경험 및 현장 학습" },
+          { month: 5, goal: "취업 준비 활동 및 이력서 작성" },
+          { month: 6, goal: "모의 면접 및 취업 전략 수립" }
+        ],
+        weeklyPlans: [
+          { week: 1, month: 1, plan: "적성 검사 및 흥미 탐색 활동" },
+          { week: 2, month: 1, plan: "다양한 직업 정보 수집 및 분석" },
+          { week: 3, month: 1, plan: "직업 체험 활동 계획 수립" },
+          { week: 4, month: 1, plan: "기본적인 컴퓨터 활용 기술 학습" }
+        ]
       }
     ],
-    monthly_plans: Array.from({ length: 6 }, (_, index) => ({
-      month: index + 1,
-      goals: [`goal_1 관련 월별 목표 ${index + 1}`],
-      interventions: ["개별 상담", "집단 프로그램"],
-      milestones: [`${index + 1}개월차 주요 성과 지표`],
-      focus_areas: ["사회적 기능", "정서 조절"]
-    })),
-    weekly_plans: Array.from({ length: 24 }, (_, index) => ({
-      week: index + 1,
-      month: Math.floor(index / 4) + 1,
-      objectives: [`${index + 1}주차 목표`],
-      activities: ["개별 상담 1회", "집단 활동 1회"],
-      measurements: ["행동 관찰", "자가 평가"]
-    })),
     execution_strategy: {
       phase_1: "초기 평가 및 관계 형성 (1-2개월)",
       phase_2: "핵심 개입 및 기능 훈련 (3-4개월)",

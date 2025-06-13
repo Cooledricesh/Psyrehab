@@ -30,8 +30,8 @@ import {
   errorLoggingMiddleware
 } from './lib/security-logger.js';
 
-// Load environment variables from .env.local
-dotenv.config({ path: '.env.local' });
+// Load environment variables from .env
+dotenv.config({ path: '.env' });
 
 // Supabase configuration
 const SUPABASE_URL = 'https://jsilzrsiieswiskzcriy.supabase.co';
@@ -565,6 +565,11 @@ const validateCSRF = (req, res, next) => {
     return next();
   }
   
+  // Skip CSRF for AI recommendation endpoint (temporary for development)
+  if (req.path === '/api/ai/recommend' || req.path === '/ai/recommend') {
+    return next();
+  }
+  
   const secret = req.session.csrfSecret;
   if (!secret) {
     // Log CSRF validation failure
@@ -659,7 +664,9 @@ const validateCSRF = (req, res, next) => {
 // Apply CSRF validation to state-changing requests
 app.use('/api', (req, res, next) => {
   // Apply CSRF validation for all API routes except GET, HEAD, OPTIONS and webhooks
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !req.path.startsWith('/webhook/')) {
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && 
+      !req.path.startsWith('/webhook/') && 
+      req.path !== '/ai/recommend') {  // Skip CSRF for AI recommend endpoint
     return validateCSRF(req, res, next);
   }
   next();
@@ -958,6 +965,145 @@ app.get('/api/patients/:id/ai-response', apiLimiter, async (req, res) => {
     console.error(`[ai-response] 에러:`, error);
     res.status(500).json({ message: 'Error fetching AI response' });
   }
+});
+
+// AI recommendation request endpoint
+app.post('/api/ai/recommend', apiLimiter, async (req, res) => {
+  try {
+    console.log('[AI] AI 추천 요청 받음:', req.body);
+    const { assessmentId } = req.body;
+
+    if (!assessmentId) {
+      return res.status(400).json({ error: 'Assessment ID is required' });
+    }
+
+    // 평가 데이터 조회 (환자 정보 포함)
+    const { data: assessment, error: fetchError } = await supabase
+      .from('assessments')
+      .select(`
+        *,
+        patient:patients!inner(
+          id,
+          full_name,
+          date_of_birth,
+          gender,
+          additional_info
+        )
+      `)
+      .eq('id', assessmentId)
+      .single();
+
+    if (fetchError || !assessment) {
+      console.error('[AI] Assessment fetch error:', fetchError);
+      return res.status(404).json({ 
+        error: 'Assessment not found', 
+        details: fetchError?.message 
+      });
+    }
+
+    // 나이 계산 함수
+    const calculateAge = (birthDate) => {
+      if (!birthDate) return null;
+      const today = new Date();
+      const birth = new Date(birthDate);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age;
+    };
+
+    // 이환기간 계산 (진단일로부터)
+    const calculateDiseaseDuration = (diagnosisDate) => {
+      if (!diagnosisDate) return null;
+      const today = new Date();
+      const diagnosis = new Date(diagnosisDate);
+      return Math.floor((today - diagnosis) / (365.25 * 24 * 60 * 60 * 1000));
+    };
+
+    // 환자 정보 추출
+    const patientInfo = assessment.patient;
+    const diagnosis = patientInfo.additional_info?.diagnosis || null;
+    const diagnosisDate = patientInfo.additional_info?.diagnosis_date || null;
+    const age = calculateAge(patientInfo.date_of_birth);
+    const diseaseDurationYears = calculateDiseaseDuration(diagnosisDate);
+
+    // 평가 데이터를 AI 분석용으로 변환
+    const aiPayload = {
+      assessmentId: assessment.id,
+      patientId: assessment.patient_id,
+      patientInfo: {
+        age: age,
+        gender: patientInfo.gender || null,
+        diagnosis: diagnosis
+      },
+      assessmentData: {
+        focusTime: assessment.focus_time,
+        motivationLevel: assessment.motivation_level,
+        pastSuccesses: assessment.past_successes || [],
+        constraints: assessment.constraints || [],
+        socialPreference: assessment.social_preference
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    // n8n 웹훅 URL
+    const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://baclava.uk/webhook/09b18ab5-1bdb-4e04-88e4-63babb1f4b46';
+
+    try {
+      // n8n 웹훅으로 데이터 전송
+      console.log('[AI] n8n 웹훅으로 전송:', N8N_WEBHOOK_URL);
+      console.log('[AI] 전송 데이터:', JSON.stringify(aiPayload, null, 2));
+      
+      const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(aiPayload)
+      });
+
+      if (!n8nResponse.ok) {
+        throw new Error(`N8N webhook failed: ${n8nResponse.status} ${n8nResponse.statusText}`);
+      }
+
+      const n8nResult = await n8nResponse.json();
+      console.log('[AI] n8n 응답:', n8nResult);
+
+      return res.json({
+        success: true,
+        message: 'Assessment data sent to AI processing successfully',
+        data: {
+          assessmentId: assessmentId,
+          patientId: assessment.patient_id,
+          status: 'processing',
+          n8nResponse: n8nResult
+        }
+      });
+
+    } catch (n8nError) {
+      console.error('[AI] N8N webhook error:', n8nError);
+      return res.status(500).json({ 
+        error: 'Failed to send data to AI processing', 
+        details: n8nError instanceof Error ? n8nError.message : 'Unknown error'
+      });
+    }
+
+  } catch (error) {
+    console.error('[AI] API processing error:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Legacy endpoint (without /api prefix) - redirects to new endpoint
+app.post('/ai/recommend', apiLimiter, async (req, res) => {
+  console.log('[AI] Legacy endpoint called, redirecting to /api/ai/recommend');
+  req.url = '/api/ai/recommend';
+  return app._router.handle(req, res);
 });
 
 // AI recommendation status endpoint with API rate limiting

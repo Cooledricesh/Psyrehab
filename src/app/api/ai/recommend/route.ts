@@ -4,8 +4,19 @@ import { createClient } from '@/lib/supabase/server'
 // n8n 웹훅 URL (환경변수로 관리)
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://baclava.uk/webhook/09b18ab5-1bdb-4e04-88e4-63babb1f4b46'
 
-// 평가 데이터를 AI 분석용으로 변환하는 유틸리티 함수
+// 평가 데이터를 AI 분석용으로 변환하는 유틸리티 함수 (GoalSetting.tsx 구조에 맞게 수정)
 function transformAssessmentForAI(assessment: any) {
+  // focus_time을 분 단위 duration으로 변환
+  const getDurationFromFocusTime = (focusTime: string): number => {
+    switch (focusTime) {
+      case '5min': return 5
+      case '15min': return 15
+      case '30min': return 30
+      case '1hour': return 60
+      default: return 30
+    }
+  }
+
   return {
     assessmentId: assessment.id,
     patientId: assessment.patient_id,
@@ -17,43 +28,40 @@ function transformAssessmentForAI(assessment: any) {
     },
     assessmentData: {
       concentrationTime: {
-        duration: assessment.concentration_time?.duration || 0,
-        distractionLevel: assessment.concentration_time?.distraction_level || 1,
-        preferredEnvironment: assessment.concentration_time?.preferred_environment || 'quiet'
+        duration: getDurationFromFocusTime(assessment.focus_time),
+        focusTimeCategory: assessment.focus_time,
+        preferredEnvironment: 'quiet' // 기본값
       },
       motivationLevel: {
-        intrinsicMotivation: assessment.motivation_level?.intrinsic_motivation || 1,
-        externalInfluence: assessment.motivation_level?.external_influence || 1,
-        goalOrientation: assessment.motivation_level?.goal_orientation || 1,
-        selfEfficacy: assessment.motivation_level?.self_efficacy || 1
+        overallLevel: assessment.motivation_level,
+        intrinsicMotivation: Math.min(5, Math.max(1, Math.ceil(assessment.motivation_level / 2))),
+        externalInfluence: Math.min(5, Math.max(1, Math.floor(assessment.motivation_level / 2))),
+        goalOrientation: Math.min(5, Math.max(1, Math.round(assessment.motivation_level / 2))),
+        selfEfficacy: Math.min(5, Math.max(1, Math.round(assessment.motivation_level / 2)))
       },
       pastSuccesses: {
-        categories: assessment.past_successes?.categories || [],
-        keyFactors: assessment.past_successes?.key_factors || [],
-        sustainabilityFactors: assessment.past_successes?.sustainability_factors || [],
-        applicableStrategies: assessment.past_successes?.applicable_strategies || []
+        categories: assessment.past_successes || [],
+        keyFactors: assessment.past_successes || [],
+        otherDetails: assessment.notes || ''
       },
       constraints: {
-        physicalLimitations: assessment.constraints?.physical_limitations || [],
-        cognitiveChallenges: assessment.constraints?.cognitive_challenges || [],
-        emotionalBarriers: assessment.constraints?.emotional_barriers || [],
-        socialObstacles: assessment.constraints?.social_obstacles || [],
-        environmentalFactors: assessment.constraints?.environmental_factors || [],
-        resourceLimitations: assessment.constraints?.resource_limitations || [],
-        severityRating: assessment.constraints?.severity_rating || 1
+        primaryConstraints: assessment.constraints || [],
+        severityRating: assessment.constraints?.length > 0 ? Math.min(5, assessment.constraints.length) : 1,
+        otherDetails: assessment.notes || ''
       },
       socialPreference: {
-        groupSizePreference: assessment.social_preference?.group_size_preference || 'small',
-        interactionStyle: assessment.social_preference?.interaction_style || 'collaborative',
-        communicationPreference: assessment.social_preference?.communication_preference || 'verbal',
-        supportTypeNeeded: assessment.social_preference?.support_type_needed || 'emotional'
+        preferenceType: assessment.social_preference,
+        groupSizePreference: assessment.social_preference === 'individual' ? 'individual' : 
+                           assessment.social_preference === 'small_group' ? 'small' : 'large',
+        interactionStyle: assessment.social_preference === 'individual' ? 'independent' : 'collaborative'
       }
     },
     contextInfo: {
       assessmentDate: assessment.created_at,
-      assessorId: assessment.created_by,
-      previousAssessments: assessment.previous_assessments_count || 0,
-      urgencyLevel: assessment.urgency_level || 'medium'
+      assessorId: assessment.assessed_by,
+      notes: assessment.notes || '',
+      previousAssessments: 0,
+      urgencyLevel: 'medium'
     },
     // AI 모델이 응답을 보낼 웹훅 URL
     callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://606a-119-201-55-170.ngrok-free.app'}/api/webhook/n8n`
