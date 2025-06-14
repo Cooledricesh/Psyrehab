@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { AIRecommendationService } from '@/services/goalSetting';
 import { POLLING_INTERVAL, MAX_POLLING_ATTEMPTS, MESSAGES } from '@/utils/GoalSetting/constants';
 
 interface UseAIPollingProps {
@@ -37,22 +37,7 @@ export const useAIPolling = ({
     try {
       console.log(`📊 AI 처리 상태 확인 중... (시도 ${pollingAttempts + 1}/${MAX_POLLING_ATTEMPTS})`);
       
-      const { data: recommendation, error } = await supabase
-        .from('ai_goal_recommendations')
-        .select('id, n8n_processing_status, assessment_id')
-        .eq('assessment_id', currentAssessmentId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ AI 추천 상태 조회 실패:', error);
-        setPollingStatus('error');
-        onError(error.message);
-        return;
-      }
-
-      console.log('📋 AI 처리 상태:', recommendation);
+      const recommendation = await AIRecommendationService.checkRecommendationStatus(currentAssessmentId);
 
       if (recommendation && recommendation.n8n_processing_status === 'completed') {
         console.log('✅ AI 처리 완료! 추천 ID:', recommendation.id);

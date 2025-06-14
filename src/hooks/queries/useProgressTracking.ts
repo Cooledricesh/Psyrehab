@@ -34,12 +34,12 @@ export const useActivePatients = () => {
         `)
         .in('id', patientIds)
         .in('status', ['active', 'inactive'])  // discharged 제외
-        .order('created_at', { ascending: false });
+        .order('full_name', { ascending: true });  // 이름순으로 정렬
 
       if (error) throw error;
       return data;
     },
-    refetchInterval: 5000, // 5초마다 자동 새로고침
+    // refetchInterval 제거 - 필요시에만 수동으로 새로고침
   });
 };
 

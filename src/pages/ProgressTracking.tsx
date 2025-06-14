@@ -28,18 +28,18 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { useQueryClient } from '@tanstack/react-query';
+import SimpleWeeklyCheckbox from '@/components/progress/SimpleWeeklyCheckbox';
+import { cn } from '@/lib/utils';
 
 export default function ProgressTracking() {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [expandedGoals, setExpandedGoals] = useState<Record<string, boolean>>({});
-  const [selectedWeeklyGoal, setSelectedWeeklyGoal] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // 데이터 조회
   const { data: patients, isLoading: patientsLoading } = useActivePatients();
   const { data: patientGoals, isLoading: goalsLoading } = usePatientGoals(selectedPatient);
   const { data: stats, isLoading: statsLoading } = useProgressStats();
-  const { data: weeklyCheckIns } = useWeeklyCheckIns(selectedWeeklyGoal);
 
   // 환자 상태 변경 이벤트 리스너
   useEffect(() => {
@@ -98,6 +98,13 @@ export default function ProgressTracking() {
     if (progress >= 60) return 'bg-blue-500';
     if (progress >= 40) return 'bg-yellow-500';
     return 'bg-red-500';
+  };
+
+  const getTextColorByProgress = (progress: number) => {
+    if (progress >= 80) return 'text-green-600';
+    if (progress >= 60) return 'text-blue-600';
+    if (progress >= 40) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   return (
@@ -160,7 +167,7 @@ export default function ProgressTracking() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              활성 회원 수
+              진행 중인 회원 수
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -193,10 +200,10 @@ export default function ProgressTracking() {
                     <button
                       key={patient.id}
                       onClick={() => setSelectedPatient(patient.id)}
-                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                      className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                         selectedPatient === patient.id
-                          ? 'bg-primary/10 border-primary'
-                          : 'hover:bg-gray-50 border-gray-200'
+                          ? 'bg-blue-50 border-blue-500 shadow-md'
+                          : 'hover:bg-gray-50 border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="font-medium">{patient.full_name}</div>
@@ -249,16 +256,14 @@ export default function ProgressTracking() {
                     <Progress 
                       value={patientGoals.sixMonthGoal.progress || 0} 
                       className="h-2"
+                      indicatorClassName={getProgressColor(patientGoals.sixMonthGoal.progress || 0)}
                     />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      진행률: {patientGoals.sixMonthGoal.progress || 0}%
-                    </div>
                   </div>
 
                   {/* 월간 목표들 */}
                   <div className="space-y-3">
                     {patientGoals.monthlyGoals.map((monthlyGoal) => (
-                      <div key={monthlyGoal.id} className="border rounded-lg p-3">
+                      <div key={monthlyGoal.id} className="border rounded-lg p-3 space-y-2">
                         <button
                           onClick={() => toggleGoalExpansion(monthlyGoal.id)}
                           className="w-full"
@@ -271,44 +276,72 @@ export default function ProgressTracking() {
                                 <ChevronRight className="h-4 w-4" />
                               )}
                               <Calendar className="h-4 w-4 text-blue-500" />
-                              <span className="font-medium text-sm">
+                              <span className={`font-medium text-sm ${
+                                monthlyGoal.status === 'completed' 
+                                  ? getTextColorByProgress(monthlyGoal.progress || 0)
+                                  : ''
+                              }`}>
                                 {monthlyGoal.sequence_number}개월차: {monthlyGoal.title}
                               </span>
                             </div>
-                            {getStatusBadge(monthlyGoal.status)}
+                            <div className="flex items-center space-x-2">
+                              {monthlyGoal.status === 'completed' ? (
+                                <span className={cn(
+                                  "text-xs font-medium",
+                                  getTextColorByProgress(monthlyGoal.progress || 0)
+                                )}>
+                                  달성률: {monthlyGoal.progress || 0}%
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">
+                                  {monthlyGoal.weeklyGoals?.filter(
+                                    w => w.status === 'completed' || w.status === 'cancelled'
+                                  ).length || 0}/{monthlyGoal.weeklyGoals?.length || 0}주
+                                </span>
+                              )}
+                              {getStatusBadge(monthlyGoal.status)}
+                            </div>
                           </div>
                         </button>
+                        
+                        {/* 접힌 상태에서도 완료된 목표는 Progress 바 표시 */}
+                        {!expandedGoals[monthlyGoal.id] && monthlyGoal.status === 'completed' && (
+                          <div className="ml-6 mr-2">
+                            <Progress 
+                              value={monthlyGoal.progress || 0} 
+                              className="h-2"
+                              indicatorClassName={getProgressColor(monthlyGoal.progress || 0)}
+                            />
+                          </div>
+                        )}
 
                         {expandedGoals[monthlyGoal.id] && (
-                          <div className="mt-3 ml-6 space-y-2">
-                            {monthlyGoal.weeklyGoals?.map((weeklyGoal) => (
-                              <div
-                                key={weeklyGoal.id}
-                                className="p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
-                                onClick={() => setSelectedWeeklyGoal(weeklyGoal.id)}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center space-x-2">
-                                    {weeklyGoal.status === 'completed' ? (
-                                      <CheckCircle2 className="h-3 w-3 text-green-500" />
-                                    ) : (
-                                      <Circle className="h-3 w-3 text-gray-400" />
-                                    )}
-                                    <span className="text-sm">
-                                      {weeklyGoal.sequence_number}주차: {weeklyGoal.title}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    {weeklyGoal.weekly_check_ins?.length > 0 && (
-                                      <Badge variant="outline" className="text-xs">
-                                        체크인 {weeklyGoal.weekly_check_ins.length}
-                                      </Badge>
-                                    )}
-                                    {getStatusBadge(weeklyGoal.status)}
-                                  </div>
-                                </div>
+                          <div className="mt-3 space-y-2">
+                            {/* 펼쳤을 때도 완료된 목표는 Progress 바 표시 */}
+                            {monthlyGoal.status === 'completed' && (
+                              <div className="ml-6">
+                                <Progress 
+                                  value={monthlyGoal.progress || 0} 
+                                  className="h-2"
+                                  indicatorClassName={getProgressColor(monthlyGoal.progress || 0)}
+                                />
                               </div>
-                            ))}
+                            )}
+                            
+                            {/* 주간 목표들 */}
+                            <div className="ml-6 space-y-2">
+                              {monthlyGoal.weeklyGoals?.map((weeklyGoal) => (
+                                <div
+                                  key={weeklyGoal.id}
+                                  className="p-2 bg-gray-50 rounded"
+                                >
+                                  <SimpleWeeklyCheckbox
+                                    weeklyGoal={weeklyGoal}
+                                    patientId={selectedPatient!}
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -328,8 +361,6 @@ export default function ProgressTracking() {
           </CardContent>
         </Card>
       </div>
-
-      {/* 주간 체크인 모달/섹션은 추후 구현 */}
     </div>
   );
 }

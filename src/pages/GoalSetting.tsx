@@ -15,9 +15,14 @@ import ProcessingModal from '@/components/GoalSetting/ProcessingModal';
 import AssessmentStep from '@/components/GoalSetting/AssessmentStep';
 import GoalDetailDisplay from '@/components/GoalSetting/GoalDetailDisplay';
 import PageHeader from '@/components/GoalSetting/PageHeader';
+import AIRecommendationSelection from '@/components/GoalSetting/AIRecommendationSelection';
+import GoalDetailView from '@/components/GoalSetting/GoalDetailView';
 
 // Custom Hooks
 import { useGoalSettingFlow, useAIPolling, useAssessmentSave } from '@/hooks/GoalSetting';
+
+// Services
+import { AssessmentService, AIRecommendationService, GoalService } from '@/services/goalSetting';
 
 // Utils and Constants
 import { MESSAGES } from '@/utils/GoalSetting/constants';
@@ -191,35 +196,9 @@ const GoalSetting: React.FC = () => {
     }
   });
 
-  // AI 추천 요청 mutation (새로운 API 엔드포인트 사용)
+  // AI 추천 요청 mutation
   const requestAIRecommendationMutation = useMutation({
-    mutationFn: async (assessmentId: string) => {
-      console.log('🔗 AI 추천 요청 시작:', assessmentId);
-      console.log('🌐 API URL:', ENV.API_URL);
-      console.log('📍 전체 URL:', `${ENV.API_URL}/api/ai/recommend`);
-      
-      const response = await fetch(`${ENV.API_URL}/api/ai/recommend`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          assessmentId: assessmentId,
-        }),
-      });
-
-      console.log('📡 AI API Response Status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ AI API Error Response:', errorText);
-        throw new Error(`AI 추천 요청 실패: ${response.status} - ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ AI API Success Response:', result);
-      return result;
-    },
+    mutationFn: AIRecommendationService.requestRecommendation,
   });
 
   // AI 추천 받기 함수
@@ -313,172 +292,41 @@ const GoalSetting: React.FC = () => {
     }
 
     try {
-      // 저장 중임을 표시
       setIsProcessing(true);
       
-      // 디버깅을 위한 로그
-      console.log('detailedGoals 전체 구조:', detailedGoals);
-      console.log('monthlyGoals:', detailedGoals.monthlyGoals);
-      console.log('weeklyGoals:', detailedGoals.weeklyGoals);
-
-      // 현재 사용자 ID 가져오기
-      const { data: userData } = await supabase.auth.getUser();
-      const currentUserId = userData.user?.id;
+      const currentUserId = await AssessmentService.getCurrentUserId();
 
       // 1. 기존 active 계획을 inactive로 변경
-      const { error: deactivateError } = await supabase
-        .from('rehabilitation_goals')
-        .update({ plan_status: 'inactive' })
-        .eq('patient_id', selectedPatient)
-        .eq('plan_status', 'active');
+      await GoalService.deactivateExistingGoals(selectedPatient);
 
-      if (deactivateError) {
-        console.error('기존 계획 비활성화 실패:', deactivateError);
-        throw deactivateError;
-      }
-
-      // 2. AI 추천 ID 가져오기 (평가 ID로 조회)
+      // 2. AI 추천 ID 가져오기
       let aiRecommendationId = recommendationId;
-      
       if (!aiRecommendationId && currentAssessmentId) {
-        // recommendationId가 없으면 평가 ID로 AI 추천 조회
-        const { data: aiRec, error: aiError } = await supabase
-          .from('ai_goal_recommendations')
-          .select('id')
-          .eq('assessment_id', currentAssessmentId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-          
-        if (aiRec) {
-          aiRecommendationId = aiRec.id;
-          console.log('AI 추천 ID 조회됨:', aiRecommendationId);
-        }
+        aiRecommendationId = await AIRecommendationService.getRecommendationIdByAssessment(currentAssessmentId);
       }
 
       // 3. AI 추천 상태 업데이트
       if (aiRecommendationId) {
-        const { error: updateError } = await supabase
-          .from('ai_goal_recommendations')
-          .update({
-            is_active: true,
-            applied_at: new Date().toISOString(),
-            applied_by: currentUserId,
-            selected_plan_number: detailedGoals.selectedIndex + 1
-          })
-          .eq('id', aiRecommendationId);
-
-        if (updateError) {
-          console.error('AI 추천 상태 업데이트 실패:', updateError);
-          // 실패해도 계속 진행
-        }
-      }
-
-      // 3. 목표들을 데이터베이스에 저장
-      const goalsToInsert = [];
-      
-      // 6개월 목표
-      const sixMonthGoalId = crypto.randomUUID();
-      const sixMonthGoal = detailedGoals.sixMonthGoal;
-      
-      console.log('💾 저장할 6개월 목표:', sixMonthGoal);
-      console.log('💾 사용할 AI 추천 ID:', aiRecommendationId);
-      
-      // 6개월 목표 저장
-      goalsToInsert.push({
-        id: sixMonthGoalId,
-        patient_id: selectedPatient,
-        parent_goal_id: null,
-        title: sixMonthGoal.goal || sixMonthGoal.title || '6개월 목표',
-        description: sixMonthGoal.details || sixMonthGoal.description || '',
-        goal_type: 'six_month',
-        sequence_number: 1,
-        start_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
-        end_date: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
-        status: 'active',
-        plan_status: 'active',
-        is_ai_suggested: true,
-        source_recommendation_id: aiRecommendationId || null, // AI 추천 ID 사용
-        is_from_ai_recommendation: true,
-        created_by_social_worker_id: currentUserId
-      });
-
-      // 월간 목표들
-      console.log('💾 저장할 월간 목표들:', detailedGoals.monthlyGoals);
-      
-      detailedGoals.monthlyGoals?.forEach((monthlyPlan, monthIndex) => {
-          const monthlyGoalId = crypto.randomUUID();
-          
-          goalsToInsert.push({
-            id: monthlyGoalId,
-            patient_id: selectedPatient,
-            parent_goal_id: sixMonthGoalId,
-            title: monthlyPlan.goal || monthlyPlan.title || `${monthIndex + 1}개월차 목표`,
-            description: monthlyPlan.activities?.join(', ') || monthlyPlan.description || '',
-            goal_type: 'monthly',
-            sequence_number: monthIndex + 1,
-            start_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
-            end_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex + 1)).toISOString().split('T')[0],
-            status: monthIndex === 0 ? 'active' : 'pending',
-            plan_status: 'active',
-            is_ai_suggested: true,
-            source_recommendation_id: aiRecommendationId || null,
-            is_from_ai_recommendation: true,
-            created_by_social_worker_id: currentUserId
-          });
-
-          // 주간 목표들
-          console.log('💾 저장할 주간 목표들:', detailedGoals.weeklyGoals);
-          
-          detailedGoals.weeklyGoals
-            ?.filter(weeklyPlan => {
-              // weeklyPlan.month 필드를 직접 사용
-              return (weeklyPlan.month - 1) === monthIndex;
-            })
-            ?.forEach((weeklyPlan, weekIndex) => {
-              goalsToInsert.push({
-                id: crypto.randomUUID(),
-                patient_id: selectedPatient,
-                parent_goal_id: monthlyGoalId,
-                title: weeklyPlan.plan || weeklyPlan.title || `${weeklyPlan.week}주차 목표`,
-                description: weeklyPlan.description || '',
-                goal_type: 'weekly',
-                sequence_number: parseInt(weeklyPlan.week || `${weekIndex + 1}`),
-                start_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
-                end_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
-                status: monthIndex === 0 && weekIndex === 0 ? 'active' : 'pending',
-                plan_status: 'active',
-                is_ai_suggested: true,
-                source_recommendation_id: aiRecommendationId || null,
-                is_from_ai_recommendation: true,
-                created_by_social_worker_id: currentUserId
-              });
-            });
+        await AIRecommendationService.updateRecommendationStatus(aiRecommendationId, {
+          is_active: true,
+          applied_at: new Date().toISOString(),
+          applied_by: currentUserId,
+          selected_plan_number: detailedGoals.selectedIndex + 1
         });
+      }
 
-      // 목표들을 DB에 저장
-      console.log('💾 저장할 목표 개수:', goalsToInsert.length);
-      console.log('💾 저장할 목표 데이터:', goalsToInsert);
+      // 4. 계층적 목표 생성 및 저장
+      const goalsToInsert = GoalService.createHierarchicalGoals(
+        detailedGoals,
+        selectedPatient,
+        aiRecommendationId,
+        currentUserId
+      );
       
-      const { error: goalsError } = await supabase
-        .from('rehabilitation_goals')
-        .insert(goalsToInsert);
+      await GoalService.saveGoals(goalsToInsert);
 
-      if (goalsError) {
-        console.error('목표 저장 실패:', goalsError);
-        throw goalsError;
-      }
-
-      // 3. 환자 상태를 active로 변경
-      const { error: patientError } = await supabase
-        .from('patients')
-        .update({ status: 'active' })
-        .eq('id', selectedPatient);
-
-      if (patientError) {
-        console.error('환자 상태 업데이트 실패:', patientError);
-        throw patientError;
-      }
+      // 5. 환자 상태를 active로 변경
+      await GoalService.activatePatient(selectedPatient);
 
       // 성공 메시지
       alert(MESSAGES.success.goalsSaved);
@@ -492,9 +340,7 @@ const GoalSetting: React.FC = () => {
     } catch (error: any) {
       console.error('목표 저장 중 오류:', error);
       
-      // 구체적인 오류 메시지 표시
       let errorMessage = MESSAGES.error.default;
-      
       if (error.message) {
         errorMessage = MESSAGES.error.goalSaveFailed(error.message);
       }
@@ -573,151 +419,27 @@ const GoalSetting: React.FC = () => {
         )}
 
         {currentStep === 4 && aiRecommendations && (
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-                3개의 맞춤형 목표가 생성되었습니다.
-              </h3>
-            </div>
-
-            {/* AI 분석 요약 - 접이식 */}
-            {(aiRecommendations.reasoning || aiRecommendations.patient_analysis) && (
-              <div className="bg-white rounded-lg shadow-sm">
-                <details className="group">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
-                        <span className="text-sm">📋</span>
-                      </div>
-                      <span className="font-medium text-gray-900">환자 분석</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="px-4 pb-4 border-t border-gray-100">
-                    <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 mt-3">
-                      {aiRecommendations.reasoning || aiRecommendations.patient_analysis?.insights || '분석 정보를 불러오는 중...'}
-                    </div>
-                  </div>
-                </details>
-              </div>
-            )}
-
-            {/* 추천 목표 */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center">
-                  <Target className="h-4 w-4 text-red-600" />
-                </div>
-                <h4 className="font-semibold text-gray-900">추천 목표 (3개)</h4>
-              </div>
-
-              <div className="space-y-3">
-                {(aiRecommendations.goals || []).map((goal: any, index: number) => (
-                  <div
-                    key={index}
-                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                      selectedGoal === index.toString()
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                    onClick={() => setSelectedGoal(index.toString())}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="goal"
-                        value={index.toString()}
-                        checked={selectedGoal === index.toString()}
-                        onChange={() => setSelectedGoal(index.toString())}
-                        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium text-gray-600">목표 {index + 1}</span>
-                          <span className="text-lg font-semibold text-gray-900">
-                            {goal.title?.replace(/^목표\s*\d+[:\.]?\s*/, '') || `목표 ${index + 1}`}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-start gap-2">
-                            <span className="text-yellow-600 mt-0.5">🎯</span>
-                            <div>
-                              <span className="font-medium text-gray-700">목적:</span>
-                              <span className="text-gray-600 ml-1">
-                                {goal.purpose || '목적 설명'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-2">
-                            <span className="text-red-600 mt-0.5">⭕</span>
-                            <div>
-                              <span className="font-medium text-gray-700">6개월 목표:</span>
-                              <span className="text-gray-600 ml-1">
-                                {goal.sixMonthGoal || '목표 설정 중'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  setCurrentStep(2);
-                  setAiRecommendations(null);
-                  setSelectedGoal('');
-                }}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                평가 다시하기
-              </button>
-              <button
-                onClick={() => {
-                  console.log('🔥 목표 설정하기 버튼 클릭됨!');
-                  console.log('선택된 목표:', selectedGoal);
-                  console.log('AI 추천 데이터:', aiRecommendations);
-                  
-                  if (!selectedGoal) {
-                    alert('하나의 목표를 선택해주세요.');
-                    return;
-                  }
-                  
-                  const selectedGoalData = aiRecommendations.goals[parseInt(selectedGoal)];
-                  console.log('선택된 목표 데이터:', selectedGoalData);
-                  
-                  // 선택한 목표만 상세 구조 생성
-                  const detailed = {
-                    selectedIndex: parseInt(selectedGoal),
-                    sixMonthGoal: selectedGoalData,
-                    monthlyGoals: selectedGoalData.monthlyGoals || [],
-                    weeklyGoals: selectedGoalData.weeklyPlans || []
-                  };
-                  
-                  console.log('생성된 상세 목표:', detailed);
-                  setDetailedGoals(detailed);
-                  console.log('Step 5로 이동 중...');
-                  setCurrentStep(5);
-                }}
-                disabled={!selectedGoal}
-                className={`px-6 py-2 rounded-lg font-medium ${
-                  selectedGoal
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                목표 설정하기
-              </button>
-            </div>
-          </div>
+          <AIRecommendationSelection
+            aiRecommendations={aiRecommendations}
+            selectedGoal={selectedGoal}
+            onSelectGoal={setSelectedGoal}
+            onBack={() => {
+              setCurrentStep(2);
+              setAiRecommendations(null);
+              setSelectedGoal('');
+            }}
+            onNext={() => {
+              const selectedGoalData = aiRecommendations.goals[parseInt(selectedGoal)];
+              const detailed = {
+                selectedIndex: parseInt(selectedGoal),
+                sixMonthGoal: selectedGoalData,
+                monthlyGoals: selectedGoalData.monthlyGoals || [],
+                weeklyGoals: selectedGoalData.weeklyPlans || []
+              };
+              setDetailedGoals(detailed);
+              setCurrentStep(5);
+            }}
+          />
         )}
 
         {/* Step 4에서 목표 선택 후 상세 보기 */}
@@ -736,141 +458,18 @@ const GoalSetting: React.FC = () => {
         )}
 
         {currentStep === 5 && detailedGoals && (
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-                선택한 목표의 계층적 구조가 생성되었습니다.
-              </h3>
-              <p className="text-center text-gray-600 text-sm">
-                목표 {(detailedGoals.selectedIndex || 0) + 1}: {detailedGoals.sixMonthGoal.title}
-              </p>
-            </div>
-
-            {/* 6개월 전체 목표 */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
-                  <Target className="h-4 w-4 text-blue-600" />
-                </div>
-                <h4 className="font-semibold text-gray-900">6개월 전체 목표</h4>
-              </div>
-              <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
-                <h5 className="font-semibold text-blue-900 mb-2">{detailedGoals.sixMonthGoal.title}</h5>
-                <div className="text-blue-800 text-sm">
-                  <p className="font-medium mb-1">6개월 목표:</p>
-                  <p>{detailedGoals.sixMonthGoal.sixMonthGoal || detailedGoals.sixMonthGoal.goal}</p>
-                  <p className="mt-2">목적: {detailedGoals.sixMonthGoal.purpose}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 탭 형태의 월간/주간 목표 */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="border-b border-gray-200">
-                <div className="flex">
-                  <button
-                    onClick={() => setViewMode('monthly')}
-                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                      viewMode === 'monthly' 
-                        ? 'border-green-500 text-green-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    월간 목표 ({detailedGoals.monthlyGoals.length}개)
-                  </button>
-                  <button
-                    onClick={() => setViewMode('weekly')}
-                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                      viewMode === 'weekly' 
-                        ? 'border-orange-500 text-orange-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    주간 목표 ({detailedGoals.weeklyGoals.length}주)
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-4">
-                {/* 월간 목표 뷰 */}
-                {(!viewMode || viewMode === 'monthly') && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {detailedGoals.monthlyGoals.map((goal: any, index: number) => (
-                      <div key={goal.month || index} className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-semibold text-green-900 text-sm">{goal.month || index + 1}개월차</h5>
-                        </div>
-                        <p className="text-green-800 text-xs">{goal.goal}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 주간 목표 뷰 */}
-                {viewMode === 'weekly' && (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4, 5, 6].map(month => (
-                      <div key={month}>
-                        <h5 className="font-semibold text-orange-900 mb-2 text-sm">
-                          {month}개월차 ({month*4-3}주 ~ {month*4}주)
-                        </h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                          {detailedGoals.weeklyGoals
-                            .filter((goal: any) => goal.month === month)
-                            .map((goal: any, index: number) => (
-                              <div key={goal.week || index} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h6 className="font-medium text-orange-900 text-xs">{goal.week}주차</h6>
-                                </div>
-                                <p className="text-orange-800 text-xs">{goal.plan}</p>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  setCurrentStep(4);
-                  setDetailedGoals(null);
-                }}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                목표 다시 선택
-              </button>
-              <div className="space-x-3">
-                <button
-                  onClick={handleSaveGoals}
-                  disabled={isProcessing}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                      저장 중...
-                    </>
-                  ) : (
-                    '목표 저장하기'
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    resetFlow();
-                  }}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  새 목표 설정
-                </button>
-              </div>
-            </div>
-          </div>
+          <GoalDetailView
+            detailedGoals={detailedGoals}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onBack={() => {
+              setCurrentStep(4);
+              setDetailedGoals(null);
+            }}
+            onSave={handleSaveGoals}
+            onReset={resetFlow}
+            isProcessing={isProcessing}
+          />
         )}
 
       </div>

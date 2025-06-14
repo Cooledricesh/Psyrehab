@@ -6,7 +6,7 @@ import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import PatientDetailModal from '@/components/PatientDetailModal'
 import PatientEditModal from '@/components/PatientEditModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
-import { supabase } from '@/lib/supabase'
+import { GoalService } from '@/services/goalSetting';
 
 export default function PatientManagement() {
   const [patients, setPatients] = useState<Patient[]>([])
@@ -78,17 +78,7 @@ export default function PatientManagement() {
         dbStatus = 'discharged'
         
         // 입원 처리 시 활성 목표들을 비활성화
-        const { error: goalsError } = await supabase
-          .from('rehabilitation_goals')
-          .update({ status: 'on_hold' })
-          .eq('patient_id', patientId)
-          .eq('status', 'active')
-        
-        if (goalsError) {
-          console.error('목표 비활성화 실패:', goalsError)
-          alert('목표 상태 변경에 실패했습니다.')
-          return
-        }
+        await GoalService.holdPatientGoals(patientId)
       } else if (newStatus === 'inactive') {
         dbStatus = 'inactive'
       } else {
@@ -359,7 +349,7 @@ export default function PatientManagement() {
                           onClick={() => handleViewDetail(patient.id)}
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          상세보기
+                          상세
                         </button>
                         <button
                           onClick={() => handleEditPatient(patient.id)}
@@ -380,7 +370,7 @@ export default function PatientManagement() {
                             onClick={() => handleStatusChange(patient.id, 'inactive')}
                             className="text-green-600 hover:text-green-900"
                           >
-                            퇴원
+                            재등록
                           </button>
                         )}
                       </div>

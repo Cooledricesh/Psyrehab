@@ -91,7 +91,7 @@ export const Sidebar = () => {
               <SidebarLink
                 to="/patient-management"
                 icon={<Users size={18} />}
-                label="환자 관리"
+                label="마루 회원 관리"
                 isActive={location.pathname === '/patient-management'}
               />
               <SidebarLink
@@ -109,7 +109,7 @@ export const Sidebar = () => {
               <SidebarLink
                 to="/reports"
                 icon={<FileText size={18} />}
-                label="보고서"
+                label="보고서(미구현)"
                 isActive={location.pathname === '/reports'}
               />
               <li className="my-2 h-px bg-gray-200 mx-4"></li>
@@ -125,7 +125,7 @@ export const Sidebar = () => {
           <footer className="p-4 border-t border-gray-200">
             <div className="text-center">
               <p className="font-medium text-sm">김사회님</p>
-              <p className="text-xs text-gray-600">사회복지사</p>
+              <p className="text-xs text-gray-600">마루</p>
             </div>
           </footer>
         </div>
