@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Brain, Target, History, AlertTriangle, Users, ChevronRight, Check, Loader2, User, Calendar } from 'lucide-react';
-// import ReactMarkdown from 'react-markdown'; // 임시 제거
+import { Check, Loader2 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { PatientService } from '@/services/patients';
 import { supabase } from '@/lib/supabase';
@@ -13,11 +12,12 @@ import { eventBus, EVENTS } from '@/lib/eventBus';
 import PatientSelection from '@/components/GoalSetting/PatientSelection';
 import StepIndicator from '@/components/GoalSetting/StepIndicator';
 import ProcessingModal from '@/components/GoalSetting/ProcessingModal';
-import AssessmentForm from '@/components/GoalSetting/AssessmentForm';
+import AssessmentStep from '@/components/GoalSetting/AssessmentStep';
+import GoalDetailDisplay from '@/components/GoalSetting/GoalDetailDisplay';
+import PageHeader from '@/components/GoalSetting/PageHeader';
 
 // Utils, Types, and Constants
 import { 
-  // Constants
   FOCUS_TIME_OPTIONS, 
   PAST_SUCCESS_OPTIONS, 
   CONSTRAINT_OPTIONS, 
@@ -27,14 +27,18 @@ import {
   PAST_SUCCESS_MAPPING,
   CONSTRAINT_MAPPING,
   MESSAGES,
-  STYLES,
-  // Types
-  AssessmentFormData,
-  Patient,
-  Step,
-  AIRecommendation,
-  GoalData,
-  // Helpers
+  STYLES
+} from '@/utils/GoalSetting/constants';
+
+import {
+  type AssessmentFormData,
+  type Patient,
+  type Step,
+  type AIRecommendation,
+  type GoalData
+} from '@/utils/GoalSetting/types';
+
+import {
   getMotivationText,
   formatText,
   formatAssessmentData,
@@ -43,7 +47,7 @@ import {
   calculateProgress,
   getStatusColor,
   getGoalTypeLabel
-} from '@/utils/GoalSetting';
+} from '@/utils/GoalSetting/helpers';
 
 const GoalSetting: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
@@ -313,33 +317,13 @@ const GoalSetting: React.FC = () => {
                 motivation_level: assessmentData.motivationLevel,
                 past_successes: [
                   ...(assessmentData.pastSuccesses.map((value: string) => {
-                    // 값을 라벨로 변환
-                    const mapping: Record<string, string> = {
-                      'cooking': '요리/베이킹',
-                      'exercise': '운동/산책',
-                      'reading': '독서/공부',
-                      'crafting': '만들기/그리기',
-                      'socializing': '사람 만나기/대화',
-                      'entertainment': '음악/영화 감상',
-                      'organizing': '정리/청소',
-                      'none': '특별히 없음'
-                    };
-                    return mapping[value] || value;
+                    return PAST_SUCCESS_MAPPING[value] || value;
                   })),
                   ...(assessmentData.pastSuccessesOther ? [assessmentData.pastSuccessesOther] : [])
                 ].filter(Boolean),
                 constraints: [
                   ...(assessmentData.constraints.map((value: string) => {
-                    // 값을 라벨로 변환
-                    const mapping: Record<string, string> = {
-                      'transport': '교통편 문제 (대중교통 이용 어려움)',
-                      'financial': '경제적 부담 (비용 지출 어려움)',
-                      'time': '시간 제약 (다른 일정으로 바쁨)',
-                      'physical': '신체적 제약 (거동 불편, 체력 부족)',
-                      'family': '가족 반대 (가족이 활동 반대)',
-                      'none': '별다른 제약 없음'
-                    };
-                    return mapping[value] || value;
+                    return CONSTRAINT_MAPPING[value] || value;
                   })),
                   ...(assessmentData.constraintsOther ? [assessmentData.constraintsOther] : [])
                 ].filter(Boolean),
@@ -506,6 +490,12 @@ const GoalSetting: React.FC = () => {
 
   const isFormValid = () => {
     return formData.focusTime && formData.socialPreference;
+  };
+
+  const handleAssessmentSubmit = () => {
+    if (isFormValid()) {
+      handleGetAIRecommendation();
+    }
   };
 
   // 목표 저장 함수
@@ -731,23 +721,32 @@ const GoalSetting: React.FC = () => {
     }
   };
 
+  // AI 추천이 있을 때 detailedGoals 업데이트
+  React.useEffect(() => {
+    if (aiRecommendations && selectedGoal !== '') {
+      const goalIndex = parseInt(selectedGoal);
+      const selectedOption = aiRecommendations.goals[goalIndex];
+      
+      if (selectedOption) {
+        setDetailedGoals({
+          selectedIndex: goalIndex,
+          sixMonthGoal: selectedOption.sixMonthGoals?.[0] || {},
+          monthlyGoals: selectedOption.sixMonthGoals?.[0]?.monthlyPlans || [],
+          weeklyGoals: selectedOption.sixMonthGoals?.[0]?.monthlyPlans?.flatMap(
+            mp => mp.weeklyPlans || []
+          ) || []
+        });
+      }
+    }
+  }, [aiRecommendations, selectedGoal]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <button className="flex items-center text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                돌아가기
-              </button>
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900">맞춤형 목표 설정</h1>
-            <div className="w-20"></div>
-          </div>
-        </div>
-      </div>
+      <PageHeader 
+        title="맞춤형 목표 설정"
+        onBack={() => window.history.back()}
+      />
 
       {/* Progress Steps */}
       <StepIndicator currentStep={currentStep} steps={steps} />
@@ -763,538 +762,73 @@ const GoalSetting: React.FC = () => {
         )}
 
         {currentStep === 2 && (
-          <div className="space-y-8">
-            {/* 헤더 */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">맞춤형 목표 설정 질문지</h2>
-              <p className="text-gray-600">
-                {patients?.find(p => p.id === selectedPatient)?.full_name}님의 개인별 특성을 파악하여 최적의 재활 목표를 추천해드립니다.
-              </p>
-            </div>
-
-            {/* 1. 집중력 & 인지 부담 측정 */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-blue-50 px-6 py-4 border-b border-blue-100">
-                <div className="flex items-center">
-                  <div className="bg-blue-500 p-2 rounded-lg mr-3">
-                    <Brain className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-blue-900">1. 집중력 & 인지 부담 측정</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <label className="block text-base font-medium text-gray-900 mb-4">
-                  한 가지 일에 집중할 수 있는 시간은 얼마나 되나요?
-                </label>
-                <div className="space-y-3">
-                  {FOCUS_TIME_OPTIONS.map((option) => (
-                    <label key={option.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="focusTime"
-                        value={option.value}
-                        checked={formData.focusTime === option.value}
-                        onChange={(e) => handleFocusTimeChange(e.target.value)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-3 text-gray-900">{option.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 2. 변화 동기 & 의지 수준 */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-green-50 px-6 py-4 border-b border-green-100">
-                <div className="flex items-center">
-                  <div className="bg-green-500 p-2 rounded-lg mr-3">
-                    <Target className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-green-900">2. 변화 동기 & 의지 수준</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <label className="block text-base font-medium text-gray-900 mb-4">
-                  지금 새로운 것을 시작하고 싶은 마음이 얼마나 되나요?
-                </label>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">별로 없음</span>
-                    <span className="font-medium text-lg">{formData.motivationLevel}점</span>
-                    <span className="text-sm text-gray-600">매우 많음</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={formData.motivationLevel}
-                    onChange={(e) => handleMotivationChange([parseInt(e.target.value)])}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <div className="text-sm text-gray-600 text-center py-2 bg-gray-50 rounded-lg">
-                    {getMotivationText(formData.motivationLevel)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. 과거 성공 경험 탐색 */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-purple-50 px-6 py-4 border-b border-purple-100">
-                <div className="flex items-center">
-                  <div className="bg-purple-500 p-2 rounded-lg mr-3">
-                    <History className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-purple-900">3. 과거 성공 경험 탐색</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <label className="block text-base font-medium text-gray-900 mb-4">
-                  예전에 꾸준히 잘 했던 일이나 좋아했던 활동이 있나요? (복수 선택 가능)
-                </label>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {PAST_SUCCESS_OPTIONS.map((item) => (
-                      <label key={item.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.pastSuccesses.includes(item.value)}
-                          onChange={(e) => handlePastSuccessChange(item.value, e.target.checked)}
-                          className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                        />
-                        <span className="ml-3 text-gray-900">{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm text-gray-600">
-                      기타 성공 경험이 있다면 적어주세요
-                    </label>
-                    <textarea
-                      placeholder="예: 특별한 취미나 활동, 자격증 취득 등"
-                      value={formData.pastSuccessesOther}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pastSuccessesOther: e.target.value }))}
-                      className="w-full min-h-[80px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 4. 환경적 제약 사항 */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-orange-50 px-6 py-4 border-b border-orange-100">
-                <div className="flex items-center">
-                  <div className="bg-orange-500 p-2 rounded-lg mr-3">
-                    <AlertTriangle className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-orange-900">4. 환경적 제약 사항</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <label className="block text-base font-medium text-gray-900 mb-4">
-                  다음 중 목표 실행에 어려움이 될 수 있는 것은? (복수 선택 가능)
-                </label>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {CONSTRAINT_OPTIONS.map((item) => (
-                      <label key={item.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.constraints.includes(item.value)}
-                          onChange={(e) => handleConstraintChange(item.value, e.target.checked)}
-                          className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                        />
-                        <span className="ml-3 text-gray-900">{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="constraintsOther" className="block text-sm text-gray-600">
-                      기타 제약사항 (직접 입력)
-                    </label>
-                    <input
-                      id="constraintsOther"
-                      type="text"
-                      placeholder="예: 약물 부작용, 집중력 부족, 기타 개인적 제약사항"
-                      value={formData.constraintsOther}
-                      onChange={(e) => setFormData(prev => ({ ...prev, constraintsOther: e.target.value }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 5. 사회적 활동 선호도 */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-indigo-50 px-6 py-4 border-b border-indigo-100">
-                <div className="flex items-center">
-                  <div className="bg-indigo-500 p-2 rounded-lg mr-3">
-                    <Users className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-indigo-900">5. 사회적 활동 선호도</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <label className="block text-base font-medium text-gray-900 mb-4">
-                  사람들과 함께 하는 활동에 대해 어떻게 생각하세요?
-                </label>
-                <div className="space-y-3">
-                  {SOCIAL_PREFERENCE_OPTIONS.map((option) => (
-                    <label key={option.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="socialPreference"
-                        value={option.value}
-                        checked={formData.socialPreference === option.value}
-                        onChange={(e) => handleSocialPreferenceChange(e.target.value)}
-                        className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                      />
-                      <span className="ml-3 text-gray-900">{option.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end">
-              <button
-                onClick={handleGetAIRecommendation}
-                disabled={!isFormValid() || isProcessing}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center ${
-                  isFormValid() && !isProcessing
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    처리 중...
-                  </>
-                ) : (
-                  'AI 추천 받기'
-                )}
-              </button>
-            </div>
-          </div>
+          <AssessmentStep
+            formData={formData}
+            selectedPatient={selectedPatient}
+            patients={patients}
+            onFocusTimeChange={handleFocusTimeChange}
+            onMotivationChange={(value) => handleMotivationChange([value])}
+            onPastSuccessChange={handlePastSuccessChange}
+            onConstraintChange={handleConstraintChange}
+            onSocialPreferenceChange={handleSocialPreferenceChange}
+            onFormDataChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))}
+            onNext={handleAssessmentSubmit}
+            onBack={() => setCurrentStep(1)}
+            isProcessing={isProcessing}
+          />
         )}
 
         {currentStep === 3 && (
           <ProcessingModal
-            pollingAttempts={pollingAttempts}
-            onRetry={() => {
-              setPollingAttempts(0);
-              refetchAIRecommendation();
-            }}
+            isOpen={isProcessing}
+            message="AI가 최적의 재활 목표를 분석하고 있습니다..."
           />
         )}
 
-                {currentStep === 4 && aiRecommendations && (
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-                3개의 맞춤형 목표가 생성되었습니다.
-              </h3>
-            </div>
-
-            {/* AI 분석 요약 - 접이식 */}
-            {aiRecommendations.reasoning && (
-              <div className="bg-white rounded-lg shadow-sm">
-                <details className="group">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
-                        <span className="text-sm">📋</span>
-                      </div>
-                      <span className="font-medium text-gray-900">환자 분석</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="px-4 pb-4 border-t border-gray-100">
-                    <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 mt-3">
-                      {typeof aiRecommendations.reasoning === 'string' ? (
-                        <div className="whitespace-pre-line">{aiRecommendations.reasoning}</div>
-                      ) : (
-                        <ul className="space-y-1">
-                          <li>• 분석 진행 중...</li>
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                </details>
-              </div>
-            )}
-
-            {/* 추천 목표 */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center">
-                  <Target className="h-4 w-4 text-red-600" />
-                </div>
-                <h4 className="font-semibold text-gray-900">추천 목표 (3개)</h4>
-              </div>
-
-              <div className="space-y-3">
-                {(aiRecommendations.goals || []).map((goal: any, index: number) => (
-                  <div
-                    key={index}
-                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                      selectedGoal === index.toString()
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                    onClick={() => setSelectedGoal(index.toString())}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="goal"
-                        value={index.toString()}
-                        checked={selectedGoal === index.toString()}
-                        onChange={() => setSelectedGoal(index.toString())}
-                        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium text-gray-600">목표 {index + 1}</span>
-                          <span className="text-lg font-semibold text-gray-900">
-                            {goal.title?.replace(/^목표\s*\d+[:\.]?\s*/, '') || `목표 ${index + 1}`}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-start gap-2">
-                            <span className="text-yellow-600 mt-0.5">🎯</span>
-                            <div>
-                              <span className="font-medium text-gray-700">목적:</span>
-                              <span className="text-gray-600 ml-1">
-                                {(goal.purpose || goal.description?.split('\n')[0])?.replace(/^\*\s*목적:\s*/, '').replace(/^\*\s*/, '').substring(0, 100) || '목적 설명'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-2">
-                            <span className="text-red-600 mt-0.5">⭕</span>
-                            <div>
-                              <span className="font-medium text-gray-700">6개월 목표:</span>
-                              <span className="text-gray-600 ml-1">
-                                {goal.sixMonthGoal || goal.goal || goal.goals?.[0] || '목표 설정 중'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  setCurrentStep(2);
-                  setAiRecommendations(null);
-                  setSelectedGoal('');
-                }}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                평가 다시하기
-              </button>
-              <button
-                onClick={() => {
-                  console.log('🔥 목표 설정하기 버튼 클릭됨!');
-                  console.log('선택된 목표:', selectedGoal);
-                  console.log('AI 추천 데이터:', aiRecommendations);
-                  
-                  if (!selectedGoal) {
-                    alert(MESSAGES.error.noGoalSelected);
-                    return;
-                  }
-                  
-                  const selectedGoalData = aiRecommendations.goals[parseInt(selectedGoal)];
-                  console.log('선택된 목표 데이터:', selectedGoalData);
-                  
-                  // 선택한 목표만 상세 구조 생성
-                  const detailed = {
-                    selectedIndex: parseInt(selectedGoal),
-                    sixMonthGoal: selectedGoalData,
-                    monthlyGoals: selectedGoalData.monthlyGoals || [],
-                    weeklyGoals: selectedGoalData.weeklyPlans || []
-                  };
-                  
-                  console.log('생성된 상세 목표:', detailed);
-                  setDetailedGoals(detailed);
-                  console.log('Step 5로 이동 중...');
-                  setCurrentStep(5);
-                }}
-                disabled={!selectedGoal}
-                className={`px-6 py-2 rounded-lg font-medium ${
-                  selectedGoal
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                목표 설정하기
-              </button>
-            </div>
-          </div>
+        {currentStep === 4 && detailedGoals && (
+          <GoalDetailDisplay
+            detailedGoals={detailedGoals}
+            selectedGoal={selectedGoal}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onGoalSelect={setSelectedGoal}
+            onSave={handleSaveGoals}
+            isProcessing={isProcessing}
+            patients={patients}
+            selectedPatient={selectedPatient}
+          />
         )}
 
-        {currentStep === 5 && detailedGoals && (
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-                선택한 목표의 계층적 구조가 생성되었습니다.
-              </h3>
-              <p className="text-center text-gray-600 text-sm">
-                목표 {(detailedGoals.selectedIndex || 0) + 1}: {detailedGoals.sixMonthGoal.title}
-              </p>
+        {currentStep === 5 && (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+              <Check className="h-8 w-8 text-green-600" />
             </div>
-
-            {/* 6개월 전체 목표 */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
-                  <Target className="h-4 w-4 text-blue-600" />
-                </div>
-                <h4 className="font-semibold text-gray-900">6개월 전체 목표</h4>
-              </div>
-              <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
-                <h5 className="font-semibold text-blue-900 mb-2">{detailedGoals.sixMonthGoal.title}</h5>
-                <div className="text-blue-800 text-sm">
-                  <p className="font-medium mb-1">6개월 목표:</p>
-                  <p>{detailedGoals.sixMonthGoal.sixMonthGoal}</p>
-                  <p className="mt-2">목적: {detailedGoals.sixMonthGoal.purpose}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 탭 형태의 월간/주간 목표 */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="border-b border-gray-200">
-                <div className="flex">
-                  <button
-                    onClick={() => setViewMode('monthly')}
-                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                      viewMode === 'monthly' 
-                        ? 'border-green-500 text-green-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    월간 목표 ({detailedGoals.monthlyGoals.length}개)
-                  </button>
-                  <button
-                    onClick={() => setViewMode('weekly')}
-                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                      viewMode === 'weekly' 
-                        ? 'border-orange-500 text-orange-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    주간 목표 ({detailedGoals.weeklyGoals.length}주)
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-4">
-                {/* 월간 목표 뷰 */}
-                {(!viewMode || viewMode === 'monthly') && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {detailedGoals.monthlyGoals.map((goal: any) => (
-                      <div key={goal.month} className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-semibold text-green-900 text-sm">{goal.month}개월차</h5>
-                        </div>
-                        <p className="text-green-800 text-xs">{goal.goal}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 주간 목표 뷰 */}
-                {viewMode === 'weekly' && (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4, 5, 6].map(month => (
-                      <div key={month}>
-                        <h5 className="font-semibold text-orange-900 mb-2 text-sm">
-                          {month}개월차 ({month*4-3}주 ~ {month*4}주)
-                        </h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                          {detailedGoals.weeklyGoals
-                            .filter((goal: any) => goal.month === month)
-                            .map((goal: any) => (
-                              <div key={goal.week} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h6 className="font-medium text-orange-900 text-xs">{goal.week}주차</h6>
-                                </div>
-                                <p className="text-orange-800 text-xs">{goal.plan}</p>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  setCurrentStep(4);
-                  setDetailedGoals(null);
-                }}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                목표 다시 선택
-              </button>
-              <div className="space-x-3">
-                <button
-                  onClick={handleSaveGoals}
-                  disabled={isProcessing}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                      저장 중...
-                    </>
-                  ) : (
-                    '목표 저장하기'
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    // 새로운 목표 설정
-                    setSelectedPatient(null);
-                    setCurrentStep(1);
-                    setRecommendationId(null);
-                    setDetailedGoals(null);
-                    setFormData({
-                      focusTime: '',
-                      motivationLevel: 5,
-                      pastSuccesses: [],
-                      pastSuccessesOther: '',
-                      constraints: [],
-                      constraintsOther: '',
-                      socialPreference: '',
-                    });
-                  }}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  새 목표 설정
-                </button>
-              </div>
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">목표 설정 완료!</h2>
+            <p className="text-gray-600 mb-8">
+              {patients?.find(p => p.id === selectedPatient)?.full_name}님의 재활 목표가 성공적으로 설정되었습니다.
+            </p>
+            <button
+              onClick={() => {
+                setSelectedPatient(null);
+                setCurrentStep(1);
+                setFormData({
+                  focusTime: '',
+                  motivationLevel: 5,
+                  pastSuccesses: [],
+                  pastSuccessesOther: '',
+                  constraints: [],
+                  constraintsOther: '',
+                  socialPreference: '',
+                });
+                setAiRecommendations(null);
+                setDetailedGoals(null);
+                setSelectedGoal('');
+              }}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              새로운 환자 목표 설정하기
+            </button>
           </div>
         )}
       </div>
@@ -1302,4 +836,4 @@ const GoalSetting: React.FC = () => {
   );
 };
 
-export default GoalSetting; 
+export default GoalSetting;
