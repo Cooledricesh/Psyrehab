@@ -15,9 +15,10 @@ import StepIndicator from '@/components/GoalSetting/StepIndicator';
 import ProcessingModal from '@/components/GoalSetting/ProcessingModal';
 import AssessmentForm from '@/components/GoalSetting/AssessmentForm';
 
-// Utils, Types, and Constants
+// Utils
+import { getMotivationText, formatText, formatAssessmentData } from '@/utils/GoalSetting/helpers';
+// Constants
 import { 
-  // Constants
   FOCUS_TIME_OPTIONS, 
   PAST_SUCCESS_OPTIONS, 
   CONSTRAINT_OPTIONS, 
@@ -25,25 +26,18 @@ import {
   MAX_POLLING_ATTEMPTS,
   POLLING_INTERVAL,
   PAST_SUCCESS_MAPPING,
-  CONSTRAINT_MAPPING,
-  MESSAGES,
-  STYLES,
-  // Types
-  AssessmentFormData,
-  Patient,
-  Step,
-  AIRecommendation,
-  GoalData,
-  // Helpers
-  getMotivationText,
-  formatText,
-  formatAssessmentData,
-  formatDate,
-  getRelativeTime,
-  calculateProgress,
-  getStatusColor,
-  getGoalTypeLabel
-} from '@/utils/GoalSetting';
+  CONSTRAINT_MAPPING
+} from '@/utils/GoalSetting/constants';
+
+interface AssessmentFormData {
+  focusTime: string;
+  motivationLevel: number;
+  pastSuccesses: string[];
+  pastSuccessesOther: string;
+  constraints: string[];
+  constraintsOther: string;
+  socialPreference: string;
+}
 
 const GoalSetting: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
@@ -74,11 +68,11 @@ const GoalSetting: React.FC = () => {
   React.useEffect(() => {
     const autoLogin = async () => {
       try {
-        console.log(MESSAGES.info.autoLoginAttempt);
+        console.log('🔍 자동 로그인 체크 시작...');
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          console.log(MESSAGES.info.noSession);
+          console.log('🔐 세션이 없음. 개발용 admin 자동 로그인 시도...');
           const { data, error } = await supabase.auth.signInWithPassword({
             email: 'admin@psyrehab.dev',
             password: 'admin123!'
@@ -87,10 +81,10 @@ const GoalSetting: React.FC = () => {
           if (error) {
             console.log('⚠️ 자동 로그인 실패:', error.message);
           } else {
-            console.log(MESSAGES.info.loginSuccess, data);
+            console.log('✅ 개발용 admin 자동 로그인 성공!', data);
           }
         } else {
-          console.log(MESSAGES.info.alreadyLoggedIn, session.user?.email);
+          console.log('✅ 이미 로그인된 상태입니다.', session.user?.email);
         }
       } catch (error) {
         console.error('자동 로그인 중 오류:', error);
@@ -101,7 +95,7 @@ const GoalSetting: React.FC = () => {
             password: 'admin123!'
           });
           if (!forceError) {
-            console.log(MESSAGES.info.forceLoginSuccess);
+            console.log('✅ 강제 로그인 성공!');
           }
         } catch (e) {
           console.error('강제 로그인도 실패:', e);
@@ -183,14 +177,14 @@ const GoalSetting: React.FC = () => {
         } else if (recommendation && recommendation.n8n_processing_status === 'failed') {
           console.error('❌ AI 처리 실패');
           clearInterval(pollInterval);
-          alert(MESSAGES.error.aiRecommendationFailed);
+          alert('AI 추천 처리가 실패했습니다. 다시 시도해주세요.');
           setCurrentStep(2);
           setIsProcessing(false);
           
         } else if (pollCount >= maxPolls) {
           console.log('⏰ 폴링 횟수 초과');
           clearInterval(pollInterval);
-          alert(MESSAGES.error.aiRecommendationTimeout);
+          alert('AI 분석이 예상보다 오래 걸리고 있습니다. 잠시 후 다시 확인해주세요.');
           setIsProcessing(false);
         } else {
           console.log('⏳ AI 처리 진행 중... 상태:', recommendation?.n8n_processing_status || 'waiting');
@@ -436,7 +430,7 @@ const GoalSetting: React.FC = () => {
       
     } catch (error) {
       console.error('AI 추천 처리 중 오류:', error);
-      alert(MESSAGES.error.aiRequestFailed);
+      alert('AI 추천 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       setCurrentStep(2); // 평가 단계로 되돌리기
       setIsProcessing(false);
     }
@@ -517,7 +511,7 @@ const GoalSetting: React.FC = () => {
     console.log('AI 추천 ID:', recommendationId);
     
     if (!selectedPatient || !detailedGoals || !currentAssessmentId) {
-      alert(MESSAGES.error.missingData);
+      alert('저장할 목표 정보가 없습니다.');
       return;
     }
 
@@ -692,7 +686,7 @@ const GoalSetting: React.FC = () => {
       }
 
       // 성공 메시지
-      alert(MESSAGES.success.goalsSaved);
+      alert('목표가 성공적으로 저장되었습니다!');
       
       // 초기 상태로 리셋
       setSelectedPatient(null);
@@ -719,10 +713,14 @@ const GoalSetting: React.FC = () => {
       console.error('목표 저장 중 오류:', error);
       
       // 구체적인 오류 메시지 표시
-      let errorMessage = MESSAGES.error.default;
+      let errorMessage = '목표 저장 중 오류가 발생했습니다.';
       
       if (error.message) {
-        errorMessage = MESSAGES.error.goalSaveFailed(error.message);
+        errorMessage += '\n\n상세 오류: ' + error.message;
+      }
+      
+      if (error.code) {
+        errorMessage += '\n오류 코드: ' + error.code;
       }
       
       alert(errorMessage);
@@ -829,7 +827,7 @@ const GoalSetting: React.FC = () => {
                     min="1"
                     max="10"
                     value={formData.motivationLevel}
-                    onChange={(e) => handleMotivationChange([parseInt(e.target.value)])}
+                    onChange={(e) => handleMotivationChange(parseInt(e.target.value))}}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                   <div className="text-sm text-gray-600 text-center py-2 bg-gray-50 rounded-lg">
@@ -1114,7 +1112,7 @@ const GoalSetting: React.FC = () => {
                   console.log('AI 추천 데이터:', aiRecommendations);
                   
                   if (!selectedGoal) {
-                    alert(MESSAGES.error.noGoalSelected);
+                    alert('하나의 목표를 선택해주세요.');
                     return;
                   }
                   

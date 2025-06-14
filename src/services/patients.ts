@@ -345,4 +345,51 @@ export class PatientService {
       discharged: stats.discharged || 0
     }
   }
+
+  // 활성 목표가 없는 환자 목록 조회
+  static async getPatientsWithoutActiveGoals() {
+    try {
+      // 먼저 모든 환자를 가져옵니다
+      const { data: patients, error: patientsError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+
+      if (patientsError) {
+        throw new Error(`환자 목록을 가져오는 중 오류가 발생했습니다: ${patientsError.message}`)
+      }
+
+      if (!patients || patients.length === 0) {
+        return []
+      }
+
+      // 각 환자의 활성 목표 여부를 확인합니다
+      const patientsWithGoalStatus = await Promise.all(
+        patients.map(async (patient) => {
+          const { data: activeGoals, error: goalsError } = await supabase
+            .from('rehabilitation_goals')
+            .select('id')
+            .eq('patient_id', patient.id)
+            .eq('goal_type', 'six_month')
+            .in('status', ['active', 'pending'])
+            .limit(1)
+
+          if (goalsError) {
+            console.error(`환자 ${patient.id}의 목표 조회 오류:`, goalsError)
+            return null
+          }
+
+          // 활성 목표가 없는 환자만 반환
+          return activeGoals && activeGoals.length === 0 ? patient : null
+        })
+      )
+
+      // null이 아닌 환자들만 필터링하여 반환
+      return patientsWithGoalStatus.filter((patient) => patient !== null)
+    } catch (error) {
+      console.error('활성 목표가 없는 환자 조회 오류:', error)
+      throw error
+    }
+  }
 } 
