@@ -1,6 +1,6 @@
+'use client'
+
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,25 +11,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { signIn } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-    try {
-      const result = await signIn(email, password)
-      if (result.success) {
-        router.push('/')
-      } else {
-        setError(result.error || '로그인에 실패했습니다.')
-      }
-    } catch (error: any) {
-      setError(error.message || '로그인 중 오류가 발생했습니다.')
-    } finally {
+    
+    // 임시로 로그인 로직 비활성화 (UI 확인용)
+    setTimeout(() => {
+      setError('로그인 기능은 개발 중입니다.')
       setIsLoading(false)
-    }
+    }, 1000)
   }
 
   return (

@@ -15,6 +15,9 @@ import { SystemLogs } from '@/pages/admin/SystemLogs'
 import { BackupRestore } from '@/pages/admin/BackupRestore'
 import AnnouncementsManagement from '@/pages/admin/AnnouncementsManagement'
 
+// 인증 페이지 컴포넌트
+import LoginPage from '@/pages/auth/LoginPage'
+
 // QueryClient 인스턴스 생성
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,26 +115,34 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen flex bg-gray-50">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1 p-6 bg-gray-50 overflow-auto">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/dashboard" element={<SimpleDashboard />} />
-                <Route path="/patient-management" element={<PatientManagement />} />
-                <Route path="/goal-setting" element={<GoalSetting />} />
-                <Route path="/progress-tracking" element={<ProgressTracking />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/admin/logs" element={<SystemLogs />} />
-                <Route path="/admin/backup-restore" element={<BackupRestore />} />
-                <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
-              </Routes>
-            </main>
-          </div>
-        </div>
+        <Routes>
+          {/* 인증 관련 라우트 (레이아웃 없음) */}
+          <Route path="/auth/login" element={<LoginPage />} />
+          
+          {/* 메인 애플리케이션 라우트 (레이아웃 포함) */}
+          <Route path="/*" element={
+            <div className="min-h-screen flex bg-gray-50">
+              <Sidebar />
+              <div className="flex-1 flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-1 p-6 bg-gray-50 overflow-auto">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/dashboard" element={<SimpleDashboard />} />
+                    <Route path="/patient-management" element={<PatientManagement />} />
+                    <Route path="/goal-setting" element={<GoalSetting />} />
+                    <Route path="/progress-tracking" element={<ProgressTracking />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/admin/logs" element={<SystemLogs />} />
+                    <Route path="/admin/backup-restore" element={<BackupRestore />} />
+                    <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
+          } />
+        </Routes>
       </Router>
     </QueryClientProvider>
   )

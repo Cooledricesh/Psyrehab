@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Target, History, AlertTriangle, Users } from 'lucide-react';
+import { Brain, Target, History, AlertTriangle, Users, ArrowLeft, ChevronRight } from 'lucide-react';
 import {
   FOCUS_TIME_OPTIONS,
   PAST_SUCCESS_OPTIONS,
@@ -7,7 +7,7 @@ import {
   SOCIAL_PREFERENCE_OPTIONS
 } from '@/utils/GoalSetting/constants';
 import { getMotivationText } from '@/utils/GoalSetting/helpers';
-import { AssessmentFormData, Patient } from '@/utils/GoalSetting/types';
+import type { AssessmentFormData, Patient } from '@/utils/GoalSetting/types';
 
 interface AssessmentStepProps {
   formData: AssessmentFormData;
