@@ -9,6 +9,26 @@ import { useAIRecommendationByAssessment } from '@/hooks/useAIRecommendations';
 import { ENV } from '@/lib/env';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 
+// Components
+import PatientSelection from '@/components/GoalSetting/PatientSelection';
+import StepIndicator from '@/components/GoalSetting/StepIndicator';
+import ProcessingModal from '@/components/GoalSetting/ProcessingModal';
+import AssessmentForm from '@/components/GoalSetting/AssessmentForm';
+
+// Utils
+import { getMotivationText, formatText, formatAssessmentData } from '@/utils/GoalSetting/helpers';
+// Constants
+import { 
+  FOCUS_TIME_OPTIONS, 
+  PAST_SUCCESS_OPTIONS, 
+  CONSTRAINT_OPTIONS, 
+  SOCIAL_PREFERENCE_OPTIONS,
+  MAX_POLLING_ATTEMPTS,
+  POLLING_INTERVAL,
+  PAST_SUCCESS_MAPPING,
+  CONSTRAINT_MAPPING
+} from '@/utils/GoalSetting/constants';
+
 interface AssessmentFormData {
   focusTime: string;
   motivationLevel: number;
@@ -28,7 +48,6 @@ const GoalSetting: React.FC = () => {
   const [aiRecommendations, setAiRecommendations] = useState<any>(null);
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [pollingAttempts, setPollingAttempts] = useState(0);
-  const maxPollingAttempts = 15;
   const [detailedGoals, setDetailedGoals] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   
@@ -179,7 +198,7 @@ const GoalSetting: React.FC = () => {
     pollAIStatus();
     
     // 5초마다 폴링
-    pollInterval = setInterval(pollAIStatus, 5000);
+    pollInterval = setInterval(pollAIStatus, POLLING_INTERVAL);
 
     return () => {
       if (pollInterval) {
@@ -235,33 +254,13 @@ const GoalSetting: React.FC = () => {
           motivation_level: assessmentData.motivationLevel,
           past_successes: [
             ...(assessmentData.pastSuccesses.map((value: string) => {
-              // 값을 라벨로 변환
-              const mapping: Record<string, string> = {
-                'cooking': '요리/베이킹',
-                'exercise': '운동/산책',
-                'reading': '독서/공부',
-                'crafting': '만들기/그리기',
-                'socializing': '사람 만나기/대화',
-                'entertainment': '음악/영화 감상',
-                'organizing': '정리/청소',
-                'none': '특별히 없음'
-              };
-              return mapping[value] || value;
+              return PAST_SUCCESS_MAPPING[value] || value;
             })),
             ...(assessmentData.pastSuccessesOther ? [assessmentData.pastSuccessesOther] : [])
           ].filter(Boolean),
           constraints: [
             ...(assessmentData.constraints.map((value: string) => {
-              // 값을 라벨로 변환
-              const mapping: Record<string, string> = {
-                'transport': '교통편 문제 (대중교통 이용 어려움)',
-                'financial': '경제적 부담 (비용 지출 어려움)',
-                'time': '시간 제약 (다른 일정으로 바쁨)',
-                'physical': '신체적 제약 (거동 불편, 체력 부족)',
-                'family': '가족 반대 (가족이 활동 반대)',
-                'none': '별다른 제약 없음'
-              };
-              return mapping[value] || value;
+              return CONSTRAINT_MAPPING[value] || value;
             })),
             ...(assessmentData.constraintsOther ? [assessmentData.constraintsOther] : [])
           ].filter(Boolean),
@@ -438,11 +437,11 @@ const GoalSetting: React.FC = () => {
   };
 
   const steps = [
-    { id: 1, title: '환자 선택', completed: !!selectedPatient },
-    { id: 2, title: '평가 수행', completed: false },
-    { id: 3, title: 'AI 분석', completed: false },
-    { id: 4, title: '목표 추천', completed: false },
-    { id: 5, title: '완료', completed: false }
+    { id: 1, title: '환자 선택', completed: currentStep > 1 },
+    { id: 2, title: '평가 수행', completed: currentStep > 2 },
+    { id: 3, title: 'AI 분석', completed: currentStep > 3 },
+    { id: 4, title: '목표 추천', completed: currentStep > 4 },
+    { id: 5, title: '완료', completed: currentStep > 5 }
   ];
 
   const handlePatientSelect = (patientId: string) => {
@@ -730,42 +729,6 @@ const GoalSetting: React.FC = () => {
     }
   };
 
-  const getMotivationText = (level: number) => {
-    if (level <= 2) return '현재 상태 유지가 우선';
-    if (level <= 4) return '작은 변화라면 시도해볼 만함';
-    if (level <= 6) return '적당한 도전 가능';
-    if (level <= 8) return '새로운 도전 원함';
-    return '큰 변화도 감당할 준비됨';
-  };
-
-
-
-  // 텍스트 포맷팅 함수 (간단하게)
-  const formatText = (text: string) => {
-    if (!text) return text;
-    
-    return text.split('\n').map((line, index) => {
-      line = line.trim();
-      if (!line) return null;
-      
-      // 리스트 항목
-      if (line.startsWith('*') || line.startsWith('-')) {
-        return (
-          <div key={index} className="flex items-start gap-2 mb-1">
-            <span className="text-blue-600 mt-1">•</span>
-            <span className="text-gray-700">{line.replace(/^[*-]\s*/, '')}</span>
-          </div>
-        );
-      }
-      
-      return (
-        <p key={index} className="text-gray-700 mb-2 leading-relaxed">
-          {line}
-        </p>
-      );
-    }).filter(Boolean);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -785,81 +748,16 @@ const GoalSetting: React.FC = () => {
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-center space-x-8">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                  currentStep === step.id 
-                    ? 'border-blue-500 bg-blue-500 text-white' 
-                    : step.completed 
-                    ? 'border-green-500 bg-green-500 text-white'
-                    : 'border-gray-300 bg-white text-gray-500'
-                }`}>
-                  {step.completed ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <span className="text-sm font-medium">{step.id}</span>
-                  )}
-                </div>
-                <span className={`ml-2 text-sm font-medium ${
-                  currentStep === step.id ? 'text-blue-600' : 'text-gray-500'
-                }`}>
-                  {step.title}
-                </span>
-                {index < steps.length - 1 && (
-                  <ChevronRight className="h-4 w-4 text-gray-400 ml-4" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <StepIndicator currentStep={currentStep} steps={steps} />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         {currentStep === 1 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">회원을 선택하세요</h2>
-            {patientsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">회원 목록을 불러오는 중...</span>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {patients?.map((patient) => (
-                  <button
-                    key={patient.id}
-                    onClick={() => handlePatientSelect(patient.id)}
-                    className="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-medium text-gray-900">{patient.full_name}</div>
-                        <div className="text-sm text-gray-500">IDNO: {patient.patient_identifier}</div>
-                      </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        목표 설정 대기
-                      </span>
-                    </div>
-                  </button>
-                ))}
-                {patients?.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
-                      <User className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">목표 설정이 필요한 회원이 없습니다</h3>
-                    <p className="text-sm text-gray-500">
-                      새로운 회원을 등록하거나, 기존 회원의 상태를 '목표 설정 대기(inactive)'로 변경해주세요.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <PatientSelection
+            patients={patients}
+            patientsLoading={patientsLoading}
+            onSelectPatient={handlePatientSelect}
+          />
         )}
 
         {currentStep === 2 && (
@@ -887,12 +785,7 @@ const GoalSetting: React.FC = () => {
                   한 가지 일에 집중할 수 있는 시간은 얼마나 되나요?
                 </label>
                 <div className="space-y-3">
-                  {[
-                    { value: '5min', label: '5분 정도' },
-                    { value: '15min', label: '15분 정도' },
-                    { value: '30min', label: '30분 정도' },
-                    { value: '1hour', label: '1시간 이상' }
-                  ].map((option) => (
+                  {FOCUS_TIME_OPTIONS.map((option) => (
                     <label key={option.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                       <input
                         type="radio"
@@ -960,16 +853,7 @@ const GoalSetting: React.FC = () => {
                 </label>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {[
-                      { value: 'cooking', label: '요리/베이킹' },
-                      { value: 'exercise', label: '운동/산책' },
-                      { value: 'reading', label: '독서/공부' },
-                      { value: 'crafting', label: '만들기/그리기' },
-                      { value: 'socializing', label: '사람 만나기/대화' },
-                      { value: 'entertainment', label: '음악/영화 감상' },
-                      { value: 'organizing', label: '정리/청소' },
-                      { value: 'none', label: '특별히 없음' }
-                    ].map((item) => (
+                    {PAST_SUCCESS_OPTIONS.map((item) => (
                       <label key={item.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                         <input
                           type="checkbox"
@@ -1012,14 +896,7 @@ const GoalSetting: React.FC = () => {
                 </label>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {[
-                      { value: 'transport', label: '교통편 문제 (대중교통 이용 어려움)' },
-                      { value: 'financial', label: '경제적 부담 (비용 지출 어려움)' },
-                      { value: 'time', label: '시간 제약 (다른 일정으로 바쁨)' },
-                      { value: 'physical', label: '신체적 제약 (거동 불편, 체력 부족)' },
-                      { value: 'family', label: '가족 반대 (가족이 활동 반대)' },
-                      { value: 'none', label: '별다른 제약 없음' }
-                    ].map((item) => (
+                    {CONSTRAINT_OPTIONS.map((item) => (
                       <label key={item.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                         <input
                           type="checkbox"
@@ -1063,13 +940,7 @@ const GoalSetting: React.FC = () => {
                   사람들과 함께 하는 활동에 대해 어떻게 생각하세요?
                 </label>
                 <div className="space-y-3">
-                  {[
-                    { value: 'alone', label: '혼자 하는 게 훨씬 편함' },
-                    { value: 'close_family', label: '가족이나 아주 가까운 사람과만 괜찮음' },
-                    { value: 'small_group', label: '소수의 사람들과는 괜찮음 (2-3명)' },
-                    { value: 'medium_group', label: '어느 정도 사람들과도 괜찮음 (5-10명)' },
-                    { value: 'large_group', label: '많은 사람과도 괜찮음 (10명 이상)' }
-                  ].map((option) => (
+                  {SOCIAL_PREFERENCE_OPTIONS.map((option) => (
                     <label key={option.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                       <input
                         type="radio"
@@ -1111,34 +982,13 @@ const GoalSetting: React.FC = () => {
         )}
 
         {currentStep === 3 && (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">AI 분석 진행 중</h3>
-            <p className="text-gray-600">개인맞춤형 목표를 생성하고 있습니다...</p>
-            <div className="mt-6 text-sm text-gray-500">
-              평가 데이터를 저장하고 AI 분석을 요청 중입니다. 잠시만 기다려주세요.
-            </div>
-            <div className="mt-4 text-xs text-gray-400">
-              폴링 시도: {pollingAttempts}/{maxPollingAttempts}
-            </div>
-            {pollingAttempts >= maxPollingAttempts && (
-              <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <p className="text-orange-800 text-sm">
-                  AI 분석이 예상보다 오래 걸리고 있습니다. 
-                  잠시 후 다시 시도하거나 관리자에게 문의해주세요.
-                </p>
-                <button
-                  onClick={() => {
-                    setPollingAttempts(0);
-                    refetchAIRecommendation();
-                  }}
-                  className="mt-3 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
-                >
-                  다시 시도
-                </button>
-              </div>
-            )}
-          </div>
+          <ProcessingModal
+            pollingAttempts={pollingAttempts}
+            onRetry={() => {
+              setPollingAttempts(0);
+              refetchAIRecommendation();
+            }}
+          />
         )}
 
                 {currentStep === 4 && aiRecommendations && (
