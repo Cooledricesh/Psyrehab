@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Eye, EyeOff, Heart } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,17 +15,34 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
     
-    // 임시로 로그인 로직 비활성화 (UI 확인용)
-    setTimeout(() => {
-      setError('로그인 기능은 개발 중입니다.')
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      if (data.user) {
+        // 로그인 성공 시 메인 페이지로 리다이렉트
+        navigate('/dashboard')
+      }
+    } catch (err) {
+      setError('로그인 중 오류가 발생했습니다.')
+      console.error('Login error:', err)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -118,6 +137,13 @@ export default function LoginPage() {
                   '로그인'
                 )}
               </Button>
+
+              {/* 테스트 계정 안내 */}
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-700 font-medium mb-1">테스트 계정:</p>
+                <p className="text-xs text-blue-600">이메일: test@psyrehab.com</p>
+                <p className="text-xs text-blue-600">비밀번호: test123456</p>
+              </div>
 
               {/* 추가 링크 */}
               <div className="space-y-3 pt-4">

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { SimpleDashboard } from '@/components/dashboard/SimpleDashboard'
+import { SimpleProtectedRoute } from '@/components/auth/SimpleProtectedRoute'
 
 // 실제 페이지 컴포넌트들
 import Home from '@/pages/Home'
@@ -119,28 +120,30 @@ function App() {
           {/* 인증 관련 라우트 (레이아웃 없음) */}
           <Route path="/auth/login" element={<LoginPage />} />
           
-          {/* 메인 애플리케이션 라우트 (레이아웃 포함) */}
+          {/* 메인 애플리케이션 라우트 (레이아웃 포함 + 인증 보호) */}
           <Route path="/*" element={
-            <div className="min-h-screen flex bg-gray-50">
-              <Sidebar />
-              <div className="flex-1 flex flex-col min-h-screen">
-                <Header />
-                <main className="flex-1 p-6 bg-gray-50 overflow-auto">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/dashboard" element={<SimpleDashboard />} />
-                    <Route path="/patient-management" element={<PatientManagement />} />
-                    <Route path="/goal-setting" element={<GoalSetting />} />
-                    <Route path="/progress-tracking" element={<ProgressTracking />} />
-                    <Route path="/reports" element={<Reports />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/admin/logs" element={<SystemLogs />} />
-                    <Route path="/admin/backup-restore" element={<BackupRestore />} />
-                    <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
-                  </Routes>
-                </main>
+            <SimpleProtectedRoute>
+              <div className="min-h-screen flex bg-gray-50">
+                <Sidebar />
+                <div className="flex-1 flex flex-col min-h-screen">
+                  <Header />
+                  <main className="flex-1 p-6 bg-gray-50 overflow-auto">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/dashboard" element={<SimpleDashboard />} />
+                      <Route path="/patient-management" element={<PatientManagement />} />
+                      <Route path="/goal-setting" element={<GoalSetting />} />
+                      <Route path="/progress-tracking" element={<ProgressTracking />} />
+                      <Route path="/reports" element={<Reports />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/admin/logs" element={<SystemLogs />} />
+                      <Route path="/admin/backup-restore" element={<BackupRestore />} />
+                      <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
+                    </Routes>
+                  </main>
+                </div>
               </div>
-            </div>
+            </SimpleProtectedRoute>
           } />
         </Routes>
       </Router>

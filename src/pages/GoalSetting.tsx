@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, ChevronRight, Target, Loader2 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { PatientService } from '@/services/patients';
 import { supabase } from '@/lib/supabase';
@@ -16,63 +16,40 @@ import AssessmentStep from '@/components/GoalSetting/AssessmentStep';
 import GoalDetailDisplay from '@/components/GoalSetting/GoalDetailDisplay';
 import PageHeader from '@/components/GoalSetting/PageHeader';
 
-// Utils, Types, and Constants
-import { 
-  FOCUS_TIME_OPTIONS, 
-  PAST_SUCCESS_OPTIONS, 
-  CONSTRAINT_OPTIONS, 
-  SOCIAL_PREFERENCE_OPTIONS,
-  MAX_POLLING_ATTEMPTS,
-  POLLING_INTERVAL,
-  PAST_SUCCESS_MAPPING,
-  CONSTRAINT_MAPPING,
-  MESSAGES,
-  STYLES
-} from '@/utils/GoalSetting/constants';
+// Custom Hooks
+import { useGoalSettingFlow, useAIPolling, useAssessmentSave } from '@/hooks/GoalSetting';
 
-import {
-  type AssessmentFormData,
-  type Patient,
-  type Step,
-  type AIRecommendation,
-  type GoalData
-} from '@/utils/GoalSetting/types';
-
-import {
-  getMotivationText,
-  formatText,
-  formatAssessmentData,
-  formatDate,
-  getRelativeTime,
-  calculateProgress,
-  getStatusColor,
-  getGoalTypeLabel
-} from '@/utils/GoalSetting/helpers';
+// Utils and Constants
+import { MESSAGES } from '@/utils/GoalSetting/constants';
 
 const GoalSetting: React.FC = () => {
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  // 전체 플로우 상태 관리 훅
+  const {
+    selectedPatient,
+    currentStep,
+    currentAssessmentId,
+    recommendationId,
+    selectedGoal,
+    detailedGoals,
+    viewMode,
+    formData,
+    handlePatientSelect,
+    setCurrentStep,
+    setCurrentAssessmentId,
+    setRecommendationId,
+    setSelectedGoal,
+    setDetailedGoals,
+    setViewMode,
+    updateFormData,
+    resetFlow,
+  } = useGoalSettingFlow();
+
+  // 추가 상태 (훅으로 옮기지 않은 것들)
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [recommendationId, setRecommendationId] = useState<string | null>(null);
-  const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
   const [aiRecommendations, setAiRecommendations] = useState<any>(null);
-  const [selectedGoal, setSelectedGoal] = useState<string>('');
-  const [pollingAttempts, setPollingAttempts] = useState(0);
-  const [detailedGoals, setDetailedGoals] = useState<any>(null);
-  const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   
   // AI 응답 파싱 훅
   const { parseAIResponse } = useAIResponseParser();
-  
-  const [formData, setFormData] = useState<AssessmentFormData>({
-    focusTime: '',
-    motivationLevel: 5,
-    pastSuccesses: [],
-    pastSuccessesOther: '',
-    constraints: [],
-    constraintsOther: '',
-    socialPreference: '',
-  });
 
   // 개발용 자동 admin 로그인
   React.useEffect(() => {
@@ -147,75 +124,25 @@ const GoalSetting: React.FC = () => {
     null  // 환자 ID를 null로 설정
   );
 
-  // AI 처리 상태 폴링을 위한 별도 effect
-  React.useEffect(() => {
-    if (currentStep !== 3 || !currentAssessmentId) return;
-
-    let pollInterval: NodeJS.Timeout;
-    let pollCount = 0;
-    const maxPolls = 30; // 최대 30번 (2.5분)
-
-    const pollAIStatus = async () => {
-      try {
-        pollCount++;
-        console.log(`📊 AI 처리 상태 폴링 ${pollCount}/${maxPolls}:`, currentAssessmentId);
-        
-        // ai_goal_recommendations 테이블에서 AI 처리 상태 확인
-        const { data: recommendation, error } = await supabase
-          .from('ai_goal_recommendations')
-          .select('id, n8n_processing_status, assessment_id')
-          .eq('assessment_id', currentAssessmentId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          console.error('❌ AI 추천 상태 조회 실패:', error);
-          return;
-        }
-
-        console.log('📋 AI 처리 상태:', recommendation);
-
-        if (recommendation && recommendation.n8n_processing_status === 'completed') {
-          console.log('✅ AI 처리 완료! 추천 ID:', recommendation.id);
-          clearInterval(pollInterval);
-          
-          // AI 추천 데이터 다시 조회
-          refetchAIRecommendation();
-          setIsProcessing(false);
-          
-        } else if (recommendation && recommendation.n8n_processing_status === 'failed') {
-          console.error('❌ AI 처리 실패');
-          clearInterval(pollInterval);
-          alert(MESSAGES.error.aiRecommendationFailed);
-          setCurrentStep(2);
-          setIsProcessing(false);
-          
-        } else if (pollCount >= maxPolls) {
-          console.log('⏰ 폴링 횟수 초과');
-          clearInterval(pollInterval);
-          alert(MESSAGES.error.aiRecommendationTimeout);
-          setIsProcessing(false);
-        } else {
-          console.log('⏳ AI 처리 진행 중... 상태:', recommendation?.n8n_processing_status || 'waiting');
-        }
-      } catch (error) {
-        console.error('폴링 중 오류:', error);
-      }
-    };
-
-    // 즉시 한 번 확인
-    pollAIStatus();
-    
-    // 5초마다 폴링
-    pollInterval = setInterval(pollAIStatus, POLLING_INTERVAL);
-
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-    };
-  }, [currentStep, currentAssessmentId, refetchAIRecommendation]);
+  // AI 폴링 훅 사용
+  const { isPolling, pollingStatus } = useAIPolling({
+    currentStep,
+    currentAssessmentId,
+    onSuccess: () => {
+      console.log('✅ AI 폴링 성공 콜백');
+      refetchAIRecommendation();
+      setIsProcessing(false);
+    },
+    onError: (error) => {
+      console.error('❌ AI 폴링 에러 콜백:', error);
+      alert(error);
+      setCurrentStep(2);
+      setIsProcessing(false);
+    },
+    onComplete: () => {
+      console.log('🏁 AI 폴링 완료 콜백');
+    }
+  });
 
   // AI 추천 결과 변화 감지 (구조화된 데이터 사용)
   React.useEffect(() => {
@@ -247,116 +174,20 @@ const GoalSetting: React.FC = () => {
         setIsProcessing(false);
       }
     }
-  }, [aiRecommendationData, currentAssessmentId, currentStep]);
+  }, [aiRecommendationData, currentAssessmentId, currentStep, setRecommendationId, setCurrentStep]);
 
-  // 평가 데이터 저장 mutation
-  const saveAssessmentMutation = useMutation({
-    mutationFn: async (assessmentData: any) => {
-      // 현재 로그인한 사용자 ID 가져오기
-      const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || crypto.randomUUID();
-      
-      const { data, error } = await supabase
-        .from('assessments')
-        .insert({
-          patient_id: selectedPatient!,
-          focus_time: assessmentData.focusTime,
-          motivation_level: assessmentData.motivationLevel,
-          past_successes: [
-            ...(assessmentData.pastSuccesses.map((value: string) => {
-              return PAST_SUCCESS_MAPPING[value] || value;
-            })),
-            ...(assessmentData.pastSuccessesOther ? [assessmentData.pastSuccessesOther] : [])
-          ].filter(Boolean),
-          constraints: [
-            ...(assessmentData.constraints.map((value: string) => {
-              return CONSTRAINT_MAPPING[value] || value;
-            })),
-            ...(assessmentData.constraintsOther ? [assessmentData.constraintsOther] : [])
-          ].filter(Boolean),
-          social_preference: assessmentData.socialPreference,
-          notes: null,
-          assessed_by: userId,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.log('💥 Insert 에러 상세:', error);
-        
-        // RLS 오류인 경우 admin 로그인 시도 (더 포괄적인 감지)
-        if (error.code === '42501' || 
-            error.message.includes('row-level security') ||
-            error.message.includes('policy') ||
-            error.message.includes('permission') ||
-            error.details?.includes('policy') ||
-            error.hint?.includes('policy')) {
-          console.log('🔐 RLS 오류 감지됨. Admin 로그인 시도 중...');
-          
-          const { error: loginError } = await supabase.auth.signInWithPassword({
-            email: 'admin@psyrehab.dev',
-            password: 'admin123!'
-          });
-          
-          if (loginError) {
-            console.log('⚠️ Admin 로그인 실패:', loginError.message);
-            throw new Error(`평가 데이터 저장 실패: ${error.message}`);
-          } else {
-            console.log('✅ Admin 로그인 성공! 다시 저장 시도...');
-            
-            // 새로운 사용자 ID로 다시 시도
-            const { data: { user: newUser } } = await supabase.auth.getUser();
-            const newUserId = newUser?.id || crypto.randomUUID();
-            
-            // Admin 로그인 후 다시 시도
-            const { data: retryData, error: retryError } = await supabase
-              .from('assessments')
-              .insert({
-                patient_id: selectedPatient!,
-                focus_time: assessmentData.focusTime,
-                motivation_level: assessmentData.motivationLevel,
-                past_successes: [
-                  ...(assessmentData.pastSuccesses.map((value: string) => {
-                    return PAST_SUCCESS_MAPPING[value] || value;
-                  })),
-                  ...(assessmentData.pastSuccessesOther ? [assessmentData.pastSuccessesOther] : [])
-                ].filter(Boolean),
-                constraints: [
-                  ...(assessmentData.constraints.map((value: string) => {
-                    return CONSTRAINT_MAPPING[value] || value;
-                  })),
-                  ...(assessmentData.constraintsOther ? [assessmentData.constraintsOther] : [])
-                ].filter(Boolean),
-                social_preference: assessmentData.socialPreference,
-                notes: null,
-                assessed_by: newUserId,
-              })
-              .select()
-              .single();
-              
-            if (retryError) {
-              console.log('💥 재시도 에러:', retryError);
-              throw new Error(`평가 데이터 저장 실패 (재시도): ${retryError.message}`);
-            }
-            
-            console.log('✅ 재시도 성공:', retryData);
-            return retryData;
-          }
-        } else {
-          throw new Error(`평가 데이터 저장 실패: ${error.message}`);
-        }
-      }
-
-      return data;
-    },
+  // 평가 저장 훅 사용
+  const saveAssessmentMutation = useAssessmentSave({
+    selectedPatient,
     onSuccess: (data) => {
       console.log('✅ 평가 데이터 저장 성공:', data);
       setCurrentStep(3); // AI 처리 단계로 이동
       setRecommendationId(data.id);
-      // AI 추천 워크플로우는 handleGetAIRecommendation에서 이미 처리됨
+      setCurrentAssessmentId(data.id);
     },
     onError: (error) => {
       console.error('❌ 평가 데이터 저장 실패:', error);
+      alert(error.message);
     }
   });
 
@@ -404,19 +235,15 @@ const GoalSetting: React.FC = () => {
       setCurrentAssessmentId(null);
       
       setCurrentStep(3); // AI 처리 단계로 이동
-      setPollingAttempts(0); // 폴링 시도 횟수 초기화
 
       // 1. 평가 데이터 저장
-      const savedAssessment = await saveAssessmentMutation.mutateAsync(formData);
-      
-      // 현재 평가 ID 저장
-      setCurrentAssessmentId(savedAssessment.id);
+      const savedAssessment = await saveAssessmentMutation.mutateAsync({ formData });
       
       // 2. AI 추천 요청
       console.log('🚀 AI 추천 요청 시작:', savedAssessment.id);
       const aiResponse = await requestAIRecommendationMutation.mutateAsync(savedAssessment.id);
       
-      // 폴링은 useEffect에서 자동으로 시작됨
+      // 폴링은 useAIPolling 훅에서 자동으로 시작됨
       
     } catch (error) {
       console.error('AI 추천 처리 중 오류:', error);
@@ -434,58 +261,32 @@ const GoalSetting: React.FC = () => {
     { id: 5, title: '완료', completed: currentStep > 5 }
   ];
 
-  const handlePatientSelect = (patientId: string) => {
-    setSelectedPatient(patientId);
-    setCurrentStep(2);
-    // 모든 상태 완전 초기화
-    setAiRecommendations(null);
-    setRecommendationId(null);
-    setCurrentAssessmentId(null);  // 추가
-    setSelectedGoal('');
-    setDetailedGoals(null);
-    setPollingAttempts(0);
-    setIsProcessing(false);
-    setViewMode('monthly');
-    // 폼 데이터도 초기화
-    setFormData({
-      focusTime: '',
-      motivationLevel: 5,
-      pastSuccesses: [],
-      pastSuccessesOther: '',
-      constraints: [],
-      constraintsOther: '',
-      socialPreference: '',
-    });
-  };
-
   const handleFocusTimeChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, focusTime: value }));
+    updateFormData({ focusTime: value });
   };
 
   const handleMotivationChange = (value: number[]) => {
-    setFormData((prev) => ({ ...prev, motivationLevel: value[0] }));
+    updateFormData({ motivationLevel: value[0] });
   };
 
   const handlePastSuccessChange = (value: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
+    updateFormData({
       pastSuccesses: checked
-        ? [...prev.pastSuccesses, value]
-        : prev.pastSuccesses.filter((item) => item !== value)
-    }));
+        ? [...formData.pastSuccesses, value]
+        : formData.pastSuccesses.filter((item) => item !== value)
+    });
   };
 
   const handleConstraintChange = (value: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
+    updateFormData({
       constraints: checked
-        ? [...prev.constraints, value]
-        : prev.constraints.filter((item) => item !== value)
-    }));
+        ? [...formData.constraints, value]
+        : formData.constraints.filter((item) => item !== value)
+    });
   };
 
   const handleSocialPreferenceChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, socialPreference: value }));
+    updateFormData({ socialPreference: value });
   };
 
   const isFormValid = () => {
@@ -631,10 +432,8 @@ const GoalSetting: React.FC = () => {
           
           detailedGoals.weeklyGoals
             ?.filter(weeklyPlan => {
-              // month 속성이 없을 수도 있으므로, monthIndex로 필터링
-              const weekNumber = parseInt(weeklyPlan.week || '0');
-              const weekMonth = Math.floor((weekNumber - 1) / 4);
-              return weekMonth === monthIndex;
+              // weeklyPlan.month 필드를 직접 사용
+              return (weeklyPlan.month - 1) === monthIndex;
             })
             ?.forEach((weeklyPlan, weekIndex) => {
               goalsToInsert.push({
@@ -685,22 +484,7 @@ const GoalSetting: React.FC = () => {
       alert(MESSAGES.success.goalsSaved);
       
       // 초기 상태로 리셋
-      setSelectedPatient(null);
-      setCurrentStep(1);
-      setRecommendationId(null);
-      setCurrentAssessmentId(null);
-      setAiRecommendations(null);
-      setDetailedGoals(null);
-      setSelectedGoal('');
-      setFormData({
-        focusTime: '',
-        motivationLevel: 5,
-        pastSuccesses: [],
-        pastSuccessesOther: '',
-        constraints: [],
-        constraintsOther: '',
-        socialPreference: '',
-      });
+      resetFlow();
       
       // 환자 목록 새로고침
       refetch();
@@ -730,15 +514,18 @@ const GoalSetting: React.FC = () => {
       if (selectedOption) {
         setDetailedGoals({
           selectedIndex: goalIndex,
-          sixMonthGoal: selectedOption.sixMonthGoals?.[0] || {},
-          monthlyGoals: selectedOption.sixMonthGoals?.[0]?.monthlyPlans || [],
-          weeklyGoals: selectedOption.sixMonthGoals?.[0]?.monthlyPlans?.flatMap(
-            mp => mp.weeklyPlans || []
-          ) || []
+          sixMonthGoal: {
+            title: selectedOption.title,
+            goal: selectedOption.sixMonthGoal,
+            purpose: selectedOption.purpose,
+            details: selectedOption.purpose
+          },
+          monthlyGoals: selectedOption.monthlyGoals || [],
+          weeklyGoals: selectedOption.weeklyPlans || []
         });
       }
     }
-  }, [aiRecommendations, selectedGoal]);
+  }, [aiRecommendations, selectedGoal, setDetailedGoals]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -771,7 +558,7 @@ const GoalSetting: React.FC = () => {
             onPastSuccessChange={handlePastSuccessChange}
             onConstraintChange={handleConstraintChange}
             onSocialPreferenceChange={handleSocialPreferenceChange}
-            onFormDataChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))}
+            onFormDataChange={(updates) => updateFormData(updates)}
             onNext={handleAssessmentSubmit}
             onBack={() => setCurrentStep(1)}
             isProcessing={isProcessing}
@@ -780,11 +567,160 @@ const GoalSetting: React.FC = () => {
 
         {currentStep === 3 && (
           <ProcessingModal
-            isOpen={isProcessing}
+            isOpen={isProcessing || isPolling}
             message="AI가 최적의 재활 목표를 분석하고 있습니다..."
           />
         )}
 
+        {currentStep === 4 && aiRecommendations && (
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                3개의 맞춤형 목표가 생성되었습니다.
+              </h3>
+            </div>
+
+            {/* AI 분석 요약 - 접이식 */}
+            {(aiRecommendations.reasoning || aiRecommendations.patient_analysis) && (
+              <div className="bg-white rounded-lg shadow-sm">
+                <details className="group">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                        <span className="text-sm">📋</span>
+                      </div>
+                      <span className="font-medium text-gray-900">환자 분석</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-400 group-open:rotate-90 transition-transform" />
+                  </summary>
+                  <div className="px-4 pb-4 border-t border-gray-100">
+                    <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 mt-3">
+                      {aiRecommendations.reasoning || aiRecommendations.patient_analysis?.insights || '분석 정보를 불러오는 중...'}
+                    </div>
+                  </div>
+                </details>
+              </div>
+            )}
+
+            {/* 추천 목표 */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center">
+                  <Target className="h-4 w-4 text-red-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900">추천 목표 (3개)</h4>
+              </div>
+
+              <div className="space-y-3">
+                {(aiRecommendations.goals || []).map((goal: any, index: number) => (
+                  <div
+                    key={index}
+                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                      selectedGoal === index.toString()
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-300'
+                    }`}
+                    onClick={() => setSelectedGoal(index.toString())}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="goal"
+                        value={index.toString()}
+                        checked={selectedGoal === index.toString()}
+                        onChange={() => setSelectedGoal(index.toString())}
+                        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-gray-600">목표 {index + 1}</span>
+                          <span className="text-lg font-semibold text-gray-900">
+                            {goal.title?.replace(/^목표\s*\d+[:\.]?\s*/, '') || `목표 ${index + 1}`}
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-start gap-2">
+                            <span className="text-yellow-600 mt-0.5">🎯</span>
+                            <div>
+                              <span className="font-medium text-gray-700">목적:</span>
+                              <span className="text-gray-600 ml-1">
+                                {goal.purpose || '목적 설명'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-2">
+                            <span className="text-red-600 mt-0.5">⭕</span>
+                            <div>
+                              <span className="font-medium text-gray-700">6개월 목표:</span>
+                              <span className="text-gray-600 ml-1">
+                                {goal.sixMonthGoal || '목표 설정 중'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  setCurrentStep(2);
+                  setAiRecommendations(null);
+                  setSelectedGoal('');
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                평가 다시하기
+              </button>
+              <button
+                onClick={() => {
+                  console.log('🔥 목표 설정하기 버튼 클릭됨!');
+                  console.log('선택된 목표:', selectedGoal);
+                  console.log('AI 추천 데이터:', aiRecommendations);
+                  
+                  if (!selectedGoal) {
+                    alert('하나의 목표를 선택해주세요.');
+                    return;
+                  }
+                  
+                  const selectedGoalData = aiRecommendations.goals[parseInt(selectedGoal)];
+                  console.log('선택된 목표 데이터:', selectedGoalData);
+                  
+                  // 선택한 목표만 상세 구조 생성
+                  const detailed = {
+                    selectedIndex: parseInt(selectedGoal),
+                    sixMonthGoal: selectedGoalData,
+                    monthlyGoals: selectedGoalData.monthlyGoals || [],
+                    weeklyGoals: selectedGoalData.weeklyPlans || []
+                  };
+                  
+                  console.log('생성된 상세 목표:', detailed);
+                  setDetailedGoals(detailed);
+                  console.log('Step 5로 이동 중...');
+                  setCurrentStep(5);
+                }}
+                disabled={!selectedGoal}
+                className={`px-6 py-2 rounded-lg font-medium ${
+                  selectedGoal
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                목표 설정하기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4에서 목표 선택 후 상세 보기 */}
         {currentStep === 4 && detailedGoals && (
           <GoalDetailDisplay
             detailedGoals={detailedGoals}
@@ -799,38 +735,144 @@ const GoalSetting: React.FC = () => {
           />
         )}
 
-        {currentStep === 5 && (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-              <Check className="h-8 w-8 text-green-600" />
+        {currentStep === 5 && detailedGoals && (
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                선택한 목표의 계층적 구조가 생성되었습니다.
+              </h3>
+              <p className="text-center text-gray-600 text-sm">
+                목표 {(detailedGoals.selectedIndex || 0) + 1}: {detailedGoals.sixMonthGoal.title}
+              </p>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">목표 설정 완료!</h2>
-            <p className="text-gray-600 mb-8">
-              {patients?.find(p => p.id === selectedPatient)?.full_name}님의 재활 목표가 성공적으로 설정되었습니다.
-            </p>
-            <button
-              onClick={() => {
-                setSelectedPatient(null);
-                setCurrentStep(1);
-                setFormData({
-                  focusTime: '',
-                  motivationLevel: 5,
-                  pastSuccesses: [],
-                  pastSuccessesOther: '',
-                  constraints: [],
-                  constraintsOther: '',
-                  socialPreference: '',
-                });
-                setAiRecommendations(null);
-                setDetailedGoals(null);
-                setSelectedGoal('');
-              }}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              새로운 환자 목표 설정하기
-            </button>
+
+            {/* 6개월 전체 목표 */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
+                  <Target className="h-4 w-4 text-blue-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900">6개월 전체 목표</h4>
+              </div>
+              <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
+                <h5 className="font-semibold text-blue-900 mb-2">{detailedGoals.sixMonthGoal.title}</h5>
+                <div className="text-blue-800 text-sm">
+                  <p className="font-medium mb-1">6개월 목표:</p>
+                  <p>{detailedGoals.sixMonthGoal.sixMonthGoal || detailedGoals.sixMonthGoal.goal}</p>
+                  <p className="mt-2">목적: {detailedGoals.sixMonthGoal.purpose}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 탭 형태의 월간/주간 목표 */}
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="border-b border-gray-200">
+                <div className="flex">
+                  <button
+                    onClick={() => setViewMode('monthly')}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                      viewMode === 'monthly' 
+                        ? 'border-green-500 text-green-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    월간 목표 ({detailedGoals.monthlyGoals.length}개)
+                  </button>
+                  <button
+                    onClick={() => setViewMode('weekly')}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                      viewMode === 'weekly' 
+                        ? 'border-orange-500 text-orange-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    주간 목표 ({detailedGoals.weeklyGoals.length}주)
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4">
+                {/* 월간 목표 뷰 */}
+                {(!viewMode || viewMode === 'monthly') && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {detailedGoals.monthlyGoals.map((goal: any, index: number) => (
+                      <div key={goal.month || index} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-semibold text-green-900 text-sm">{goal.month || index + 1}개월차</h5>
+                        </div>
+                        <p className="text-green-800 text-xs">{goal.goal}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 주간 목표 뷰 */}
+                {viewMode === 'weekly' && (
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5, 6].map(month => (
+                      <div key={month}>
+                        <h5 className="font-semibold text-orange-900 mb-2 text-sm">
+                          {month}개월차 ({month*4-3}주 ~ {month*4}주)
+                        </h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                          {detailedGoals.weeklyGoals
+                            .filter((goal: any) => goal.month === month)
+                            .map((goal: any, index: number) => (
+                              <div key={goal.week || index} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h6 className="font-medium text-orange-900 text-xs">{goal.week}주차</h6>
+                                </div>
+                                <p className="text-orange-800 text-xs">{goal.plan}</p>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  setCurrentStep(4);
+                  setDetailedGoals(null);
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                목표 다시 선택
+              </button>
+              <div className="space-x-3">
+                <button
+                  onClick={handleSaveGoals}
+                  disabled={isProcessing}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                      저장 중...
+                    </>
+                  ) : (
+                    '목표 저장하기'
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    resetFlow();
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  새 목표 설정
+                </button>
+              </div>
+            </div>
           </div>
         )}
+
       </div>
     </div>
   );

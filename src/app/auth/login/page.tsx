@@ -1,27 +1,46 @@
 'use client'
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
     
-    // 임시로 로그인 로직 비활성화 (UI 확인용)
-    setTimeout(() => {
-      setError('로그인 기능은 개발 중입니다.')
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      if (data.user) {
+        // 로그인 성공 시 메인 페이지로 리다이렉트
+        navigate('/dashboard')
+      }
+    } catch (err) {
+      setError('로그인 중 오류가 발생했습니다.')
+      console.error('Login error:', err)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (

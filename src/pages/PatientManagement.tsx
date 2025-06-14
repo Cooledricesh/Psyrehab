@@ -377,7 +377,7 @@ export default function PatientManagement() {
                         )}
                         {patient.status === 'completed' && (
                           <button
-                            onClick={() => handleStatusChange(patient.id, 'active')}
+                            onClick={() => handleStatusChange(patient.id, 'inactive')}
                             className="text-green-600 hover:text-green-900"
                           >
                             퇴원

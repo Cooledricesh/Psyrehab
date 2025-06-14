@@ -1,15 +1,46 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, Bell, User, ChevronDown } from 'lucide-react'
+import { supabase, getCurrentUser } from '@/lib/supabase'
 
 export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  
-  // 임시로 김사회님 정보 표시
-  const currentUser = {
-    name: '김사회',
-    role: '사회복지사',
-    initial: '김'
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const user = await getCurrentUser()
+        if (user) {
+          setCurrentUser({
+            id: user.id,
+            email: user.email,
+            name: user.email?.split('@')[0] || '사용자',
+            role: '관리자',
+            initial: user.email?.charAt(0).toUpperCase() || 'U'
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load user info:', error)
+      }
+    }
+
+    loadUserInfo()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Logout error:', error)
+      } else {
+        navigate('/auth/login')
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   return (
@@ -51,10 +82,10 @@ export const Header = () => {
             aria-haspopup="true"
           >
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              {currentUser.initial}
+              {currentUser?.initial || 'U'}
             </div>
             <span className="text-gray-700 font-medium text-sm hidden md:block">
-              {currentUser.name}님
+              {currentUser?.name || '로딩...'}님
             </span>
             <ChevronDown
               size={16}
@@ -80,12 +111,12 @@ export const Header = () => {
                   설정
                 </a>
                 <div className="h-px bg-gray-200 my-1"></div>
-                <a
-                  href="#"
-                  className="block px-4 py-2 text-gray-700 text-sm hover:bg-gray-100 transition-colors duration-200"
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-gray-700 text-sm hover:bg-gray-100 transition-colors duration-200"
                 >
                   로그아웃
-                </a>
+                </button>
               </div>
             </div>
           )}
