@@ -39,7 +39,8 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
   const [selectedValue, setSelectedValue] = useState(getInitialValue(weeklyGoal.status));
   const [showCongrats, setShowCongrats] = useState(false);
   const [showConfirmComplete, setShowConfirmComplete] = useState(false);
-  const [pendingSixMonthGoalId, setPendingSixMonthGoalId] = useState<string | null>(null);
+  const [pendingGoalId, setPendingGoalId] = useState<string | null>(null);
+  const [pendingGoalType, setPendingGoalType] = useState<'monthly' | 'six_month' | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -81,6 +82,39 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       // 먼저 캐시를 무효화하여 최신 데이터 가져오기
       await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
       
+      // 먼저 현재 목표의 부모 월간 목표 확인
+      const { data: parentMonthlyGoal } = await supabase
+        .from('rehabilitation_goals')
+        .select('id, status, parent_goal_id')
+        .eq('id', data.parent_goal_id)
+        .single();
+
+      if (parentMonthlyGoal) {
+        // 해당 월간 목표의 모든 주간 목표 확인
+        const { data: weeklyGoals } = await supabase
+          .from('rehabilitation_goals')
+          .select('status')
+          .eq('parent_goal_id', parentMonthlyGoal.id)
+          .eq('goal_type', 'weekly');
+
+        if (weeklyGoals && weeklyGoals.length > 0) {
+          const allWeeklyCompleted = weeklyGoals.every(g => 
+            g.status === 'completed' || g.status === 'cancelled'
+          );
+          const hasAtLeastOneWeeklyCompleted = weeklyGoals.some(g => 
+            g.status === 'completed'
+          );
+
+          // 모든 주간 목표가 완료되었으면 월간 목표도 완료 처리 대화상자 표시
+          if (allWeeklyCompleted && hasAtLeastOneWeeklyCompleted && parentMonthlyGoal.status === 'active') {
+            setPendingGoalId(parentMonthlyGoal.id);
+            setPendingGoalType('monthly');
+            setShowConfirmComplete(true);
+            return;
+          }
+        }
+      }
+
       // 6개월 목표 확인
       const { data: sixMonthGoals } = await supabase
         .from('rehabilitation_goals')
@@ -93,23 +127,24 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       if (sixMonthGoals && sixMonthGoals.length > 0) {
         // 각 6개월 목표에 대해 확인
         for (const sixMonthGoal of sixMonthGoals) {
-          const { data: subGoals } = await supabase
+          const { data: monthlyGoals } = await supabase
             .from('rehabilitation_goals')
             .select('status')
             .eq('parent_goal_id', sixMonthGoal.id)
-            .in('goal_type', ['monthly', 'weekly']);
+            .eq('goal_type', 'monthly');
 
-          if (subGoals && subGoals.length > 0) {
-            const allCompleted = subGoals.every(g => 
+          if (monthlyGoals && monthlyGoals.length > 0) {
+            const allMonthlyCompleted = monthlyGoals.every(g => 
               g.status === 'completed' || g.status === 'cancelled'
             );
-            const hasAtLeastOneCompleted = subGoals.some(g => 
+            const hasAtLeastOneMonthlyCompleted = monthlyGoals.some(g => 
               g.status === 'completed'
             );
             
-            if (allCompleted && hasAtLeastOneCompleted) {
-              // 모든 하위 목표가 완료되었으므로 6개월 목표 완료 확인 요청
-              setPendingSixMonthGoalId(sixMonthGoal.id);
+            if (allMonthlyCompleted && hasAtLeastOneMonthlyCompleted) {
+              // 모든 월간 목표가 완료되었으므로 6개월 목표 완료 확인 요청
+              setPendingGoalId(sixMonthGoal.id);
+              setPendingGoalType('six_month');
               setShowConfirmComplete(true);
               return; // 대화상자를 표시하므로 일반 토스트는 표시하지 않음
             }
@@ -151,51 +186,60 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
     }
   };
 
-  const handleConfirmSixMonthComplete = async () => {
-    if (!pendingSixMonthGoalId) return;
+  const handleConfirmGoalComplete = async () => {
+    if (!pendingGoalId || !pendingGoalType) return;
     
-    // 6개월 목표 완료 처리
+    // 목표 완료 처리
     const { error: updateError } = await supabase
       .from('rehabilitation_goals')
       .update({ 
         status: 'completed',
         completion_date: new Date().toISOString().split('T')[0]
       })
-      .eq('id', pendingSixMonthGoalId);
+      .eq('id', pendingGoalId);
     
     if (updateError) {
-      console.error('6개월 목표 완료 처리 실패:', updateError);
-      toast.error('6개월 목표 완료 처리에 실패했습니다.');
+      console.error(`${pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표 완료 처리 실패:`, updateError);
+      toast.error(`${pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표 완료 처리에 실패했습니다.`);
       return;
     }
     
-    // 다른 활성 6개월 목표가 있는지 확인
-    const { data: remainingGoals } = await supabase
-      .from('rehabilitation_goals')
-      .select('id')
-      .eq('patient_id', patientId)
-      .eq('goal_type', 'six_month')
-      .eq('plan_status', 'active')
-      .neq('status', 'completed');
-    
     setShowConfirmComplete(false);
-    setPendingSixMonthGoalId(null);
+    setPendingGoalId(null);
+    setPendingGoalType(null);
     
-    if (!remainingGoals || remainingGoals.length === 0) {
-      // 모든 6개월 목표가 완료됨
-      setShowCongrats(true);
-    } else {
-      toast.success('6개월 목표를 완료했습니다!');
+    if (pendingGoalType === 'monthly') {
+      toast.success('월간 목표를 완료했습니다!');
       // 캐시 새로고침
       await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
       await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+    } else {
+      // 6개월 목표인 경우, 다른 활성 6개월 목표가 있는지 확인
+      const { data: remainingGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'six_month')
+        .eq('plan_status', 'active')
+        .neq('status', 'completed');
+      
+      if (!remainingGoals || remainingGoals.length === 0) {
+        // 모든 6개월 목표가 완료됨
+        setShowCongrats(true);
+      } else {
+        toast.success('6개월 목표를 완료했습니다!');
+        // 캐시 새로고침
+        await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
+        await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+      }
     }
   };
 
-  const handleCancelSixMonthComplete = () => {
+  const handleCancelGoalComplete = () => {
     setShowConfirmComplete(false);
-    setPendingSixMonthGoalId(null);
-    toast.info('6개월 목표는 아직 진행 중입니다.');
+    setPendingGoalId(null);
+    setPendingGoalType(null);
+    toast.info(`${pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표는 아직 진행 중입니다.`);
   };
 
   const handleCongratulationClose = async () => {
@@ -292,21 +336,23 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
         </RadioGroup>
       </div>
 
-      {/* 6개월 목표 완료 확인 대화상자 */}
+      {/* 목표 완료 확인 대화상자 */}
       <AlertDialog open={showConfirmComplete} onOpenChange={setShowConfirmComplete}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>6개월 목표 달성 확인</AlertDialogTitle>
+            <AlertDialogTitle>
+              {pendingGoalType === 'monthly' ? '월간 목표' : '6개월 목표'} 달성 확인
+            </AlertDialogTitle>
             <AlertDialogDescription>
               모든 하위 목표를 완료하셨습니다!<br />
-              6개월 목표를 달성한 것으로 처리하시겠습니까?
+              {pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표를 달성한 것으로 처리하시겠습니까?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelSixMonthComplete}>
+            <AlertDialogCancel onClick={handleCancelGoalComplete}>
               아니요, 아직입니다
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSixMonthComplete}>
+            <AlertDialogAction onClick={handleConfirmGoalComplete}>
               네, 달성했습니다
             </AlertDialogAction>
           </AlertDialogFooter>

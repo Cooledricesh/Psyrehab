@@ -29,11 +29,27 @@ import { ko } from 'date-fns/locale';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { useQueryClient } from '@tanstack/react-query';
 import SimpleWeeklyCheckbox from '@/components/progress/SimpleWeeklyCheckbox';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 export default function ProgressTracking() {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [expandedGoals, setExpandedGoals] = useState<Record<string, boolean>>({});
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [completedPatientId, setCompletedPatientId] = useState<string | null>(null);
+  const [showConfirmComplete, setShowConfirmComplete] = useState(false);
+  const [pendingGoalId, setPendingGoalId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // 데이터 조회
@@ -64,6 +80,61 @@ export default function ProgressTracking() {
       setSelectedPatient(patients[0].id);
     }
   }, [patients, selectedPatient]);
+
+  // 목표 데이터 변경 시 모든 목표 완료 확인
+  useEffect(() => {
+    if (!patientGoals || !selectedPatient) return;
+
+    // patientGoals가 null이거나 sixMonthGoal이 없으면 리턴
+    if (!patientGoals.sixMonthGoal) return;
+
+    // 현재 6개월 목표가 완료되었는지 확인
+    const currentSixMonthCompleted = patientGoals.sixMonthGoal.status === 'completed';
+
+    // 모든 월간 목표가 완료되었는지 확인 (활성 목표만)
+    const allMonthlyCompleted = patientGoals.monthlyGoals?.every(goal => 
+      goal.status === 'completed' || goal.status === 'cancelled'
+    ) ?? false;
+    
+    const hasAtLeastOneMonthlyCompleted = patientGoals.monthlyGoals?.some(goal => 
+      goal.status === 'completed'
+    ) ?? false;
+
+    // 6개월 목표가 아직 active이고 모든 월간 목표가 완료되었을 때 확인 대화상자 표시
+    if (!currentSixMonthCompleted && allMonthlyCompleted && hasAtLeastOneMonthlyCompleted && patientGoals.sixMonthGoal.status === 'active') {
+      setPendingGoalId(patientGoals.sixMonthGoal.id);
+      setShowConfirmComplete(true);
+    }
+    
+    // 6개월 목표가 이미 완료되었고 모든 월간 목표도 완료되었을 때
+    if (currentSixMonthCompleted && allMonthlyCompleted && hasAtLeastOneMonthlyCompleted) {
+      // 모든 활성 6개월 목표가 완료되었는지 확인
+      const checkAllGoalsCompleted = async () => {
+        const { data: remainingGoals } = await supabase
+          .from('rehabilitation_goals')
+          .select('id')
+          .eq('patient_id', selectedPatient)
+          .eq('goal_type', 'six_month')
+          .eq('plan_status', 'active')
+          .eq('status', 'active');
+
+        if (!remainingGoals || remainingGoals.length === 0) {
+          // 환자의 현재 상태 확인
+          const { data: patient } = await supabase
+            .from('patients')
+            .select('status')
+            .eq('id', selectedPatient)
+            .single();
+
+          if (patient && patient.status === 'active') {
+            setCompletedPatientId(selectedPatient);
+            setShowCongrats(true);
+          }
+        }
+      };
+      checkAllGoalsCompleted();
+    }
+  }, [patientGoals, selectedPatient]);
 
   const toggleGoalExpansion = (goalId: string) => {
     setExpandedGoals(prev => ({
@@ -105,6 +176,94 @@ export default function ProgressTracking() {
     if (progress >= 60) return 'text-blue-600';
     if (progress >= 40) return 'text-yellow-600';
     return 'text-red-600';
+  };
+
+  const handleCongratulationClose = async () => {
+    setShowCongrats(false);
+    
+    if (completedPatientId) {
+      // 환자 상태를 inactive로 변경
+      const { error } = await supabase
+        .from('patients')
+        .update({ status: 'inactive' })
+        .eq('id', completedPatientId);
+      
+      if (error) {
+        console.error('환자 상태 업데이트 실패:', error);
+        toast.error('환자 상태 업데이트에 실패했습니다.');
+      } else {
+        toast.success('모든 재활 목표를 완료했습니다! 새로운 목표를 설정해주세요.');
+        
+        // 이벤트 발생
+        eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, {
+          patientId: completedPatientId,
+          newStatus: 'inactive'
+        });
+        
+        // 모든 관련 쿼리 새로고침
+        await queryClient.invalidateQueries({ queryKey: ['activePatients'] });
+        await queryClient.invalidateQueries({ queryKey: ['patientGoals'] });
+        await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+        
+        // 다음 환자 선택
+        if (patients && patients.length > 1) {
+          const nextPatient = patients.find(p => p.id !== completedPatientId);
+          if (nextPatient) {
+            setSelectedPatient(nextPatient.id);
+          }
+        }
+      }
+    }
+    
+    setCompletedPatientId(null);
+  };
+
+  const handleConfirmGoalComplete = async () => {
+    if (!pendingGoalId) return;
+    
+    // 6개월 목표 완료 처리
+    const { error: updateError } = await supabase
+      .from('rehabilitation_goals')
+      .update({ 
+        status: 'completed',
+        completion_date: new Date().toISOString().split('T')[0]
+      })
+      .eq('id', pendingGoalId);
+    
+    if (updateError) {
+      console.error('6개월 목표 완료 처리 실패:', updateError);
+      toast.error('6개월 목표 완료 처리에 실패했습니다.');
+      return;
+    }
+    
+    setShowConfirmComplete(false);
+    setPendingGoalId(null);
+    
+    // 모든 활성 6개월 목표가 완료되었는지 확인
+    const { data: remainingGoals } = await supabase
+      .from('rehabilitation_goals')
+      .select('id')
+      .eq('patient_id', selectedPatient)
+      .eq('goal_type', 'six_month')
+      .eq('plan_status', 'active')
+      .eq('status', 'active');
+    
+    if (!remainingGoals || remainingGoals.length === 0) {
+      // 모든 6개월 목표가 완료됨
+      setCompletedPatientId(selectedPatient);
+      setShowCongrats(true);
+    } else {
+      toast.success('6개월 목표를 완료했습니다!');
+      // 캐시 새로고침
+      await queryClient.invalidateQueries({ queryKey: ['patientGoals', selectedPatient] });
+      await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+    }
+  };
+
+  const handleCancelGoalComplete = () => {
+    setShowConfirmComplete(false);
+    setPendingGoalId(null);
+    toast.info('6개월 목표는 아직 진행 중입니다.');
   };
 
   return (
@@ -236,7 +395,7 @@ export default function ProgressTracking() {
                 <div className="text-center py-8 text-muted-foreground">
                   목표를 불러오는 중...
                 </div>
-              ) : patientGoals ? (
+              ) : patientGoals && patientGoals.sixMonthGoal ? (
                 <div className="space-y-4">
                   {/* 6개월 목표 */}
                   <div className="border rounded-lg p-4">
@@ -361,6 +520,51 @@ export default function ProgressTracking() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 6개월 목표 완료 확인 대화상자 */}
+      <AlertDialog open={showConfirmComplete} onOpenChange={setShowConfirmComplete}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>6개월 목표 달성 확인</AlertDialogTitle>
+            <AlertDialogDescription>
+              모든 월간 목표를 완료하셨습니다!<br />
+              6개월 목표를 달성한 것으로 처리하시겠습니까?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelGoalComplete}>
+              아니요, 아직입니다
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmGoalComplete}>
+              네, 달성했습니다
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 축하 메시지 대화상자 */}
+      <AlertDialog open={showCongrats} onOpenChange={setShowCongrats}>
+        <AlertDialogContent className="text-center bg-white">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            </div>
+            <AlertDialogTitle className="text-2xl">
+              축하합니다! 🎉
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              모든 재활 목표를 성공적으로 달성하셨습니다!<br />
+              환자의 노력과 헌신에 박수를 보냅니다.<br />
+              이제 새로운 목표를 설정할 수 있습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction onClick={handleCongratulationClose} className="bg-green-600 hover:bg-green-700">
+              확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
