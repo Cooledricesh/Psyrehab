@@ -28,6 +28,7 @@ import { ko } from 'date-fns/locale';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext';
 
 export interface WeeklyCheckIn {
   id: string;
@@ -68,9 +69,14 @@ export default function WeeklyCheckInPanel({
   patientId,
   onClose 
 }: WeeklyCheckInPanelProps) {
+  const { user, isRole, hasPermission } = useUnifiedAuth();
   const [isAddingCheckIn, setIsAddingCheckIn] = useState(false);
   const [editingCheckIn, setEditingCheckIn] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  
+  // Permission checks
+  const canAddCheckIn = hasPermission('checkins:create') || isRole('social_worker') || isRole('administrator');
+  const canEditCheckIn = hasPermission('checkins:update') || isRole('social_worker') || isRole('administrator');
 
   // 체크인 추가/수정 폼 상태
   const [formData, setFormData] = useState({
@@ -84,22 +90,26 @@ export default function WeeklyCheckInPanel({
   // 체크인 추가 mutation
   const addCheckInMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        console.error('사용자 정보 가져오기 실패:', userError);
+      if (!user) {
         throw new Error('로그인이 필요합니다.');
       }
 
-      // social_worker 정보 확인
-      const { data: socialWorker, error: swError } = await supabase
-        .from('social_workers')
-        .select('user_id')
-        .eq('user_id', userData.user.id)
-        .single();
+      if (!canAddCheckIn) {
+        throw new Error('체크인 추가 권한이 필요합니다.');
+      }
 
-      if (swError || !socialWorker) {
-        console.error('사회복지사 정보 확인 실패:', swError);
-        throw new Error('사회복지사 권한이 필요합니다.');
+      // social_worker 정보 확인 (사회복지사인 경우에만)
+      if (isRole('social_worker')) {
+        const { data: socialWorker, error: swError } = await supabase
+          .from('social_workers')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (swError || !socialWorker) {
+          console.error('사회복지사 정보 확인 실패:', swError);
+          throw new Error('사회복지사 권한이 필요합니다.');
+        }
       }
 
       const { data: result, error } = await supabase
@@ -108,7 +118,7 @@ export default function WeeklyCheckInPanel({
           goal_id: weeklyGoal!.id,
           week_number: weeklyGoal!.sequence_number,
           check_in_date: new Date().toISOString().split('T')[0],
-          checked_by: userData.user.id,
+          checked_by: user.id,
           ...data
         })
         .select(`
@@ -267,13 +277,15 @@ export default function WeeklyCheckInPanel({
                       </Badge>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(checkIn)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  {canEditCheckIn && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(checkIn)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
 
                 {checkIn.mood_rating && (
@@ -333,7 +345,7 @@ export default function WeeklyCheckInPanel({
         )}
 
         {/* 체크인 추가 버튼 */}
-        {!isAddingCheckIn && (
+        {!isAddingCheckIn && canAddCheckIn && (
           <Button 
             onClick={() => setIsAddingCheckIn(true)}
             className="w-full"

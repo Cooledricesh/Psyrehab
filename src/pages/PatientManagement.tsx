@@ -6,9 +6,12 @@ import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import PatientDetailModal from '@/components/PatientDetailModal'
 import PatientEditModal from '@/components/PatientEditModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
-import { GoalService } from '@/services/goalSetting';
+import { GoalService } from '@/services/goalSetting'
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext'
+import { AlertCircle, Loader2 } from 'lucide-react'
 
 export default function PatientManagement() {
+  const { isAuthenticated, loading: authLoading, hasPermission, isRole } = useUnifiedAuth()
   const [patients, setPatients] = useState<Patient[]>([])
   const [stats, setStats] = useState<PatientStats>({
     totalPatients: 0,
@@ -18,6 +21,11 @@ export default function PatientManagement() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Check if user has permission to access patient management
+  const canAccessPatients = hasPermission('patients:read') || isRole('social_worker') || isRole('administrator')
+  const canEditPatients = hasPermission('patients:write') || isRole('social_worker') || isRole('administrator')
+  const canRegisterPatients = hasPermission('patients:create') || isRole('social_worker') || isRole('administrator')
   
   // 모달 상태 관리
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
@@ -174,10 +182,50 @@ export default function PatientManagement() {
     return patient.status
   }
 
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <div className="text-lg text-gray-600">인증 정보를 확인하는 중...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check authentication and permissions
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">로그인이 필요합니다</h2>
+          <p className="text-gray-600">이 페이지에 접근하려면 로그인해주세요.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!canAccessPatients) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">접근 권한이 없습니다</h2>
+          <p className="text-gray-600">환자 관리 기능에 접근할 권한이 없습니다.</p>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">환자 데이터를 불러오는 중...</div>
+        <div className="flex items-center">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <div className="text-lg text-gray-600">환자 데이터를 불러오는 중...</div>
+        </div>
       </div>
     )
   }
@@ -199,9 +247,11 @@ export default function PatientManagement() {
           <h1 className="text-2xl font-bold text-gray-900">회원 관리</h1>
           <p className="text-gray-600 mt-1">등록된 회원들을 조회하고 관리할 수 있습니다.</p>
         </div>
-        <Button onClick={() => setIsRegistrationModalOpen(true)}>
-          새 회원 등록
-        </Button>
+        {canRegisterPatients && (
+          <Button onClick={() => setIsRegistrationModalOpen(true)}>
+            새 회원 등록
+          </Button>
+        )}
       </div>
 
       {/* 통계 카드 */}
@@ -272,12 +322,14 @@ export default function PatientManagement() {
         {patients.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">등록된 회원이 없습니다.</p>
-            <Button 
-              onClick={() => setIsRegistrationModalOpen(true)}
-              className="mt-4"
-            >
-              첫 번째 회원 등록하기
-            </Button>
+            {canRegisterPatients && (
+              <Button 
+                onClick={() => setIsRegistrationModalOpen(true)}
+                className="mt-4"
+              >
+                첫 번째 회원 등록하기
+              </Button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -352,13 +404,15 @@ export default function PatientManagement() {
                         >
                           상세
                         </button>
-                        <button
-                          onClick={() => handleEditPatient(patient.id)}
-                          className="text-gray-600 hover:text-gray-900"
-                        >
-                          편집
-                        </button>
-                        {patient.status !== 'completed' && (
+                        {canEditPatients && (
+                          <button
+                            onClick={() => handleEditPatient(patient.id)}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            편집
+                          </button>
+                        )}
+                        {canEditPatients && patient.status !== 'completed' && (
                           <button
                             onClick={() => handleStatusChange(patient.id, 'discharged')}
                             className="text-red-600 hover:text-red-900"
@@ -366,7 +420,7 @@ export default function PatientManagement() {
                             입원
                           </button>
                         )}
-                        {patient.status === 'completed' && (
+                        {canEditPatients && patient.status === 'completed' && (
                           <button
                             onClick={() => handleStatusChange(patient.id, 'inactive')}
                             className="text-green-600 hover:text-green-900"

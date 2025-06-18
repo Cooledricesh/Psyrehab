@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase'
 import { Search, UserPlus, Edit2, Trash2, Shield, AlertCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext'
 
 interface User {
   id: string
@@ -39,6 +40,20 @@ export default function UserManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const { toast } = useToast()
+  const { user: currentUser, isAdmin, hasPermission, checkAdminAccess } = useUnifiedAuth()
+
+  // Early return if not admin
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">접근 권한이 없습니다</h2>
+          <p className="text-gray-600">이 페이지는 관리자만 접근할 수 있습니다.</p>
+        </div>
+      </div>
+    )
+  }
 
   // 수정 폼 데이터
   const [editFormData, setEditFormData] = useState({
@@ -225,22 +240,12 @@ export default function UserManagement() {
     try {
       console.log('삭제 시작:', selectedUser.id, selectedUser.fullName, selectedUser.role)
 
-      // 현재 로그인한 사용자 정보 확인
-      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
-      if (authError || !currentUser) {
+      // 현재 사용자 및 관리자 권한 확인
+      if (!currentUser) {
         throw new Error('인증 정보를 확인할 수 없습니다.')
       }
 
-      // 관리자 권한 확인
-      const { data: adminCheck, error: adminError } = await supabase
-        .from('user_roles')
-        .select('role_id')
-        .eq('user_id', currentUser.id)
-        .eq('role_id', 'd7fcf425-85bc-42b4-8806-917ef6939a40') // administrator role_id
-        .single()
-
-      if (adminError || !adminCheck) {
-        console.error('Admin check error:', adminError)
+      if (!checkAdminAccess()) {
         throw new Error('관리자 권한이 필요합니다.')
       }
 
@@ -413,7 +418,7 @@ export default function UserManagement() {
         .update({
           status: 'approved',
           reviewed_at: new Date().toISOString(),
-          reviewed_by: (await supabase.auth.getUser()).data.user?.id
+          reviewed_by: currentUser?.id
         })
         .eq('id', request.id)
 

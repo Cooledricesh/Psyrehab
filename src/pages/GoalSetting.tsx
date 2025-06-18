@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronRight, Target, Loader2 } from 'lucide-react';
+import { Check, ChevronRight, Target, Loader2, AlertCircle } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { PatientService } from '@/services/patients';
 import { supabase } from '@/lib/supabase';
@@ -7,6 +7,7 @@ import useAIResponseParser from '@/hooks/useAIResponseParser';
 import { useAIRecommendationByAssessment } from '@/hooks/useAIRecommendations';
 import { ENV } from '@/lib/env';
 import { eventBus, EVENTS } from '@/lib/eventBus';
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext';
 
 // Components
 import PatientSelection from '@/components/GoalSetting/PatientSelection';
@@ -28,6 +29,8 @@ import { AssessmentService, AIRecommendationService, GoalService } from '@/servi
 import { MESSAGES } from '@/utils/GoalSetting/constants';
 
 const GoalSetting: React.FC = () => {
+  const { isAuthenticated, loading: authLoading, hasPermission, isRole, user, signIn } = useUnifiedAuth();
+  
   // 전체 플로우 상태 관리 훅
   const {
     selectedPatient,
@@ -55,48 +58,38 @@ const GoalSetting: React.FC = () => {
   
   // AI 응답 파싱 훅
   const { parseAIResponse } = useAIResponseParser();
+  
+  // Permission checks
+  const canAccessGoalSetting = hasPermission('goals:write') || isRole('social_worker') || isRole('administrator');
 
-  // 개발용 자동 admin 로그인
+  // 개발용 자동 admin 로그인 (unified auth 사용)
   React.useEffect(() => {
     const autoLogin = async () => {
       try {
         console.log(MESSAGES.info.autoLoginAttempt);
-        const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session) {
+        if (!isAuthenticated && !authLoading) {
           console.log(MESSAGES.info.noSession);
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: 'admin@psyrehab.dev',
-            password: 'admin123!'
-          });
+          const result = await signIn('admin@psyrehab.dev', 'admin123!');
           
-          if (error) {
-            console.log('⚠️ 자동 로그인 실패:', error.message);
+          if (!result.success) {
+            console.log('⚠️ 자동 로그인 실패:', result.error);
           } else {
-            console.log(MESSAGES.info.loginSuccess, data);
+            console.log(MESSAGES.info.loginSuccess);
           }
-        } else {
-          console.log(MESSAGES.info.alreadyLoggedIn, session.user?.email);
+        } else if (isAuthenticated && user) {
+          console.log(MESSAGES.info.alreadyLoggedIn, user.email);
         }
       } catch (error) {
         console.error('자동 로그인 중 오류:', error);
-        // 오류가 발생해도 강제로 로그인 시도
-        try {
-          const { error: forceError } = await supabase.auth.signInWithPassword({
-            email: 'admin@psyrehab.dev',
-            password: 'admin123!'
-          });
-          if (!forceError) {
-            console.log(MESSAGES.info.forceLoginSuccess);
-          }
-        } catch (e) {
-          console.error('강제 로그인도 실패:', e);
-        }
       }
     };
     
-    autoLogin();
-  }, []);
+    // Only attempt auto-login if auth is not loading
+    if (!authLoading) {
+      autoLogin();
+    }
+  }, [isAuthenticated, authLoading, signIn, user]);
 
   // 환자 데이터 가져오기 - inactive 상태의 환자만
   const { data: patientsResponse, isLoading: patientsLoading, error, refetch } = useQuery({
@@ -294,7 +287,10 @@ const GoalSetting: React.FC = () => {
     try {
       setIsProcessing(true);
       
-      const currentUserId = await AssessmentService.getCurrentUserId();
+      const currentUserId = user?.id;
+      if (!currentUserId) {
+        throw new Error('사용자 정보를 찾을 수 없습니다.');
+      }
 
       // 1. 기존 active 계획을 inactive로 변경
       await GoalService.deactivateExistingGoals(selectedPatient);
@@ -372,6 +368,44 @@ const GoalSetting: React.FC = () => {
       }
     }
   }, [aiRecommendations, selectedGoal, setDetailedGoals]);
+
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <div className="text-lg text-gray-600">인증 정보를 확인하는 중...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">로그인이 필요합니다</h2>
+          <p className="text-gray-600">목표 설정 기능을 사용하려면 로그인해주세요.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Check permissions
+  if (!canAccessGoalSetting) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">접근 권한이 없습니다</h2>
+          <p className="text-gray-600">목표 설정 기능에 접근할 권한이 없습니다.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
