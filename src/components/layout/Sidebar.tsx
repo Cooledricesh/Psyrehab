@@ -62,14 +62,18 @@ export const Sidebar = () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      console.log('Current user:', user.email)
+
       // 관리자 역할 확인
-      const { data: adminRole } = await supabase
+      const { data: adminRole, error: roleError } = await supabase
         .from('user_roles')
         .select('role_id')
         .eq('user_id', user.id)
         .eq('role_id', 'd7fcf425-85bc-42b4-8806-917ef6939a40')
-        .single()
+        .maybeSingle()
 
+      console.log('Admin role check:', adminRole, roleError)
+      
       setIsAdmin(!!adminRole)
 
       // 사용자 정보 가져오기
@@ -78,7 +82,7 @@ export const Sidebar = () => {
           .from('administrators')
           .select('full_name')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
         
         if (adminInfo) {
           setUserInfo({ name: adminInfo.full_name, role: '관리자' })
@@ -88,7 +92,7 @@ export const Sidebar = () => {
           .from('social_workers')
           .select('full_name')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
         
         if (swInfo) {
           setUserInfo({ name: swInfo.full_name, role: '사회복지사' })

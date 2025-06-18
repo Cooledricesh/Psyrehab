@@ -42,18 +42,24 @@ export default function AdminDashboard() {
       setLoading(true)
       setError(null)
 
-      // 사용자 통계
+      // 사용자 통계 - 중복 제거를 위해 user_id 조회
       const { data: socialWorkers, error: swError } = await supabase
         .from('social_workers')
-        .select('user_id', { count: 'exact' })
+        .select('user_id')
 
       if (swError) throw swError
 
       const { data: admins, error: adminError } = await supabase
         .from('administrators')
-        .select('user_id', { count: 'exact' })
+        .select('user_id')
 
       if (adminError) throw adminError
+
+      // 고유한 사용자 ID 세트 만들기 (중복 제거)
+      const uniqueUserIds = new Set([
+        ...(socialWorkers?.map(sw => sw.user_id) || []),
+        ...(admins?.map(admin => admin.user_id) || [])
+      ])
 
       const { data: patients, error: patientError } = await supabase
         .from('patients')
@@ -93,7 +99,7 @@ export default function AdminDashboard() {
       if (assessmentError) throw assessmentError
 
       setStats({
-        totalUsers: (socialWorkers?.length || 0) + (admins?.length || 0),
+        totalUsers: uniqueUserIds.size,  // 중복 제거된 사용자 수
         totalPatients: patients?.length || 0,
         totalSocialWorkers: socialWorkers?.length || 0,
         totalAdmins: admins?.length || 0,
@@ -146,7 +152,7 @@ export default function AdminDashboard() {
     {
       title: '전체 사용자',
       value: stats.totalUsers,
-      description: `사회복지사 ${stats.totalSocialWorkers}명, 관리자 ${stats.totalAdmins}명`,
+      description: `${stats.totalUsers}명의 사용자가 등록되어 있습니다`,
       icon: Users,
       color: 'text-blue-600'
     },
