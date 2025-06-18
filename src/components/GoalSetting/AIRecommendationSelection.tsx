@@ -1,8 +1,9 @@
 import React from 'react';
 import { ChevronRight, Target } from 'lucide-react';
+import type { AIRecommendationsResponse, AIRecommendationGoal } from '@/types/ai-recommendations';
 
 interface AIRecommendationSelectionProps {
-  aiRecommendations: any;
+  aiRecommendations: AIRecommendationsResponse;
   selectedGoal: string;
   onSelectGoal: (goalIndex: string) => void;
   onBack: () => void;
@@ -70,7 +71,7 @@ const AIRecommendationSelection: React.FC<AIRecommendationSelectionProps> = ({
         </div>
 
         <div className="space-y-3">
-          {(aiRecommendations.goals || []).map((goal: any, index: number) => (
+          {(aiRecommendations.goals || []).map((goal: AIRecommendationGoal, index: number) => (
             <div
               key={index}
               className={`border rounded-lg p-4 cursor-pointer transition-all ${
@@ -93,7 +94,7 @@ const AIRecommendationSelection: React.FC<AIRecommendationSelectionProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-medium text-gray-600">목표 {index + 1}</span>
                     <span className="text-lg font-semibold text-gray-900">
-                      {goal.title?.replace(/^목표\s*\d+[:\.]?\s*/, '') || `목표 ${index + 1}`}
+                      {goal.title?.replace(/^목표\s*\d+[:.]\s*/, '') || `목표 ${index + 1}`}
                     </span>
                   </div>
                   

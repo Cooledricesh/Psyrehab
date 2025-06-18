@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import {
   DashboardState,
   DashboardStats,
@@ -338,8 +338,8 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
 
   const realtimeStatus = useDashboardRealtime(handleRealtimeUpdate);
 
-  // Actions
-  const actions = {
+  // Actions - memoized to prevent unnecessary re-renders
+  const actions = useMemo(() => ({
     fetchStats: async (filters?: DashboardFilters) => {
       dispatch({ type: 'SET_LOADING', payload: { stats: true } });
       dispatch({ type: 'SET_ERROR', payload: { stats: null } });
@@ -452,28 +452,36 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       }
     },
 
-    fetchAllData: async (filters?: DashboardFilters) => {
-      await Promise.all([
-        actions.fetchStats(filters),
-        actions.fetchPatients(),
-        actions.fetchGoals(),
-        actions.fetchSessions(),
-        actions.fetchChartData(filters),
-      ]);
-    },
-
     updateFilters: (filters: DashboardFilters) => {
       dispatch({ type: 'SET_FILTERS', payload: filters });
-    },
-
-    refreshData: async () => {
-      await actions.fetchAllData(state.filters);
     },
 
     resetState: () => {
       dispatch({ type: 'RESET_STATE' });
     },
-  };
+  }), [state.filters]);
+
+  // Add fetchAllData and refreshData with useCallback
+  const fetchAllData = useCallback(async (filters?: DashboardFilters) => {
+    await Promise.all([
+      actions.fetchStats(filters),
+      actions.fetchPatients(),
+      actions.fetchGoals(),
+      actions.fetchSessions(),
+      actions.fetchChartData(filters),
+    ]);
+  }, [actions]);
+
+  const refreshData = useCallback(async () => {
+    await fetchAllData(state.filters);
+  }, [fetchAllData, state.filters]);
+
+  // Complete actions object
+  const completeActions = useMemo(() => ({
+    ...actions,
+    fetchAllData,
+    refreshData,
+  }), [actions, fetchAllData, refreshData]);
 
   // Selectors
   const selectors = {
@@ -491,13 +499,13 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
 
   // Initialize data on mount
   useEffect(() => {
-    actions.fetchAllData();
-  }, []);
+    fetchAllData();
+  }, []); // fetchAllData is safe to call on mount only
 
   const contextValue: DashboardContextType = {
     state,
     dispatch,
-    actions,
+    actions: completeActions,
     selectors,
   };
 

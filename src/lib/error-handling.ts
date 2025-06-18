@@ -14,7 +14,7 @@ export type ErrorType =
 export interface AppError {
   type: ErrorType
   message: string
-  details?: any
+  details?: unknown
   field?: string
   code?: string
 }
@@ -71,7 +71,7 @@ export function formatZodError(error: ZodError): AppError[] {
 }
 
 // 일반 에러를 AppError로 변환
-export function parseError(error: any): AppError {
+export function parseError(error: unknown): AppError {
   // Zod 검증 에러
   if (error instanceof ZodError) {
     const firstError = error.errors[0]
@@ -84,7 +84,7 @@ export function parseError(error: any): AppError {
   }
 
   // Supabase 에러
-  if (error?.code && supabaseErrorMessages[error.code]) {
+  if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && supabaseErrorMessages[error.code]) {
     return {
       type: getErrorTypeFromCode(error.code),
       message: supabaseErrorMessages[error.code],
@@ -94,18 +94,23 @@ export function parseError(error: any): AppError {
   }
 
   // HTTP 상태 코드 기반 에러
-  if (error?.status || error?.response?.status) {
-    const status = error.status || error.response.status
-    return {
-      type: getErrorTypeFromStatus(status),
-      message: getMessageFromStatus(status),
-      code: status.toString(),
-      details: error
+  if (error && typeof error === 'object') {
+    const statusFromError = 'status' in error ? error.status : null
+    const statusFromResponse = 'response' in error && error.response && typeof error.response === 'object' && 'status' in error.response ? error.response.status : null
+    const status = statusFromError || statusFromResponse
+    
+    if (typeof status === 'number') {
+      return {
+        type: getErrorTypeFromStatus(status),
+        message: getMessageFromStatus(status),
+        code: status.toString(),
+        details: error
+      }
     }
   }
 
   // 네트워크 에러
-  if (error?.message && error.message.includes('fetch')) {
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && error.message.includes('fetch')) {
     return {
       type: 'NETWORK_ERROR',
       message: '네트워크 연결을 확인해주세요',
@@ -114,7 +119,8 @@ export function parseError(error: any): AppError {
   }
 
   // 알려진 에러 메시지
-  const knownMessage = errorMessages[error?.message]
+  const errorMessage = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : null
+  const knownMessage = errorMessage ? errorMessages[errorMessage] : null
   if (knownMessage) {
     return {
       type: 'UNKNOWN_ERROR',
@@ -126,7 +132,7 @@ export function parseError(error: any): AppError {
   // 기본 에러
   return {
     type: 'UNKNOWN_ERROR',
-    message: error?.message || '알 수 없는 오류가 발생했습니다',
+    message: errorMessage || '알 수 없는 오류가 발생했습니다',
     details: error
   }
 }
@@ -259,7 +265,7 @@ export function getUserFriendlyMessage(error: AppError): string {
 
 // React Query 에러 핸들러
 export function createQueryErrorHandler(context: string) {
-  return (error: any) => {
+  return (error: unknown) => {
     const appError = parseError(error)
     logError(appError, context)
     return appError
@@ -267,7 +273,7 @@ export function createQueryErrorHandler(context: string) {
 }
 
 // 폼 에러 핸들러
-export function handleFormError(error: any, setError: (field: string, error: any) => void) {
+export function handleFormError(error: unknown, setError: (field: string, error: { type: string; message: string }) => void) {
   const appError = parseError(error)
   
   if (appError.type === 'VALIDATION_ERROR' && appError.field) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { getPatientById } from '@/services/patient-management'
 import type { Patient } from '@/services/patient-management'
@@ -27,9 +27,9 @@ export default function PatientDetailModal({
       fetchPatientDetail()
       checkEditPermission()
     }
-  }, [isOpen, patientId])
+  }, [isOpen, patientId, fetchPatientDetail, checkEditPermission])
 
-  const fetchPatientDetail = async () => {
+  const fetchPatientDetail = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -43,15 +43,16 @@ export default function PatientDetailModal({
       } else {
         setError('환자 정보를 찾을 수 없습니다.')
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('❌ 환자 상세 정보 로드 실패:', err)
-      setError(err.message || '환자 정보를 불러오는 중 오류가 발생했습니다.')
+      const errorMessage = err instanceof Error ? err.message : '환자 정보를 불러오는 중 오류가 발생했습니다.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
-  }
+  }, [patientId])
 
-  const checkEditPermission = async () => {
+  const checkEditPermission = useCallback(async () => {
     try {
       const hasPermission = await canEditPatient(patientId)
       setCanEdit(hasPermission)
@@ -59,7 +60,7 @@ export default function PatientDetailModal({
       console.error('권한 확인 실패:', error)
       setCanEdit(false)
     }
-  }
+  }, [patientId])
 
   if (!isOpen) return null
 
@@ -191,7 +192,7 @@ export default function PatientDetailModal({
                     <label className="block text-sm font-medium text-gray-500">환자 연락처</label>
                     <p className="text-gray-900">
                       {patient.contact_info && typeof patient.contact_info === 'object' && 'phone' in patient.contact_info 
-                        ? (patient.contact_info as any).phone || '정보 없음'
+                        ? (patient.contact_info as { phone?: string }).phone || '정보 없음'
                         : typeof patient.contact_info === 'string' 
                         ? patient.contact_info 
                         : '정보 없음'}

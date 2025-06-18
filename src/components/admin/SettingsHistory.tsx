@@ -125,7 +125,7 @@ export default function SettingsHistory({ history }: SettingsHistoryProps) {
   };
 
   // 값 표시 포맷팅
-  const formatValue = (value: any): string => {
+  const formatValue = (value: unknown): string => {
     if (typeof value === 'boolean') {
       return value ? '활성화' : '비활성화';
     }

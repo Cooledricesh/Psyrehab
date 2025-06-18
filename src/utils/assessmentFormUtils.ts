@@ -2,12 +2,17 @@ import {
   AssessmentStep, 
   AssessmentData, 
   AssessmentFieldConfig,
-  AssessmentFormConfig
+  ConcentrationTimeOptions,
+  MotivationLevelOptions,
+  PastSuccessesOptions,
+  ConstraintsOptions,
+  SocialPreferenceOptions
 } from '@/types/assessment'
 import { 
   ASSESSMENT_FORM_CONFIGS, 
   ASSESSMENT_STEP_ORDER, 
-  ASSESSMENT_FORM_VALIDATION 
+  ASSESSMENT_FORM_VALIDATION,
+  ASSESSMENT_STEP_DURATION 
 } from '@/config/assessmentFormConfig'
 
 // 폼 데이터 유효성 검사
@@ -191,18 +196,20 @@ export function validateStep(
   return { errors, warnings }
 }
 
+type StepDataType = ConcentrationTimeOptions | MotivationLevelOptions | PastSuccessesOptions | ConstraintsOptions | SocialPreferenceOptions
+
 // 필드 값 가져오기
 function getFieldValue(
   formData: Partial<AssessmentData>, 
   step: AssessmentStep, 
   fieldId: string
-): any {
-  const stepData = formData[step] as any
-  return stepData?.[fieldId]
+): string | number | boolean | string[] | undefined {
+  const stepData = formData[step] as StepDataType | undefined
+  return stepData?.[fieldId as keyof StepDataType]
 }
 
 // 필드가 채워졌는지 확인
-function isFieldFilled(field: AssessmentFieldConfig, value: any): boolean {
+function isFieldFilled(field: AssessmentFieldConfig, value: string | number | boolean | string[] | undefined): boolean {
   if (value === null || value === undefined) return false
   
   switch (field.type) {
@@ -257,7 +264,7 @@ function shouldShowField(
 }
 
 // 필드 값 범위 검사
-function validateFieldRange(field: AssessmentFieldConfig, value: any): string | null {
+function validateFieldRange(field: AssessmentFieldConfig, value: string | number | boolean | string[]): string | null {
   switch (field.type) {
     case 'number':
     case 'scale':
@@ -295,7 +302,7 @@ function validateFieldRange(field: AssessmentFieldConfig, value: any): string | 
 
   // 커스텀 검증
   if (field.validation?.custom) {
-    return field.validation.custom(value, {}) // formData 전체를 넘길 수도 있음
+    return field.validation.custom(value, {} as Partial<AssessmentData>) // formData 전체를 넘길 수도 있음
   }
 
   return null
@@ -304,7 +311,7 @@ function validateFieldRange(field: AssessmentFieldConfig, value: any): string | 
 // 필드 품질 검사 (경고)
 function checkFieldQuality(
   field: AssessmentFieldConfig, 
-  value: any, 
+  value: string | number | boolean | string[] | undefined, 
   step: AssessmentStep
 ): ValidationWarning | null {
   // 텍스트 필드 품질 검사
@@ -468,15 +475,17 @@ export function sanitizeFormDataForStorage(formData: Partial<AssessmentData>): P
   
   // 빈 문자열을 null로 변환
   ASSESSMENT_STEP_ORDER.forEach(step => {
-    const stepData = sanitized[step] as any
+    const stepData = sanitized[step] as StepDataType | undefined
     if (stepData) {
       Object.keys(stepData).forEach(key => {
-        if (stepData[key] === '') {
-          stepData[key] = null
+        const typedKey = key as keyof StepDataType
+        const value = stepData[typedKey] as string | number | boolean | string[] | null | undefined
+        if (value === '') {
+          (stepData as Record<string, unknown>)[typedKey] = null
         }
         // 빈 배열 정리
-        if (Array.isArray(stepData[key]) && stepData[key].length === 0) {
-          stepData[key] = null
+        if (Array.isArray(value) && value.length === 0) {
+          (stepData as Record<string, unknown>)[typedKey] = null
         }
       })
     }

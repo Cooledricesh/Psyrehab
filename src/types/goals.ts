@@ -125,6 +125,30 @@ export interface WeeklyCheckIn {
   updated_at: string
 }
 
+// 평가 상세 정보 타입 정의
+export interface EvaluationStrengths {
+  areas?: string[] // 강점 영역들
+  description?: string // 강점 설명
+  examples?: string[] // 구체적 예시들
+  [key: string]: string | string[] | undefined // 추가 필드 허용
+}
+
+export interface EvaluationChallenges {
+  areas?: string[] // 도전 영역들
+  description?: string // 도전 과제 설명
+  barriers?: string[] // 장애요인들
+  support_needed?: string[] // 필요한 지원
+  [key: string]: string | string[] | undefined // 추가 필드 허용
+}
+
+export interface EvaluationNextSteps {
+  immediate?: string[] // 즉시 실행 항목
+  short_term?: string[] // 단기 계획
+  long_term?: string[] // 장기 계획
+  resources_needed?: string[] // 필요 자원
+  [key: string]: string | string[] | undefined // 추가 필드 허용
+}
+
 // 목표 평가 인터페이스 (문서 스펙)
 export interface GoalEvaluation {
   id: string
@@ -133,9 +157,9 @@ export interface GoalEvaluation {
   evaluation_date: string
   completion_rate: number // 0-100
   evaluation_notes?: string
-  strengths?: Record<string, any>
-  challenges?: Record<string, any>
-  next_steps?: Record<string, any>
+  strengths?: EvaluationStrengths | null
+  challenges?: EvaluationChallenges | null
+  next_steps?: EvaluationNextSteps | null
   evaluated_by: string // social_worker user_id
   created_at: string
   updated_at: string
@@ -172,14 +196,33 @@ export interface GoalProgress {
   delayReason?: string
 }
 
+// 목표 변경 값 타입 정의
+export interface GoalChangeValues {
+  title?: string
+  description?: string
+  status?: GoalStatus
+  priority?: GoalPriority
+  progress?: number
+  actual_completion_rate?: number
+  target_completion_rate?: number
+  end_date?: string
+  category_id?: string
+  notes?: string
+  tags?: string[]
+  success_metrics?: string[]
+  methods?: string[]
+  // 추가 필드 허용
+  [key: string]: string | number | boolean | string[] | undefined
+}
+
 // 목표 히스토리 추적 (문서 스펙)
 export interface GoalHistory {
   id: string
   goal_id: string
   changed_by: string // social_worker user_id
-  change_type: 'created' | 'updated' | 'status_changed' | 'completed'
-  previous_values?: Record<string, any>
-  new_values?: Record<string, any>
+  change_type: 'created' | 'updated' | 'status_changed' | 'completed' | 'progress_updated' | 'deadline_extended' | 'category_changed' | 'deleted' | 'restored'
+  previous_values?: GoalChangeValues | null
+  new_values?: GoalChangeValues | null
   change_reason?: string
   created_at: string
 }

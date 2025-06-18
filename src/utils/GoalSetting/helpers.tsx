@@ -1,4 +1,5 @@
 import React from 'react';
+import type { AssessmentFormData } from './types';
 
 // 목표 설정 관련 유틸리티 함수들
 
@@ -10,7 +11,7 @@ export const getMotivationText = (level: number): string => {
   return '큰 변화도 감당할 준비됨';
 };
 
-export const formatText = (text: string) => {
+export const formatText = (text: string): (React.JSX.Element | null)[] => {
   if (!text) return text;
   
   return text.split('\n').map((line, index) => {
@@ -35,7 +36,7 @@ export const formatText = (text: string) => {
   }).filter(Boolean);
 };
 
-export const formatAssessmentData = (formData: any) => {
+export const formatAssessmentData = (formData: AssessmentFormData) => {
   const pastSuccessesList = [
     ...formData.pastSuccesses,
     ...(formData.pastSuccessesOther ? [formData.pastSuccessesOther] : [])

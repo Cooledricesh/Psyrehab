@@ -13,8 +13,8 @@ import MultiSelectInput from './fields/MultiSelectInput';
 interface FieldRendererProps {
   name: string;
   config: FieldConfig;
-  value: any;
-  onChange: (field: string, value: any) => void;
+  value: unknown;
+  onChange: (field: string, value: unknown) => void;
 }
 
 const FieldRenderer: React.FC<FieldRendererProps> = ({
@@ -27,7 +27,7 @@ const FieldRenderer: React.FC<FieldRendererProps> = ({
     name,
     label: config.label,
     value,
-    onChange: (newValue: any) => onChange(name, newValue),
+    onChange: (newValue: unknown) => onChange(name, newValue),
     description: config.description,
     required: config.required,
     help: config.help,

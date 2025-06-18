@@ -43,7 +43,7 @@ export const usePatientsData = (params?: QueryParams) => {
     if (!state.patients.length) {
       fetchPatients();
     }
-  }, []);
+  }, [fetchPatients, state.patients.length]);
 
   const searchPatients = useCallback((searchTerm: string) => {
     fetchPatients({ ...currentParams, search: searchTerm });
@@ -81,7 +81,7 @@ export const useGoalsData = (params?: QueryParams) => {
     if (!state.goals.length) {
       fetchGoals();
     }
-  }, []);
+  }, [fetchGoals, state.goals.length]);
 
   const filterByCategory = useCallback((category: string) => {
     fetchGoals({ 
@@ -127,7 +127,7 @@ export const useSessionsData = (params?: QueryParams) => {
     if (!state.sessions.length) {
       fetchSessions();
     }
-  }, []);
+  }, [fetchSessions, state.sessions.length]);
 
   const filterByDateRange = useCallback((startDate: string, endDate: string) => {
     fetchSessions({

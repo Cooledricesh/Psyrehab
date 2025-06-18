@@ -37,7 +37,7 @@ export interface LogEntry {
   userAgent?: string
   correlationId?: string
   duration?: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   errorDetails?: {
     stack?: string
     code?: string

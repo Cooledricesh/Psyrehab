@@ -11,7 +11,7 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false, // 변경: 무한 루프 방지
       // Storage configuration for better session handling
       storage: {
         getItem: (key: string) => {
@@ -32,9 +32,9 @@ export const supabase = createClient(
         }
       },
       // Debug mode for development
-      debug: import.meta.env.DEV,
+      debug: false, // 변경: 디버그 로그 줄이기
       // Flow type for authentication
-      flowType: 'pkce'
+      // flowType: 'pkce' // 주석 처리: 기본값 사용
     },
     // Global options
     global: {
@@ -266,10 +266,7 @@ export function setupAuthListeners() {
         break
       case 'SIGNED_OUT':
         console.log('User signed out')
-        // Clear any cached data
-        if (typeof window !== 'undefined') {
-          window.location.reload()
-        }
+        // Clear any cached data - reload 제거
         break
       case 'TOKEN_REFRESHED':
         console.log('Token refreshed')

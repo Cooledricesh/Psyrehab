@@ -25,7 +25,8 @@ const AssessmentDashboard: React.FC<AssessmentDashboardProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('overview')
   const [chartSize, setChartSize] = useState<ChartSize>('medium')
-  const [selectedAssessment, setSelectedAssessment] = useState<string | null>(null)
+  // Assessment selection reserved for detailed view implementation
+  // const [selectedAssessment, setSelectedAssessment] = useState<string | null>(null)
 
   // 차트 높이 설정
   const chartHeight = useMemo(() => {

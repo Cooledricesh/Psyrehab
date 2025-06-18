@@ -660,6 +660,32 @@ export class AuthService {
     error?: string
   }> {
     try {
+      // 관리자나 사회복지사인 경우 승인 대기 상태로 저장
+      if (formData.role === 'social_worker' || formData.role === 'administrator') {
+        const { error: requestError } = await supabase
+          .from('signup_requests')
+          .insert({
+            user_id: userId,
+            email: formData.email,
+            full_name: formData.full_name,
+            requested_role: formData.role,
+            employee_id: formData.employee_id,
+            department: formData.department,
+            contact_number: formData.contact_number,
+            status: 'pending'
+          })
+
+        if (requestError) {
+          return {
+            success: false,
+            error: '가입 신청서 생성에 실패했습니다.'
+          }
+        }
+
+        return { success: true }
+      }
+
+      // 환자인 경우 기존 로직대로 진행
       // Create role assignment
       const roleId = await this.getRoleId(formData.role)
       if (!roleId) {

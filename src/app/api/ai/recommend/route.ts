@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type {
+  AssessmentRecord,
+  TransformedAssessmentData
+} from '@/types/ai-recommendations'
 
 // n8n 웹훅 URL (환경변수로 관리)
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://baclava.uk/webhook/09b18ab5-1bdb-4e04-88e4-63babb1f4b46'
 
 // 평가 데이터를 AI 분석용으로 변환하는 유틸리티 함수 (GoalSetting.tsx 구조에 맞게 수정)
-function transformAssessmentForAI(assessment: any) {
+function transformAssessmentForAI(assessment: AssessmentRecord): TransformedAssessmentData {
   // focus_time을 분 단위 duration으로 변환
   const getDurationFromFocusTime = (focusTime: string): number => {
     switch (focusTime) {
@@ -65,7 +69,7 @@ function transformAssessmentForAI(assessment: any) {
     },
     // AI 모델이 응답을 보낼 웹훅 URL
     callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://606a-119-201-55-170.ngrok-free.app'}/api/webhook/n8n`
-  }
+  } as TransformedAssessmentData
 }
 
 // POST: 평가 데이터를 기반으로 AI 목표 추천 요청

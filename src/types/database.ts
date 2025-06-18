@@ -29,6 +29,7 @@ export type {
   GoalHierarchy,
   PendingWeeklyCheckins,
   WeeklyProgressOverview,
+  Json,
 } from './supabase'
 
 // AI Recommendation structured data types (n8n stores structured data directly)
@@ -54,9 +55,9 @@ export interface StructuredAIRecommendation {
   assessment_id: string | null
   recommendation_date: string
   recommendations: AIRecommendationPlan[]
-  patient_analysis?: any
-  success_indicators?: any
-  execution_strategy?: any
+  patient_analysis?: Json
+  success_indicators?: Json
+  execution_strategy?: Json
   is_active: boolean
   applied_at: string | null
   applied_by: string | null
@@ -82,8 +83,8 @@ export interface PatientWithProgress {
   id: string
   patient_identifier: string
   full_name: string
-  current_progress?: any // PatientCurrentProgress
-  goal_metrics?: any // GoalMetrics
+  current_progress?: PatientCurrentProgress
+  goal_metrics?: GoalMetrics
   primary_social_worker?: {
     full_name: string
     employee_id?: string
@@ -94,11 +95,11 @@ export interface GoalWithDetails {
   id: string
   title: string
   description?: string
-  category?: any // GoalCategory
-  evaluations?: any[] // GoalEvaluation[]
-  weekly_check_ins?: any[] // WeeklyCheckIn[]
-  child_goals?: any[] // RehabilitationGoal[]
-  parent_goal?: any // RehabilitationGoal
+  category?: GoalCategory
+  evaluations?: GoalEvaluation[]
+  weekly_check_ins?: WeeklyCheckIn[]
+  child_goals?: RehabilitationGoal[]
+  parent_goal?: RehabilitationGoal
 }
 
 // Assessment related types
@@ -129,7 +130,7 @@ export type SocialPreference = 'individual' | 'small_group' | 'large_group'
 export interface ServiceRecordWithDetails {
   id: string
   service_type: string
-  patient?: any // Patient
+  patient?: Patient
   social_worker?: {
     full_name: string
     employee_id?: string

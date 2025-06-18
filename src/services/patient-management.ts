@@ -27,6 +27,23 @@ export interface PatientStats {
   completedPatients: number
 }
 
+// Contact info structure
+export interface ContactInfo {
+  phone?: string
+  email?: string
+  address?: string
+  emergency_contact?: string
+}
+
+// Additional info structure  
+export interface AdditionalInfo {
+  medical_history?: string
+  allergies?: string
+  medications?: string
+  notes?: string
+  [key: string]: string | undefined
+}
+
 // 환자 생성용 타입
 export interface CreatePatientData {
   full_name: string
@@ -34,8 +51,8 @@ export interface CreatePatientData {
   date_of_birth?: string
   gender?: string
   primary_diagnosis?: string
-  contact_info?: any
-  additional_info?: any
+  contact_info?: ContactInfo
+  additional_info?: AdditionalInfo
   status?: string
 }
 
@@ -72,38 +89,41 @@ export const getPatients = async (): Promise<Patient[]> => {
     console.log('🔍 원본 환자 데이터 (첫 번째 환자):', data?.[0])
     console.log('🔍 모든 환자 데이터:', data)
 
-    return data?.map((patient: any) => {
+    return data?.map((patient: unknown) => {
+      const patientData = patient as Record<string, unknown>
+      const goals = patientData.rehabilitation_goals as Array<Record<string, unknown>> || []
+      
       // 활성 6개월 목표가 있는지 확인
-      const hasActiveGoal = patient.rehabilitation_goals?.some((goal: any) => 
+      const hasActiveGoal = goals.some((goal) => 
         goal.goal_type === 'six_month' && 
         goal.plan_status === 'active' && 
         goal.status === 'active'
       )
 
       // 각 환자별로 매핑 과정 로깅
-      console.log(`📝 환자 ${patient.full_name} 매핑:`, {
-        원본_성별: patient.gender,
-        매핑된_성별: mapGender(patient.gender),
-        원본_additional_info: patient.additional_info,
-        재활목표들: patient.rehabilitation_goals,
+      console.log(`📝 환자 ${patientData.full_name} 매핑:`, {
+        원본_성별: patientData.gender,
+        매핑된_성별: mapGender(patientData.gender as string),
+        원본_additional_info: patientData.additional_info,
+        재활목표들: patientData.rehabilitation_goals,
         활성목표여부: hasActiveGoal,
-        원본_전체: patient
+        원본_전체: patientData
       })
 
       return {
-        id: patient.id?.toString() || '',
-        name: patient.full_name || '이름 없음',
-        age: patient.date_of_birth ? calculateAge(patient.date_of_birth) : undefined,
-        birth_date: patient.date_of_birth,
-        gender: mapGender(patient.gender),
-        diagnosis: extractDiagnosis(patient),
-        registration_date: patient.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-        status: mapPatientStatus(patient.status),
-        contact_info: patient.contact_info,
-        emergency_contact: patient.emergency_contact,
+        id: patientData.id?.toString() || '',
+        name: (patientData.full_name as string) || '이름 없음',
+        age: patientData.date_of_birth ? calculateAge(patientData.date_of_birth as string) : undefined,
+        birth_date: patientData.date_of_birth as string,
+        gender: mapGender(patientData.gender as string),
+        diagnosis: extractDiagnosis(patientData),
+        registration_date: (patientData.created_at as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
+        status: mapPatientStatus(patientData.status as string),
+        contact_info: patientData.contact_info as string,
+        emergency_contact: patientData.emergency_contact as string,
         hasActiveGoal: hasActiveGoal,
-        primary_social_worker_id: patient.primary_social_worker_id,
-        social_worker: patient.social_worker
+        primary_social_worker_id: patientData.primary_social_worker_id as string,
+        social_worker: patientData.social_worker as { user_id: string; full_name: string }
       }
     }) || []
   } catch (error) {

@@ -1,6 +1,12 @@
 import React from 'react';
 
-const TimeInput: React.FC<any> = ({ label, value, onChange }) => (
+interface TimeInputProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const TimeInput: React.FC<TimeInputProps> = ({ label, value, onChange }) => (
   <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <input

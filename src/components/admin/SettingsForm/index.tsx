@@ -1,5 +1,5 @@
 import React from 'react';
-import { SettingsFormProps } from './types';
+import { SettingsFormProps, FieldConfig } from './types';
 import { sectionConfigs } from './configs';
 import FieldRenderer from './components/FieldRenderer';
 import { Info } from 'lucide-react';
@@ -24,7 +24,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ section, data, onChange }) 
     }
     acc[category].push({ key, field });
     return acc;
-  }, {} as Record<string, Array<{ key: string; field: any }>>);
+  }, {} as Record<string, Array<{ key: string; field: FieldConfig }>>);
 
   return (
     <div className="space-y-6">

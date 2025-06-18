@@ -136,7 +136,7 @@ const AssessmentComparisonChart: React.FC<AssessmentComparisonChartProps> = ({
   comparisonItems,
   height = 400,
   className = '',
-  chartType = 'grouped',
+  // chartType = 'grouped', // Reserved for future chart type implementations
   showAverage = true
 }) => {
   // 데이터 변환

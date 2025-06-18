@@ -1,6 +1,12 @@
 import React from 'react';
 
-const ColorPicker: React.FC<any> = ({ label, value, onChange }) => (
+interface ColorPickerProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const ColorPicker: React.FC<ColorPickerProps> = ({ label, value, onChange }) => (
   <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <input

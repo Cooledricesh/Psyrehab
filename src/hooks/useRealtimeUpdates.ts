@@ -37,6 +37,14 @@ export const useRealtimeUpdates = ({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const subscriptionsRef = useRef<RealtimeSubscription[]>([]);
 
+  // Handle real-time updates
+  const handleRealtimeUpdate = useCallback((payload: any) => {
+    setLastUpdate(new Date().toISOString());
+    if (onUpdate) {
+      onUpdate(payload);
+    }
+  }, [onUpdate]);
+
   // Create subscription
   const createSubscription = useCallback((config: RealtimeConfig): RealtimeSubscription => {
     const channelName = `realtime:${config.table}:${Date.now()}:${Math.random()}`;
@@ -64,15 +72,7 @@ export const useRealtimeUpdates = ({
       channel,
       isConnected: false,
     };
-  }, []);
-
-  // Handle real-time updates
-  const handleRealtimeUpdate = useCallback((payload: any) => {
-    setLastUpdate(new Date().toISOString());
-    if (onUpdate) {
-      onUpdate(payload);
-    }
-  }, [onUpdate]);
+  }, [handleRealtimeUpdate]);
 
   // Subscribe to a channel
   const subscribe = useCallback(async (subscription: RealtimeSubscription) => {

@@ -6,10 +6,7 @@ import {
   GoalPriority 
 } from '@/types/goals'
 import { 
-  ALL_GOAL_TAGS,
-  GOAL_TAG_CATEGORIES,
   getTagById,
-  getTagsByCategory,
   GOAL_STATUS_COLORS,
   GOAL_PRIORITY_COLORS,
   GOAL_TYPE_COLORS
@@ -64,7 +61,7 @@ export class GoalTagRecommendationSystem {
   // 목표 내용을 기반으로 태그 추천
   static recommendTags(goal: Partial<BaseGoal>): GoalTag[] {
     const recommendations: GoalTag[] = []
-    const { title, description, goal_type, priority } = goal
+    const { title, description, goal_type } = goal
 
     const content = `${title || ''} ${description || ''}`.toLowerCase()
 
@@ -255,7 +252,7 @@ export class GoalCategorizationUtils {
     // 정렬
     if (filters.sortBy) {
       filteredGoals.sort((a, b) => {
-        let aValue: any, bValue: any
+        let aValue: number | string, bValue: number | string
 
         switch (filters.sortBy) {
           case 'created_at':
@@ -264,11 +261,12 @@ export class GoalCategorizationUtils {
             aValue = new Date(a[filters.sortBy!]).getTime()
             bValue = new Date(b[filters.sortBy!]).getTime()
             break
-          case 'priority':
+          case 'priority': {
             const priorityOrder = { high: 3, medium: 2, low: 1 }
             aValue = priorityOrder[a.priority]
             bValue = priorityOrder[b.priority]
             break
+          }
           case 'progress':
             aValue = a.progress
             bValue = b.progress

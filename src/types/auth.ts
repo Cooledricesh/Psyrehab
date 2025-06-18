@@ -1,11 +1,4 @@
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
-import type { Database } from './supabase'
-
-// Database table types
-type SocialWorker = Database['public']['Tables']['social_workers']['Row']
-type Administrator = Database['public']['Tables']['administrators']['Row']
-type Patient = Database['public']['Tables']['patients']['Row']
-type Role = Database['public']['Tables']['roles']['Row']
 
 // User roles
 export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest'
@@ -32,17 +25,36 @@ export interface AdministratorProfile extends UserProfile {
   admin_level?: number
 }
 
+export interface PatientContactInfo {
+  phone?: string
+  email?: string
+  address?: string
+  emergency_contact?: {
+    name: string
+    relationship: string
+    phone: string
+  }
+}
+
+export interface PatientAdditionalInfo {
+  medical_history?: string
+  allergies?: string[]
+  medications?: string[]
+  special_needs?: string
+  notes?: string
+}
+
 export interface PatientProfile extends UserProfile {
   role: 'patient'
   id: string
   patient_identifier: string
   date_of_birth?: string
   gender?: string
-  contact_info?: any
+  contact_info?: PatientContactInfo
   admission_date?: string
   primary_social_worker_id?: string
   status: string
-  additional_info?: any
+  additional_info?: PatientAdditionalInfo
 }
 
 // Union type for all profiles
@@ -60,9 +72,23 @@ export interface AuthState {
 }
 
 // Authentication context
+export interface SignUpUserData {
+  full_name: string
+  role: UserRole
+  employee_id?: string
+  department?: string
+  contact_number?: string
+  admin_level?: number
+  patient_identifier?: string
+  date_of_birth?: string
+  gender?: string
+  contact_info?: PatientContactInfo
+  additional_info?: PatientAdditionalInfo
+}
+
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signUp: (email: string, password: string, userData: any) => Promise<{ success: boolean; error?: string }>
+  signUp: (email: string, password: string, userData: SignUpUserData) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
   updateProfile: (updates: Partial<AnyUserProfile>) => Promise<{ success: boolean; error?: string; profile?: AnyUserProfile }>
@@ -288,10 +314,17 @@ export interface UpdatePasswordForm {
 }
 
 // Authentication error types
+export interface AuthErrorDetails {
+  code?: string
+  field?: string
+  validationErrors?: Record<string, string[]>
+  originalError?: Error
+}
+
 export interface AuthError {
   message: string
   status?: number
-  details?: any
+  details?: AuthErrorDetails
 }
 
 // Authentication events
@@ -312,7 +345,7 @@ export interface ProtectedRouteProps {
 }
 
 // Hook return types
-export interface UseAuthReturn extends AuthContextType {}
+export type UseAuthReturn = AuthContextType
 
 export interface UsePermissionsReturn {
   hasPermission: (permission: Permission) => boolean
@@ -320,6 +353,8 @@ export interface UsePermissionsReturn {
   hasAllPermissions: (permissions: Permission[]) => boolean
   isRole: (role: UserRole) => boolean
   isAnyRole: (roles: UserRole[]) => boolean
+  userPermissions: Permission[]
+  userRole: UserRole | null
 }
 
 // Auth action types for reducers

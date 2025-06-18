@@ -6,8 +6,7 @@
 import { AssessmentService } from '@/services/assessments'
 import type { 
   AssessmentCreateRequest, 
-  AssessmentUpdateRequest,
-  AssessmentData 
+  AssessmentUpdateRequest
 } from '@/types/assessment'
 
 // Mock data for testing

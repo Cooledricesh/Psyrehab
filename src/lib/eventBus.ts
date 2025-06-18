@@ -1,22 +1,29 @@
+// Event payload types
+type EventPayload = {
+  'patient:status:changed': { patientId: string; newStatus: string };
+};
+
+type EventCallback<T = unknown> = (payload: T) => void;
+
 // 간단한 이벤트 버스 구현
 class EventBus {
-  private events: { [key: string]: Array<(...args: any[]) => void> } = {};
+  private events: { [K in keyof EventPayload]?: Array<EventCallback<EventPayload[K]>> } = {};
 
-  on(event: string, callback: (...args: any[]) => void) {
+  on<K extends keyof EventPayload>(event: K, callback: EventCallback<EventPayload[K]>) {
     if (!this.events[event]) {
       this.events[event] = [];
     }
-    this.events[event].push(callback);
+    this.events[event]!.push(callback);
   }
 
-  off(event: string, callback: (...args: any[]) => void) {
+  off<K extends keyof EventPayload>(event: K, callback: EventCallback<EventPayload[K]>) {
     if (!this.events[event]) return;
-    this.events[event] = this.events[event].filter(cb => cb !== callback);
+    this.events[event] = this.events[event]!.filter(cb => cb !== callback);
   }
 
-  emit(event: string, ...args: any[]) {
+  emit<K extends keyof EventPayload>(event: K, payload: EventPayload[K]) {
     if (!this.events[event]) return;
-    this.events[event].forEach(callback => callback(...args));
+    this.events[event]!.forEach(callback => callback(payload));
   }
 }
 

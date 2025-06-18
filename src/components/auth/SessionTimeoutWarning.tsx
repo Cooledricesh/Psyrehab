@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSession } from '@/hooks/useAuthState'
 
@@ -51,16 +51,16 @@ export function SessionTimeoutWarning({
     const interval = setInterval(checkSessionTimeout, 1000)
 
     return () => clearInterval(interval)
-  }, [user, sessionExpiresAt, isSessionValid, warningTime])
+  }, [user, sessionExpiresAt, isSessionValid, warningTime, handleSessionExpired])
 
-  const handleSessionExpired = async () => {
+  const handleSessionExpired = useCallback(async () => {
     try {
       await signOut()
       onLogout?.()
     } catch (error) {
       console.error('Error during session expiration logout:', error)
     }
-  }
+  }, [signOut, onLogout])
 
   const handleExtendSession = async () => {
     setIsExtending(true)

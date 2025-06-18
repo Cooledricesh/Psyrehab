@@ -14,7 +14,7 @@ interface SignUpFormData {
   email: string
   password: string
   passwordConfirm: string
-  role: 'social_worker' | 'administrator' | 'patient'
+  requestedRole: 'social_worker' | 'administrator'  // 요청 역할로 변경
   fullName: string
   employeeId?: string
   department?: string
@@ -26,7 +26,7 @@ export default function SignUpPage() {
     email: '',
     password: '',
     passwordConfirm: '',
-    role: 'social_worker',
+    requestedRole: 'social_worker',
     fullName: '',
     employeeId: '',
     department: '',
@@ -44,6 +44,19 @@ export default function SignUpPage() {
   }
 
   const validateForm = (): boolean => {
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError('올바른 이메일 형식이 아닙니다.')
+      return false
+    }
+    
+    // .dev 도메인 경고
+    if (formData.email.endsWith('.dev')) {
+      setError('.dev 도메인은 사용할 수 없습니다. 다른 이메일을 사용해주세요.')
+      return false
+    }
+    
     if (formData.password !== formData.passwordConfirm) {
       setError('비밀번호가 일치하지 않습니다.')
       return false
@@ -59,7 +72,7 @@ export default function SignUpPage() {
       return false
     }
 
-    if (formData.role === 'social_worker' && !formData.employeeId?.trim()) {
+    if (formData.requestedRole === 'social_worker' && !formData.employeeId?.trim()) {
       setError('직원번호를 입력해주세요.')
       return false
     }
@@ -85,7 +98,7 @@ export default function SignUpPage() {
         options: {
           data: {
             full_name: formData.fullName,
-            role: formData.role
+            requested_role: formData.requestedRole  // 요청한 역할 저장
           }
         }
       })
@@ -98,72 +111,47 @@ export default function SignUpPage() {
         throw new Error('사용자 생성에 실패했습니다.')
       }
 
-      // 2. 역할에 따른 프로필 생성
+      // 2. 회원가입 신청서 제출
       const userId = authData.user.id
 
-      // 역할 ID 가져오기
-      const roleMap = {
-        'social_worker': '6a5037f6-5553-47f9-824f-bf1e767bda95',
-        'administrator': 'd7fcf425-85bc-42b4-8806-917ef6939a40',
-        'patient': 'b3ec265d-07cc-45a3-9f3e-5bdd0f529890'
-      }
-
-      // user_roles 테이블에 역할 할당
-      const { error: roleError } = await supabase
-        .from('user_roles')
+      // signup_requests 테이블에 신청서 저장
+      const { error: requestError } = await supabase
+        .from('signup_requests')
         .insert({
-          user_id: userId,
-          role_id: roleMap[formData.role]
+          user_id: userId,  // auth_user_id가 아닌 user_id 사용
+          email: formData.email,
+          full_name: formData.fullName,
+          requested_role: formData.requestedRole,
+          employee_id: formData.employeeId || null,
+          department: formData.department || null,
+          contact_number: formData.contactNumber || null
+          // status는 디폴트로 'pending'이 설정됨
         })
 
-      if (roleError) {
-        throw roleError
-      }
-
-      // 역할별 프로필 생성
-      if (formData.role === 'social_worker') {
-        const { error: profileError } = await supabase
-          .from('social_workers')
-          .insert({
-            user_id: userId,
-            full_name: formData.fullName,
-            employee_id: formData.employeeId,
-            department: formData.department || null,
-            contact_number: formData.contactNumber || null,
-            is_active: true
-          })
-
-        if (profileError) {
-          throw profileError
-        }
-      } else if (formData.role === 'administrator') {
-        const { error: profileError } = await supabase
-          .from('administrators')
-          .insert({
-            user_id: userId,
-            full_name: formData.fullName,
-            employee_id: formData.employeeId,
-            department: formData.department || null,
-            contact_number: formData.contactNumber || null,
-            is_active: true
-          })
-
-        if (profileError) {
-          throw profileError
-        }
+      if (requestError) {
+        console.error('Signup request error:', requestError)
+        throw new Error('회원가입 신청서 제출에 실패했습니다.')
       }
 
       // 회원가입 성공 후 로그인 페이지로 이동
       navigate('/auth/login', {
         state: { 
-          message: '회원가입이 완료되었습니다. 이메일을 확인해주세요.'
+          message: '회원가입 신청이 완료되었습니다. 관리자의 승인 후 로그인하실 수 있습니다.'
         }
       })
 
     } catch (err: any) {
       console.error('SignUp error:', err)
+      
+      // 에러 메시지 개선
       if (err.message?.includes('already registered')) {
         setError('이미 등록된 이메일입니다.')
+      } else if (err.message?.includes('Email address') && err.message?.includes('is invalid')) {
+        setError('사용할 수 없는 이메일 주소입니다. 일반적인 이메일 도메인을 사용해주세요. (예: gmail.com, naver.com)')
+      } else if (err.message?.includes('Database error finding user')) {
+        setError('회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      } else if (err.message?.includes('row-level security')) {
+        setError('회원가입 설정에 문제가 있습니다. 관리자에게 문의해주세요.')
       } else {
         setError(err.message || '회원가입 중 오류가 발생했습니다.')
       }
@@ -203,24 +191,24 @@ export default function SignUpPage() {
             <form onSubmit={handleSignUp} className="space-y-4">
               {/* 역할 선택 */}
               <div className="space-y-2">
-                <Label htmlFor="role" className="text-sm font-medium text-gray-700">
-                  사용자 유형 <span className="text-red-500">*</span>
+                <Label htmlFor="requestedRole" className="text-sm font-medium text-gray-700">
+                  신청 역할 <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.role}
-                  onValueChange={(value: 'social_worker' | 'administrator' | 'patient') => 
-                    handleInputChange('role', value)
+                  value={formData.requestedRole}
+                  onValueChange={(value: 'social_worker' | 'administrator') => 
+                    handleInputChange('requestedRole', value)
                   }
                 >
                   <SelectTrigger className="h-11">
-                    <SelectValue placeholder="사용자 유형을 선택하세요" />
+                    <SelectValue placeholder="신청할 역할을 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="social_worker">사회복지사</SelectItem>
                     <SelectItem value="administrator">관리자</SelectItem>
-                    <SelectItem value="patient">환자</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-sm text-gray-500">관리자 승인 후 선택한 역할이 부여됩니다.</p>
               </div>
 
               {/* 기본 정보 */}
@@ -310,7 +298,7 @@ export default function SignUpPage() {
               </div>
 
               {/* 추가 정보 (사회복지사/관리자) */}
-              {(formData.role === 'social_worker' || formData.role === 'administrator') && (
+              {(formData.requestedRole === 'social_worker' || formData.requestedRole === 'administrator') && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="employeeId" className="text-sm font-medium text-gray-700">

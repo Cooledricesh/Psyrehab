@@ -1,3 +1,5 @@
+import type { AssessmentFormData, Patient } from './types';
+
 // 목표 설정 페이지에서 사용하는 유틸리티 함수들
 
 /**
@@ -21,7 +23,7 @@ export const formatText = (text: string): string => {
 /**
  * 평가 데이터를 API 요청 형식으로 변환
  */
-export const formatAssessmentData = (formData: any, patient: any) => {
+export const formatAssessmentData = (formData: AssessmentFormData, patient: Patient) => {
   return {
     patientInfo: {
       name: patient.full_name,

@@ -7,7 +7,6 @@ import {
   Edit2, 
   Trash2, 
   Eye, 
-  MoreHorizontal,
   ChevronUp,
   ChevronDown,
   CheckCircle,
@@ -49,7 +48,8 @@ export const UserTable: React.FC<UserTableProps> = ({
 }) => {
   const { checkPermission } = useAdminAuth();
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  // Bulk actions UI reserved for future implementation
+  // const [showBulkActions, setShowBulkActions] = useState(false);
 
   // 역할별 아이콘 및 색상
   const getRoleConfig = (role: UserRole) => {
@@ -97,7 +97,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   // 전체 선택/해제
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const selectableUsers = users.filter(user => 
+      const selectableUsers = users.filter(() => 
         checkPermission(Permission.USER_UPDATE) || checkPermission(Permission.USER_DELETE)
       );
       onSelectionChange(selectableUsers.map(user => user.id));
@@ -117,7 +117,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
   // 정렬된 사용자 목록
   const sortedUsers = React.useMemo(() => {
-    let sortableUsers = [...users];
+    const sortableUsers = [...users];
     if (sortConfig.key) {
       sortableUsers.sort((a, b) => {
         const aValue = a[sortConfig.key!];

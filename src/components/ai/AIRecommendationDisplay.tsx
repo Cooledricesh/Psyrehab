@@ -5,7 +5,6 @@ import {
   useAIRecommendationByAssessment,
   useUpdateAIRecommendationStatus,
   useGenerateGoalsFromRecommendation,
-  type AIRecommendation,
   type ParsedGoal
 } from '@/hooks/useAIRecommendations'
 
@@ -71,23 +70,24 @@ export function AIRecommendationDisplay({
     )
   }
 
-  const handleApprove = async () => {
-    if (selectedPlanNumbers.length === 0) {
-      alert('적어도 하나의 계획을 선택해주세요.')
-      return
-    }
+  // Approval handler reserved for future implementation
+  // const handleApprove = async () => {
+  //   if (selectedPlanNumbers.length === 0) {
+  //     alert('적어도 하나의 계획을 선택해주세요.')
+  //     return
+  //   }
 
-    try {
-      await updateStatusMutation.mutateAsync({
-        recommendationId: recommendation.id,
-        isActive: true,
-        appliedBy: patientId // 현재는 환자 ID를 사용, 실제로는 로그인한 사용자 ID
-      })
-    } catch (error) {
-      console.error('Failed to approve recommendation:', error)
-      alert('추천 승인 중 오류가 발생했습니다.')
-    }
-  }
+  //   try {
+  //     await updateStatusMutation.mutateAsync({
+  //       recommendationId: recommendation.id,
+  //       isActive: true,
+  //       appliedBy: patientId // 현재는 환자 ID를 사용, 실제로는 로그인한 사용자 ID
+  //     })
+  //   } catch (error) {
+  //     console.error('Failed to approve recommendation:', error)
+  //     alert('추천 승인 중 오류가 발생했습니다.')
+  //   }
+  // }
 
   const handleGenerateGoals = async () => {
     if (selectedPlanNumbers.length === 0) {

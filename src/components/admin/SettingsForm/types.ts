@@ -2,15 +2,15 @@
 
 export interface SettingsFormProps {
   section: string;
-  data: any;
-  onChange: (field: string, value: any) => void;
+  data: Record<string, string | number | boolean | string[] | null>;
+  onChange: (field: string, value: string | number | boolean | string[] | null) => void;
 }
 
 export interface FieldConfig {
   label: string;
   description?: string;
   type: 'text' | 'number' | 'boolean' | 'select' | 'textarea' | 'password' | 'time' | 'color' | 'multiselect';
-  options?: { label: string; value: any }[];
+  options?: { label: string; value: string | number | boolean }[];
   min?: number;
   max?: number;
   placeholder?: string;

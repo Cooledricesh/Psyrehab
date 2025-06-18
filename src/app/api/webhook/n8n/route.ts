@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-// n8n에서 받을 완료 신호 데이터 타입
-interface WebhookCompletionData {
-  status: 'completed' | 'failed'
-  assessmentId: string
-  recommendationId?: string
-  error?: string
-}
+import type { N8nWebhookCompletionData } from '@/types/ai-recommendations'
 
 // POST: n8n에서 AI 추천 완료 신호를 받는 웹훅 엔드포인트
 export async function POST(request: NextRequest) {
@@ -15,7 +8,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient()
     
     // 요청 본문 파싱
-    const data: WebhookCompletionData = await request.json()
+    const data: N8nWebhookCompletionData = await request.json()
     
     // 데이터 유효성 검증
     if (!data.status || !data.assessmentId) {

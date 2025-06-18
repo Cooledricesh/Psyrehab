@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
-import { Users, Activity, Database, Shield, BarChart3, Calendar, AlertCircle, CheckCircle } from 'lucide-react'
+import { Users, Activity, Database, Shield, BarChart3, Calendar, AlertCircle, CheckCircle, UserCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface SystemStats {
@@ -124,6 +124,13 @@ export default function AdminDashboard() {
       icon: Users,
       color: 'bg-blue-500',
       href: '/admin/users'
+    },
+    {
+      title: '환자 배정 관리',
+      description: '환자별 담당 사회복지사 배정',
+      icon: UserCheck,
+      color: 'bg-indigo-500',
+      href: '/admin/patient-assignment'
     },
     {
       title: '시스템 로그',

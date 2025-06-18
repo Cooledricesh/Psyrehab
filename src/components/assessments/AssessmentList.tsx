@@ -1,32 +1,18 @@
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
-  Search, 
-  Plus, 
   Eye, 
   Edit, 
   Trash2, 
-  Filter,
   Calendar,
   User,
   FileText,
-  TrendingUp,
-  MoreHorizontal,
   ChevronUp,
   ChevronDown,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react'
-import { AssessmentService } from '@/services/assessments'
 import type { AssessmentSummary, AssessmentListParams } from '@/types/assessment'
 import { formatDate } from '@/utils/date'
-import { cn } from '@/lib/utils'
 import { useAssessments, useDeleteAssessment, useUpdateAssessmentStatus } from '@/hooks/assessments/useAssessments'
 import { toast } from 'react-hot-toast'
 import Link from 'next/link'
@@ -77,7 +63,7 @@ export function AssessmentList({
       try {
         await deleteAssessmentMutation.mutateAsync(id)
         toast.success('평가가 삭제되었습니다')
-      } catch (error) {
+      } catch {
         toast.error('평가 삭제에 실패했습니다')
       }
     }
@@ -87,7 +73,7 @@ export function AssessmentList({
     try {
       await updateStatusMutation.mutateAsync({ id, status })
       toast.success('평가 상태가 변경되었습니다')
-    } catch (error) {
+    } catch {
       toast.error('상태 변경에 실패했습니다')
     }
   }

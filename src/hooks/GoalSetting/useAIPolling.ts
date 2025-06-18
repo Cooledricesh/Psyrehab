@@ -30,6 +30,18 @@ export const useAIPolling = ({
   const [pollingStatus, setPollingStatus] = useState<'idle' | 'polling' | 'success' | 'error' | 'timeout'>('idle');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 폴링 중지 함수를 먼저 정의
+  const stopPolling = useCallback(() => {
+    console.log('⏹️ AI 폴링 중지');
+    setIsPolling(false);
+    onComplete();
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [onComplete]);
+
   // AI 상태 확인 함수
   const checkAIStatus = useCallback(async () => {
     if (!currentAssessmentId) return;
@@ -66,7 +78,7 @@ export const useAIPolling = ({
       setPollingStatus('error');
       onError('폴링 중 오류가 발생했습니다.');
     }
-  }, [currentAssessmentId, pollingAttempts, onSuccess, onError]);
+  }, [currentAssessmentId, pollingAttempts, onSuccess, onError, stopPolling]);
 
   // 폴링 시작
   const startPolling = useCallback(() => {
@@ -84,17 +96,6 @@ export const useAIPolling = ({
     intervalRef.current = setInterval(checkAIStatus, POLLING_INTERVAL);
   }, [isPolling, checkAIStatus]);
 
-  // 폴링 중지
-  const stopPolling = useCallback(() => {
-    console.log('⏹️ AI 폴링 중지');
-    setIsPolling(false);
-    onComplete();
-    
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, [onComplete]);
 
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {

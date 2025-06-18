@@ -3,9 +3,9 @@ import React from 'react';
 interface SelectInputProps {
   name: string;
   label: string;
-  value: any;
-  onChange: (value: any) => void;
-  options: { label: string; value: any }[];
+  value: string | number | boolean;
+  onChange: (value: string | number | boolean) => void;
+  options: { label: string; value: string | number | boolean }[];
   description?: string;
   required?: boolean;
   icon?: React.ComponentType<{ className?: string }>;

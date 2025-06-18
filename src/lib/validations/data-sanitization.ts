@@ -152,7 +152,7 @@ export function sanitizeFilename(
     preserveExtension = true
   } = options
 
-  let sanitized = filename.trim()
+  const sanitized = filename.trim()
 
   // 확장자 분리
   let name = sanitized
@@ -287,9 +287,9 @@ export function sanitizePatientId(patientId: string): string {
 /**
  * 객체의 모든 문자열 필드 정화
  */
-export function sanitizeObject<T extends Record<string, any>>(
+export function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
-  fieldRules: Record<keyof T, (value: any) => any> = {}
+  fieldRules: Record<keyof T, (value: unknown) => unknown> = {}
 ): T {
   if (!obj || typeof obj !== 'object') return obj
 
@@ -325,7 +325,7 @@ export function sanitizeObject<T extends Record<string, any>>(
 /**
  * 환자 데이터 정화
  */
-export function sanitizePatientData(data: any) {
+export function sanitizePatientData(data: Record<string, unknown>) {
   return sanitizeObject(data, {
     name: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 100 }),
     email: sanitizeEmail,
@@ -351,7 +351,7 @@ export function sanitizePatientData(data: any) {
 /**
  * 서비스 기록 데이터 정화
  */
-export function sanitizeServiceData(data: any) {
+export function sanitizeServiceData(data: Record<string, unknown>) {
   return sanitizeObject(data, {
     service_title: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 200 }),
     service_description: (value: string) => sanitizeHtml(value, { 
@@ -369,7 +369,7 @@ export function sanitizeServiceData(data: any) {
 /**
  * 목표 데이터 정화
  */
-export function sanitizeGoalData(data: any) {
+export function sanitizeGoalData(data: Record<string, unknown>) {
   return sanitizeObject(data, {
     title: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 200 }),
     description: (value: string) => sanitizeHtml(value, { 
@@ -394,22 +394,22 @@ export function sanitizeGoalData(data: any) {
 /**
  * 정화된 데이터가 원본과 다른지 확인
  */
-export function hasDataChanged(original: any, sanitized: any): boolean {
+export function hasDataChanged(original: unknown, sanitized: unknown): boolean {
   return JSON.stringify(original) !== JSON.stringify(sanitized)
 }
 
 /**
  * 정화 결과 보고서 생성
  */
-export function generateSanitizationReport(original: any, sanitized: any) {
+export function generateSanitizationReport(original: unknown, sanitized: unknown) {
   const changes: Array<{
     field: string
-    original: any
-    sanitized: any
+    original: unknown
+    sanitized: unknown
     changed: boolean
   }> = []
 
-  function compareObjects(orig: any, san: any, path: string = '') {
+  function compareObjects(orig: unknown, san: unknown, path: string = '') {
     if (typeof orig !== typeof san) {
       changes.push({
         field: path,
@@ -420,9 +420,13 @@ export function generateSanitizationReport(original: any, sanitized: any) {
       return
     }
 
-    if (typeof orig === 'object' && orig !== null) {
-      for (const key of new Set([...Object.keys(orig || {}), ...Object.keys(san || {})])) {
-        compareObjects(orig?.[key], san?.[key], path ? `${path}.${key}` : key)
+    if (typeof orig === 'object' && orig !== null && typeof san === 'object' && san !== null) {
+      const origKeys = Object.keys(orig as Record<string, unknown>)
+      const sanKeys = Object.keys(san as Record<string, unknown>)
+      for (const key of new Set([...origKeys, ...sanKeys])) {
+        const origValue = (orig as Record<string, unknown>)[key]
+        const sanValue = (san as Record<string, unknown>)[key]
+        compareObjects(origValue, sanValue, path ? `${path}.${key}` : key)
       }
     } else {
       const changed = orig !== san

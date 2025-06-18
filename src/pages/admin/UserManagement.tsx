@@ -223,6 +223,8 @@ export default function UserManagement() {
     if (!selectedUser) return
 
     try {
+      console.log('삭제 시작:', selectedUser.id, selectedUser.fullName, selectedUser.role)
+
       // 현재 로그인한 사용자 정보 확인
       const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
       if (authError || !currentUser) {
@@ -238,8 +240,11 @@ export default function UserManagement() {
         .single()
 
       if (adminError || !adminCheck) {
+        console.error('Admin check error:', adminError)
         throw new Error('관리자 권한이 필요합니다.')
       }
+
+      console.log('관리자 권한 확인됨')
 
       // 환자가 할당된 사회복지사는 삭제할 수 없음
       if (selectedUser.role === 'social_worker' && selectedUser.patientCount && selectedUser.patientCount > 0) {
@@ -251,23 +256,37 @@ export default function UserManagement() {
         return
       }
 
-      console.log('삭제 시작:', selectedUser.id, selectedUser.fullName, selectedUser.role)
-
-      // 1. 프로필 먼저 삭제 (외래키 제약 때문에)
-      if (selectedUser.role !== 'pending') {
-        const table = selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators'
+      // 관리자가 생성한 공지사항이 있는지 확인
+      if (selectedUser.role === 'administrator') {
+        const { count } = await supabase
+          .from('announcements')
+          .select('*', { count: 'exact', head: true })
+          .eq('created_by', selectedUser.id)
         
-        // 먼저 데이터 존재 여부 확인
-        const { data: existingProfile, error: checkError } = await supabase
+        if (count && count > 0) {
+          toast({
+            title: '삭제 불가',
+            description: `이 관리자가 작성한 ${count}개의 공지사항이 있습니다. 먼저 공지사항을 삭제하거나 다른 관리자에게 이전해주세요.`,
+            variant: 'destructive',
+            duration: 5000
+          })
+          return
+        }
+      }
+
+      // 1. 프로필 테이블에서 삭제
+      if (selectedUser.role === 'social_worker' || selectedUser.role === 'administrator') {
+        const table = selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators'
+        console.log(`${table}에서 삭제 시도 중...`)
+        
+        // 먼저 프로필이 존재하는지 확인
+        const { data: profileData, error: checkError } = await supabase
           .from(table)
           .select('user_id')
           .eq('user_id', selectedUser.id)
           .single()
-        
-        console.log(`${table} 테이블에서 ${selectedUser.id} 확인:`, existingProfile, checkError)
-        
-        if (existingProfile) {
-          console.log(`${table}에서 삭제 시도 중...`)
+
+        if (profileData) {
           const { error: profileError } = await supabase
             .from(table)
             .delete()

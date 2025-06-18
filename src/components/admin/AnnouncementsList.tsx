@@ -46,7 +46,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
   // 필터링 및 정렬된 공지사항
   const filteredAndSortedAnnouncements = useMemo(() => {
-    let filtered = announcements.filter(announcement => {
+    const filtered = announcements.filter(announcement => {
       // 검색어 필터
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -89,7 +89,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
     // 정렬
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: string | number | Date, bValue: string | number | Date;
 
       switch (sort.field) {
         case 'title':
@@ -108,16 +108,18 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
           aValue = a.metadata.readCount;
           bValue = b.metadata.readCount;
           break;
-        case 'priority':
+        case 'priority': {
           const priorityOrder = ['low', 'medium', 'high', 'urgent'];
           aValue = priorityOrder.indexOf(a.priority);
           bValue = priorityOrder.indexOf(b.priority);
           break;
-        case 'status':
+        }
+        case 'status': {
           const statusOrder = ['draft', 'scheduled', 'published', 'expired', 'cancelled'];
           aValue = statusOrder.indexOf(a.status);
           bValue = statusOrder.indexOf(b.status);
           break;
+        }
         default:
           aValue = a.createdAt;
           bValue = b.createdAt;
@@ -138,32 +140,32 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
     currentPage * itemsPerPage
   );
 
-  // 일괄 선택/해제
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedItems(new Set(paginatedAnnouncements.map(a => a.id)));
-    } else {
-      setSelectedItems(new Set());
-    }
-  };
+  // These handlers are reserved for future bulk operations and sorting functionality
+  // Keeping them to maintain interface consistency
+  // const handleSelectAll = (checked: boolean) => {
+  //   if (checked) {
+  //     setSelectedItems(new Set(paginatedAnnouncements.map(a => a.id)));
+  //   } else {
+  //     setSelectedItems(new Set());
+  //   }
+  // };
 
-  const handleSelectItem = (id: string, checked: boolean) => {
-    const newSelected = new Set(selectedItems);
-    if (checked) {
-      newSelected.add(id);
-    } else {
-      newSelected.delete(id);
-    }
-    setSelectedItems(newSelected);
-  };
+  // const handleSelectItem = (id: string, checked: boolean) => {
+  //   const newSelected = new Set(selectedItems);
+  //   if (checked) {
+  //     newSelected.add(id);
+  //   } else {
+  //     newSelected.delete(id);
+  //   }
+  //   setSelectedItems(newSelected);
+  // };
 
-  // 정렬 변경
-  const handleSort = (field: AnnouncementSort['field']) => {
-    setSort(prev => ({
-      field,
-      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
+  // const handleSort = (field: AnnouncementSort['field']) => {
+  //   setSort(prev => ({
+  //     field,
+  //     direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+  //   }));
+  // };
 
   // 로딩 상태
   if (isLoading) {

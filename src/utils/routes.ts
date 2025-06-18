@@ -4,7 +4,7 @@ import type { UserRole, Permission } from '@/types/auth'
 export interface RouteConfig {
   path: string
   title: string
-  component?: React.ComponentType<any>
+  component?: React.ComponentType
   
   // Access control
   requireAuth?: boolean
@@ -177,7 +177,7 @@ export class RouteUtils {
    * Check if a route requires authentication
    */
   static requiresAuth(path: string): boolean {
-    return !PUBLIC_ROUTES.includes(path as any)
+    return !PUBLIC_ROUTES.includes(path as typeof PUBLIC_ROUTES[number])
   }
 
   /**
@@ -272,14 +272,14 @@ export class RouteUtils {
    * Check if current path is an auth route
    */
   static isAuthRoute(path: string): boolean {
-    return Object.values(ROUTE_PATHS.AUTH).includes(path as any)
+    return Object.values(ROUTE_PATHS.AUTH).includes(path as string)
   }
 
   /**
    * Check if current path is a public route
    */
   static isPublicRoute(path: string): boolean {
-    return PUBLIC_ROUTES.includes(path as any)
+    return PUBLIC_ROUTES.includes(path as typeof PUBLIC_ROUTES[number])
   }
 
   /**

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { PermissionGate } from '@/components/auth/AdminRoute';
 import { Permission } from '@/types/auth';
 import {
   Home,
@@ -14,14 +13,10 @@ import {
   Database,
   Bell,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   Calendar,
   ClipboardList,
   Heart,
   Activity,
-  Archive,
-  AlertTriangle,
   X
 } from 'lucide-react';
 
@@ -33,7 +28,7 @@ interface AdminSidebarProps {
 interface NavItem {
   name: string;
   href: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   permission?: Permission;
   badge?: string;
   children?: NavItem[];

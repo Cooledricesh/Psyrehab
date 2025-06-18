@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { 
@@ -8,7 +8,6 @@ import {
   Settings, 
   FileText, 
   Calendar,
-  AlertTriangle,
   CheckCircle,
   XCircle,
   Clock,
@@ -26,7 +25,7 @@ interface Activity {
   };
   timestamp: Date;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const AdminRecentActivity: React.FC = () => {
@@ -141,7 +140,7 @@ export const AdminRecentActivity: React.FC = () => {
   };
 
   // 데이터 로드
-  const loadActivities = async (refresh = false) => {
+  const loadActivities = useCallback(async (refresh = false) => {
     try {
       if (refresh) {
         setIsRefreshing(true);
@@ -160,7 +159,7 @@ export const AdminRecentActivity: React.FC = () => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   // 새로고침
   const handleRefresh = () => {
@@ -170,7 +169,7 @@ export const AdminRecentActivity: React.FC = () => {
   // 초기 데이터 로드
   useEffect(() => {
     loadActivities();
-  }, []);
+  }, [loadActivities]);
 
   if (isLoading) {
     return (

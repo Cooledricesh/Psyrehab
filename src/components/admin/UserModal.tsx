@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Eye, EyeOff, Save, User, Mail, Shield, Building, Calendar, AlertCircle } from 'lucide-react';
+import { X, Eye, EyeOff, Save, User, Mail, Shield, Building, AlertCircle } from 'lucide-react';
 import { UserRole } from '../../types/auth';
 
 export interface User {
@@ -173,8 +173,8 @@ export default function UserModal({
 
       // Only include password for create mode
       if (mode === 'create' && formData.password) {
-        (userData as any).password = formData.password;
-        (userData as any).send_welcome_email = formData.send_welcome_email;
+        (userData as Partial<User> & { password?: string; send_welcome_email?: boolean }).password = formData.password;
+        (userData as Partial<User> & { password?: string; send_welcome_email?: boolean }).send_welcome_email = formData.send_welcome_email;
       }
 
       await onSave(userData);
@@ -187,7 +187,7 @@ export default function UserModal({
     }
   };
 
-  const handleInputChange = (field: keyof FormData, value: any) => {
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value

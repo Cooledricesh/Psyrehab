@@ -1,10 +1,11 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import AssessmentsPage from '@/app/assessments/page'
 import { AssessmentData } from '@/types/assessment'
+import { Patient } from '@/types/database'
 
 // Mock data
 const mockAssessments: AssessmentData[] = [
@@ -68,12 +69,6 @@ const mockAssessments: AssessmentData[] = [
   }
 ]
 
-const mockPatients = [
-  { id: 'patient1', name: '김영수' },
-  { id: 'patient2', name: '이미영' },
-  { id: 'patient3', name: '박준호' },
-  { id: 'patient4', name: '최서연' }
-]
 
 // Mock the hooks
 vi.mock('@/hooks/useAssessments', () => ({
@@ -95,8 +90,14 @@ vi.mock('@/hooks/useAssessments', () => ({
 }))
 
 // Mock the visualization components to avoid canvas/chart rendering issues
+interface MockDashboardProps {
+  assessments: AssessmentData[]
+  patients: Patient[]
+  className?: string
+}
+
 vi.mock('@/components/assessments/visualization/AssessmentDashboard', () => ({
-  AssessmentDashboard: ({ assessments, patients, className }: any) => (
+  AssessmentDashboard: ({ assessments, patients, className }: MockDashboardProps) => (
     <div className={className} data-testid="assessment-dashboard">
       <h2>Assessment Dashboard</h2>
       <p>Assessments: {assessments.length}</p>
@@ -105,8 +106,14 @@ vi.mock('@/components/assessments/visualization/AssessmentDashboard', () => ({
   )
 }))
 
+interface MockComparisonProps {
+  assessments: AssessmentData[]
+  patients: Patient[]
+  className?: string
+}
+
 vi.mock('@/components/assessments/comparison/ComparisonManager', () => ({
-  ComparisonManager: ({ assessments, patients, className }: any) => (
+  ComparisonManager: ({ assessments, patients, className }: MockComparisonProps) => (
     <div className={className} data-testid="comparison-manager">
       <h2>Comparison Manager</h2>
       <p>Assessments: {assessments.length}</p>
@@ -115,8 +122,13 @@ vi.mock('@/components/assessments/comparison/ComparisonManager', () => ({
   )
 }))
 
+interface MockAssessmentFormProps {
+  onAssessmentComplete: (assessmentId: string) => void
+  className?: string
+}
+
 vi.mock('@/components/assessments/AssessmentForm', () => ({
-  AssessmentForm: ({ onAssessmentComplete, className }: any) => (
+  AssessmentForm: ({ onAssessmentComplete, className }: MockAssessmentFormProps) => (
     <div className={className} data-testid="assessment-form">
       <h2>Assessment Form</h2>
       <button 
@@ -129,8 +141,14 @@ vi.mock('@/components/assessments/AssessmentForm', () => ({
   )
 }))
 
+interface MockAssessmentResultsProps {
+  assessmentId: string
+  onNavigateToHistory: () => void
+  className?: string
+}
+
 vi.mock('@/components/assessments/AssessmentResults', () => ({
-  AssessmentResults: ({ assessmentId, onNavigateToHistory, className }: any) => (
+  AssessmentResults: ({ assessmentId, onNavigateToHistory, className }: MockAssessmentResultsProps) => (
     <div className={className} data-testid="assessment-results">
       <h2>Assessment Results</h2>
       <p>Assessment ID: {assessmentId}</p>
@@ -144,14 +162,19 @@ vi.mock('@/components/assessments/AssessmentResults', () => ({
   )
 }))
 
+interface MockAssessmentHistoryProps {
+  onAssessmentSelect: (assessmentId: string) => void
+  className?: string
+}
+
 vi.mock('@/components/assessments/AssessmentHistory', () => ({
-  AssessmentHistory: ({ onAssessmentSelect, className }: any) => (
+  AssessmentHistory: ({ onAssessmentSelect, className }: MockAssessmentHistoryProps) => (
     <div className={className} data-testid="assessment-history">
       <h2>Assessment History</h2>
       {mockAssessments.map(assessment => (
         <button
           key={assessment.id}
-          onClick={() => onAssessmentSelect(assessment.id)}
+          onClick={() => onAssessmentSelect(assessment.id!)}
           data-testid={`select-assessment-${assessment.id}`}
         >
           Assessment {assessment.id}

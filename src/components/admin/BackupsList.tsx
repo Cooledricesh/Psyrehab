@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import type { BackupItem, BackupFilter } from '@/types/backup'
-import { BackupType, BackupStatus, BACKUP_TYPE_LABELS, BACKUP_STATUS_LABELS, BACKUP_TYPE_COLORS, BACKUP_STATUS_COLORS, formatFileSize, formatDuration } from '@/types/backup'
+import { BackupType, BackupStatus, BACKUP_TYPE_LABELS, BACKUP_STATUS_LABELS, formatFileSize, formatDuration } from '@/types/backup'
 
 interface BackupsListProps {
   backups: BackupItem[]
@@ -55,8 +55,8 @@ export const BackupsList: React.FC<BackupsListProps> = ({
   // 정렬된 백업 목록
   const sortedBackups = useMemo(() => {
     return [...filteredBackups].sort((a, b) => {
-      let aValue: any = a[sortBy]
-      let bValue: any = b[sortBy]
+      let aValue: string | number | Date = a[sortBy] as string | number | Date
+      let bValue: string | number | Date = b[sortBy] as string | number | Date
       
       if (sortBy === 'createdAt') {
         aValue = new Date(aValue).getTime()
@@ -76,14 +76,16 @@ export const BackupsList: React.FC<BackupsListProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedBackups = sortedBackups.slice(startIndex, startIndex + itemsPerPage)
 
-  const handleSort = (field: typeof sortBy) => {
-    if (field === sortBy) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortBy(field)
-      setSortOrder('desc')
-    }
-  }
+  // Sort handling is integrated into the select dropdown
+  // This function is reserved for future header-based sorting
+  // const handleSort = (field: typeof sortBy) => {
+  //   if (field === sortBy) {
+  //     setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+  //   } else {
+  //     setSortBy(field)
+  //     setSortOrder('desc')
+  //   }
+  // }
 
   const getStatusColor = (status: BackupStatus) => {
     const colorMap = {
