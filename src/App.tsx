@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthMigrationWrapper } from '@/contexts/AuthMigrationWrapper'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { SimpleDashboard } from '@/components/dashboard/SimpleDashboard'
-import { SimpleProtectedRoute } from '@/components/auth/SimpleProtectedRoute'
-import { AdminProtectedRoute } from '@/components/auth/AdminProtectedRoute'
+import { UnifiedProtectedRoute, AdminRoute } from '@/components/auth/UnifiedProtectedRoute'
 
 // 실제 페이지 컴포넌트들
 import Home from '@/pages/Home'
@@ -41,8 +41,9 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
+      <AuthMigrationWrapper>
+        <Router>
+          <Routes>
           {/* 인증 관련 라우트 (레이아웃 없음) */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/sign-up" element={<SignUpPage />} />
@@ -50,7 +51,7 @@ function App() {
           
           {/* 메인 애플리케이션 라우트 (레이아웃 포함 + 인증 보호) */}
           <Route path="/*" element={
-            <SimpleProtectedRoute>
+            <UnifiedProtectedRoute>
               <div className="min-h-screen flex bg-gray-50">
                 <Sidebar />
                 <div className="flex-1 flex flex-col min-h-screen">
@@ -67,21 +68,22 @@ function App() {
                       <Route path="/admin-quick" element={<AdminQuickAccess />} />
                       
                       {/* 관리자 전용 라우트 */}
-                      <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-                      <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-                      <Route path="/admin/users" element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
-                      <Route path="/admin/patient-assignment" element={<AdminProtectedRoute><PatientAssignment /></AdminProtectedRoute>} />
-                      <Route path="/admin/logs" element={<AdminProtectedRoute><SystemLogs /></AdminProtectedRoute>} />
-                      <Route path="/admin/backup-restore" element={<AdminProtectedRoute><BackupRestore /></AdminProtectedRoute>} />
-                      <Route path="/admin/announcements" element={<AdminProtectedRoute><AnnouncementsManagement /></AdminProtectedRoute>} />
+                      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                      <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                      <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+                      <Route path="/admin/patient-assignment" element={<AdminRoute><PatientAssignment /></AdminRoute>} />
+                      <Route path="/admin/logs" element={<AdminRoute><SystemLogs /></AdminRoute>} />
+                      <Route path="/admin/backup-restore" element={<AdminRoute><BackupRestore /></AdminRoute>} />
+                      <Route path="/admin/announcements" element={<AdminRoute><AnnouncementsManagement /></AdminRoute>} />
                     </Routes>
                   </main>
                 </div>
               </div>
-            </SimpleProtectedRoute>
+            </UnifiedProtectedRoute>
           } />
-        </Routes>
-      </Router>
+          </Routes>
+        </Router>
+      </AuthMigrationWrapper>
     </QueryClientProvider>
   )
 }

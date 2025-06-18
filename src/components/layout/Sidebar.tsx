@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Home,
@@ -16,7 +16,7 @@ import {
   UserCog,
   UserCheck,
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext'
 
 interface SidebarLinkProps {
   to: string
@@ -49,59 +49,14 @@ const SidebarLink = ({ to, icon, label, isActive }: SidebarLinkProps) => {
 export const Sidebar = () => {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [adminMenuOpen, setAdminMenuOpen] = useState(false)
-  const [userInfo, setUserInfo] = useState<{ name: string; role: string }>({ name: '사용자', role: '' })
   const sidebarRef = useRef<HTMLElement>(null)
+  const auth = useUnifiedAuth()
 
-  useEffect(() => {
-    checkUserRole()
-  }, [])
-
-  const checkUserRole = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      console.log('Current user:', user.email)
-
-      // 관리자 역할 확인
-      const { data: adminRole, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role_id')
-        .eq('user_id', user.id)
-        .eq('role_id', 'd7fcf425-85bc-42b4-8806-917ef6939a40')
-        .maybeSingle()
-
-      console.log('Admin role check:', adminRole, roleError)
-      
-      setIsAdmin(!!adminRole)
-
-      // 사용자 정보 가져오기
-      if (adminRole) {
-        const { data: adminInfo } = await supabase
-          .from('administrators')
-          .select('full_name')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        
-        if (adminInfo) {
-          setUserInfo({ name: adminInfo.full_name, role: '관리자' })
-        }
-      } else {
-        const { data: swInfo } = await supabase
-          .from('social_workers')
-          .select('full_name')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        
-        if (swInfo) {
-          setUserInfo({ name: swInfo.full_name, role: '사회복지사' })
-        }
-      }
-    } catch (error) {
-      console.error('Error checking user role:', error)
-    }
+  // Extract user info from unified auth
+  const userInfo = {
+    name: auth.profile?.full_name || '사용자',
+    role: auth.role === 'admin' ? '관리자' : auth.role === 'social_worker' ? '사회복지사' : ''
   }
 
   const toggleSidebar = () => {
@@ -150,30 +105,47 @@ export const Sidebar = () => {
                 label="대시보드"
                 isActive={location.pathname === '/dashboard'}
               />
-              <SidebarLink
-                to="/patient-management"
-                icon={<Users size={18} />}
-                label="마루 회원 관리"
-                isActive={location.pathname === '/patient-management'}
-              />
-              <SidebarLink
-                to="/goal-setting"
-                icon={<Target size={18} />}
-                label="목표 설정"
-                isActive={location.pathname === '/goal-setting'}
-              />
-              <SidebarLink
-                to="/progress-tracking"
-                icon={<TrendingUp size={18} />}
-                label="진행 추적"
-                isActive={location.pathname === '/progress-tracking'}
-              />
-              <SidebarLink
-                to="/reports"
-                icon={<FileText size={18} />}
-                label="보고서(미구현)"
-                isActive={location.pathname === '/reports'}
-              />
+              
+              {/* Patient Management - visible to social workers and admins */}
+              {auth.hasAnyPermission(['patient:read', 'patient:manage']) && (
+                <SidebarLink
+                  to="/patient-management"
+                  icon={<Users size={18} />}
+                  label="마루 회원 관리"
+                  isActive={location.pathname === '/patient-management'}
+                />
+              )}
+              
+              {/* Goal Setting - visible to social workers and admins */}
+              {auth.hasAnyPermission(['goal:create', 'goal:manage']) && (
+                <SidebarLink
+                  to="/goal-setting"
+                  icon={<Target size={18} />}
+                  label="목표 설정"
+                  isActive={location.pathname === '/goal-setting'}
+                />
+              )}
+              
+              {/* Progress Tracking - visible to social workers and admins */}
+              {auth.hasAnyPermission(['progress:read', 'progress:manage']) && (
+                <SidebarLink
+                  to="/progress-tracking"
+                  icon={<TrendingUp size={18} />}
+                  label="진행 추적"
+                  isActive={location.pathname === '/progress-tracking'}
+                />
+              )}
+              
+              {/* Reports - visible to social workers and admins */}
+              {auth.hasAnyPermission(['report:read', 'report:generate']) && (
+                <SidebarLink
+                  to="/reports"
+                  icon={<FileText size={18} />}
+                  label="보고서(미구현)"
+                  isActive={location.pathname === '/reports'}
+                />
+              )}
+              
               <li className="my-2 h-px bg-gray-200 mx-4"></li>
               <SidebarLink
                 to="/settings"
@@ -183,7 +155,7 @@ export const Sidebar = () => {
               />
               
               {/* 관리자 메뉴 */}
-              {isAdmin && (
+              {auth.isAdmin && (
                 <>
                   <li className="my-2 h-px bg-gray-200 mx-4"></li>
                   <li>
@@ -203,36 +175,55 @@ export const Sidebar = () => {
                   </li>
                   {adminMenuOpen && (
                     <ul className="bg-gray-50 py-1">
-                      <SidebarLink
-                        to="/admin/dashboard"
-                        icon={<Activity size={16} />}
-                        label="관리자 대시보드"
-                        isActive={location.pathname === '/admin/dashboard'}
-                      />
-                      <SidebarLink
-                        to="/admin/users"
-                        icon={<UserCog size={16} />}
-                        label="사용자 관리"
-                        isActive={location.pathname === '/admin/users'}
-                      />
-                      <SidebarLink
-                        to="/admin/patient-assignment"
-                        icon={<UserCheck size={16} />}
-                        label="환자 배정 관리"
-                        isActive={location.pathname === '/admin/patient-assignment'}
-                      />
-                      <SidebarLink
-                        to="/admin/logs"
-                        icon={<FileText size={16} />}
-                        label="시스템 로그"
-                        isActive={location.pathname === '/admin/logs'}
-                      />
-                      <SidebarLink
-                        to="/admin/backup-restore"
-                        icon={<Database size={16} />}
-                        label="백업/복원"
-                        isActive={location.pathname === '/admin/backup-restore'}
-                      />
+                      {/* Admin Dashboard - all admins */}
+                      {auth.hasPermission('admin:dashboard') && (
+                        <SidebarLink
+                          to="/admin/dashboard"
+                          icon={<Activity size={16} />}
+                          label="관리자 대시보드"
+                          isActive={location.pathname === '/admin/dashboard'}
+                        />
+                      )}
+                      
+                      {/* User Management - requires user management permissions */}
+                      {auth.hasPermission('admin:user_management') && (
+                        <SidebarLink
+                          to="/admin/users"
+                          icon={<UserCog size={16} />}
+                          label="사용자 관리"
+                          isActive={location.pathname === '/admin/users'}
+                        />
+                      )}
+                      
+                      {/* Patient Assignment - requires patient management permissions */}
+                      {auth.hasPermission('admin:patient_assignment') && (
+                        <SidebarLink
+                          to="/admin/patient-assignment"
+                          icon={<UserCheck size={16} />}
+                          label="환자 배정 관리"
+                          isActive={location.pathname === '/admin/patient-assignment'}
+                        />
+                      )}
+                      
+                      {/* System Logs - requires system monitoring permissions */}
+                      {auth.hasPermission('admin:system_logs') && (
+                        <SidebarLink
+                          to="/admin/logs"
+                          icon={<FileText size={16} />}
+                          label="시스템 로그"
+                          isActive={location.pathname === '/admin/logs'}
+                        />
+                      )}
+                      
+                      {/* Backup/Restore - requires system management permissions */}
+                      {auth.hasPermission('admin:system_management') && (
+                        <SidebarLink
+                          to="/admin/backup-restore"
+                          icon={<Database size={16} />}
+                          label="백업/복원"
+                          isActive={location.pathname === '/admin/backup-restore'}
+                        />
+                      )}
                     </ul>
                   )}
                 </>

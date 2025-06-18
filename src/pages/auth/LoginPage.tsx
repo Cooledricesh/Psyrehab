@@ -7,17 +7,25 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Eye, EyeOff, Heart, CheckCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
+  const auth = useUnifiedAuth()
+
+  // 이미 로그인된 경우 리다이렉트
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      const redirectTo = new URLSearchParams(location.search).get('redirect') || '/dashboard'
+      navigate(redirectTo, { replace: true })
+    }
+  }, [auth.isAuthenticated, navigate, location.search])
 
   useEffect(() => {
     // 회원가입 성공 메시지 확인
@@ -30,29 +38,21 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError(null)
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const result = await auth.signIn(email, password)
 
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      if (data.user) {
-        // 로그인 성공 시 메인 페이지로 리다이렉트
-        navigate('/dashboard')
+      if (result.success) {
+        // 로그인 성공 시 리다이렉트
+        const redirectTo = new URLSearchParams(location.search).get('redirect') || '/dashboard'
+        navigate(redirectTo, { replace: true })
+      } else {
+        setError(result.error || '로그인에 실패했습니다.')
       }
     } catch (err) {
       setError('로그인 중 오류가 발생했습니다.')
       console.error('Login error:', err)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -145,9 +145,9 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 shadow-md"
-                disabled={isLoading}
+                disabled={auth.loading}
               >
-                {isLoading ? (
+                {auth.loading ? (
                   <div className="flex items-center">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     로그인 중...

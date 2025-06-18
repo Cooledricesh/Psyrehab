@@ -1,43 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Bell, User, ChevronDown } from 'lucide-react'
-import { supabase, getCurrentUser } from '@/lib/supabase'
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext'
 
 export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [currentUser, setCurrentUser] = useState<any>(null)
   const navigate = useNavigate()
+  const auth = useUnifiedAuth()
 
-  useEffect(() => {
-    const loadUserInfo = async () => {
-      try {
-        const user = await getCurrentUser()
-        if (user) {
-          setCurrentUser({
-            id: user.id,
-            email: user.email,
-            name: user.email?.split('@')[0] || '사용자',
-            role: '관리자',
-            initial: user.email?.charAt(0).toUpperCase() || 'U'
-          })
-        }
-      } catch (error) {
-        console.error('Failed to load user info:', error)
-      }
-    }
-
-    loadUserInfo()
-  }, [])
+  // 사용자 정보 준비
+  const currentUser = auth.profile ? {
+    id: auth.user?.id,
+    email: auth.user?.email,
+    name: auth.profile.full_name || auth.user?.email?.split('@')[0] || '사용자',
+    role: auth.role === 'admin' ? '관리자' : auth.role === 'social_worker' ? '사회복지사' : '환자',
+    initial: (auth.profile.full_name || auth.user?.email || 'U').charAt(0).toUpperCase()
+  } : null
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error('Logout error:', error)
-      } else {
-        navigate('/auth/login')
-      }
+      await auth.signOut()
+      navigate('/auth/login')
     } catch (error) {
       console.error('Logout error:', error)
     }

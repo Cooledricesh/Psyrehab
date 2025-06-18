@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useUnifiedAuth } from '@/contexts/UnifiedAuthContext'
 import { supabase } from '@/lib/supabase'
+import type { Permission } from '@/types/auth'
 import { Users, Activity, Database, Shield, BarChart3, Calendar, AlertCircle, CheckCircle, UserCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -18,7 +20,17 @@ interface SystemStats {
   totalAssessments: number
 }
 
+interface QuickAction {
+  title: string
+  description: string
+  icon: any
+  color: string
+  href: string
+  permission: Permission
+}
+
 export default function AdminDashboard() {
+  const auth = useUnifiedAuth()
   const [stats, setStats] = useState<SystemStats>({
     totalUsers: 0,
     totalPatients: 0,
@@ -34,10 +46,24 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    loadSystemStats()
-  }, [])
+    if (auth.initialized && auth.isAuthenticated && auth.isAdmin) {
+      loadSystemStats()
+    }
+  }, [auth.initialized, auth.isAuthenticated, auth.isAdmin])
 
-  const loadSystemStats = async () => {
+  const loadSystemStats = useCallback(async () => {
+    if (!auth.isAdmin) {
+      setError('관리자 권한이 필요합니다.')
+      setLoading(false)
+      return
+    }
+
+    if (!auth.hasPermission('view_all_data')) {
+      setError('시스템 통계를 볼 권한이 없습니다.')
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
@@ -115,43 +141,48 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [auth.isAdmin, auth.hasPermission])
 
-  const quickActions = [
+  const quickActions: QuickAction[] = [
     {
       title: '사용자 관리',
       description: '시스템 사용자 관리 및 권한 설정',
       icon: Users,
       color: 'bg-blue-500',
-      href: '/admin/users'
+      href: '/admin/users',
+      permission: 'manage_users' as const
     },
     {
       title: '환자 배정 관리',
       description: '환자별 담당 사회복지사 배정',
       icon: UserCheck,
       color: 'bg-indigo-500',
-      href: '/admin/patient-assignment'
+      href: '/admin/patient-assignment',
+      permission: 'manage_patients' as const
     },
     {
       title: '시스템 로그',
       description: '시스템 활동 및 오류 로그 확인',
       icon: Activity,
       color: 'bg-green-500',
-      href: '/admin/logs'
+      href: '/admin/logs',
+      permission: 'system:logs:read' as const
     },
     {
       title: '백업 관리',
       description: '데이터베이스 백업 및 복원',
       icon: Database,
       color: 'bg-purple-500',
-      href: '/admin/backup-restore'
+      href: '/admin/backup-restore',
+      permission: 'system:backup:create' as const
     },
     {
       title: '권한 설정',
       description: '역할 및 권한 관리',
       icon: Shield,
       color: 'bg-orange-500',
-      href: '/admin/permissions'
+      href: '/admin/permissions',
+      permission: 'manage_system_settings' as const
     }
   ]
 
@@ -200,6 +231,34 @@ export default function AdminDashboard() {
     }
   ]
 
+  // 인증 로딩 상태 처리
+  if (auth.loading || !auth.initialized) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600">인증 정보를 확인하는 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 관리자 권한 체크
+  if (!auth.isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600">관리자 권한이 필요합니다.</p>
+          <Button onClick={() => navigate('/')} className="mt-4">
+            홈으로 돌아가기
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // 데이터 로딩 상태 처리
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -230,7 +289,14 @@ export default function AdminDashboard() {
       {/* 헤더 */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
-        <p className="text-gray-600 mt-2">시스템 현황 및 통계를 한눈에 확인하세요</p>
+        <p className="text-gray-600 mt-2">
+          시스템 현황 및 통계를 한눈에 확인하세요
+          {auth.profile && (
+            <span className="ml-2 text-sm text-blue-600">
+              환영합니다, {auth.profile.full_name}님
+            </span>
+          )}
+        </p>
       </div>
 
       {/* 시스템 통계 */}
@@ -255,21 +321,30 @@ export default function AdminDashboard() {
       <div>
         <h2 className="text-xl font-semibold mb-4">빠른 실행</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
-            <Card 
-              key={index} 
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate(action.href)}
-            >
-              <CardHeader>
-                <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3`}>
-                  <action.icon className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle className="text-lg">{action.title}</CardTitle>
-                <CardDescription>{action.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
+          {quickActions
+            .filter(action => auth.hasPermission(action.permission))
+            .map((action, index) => (
+              <Card 
+                key={index} 
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(action.href)}
+              >
+                <CardHeader>
+                  <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3`}>
+                    <action.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <CardTitle className="text-lg">{action.title}</CardTitle>
+                  <CardDescription>{action.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))
+          }
+          {quickActions.filter(action => auth.hasPermission(action.permission)).length === 0 && (
+            <div className="col-span-full text-center text-gray-500 py-8">
+              <p>사용 가능한 관리 기능이 없습니다.</p>
+              <p className="text-sm mt-1">권한을 확인해 주세요.</p>
+            </div>
+          )}
         </div>
       </div>
 
