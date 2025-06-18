@@ -22,7 +22,7 @@ export default function PatientRegistrationModal({
     primary_diagnosis: '',
     contact_info: {},
     additional_info: {},
-    status: 'active'
+    status: 'inactive'  // 기본값을 inactive로 변경
   })
   
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -86,7 +86,7 @@ export default function PatientRegistrationModal({
                   primary_diagnosis: '',
         contact_info: {},
         additional_info: {},
-          status: 'active'
+          status: 'inactive'  // 기본값을 inactive로 변경
         })
       }
     } catch (err: any) {

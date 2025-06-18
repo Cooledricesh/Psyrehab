@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { getPatientById } from '@/services/patient-management'
 import type { Patient } from '@/services/patient-management'
+import { canEditPatient } from '@/lib/auth-utils'
 
 interface PatientDetailModalProps {
   isOpen: boolean
@@ -19,10 +20,12 @@ export default function PatientDetailModal({
   const [patient, setPatient] = useState<Patient | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [canEdit, setCanEdit] = useState(false)
 
   useEffect(() => {
     if (isOpen && patientId) {
       fetchPatientDetail()
+      checkEditPermission()
     }
   }, [isOpen, patientId])
 
@@ -45,6 +48,16 @@ export default function PatientDetailModal({
       setError(err.message || '환자 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const checkEditPermission = async () => {
+    try {
+      const hasPermission = await canEditPatient(patientId)
+      setCanEdit(hasPermission)
+    } catch (error) {
+      console.error('권한 확인 실패:', error)
+      setCanEdit(false)
     }
   }
 
@@ -161,6 +174,12 @@ export default function PatientDetailModal({
                     <label className="block text-sm font-medium text-gray-500">현재 상태</label>
                     <p className="text-gray-900">{getStatusText(patient.status)}</p>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">담당 사회복지사</label>
+                    <p className="text-gray-900">
+                      {patient.social_worker?.full_name || '미배정'}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -191,9 +210,11 @@ export default function PatientDetailModal({
               <Button variant="outline" onClick={onClose}>
                 닫기
               </Button>
-              <Button onClick={onEdit}>
-                편집
-              </Button>
+              {canEdit && (
+                <Button onClick={onEdit}>
+                  편집
+                </Button>
+              )}
             </div>
           </div>
         ) : (

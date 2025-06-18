@@ -13,6 +13,11 @@ export interface Patient {
   contact_info?: string
   emergency_contact?: string
   hasActiveGoal?: boolean  // 활성 목표 유무 추가
+  primary_social_worker_id?: string  // 담당 사회복지사 ID 추가
+  social_worker?: {  // 담당 사회복지사 정보 추가
+    user_id: string
+    full_name: string
+  }
 }
 
 export interface PatientStats {
@@ -37,16 +42,6 @@ export interface CreatePatientData {
 // 환자 목록 조회
 export const getPatients = async (): Promise<Patient[]> => {
   try {
-    // 개발용 관리자로 로그인 (RLS 정책 때문에 필요)
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: 'admin@psyrehab.dev',
-      password: 'admin123!'
-    })
-    
-    if (signInError) {
-      console.log('⚠️ 관리자 로그인 실패:', signInError.message)
-    }
-
     // 환자 정보와 재활 목표를 함께 조회하여 진단 정보를 찾아보자
     const { data, error } = await supabase
       .from('patients')
@@ -60,6 +55,10 @@ export const getPatients = async (): Promise<Patient[]> => {
           goal_type,
           plan_status,
           status
+        ),
+        social_worker:primary_social_worker_id (
+          user_id,
+          full_name
         )
       `)
       .order('created_at', { ascending: false })
@@ -102,7 +101,9 @@ export const getPatients = async (): Promise<Patient[]> => {
         status: mapPatientStatus(patient.status),
         contact_info: patient.contact_info,
         emergency_contact: patient.emergency_contact,
-        hasActiveGoal: hasActiveGoal
+        hasActiveGoal: hasActiveGoal,
+        primary_social_worker_id: patient.primary_social_worker_id,
+        social_worker: patient.social_worker
       }
     }) || []
   } catch (error) {
@@ -114,16 +115,6 @@ export const getPatients = async (): Promise<Patient[]> => {
 // 환자 생성
 export const createPatient = async (patientData: CreatePatientData): Promise<Patient | null> => {
   try {
-    // 개발용 관리자로 로그인
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: 'admin@psyrehab.dev',
-      password: 'admin123!'
-    })
-    
-    if (signInError) {
-      console.log('⚠️ 관리자 로그인 실패:', signInError.message)
-    }
-
     // 환자 식별번호가 없으면 자동 생성
     if (!patientData.patient_identifier) {
       patientData.patient_identifier = await generatePatientIdentifier()
@@ -141,10 +132,16 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
           ...patientData.additional_info,
           primary_diagnosis: patientData.primary_diagnosis || null
         },
-        status: patientData.status || 'active',
+        status: patientData.status || 'inactive',  // 기본값을 inactive로 변경
         primary_social_worker_id: null, // 나중에 설정 가능
       }])
-      .select()
+      .select(`
+        *,
+        social_worker:primary_social_worker_id (
+          user_id,
+          full_name
+        )
+      `)
       .single()
 
     if (error) {
@@ -304,16 +301,6 @@ const extractDiagnosis = (patient: any): string => {
 // 환자 통계 조회
 export const getPatientStats = async (): Promise<PatientStats> => {
   try {
-    // 개발용 관리자로 로그인
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: 'admin@psyrehab.dev',
-      password: 'admin123!'
-    })
-    
-    if (signInError) {
-      console.log('⚠️ 관리자 로그인 실패:', signInError.message)
-    }
-
     // 모든 환자 조회
     const { data: allPatients, error: allPatientsError } = await supabase
       .from('patients')
@@ -385,16 +372,6 @@ export const getPatientStats = async (): Promise<PatientStats> => {
 // 특정 환자 상세 정보 조회
 export const getPatientById = async (patientId: string): Promise<Patient | null> => {
   try {
-    // 개발용 관리자로 로그인
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: 'admin@psyrehab.dev',
-      password: 'admin123!'
-    })
-    
-    if (signInError) {
-      console.log('⚠️ 관리자 로그인 실패:', signInError.message)
-    }
-
     const { data, error } = await supabase
       .from('patients')
       .select(`
@@ -403,6 +380,10 @@ export const getPatientById = async (patientId: string): Promise<Patient | null>
           title,
           description,
           category_id
+        ),
+        social_worker:primary_social_worker_id (
+          user_id,
+          full_name
         )
       `)
       .eq('id', patientId)
@@ -423,7 +404,9 @@ export const getPatientById = async (patientId: string): Promise<Patient | null>
       registration_date: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       status: mapPatientStatus(data.status),
       contact_info: data.contact_info,
-      emergency_contact: data.emergency_contact
+      emergency_contact: data.emergency_contact,
+      primary_social_worker_id: data.primary_social_worker_id,
+      social_worker: data.social_worker
     }
   } catch (error) {
     console.error('Error in getPatientById:', error)
@@ -465,16 +448,6 @@ const mapPatientStatus = (dbStatus: string): 'active' | 'inactive' | 'completed'
 export const updatePatient = async (patientId: string, patientData: CreatePatientData): Promise<Patient | null> => {
   try {
     console.log('🔄 환자 정보 수정 시작:', patientId, patientData)
-    
-    // 개발용 관리자로 로그인 (기존 패턴과 동일)
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: 'admin@psyrehab.dev',
-      password: 'admin123!'
-    })
-    
-    if (signInError) {
-      console.log('⚠️ 관리자 로그인 실패:', signInError.message)
-    }
 
     // 업데이트할 데이터 준비 (status 제외 - 별도 관리)
     const updateData: any = {}
@@ -544,16 +517,6 @@ export const updatePatientStatus = async (
 ): Promise<Patient | null> => {
   try {
     console.log('🔄 환자 상태 변경 시작:', { patientId, newStatus })
-    
-    // 개발용 관리자로 로그인
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: 'admin@psyrehab.dev',
-      password: 'admin123!'
-    })
-    
-    if (signInError) {
-      console.log('⚠️ 관리자 로그인 실패:', signInError.message)
-    }
 
     const { data, error } = await supabase
       .from('patients')

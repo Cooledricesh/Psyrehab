@@ -14,6 +14,7 @@ import {
   Activity,
   Database,
   UserCog,
+  UserCheck,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -133,9 +134,11 @@ export const Sidebar = () => {
       >
         <div className="h-full flex flex-col">
           <header className="p-4 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-blue-600">
-              PsyRehab
-            </h1>
+            <Link to="/">
+              <h1 className="text-xl font-bold text-blue-600 cursor-pointer hover:text-blue-700 transition-colors">
+                PsyRehab
+              </h1>
+            </Link>
             <p className="text-sm text-gray-600">정신건강 전문가 포털</p>
           </header>
 
@@ -211,6 +214,12 @@ export const Sidebar = () => {
                         icon={<UserCog size={16} />}
                         label="사용자 관리"
                         isActive={location.pathname === '/admin/users'}
+                      />
+                      <SidebarLink
+                        to="/admin/patient-assignment"
+                        icon={<UserCheck size={16} />}
+                        label="환자 배정 관리"
+                        isActive={location.pathname === '/admin/patient-assignment'}
                       />
                       <SidebarLink
                         to="/admin/logs"
