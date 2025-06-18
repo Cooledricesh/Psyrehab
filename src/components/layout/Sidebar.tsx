@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Home,
@@ -9,7 +9,13 @@ import {
   Settings,
   Menu,
   X,
+  Shield,
+  ChevronDown,
+  Activity,
+  Database,
+  UserCog,
 } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 interface SidebarLinkProps {
   to: string
@@ -42,7 +48,56 @@ const SidebarLink = ({ to, icon, label, isActive }: SidebarLinkProps) => {
 export const Sidebar = () => {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false)
+  const [userInfo, setUserInfo] = useState<{ name: string; role: string }>({ name: '사용자', role: '' })
   const sidebarRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    checkUserRole()
+  }, [])
+
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // 관리자 역할 확인
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('role_id')
+        .eq('user_id', user.id)
+        .eq('role_id', 'd7fcf425-85bc-42b4-8806-917ef6939a40')
+        .single()
+
+      setIsAdmin(!!adminRole)
+
+      // 사용자 정보 가져오기
+      if (adminRole) {
+        const { data: adminInfo } = await supabase
+          .from('administrators')
+          .select('full_name')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (adminInfo) {
+          setUserInfo({ name: adminInfo.full_name, role: '관리자' })
+        }
+      } else {
+        const { data: swInfo } = await supabase
+          .from('social_workers')
+          .select('full_name')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (swInfo) {
+          setUserInfo({ name: swInfo.full_name, role: '사회복지사' })
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user role:', error)
+    }
+  }
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen)
@@ -119,13 +174,63 @@ export const Sidebar = () => {
                 label="설정"
                 isActive={location.pathname === '/settings'}
               />
+              
+              {/* 관리자 메뉴 */}
+              {isAdmin && (
+                <>
+                  <li className="my-2 h-px bg-gray-200 mx-4"></li>
+                  <li>
+                    <button
+                      onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                      className="w-full flex items-center justify-between px-6 py-3 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <div className="flex items-center">
+                        <Shield size={18} className="mr-3" />
+                        <span>관리자 메뉴</span>
+                      </div>
+                      <ChevronDown 
+                        size={16} 
+                        className={`transform transition-transform ${adminMenuOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  </li>
+                  {adminMenuOpen && (
+                    <ul className="bg-gray-50 py-1">
+                      <SidebarLink
+                        to="/admin/dashboard"
+                        icon={<Activity size={16} />}
+                        label="관리자 대시보드"
+                        isActive={location.pathname === '/admin/dashboard'}
+                      />
+                      <SidebarLink
+                        to="/admin/users"
+                        icon={<UserCog size={16} />}
+                        label="사용자 관리"
+                        isActive={location.pathname === '/admin/users'}
+                      />
+                      <SidebarLink
+                        to="/admin/logs"
+                        icon={<FileText size={16} />}
+                        label="시스템 로그"
+                        isActive={location.pathname === '/admin/logs'}
+                      />
+                      <SidebarLink
+                        to="/admin/backup-restore"
+                        icon={<Database size={16} />}
+                        label="백업/복원"
+                        isActive={location.pathname === '/admin/backup-restore'}
+                      />
+                    </ul>
+                  )}
+                </>
+              )}
             </ul>
           </nav>
 
           <footer className="p-4 border-t border-gray-200">
             <div className="text-center">
-              <p className="font-medium text-sm">김사회님</p>
-              <p className="text-xs text-gray-600">마루</p>
+              <p className="font-medium text-sm">{userInfo.name}님</p>
+              <p className="text-xs text-gray-600">{userInfo.role}</p>
             </div>
           </footer>
         </div>

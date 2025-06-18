@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Eye, EyeOff, Heart } from 'lucide-react'
+import { Eye, EyeOff, Heart, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
@@ -15,7 +15,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    // 회원가입 성공 메시지 확인
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message)
+      // 상태 초기화
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,6 +125,14 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
+
+              {/* 성공 메시지 */}
+              {successMessage && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-md flex items-start gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-green-600">{successMessage}</p>
+                </div>
+              )}
 
               {/* 에러 메시지 */}
               {error && (

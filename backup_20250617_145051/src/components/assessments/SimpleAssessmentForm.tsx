@@ -1,0 +1,1 @@
+export { SimpleAssessmentForm } from './SimpleAssessmentForm'

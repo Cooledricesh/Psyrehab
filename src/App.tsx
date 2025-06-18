@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { SimpleDashboard } from '@/components/dashboard/SimpleDashboard'
 import { SimpleProtectedRoute } from '@/components/auth/SimpleProtectedRoute'
+import { AdminProtectedRoute } from '@/components/auth/AdminProtectedRoute'
 
 // 실제 페이지 컴포넌트들
 import Home from '@/pages/Home'
@@ -15,9 +16,12 @@ import PatientManagement from '@/pages/PatientManagement'
 import { SystemLogs } from '@/pages/admin/SystemLogs'
 import { BackupRestore } from '@/pages/admin/BackupRestore'
 import AnnouncementsManagement from '@/pages/admin/AnnouncementsManagement'
+import AdminDashboard from '@/pages/admin/AdminDashboard'
+import UserManagement from '@/pages/admin/UserManagement'
 
 // 인증 페이지 컴포넌트
 import LoginPage from '@/pages/auth/LoginPage'
+import SignUpPage from '@/pages/auth/SignUpPage'
 
 // QueryClient 인스턴스 생성
 const queryClient = new QueryClient({
@@ -119,6 +123,7 @@ function App() {
         <Routes>
           {/* 인증 관련 라우트 (레이아웃 없음) */}
           <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/sign-up" element={<SignUpPage />} />
           
           {/* 메인 애플리케이션 라우트 (레이아웃 포함 + 인증 보호) */}
           <Route path="/*" element={
@@ -136,9 +141,14 @@ function App() {
                       <Route path="/progress-tracking" element={<ProgressTracking />} />
                       <Route path="/reports" element={<Reports />} />
                       <Route path="/settings" element={<Settings />} />
-                      <Route path="/admin/logs" element={<SystemLogs />} />
-                      <Route path="/admin/backup-restore" element={<BackupRestore />} />
-                      <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
+                      
+                      {/* 관리자 전용 라우트 */}
+                      <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+                      <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+                      <Route path="/admin/users" element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
+                      <Route path="/admin/logs" element={<AdminProtectedRoute><SystemLogs /></AdminProtectedRoute>} />
+                      <Route path="/admin/backup-restore" element={<AdminProtectedRoute><BackupRestore /></AdminProtectedRoute>} />
+                      <Route path="/admin/announcements" element={<AdminProtectedRoute><AnnouncementsManagement /></AdminProtectedRoute>} />
                     </Routes>
                   </main>
                 </div>

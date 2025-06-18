@@ -19,9 +19,7 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
       <div className="mt-6 text-sm text-gray-500">
         평가 데이터를 저장하고 AI 분석을 요청 중입니다. 잠시만 기다려주세요.
       </div>
-      <div className="mt-4 text-xs text-gray-400">
-        폴링 시도: {pollingAttempts}/{MAX_POLLING_ATTEMPTS}
-      </div>
+
       
       {pollingAttempts >= MAX_POLLING_ATTEMPTS && (
         <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
