@@ -150,8 +150,8 @@ export function ServiceRecordForm({
         onSuccess?.(result)
         reset()
       }
-    } catch (error) {
-      console.error('서비스 레코드 저장 실패:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       setIsSubmitting(false)
     }

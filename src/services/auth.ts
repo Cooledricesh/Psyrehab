@@ -410,13 +410,13 @@ export class AuthService {
       const { data: { user }, error } = await supabase.auth.getUser()
       
       if (error) {
-        console.error('Error fetching current user:', error.message)
+        console.error("Error occurred")
         return null
       }
 
       return user
-    } catch (error) {
-      console.error('Failed to get current user:', error)
+    } catch {
+      console.error("Error occurred")
       return null
     }
   }
@@ -427,13 +427,13 @@ export class AuthService {
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (error) {
-        console.error('Error fetching current session:', error.message)
+        console.error("Error occurred")
         return null
       }
 
       return session
-    } catch (error) {
-      console.error('Failed to get current session:', error)
+    } catch {
+      console.error("Error occurred")
       return null
     }
   }
@@ -709,13 +709,13 @@ export class AuthService {
         .single()
 
       if (error || !data) {
-        console.error('Error fetching role ID:', error?.message)
+        console.error("Error occurred")
         return null
       }
 
       return data.id
-    } catch (error) {
-      console.error('Failed to get role ID:', error)
+    } catch {
+      console.error("Error occurred")
       return null
     }
   }
@@ -814,8 +814,8 @@ export class AuthService {
 
       // Note: We can't delete the auth user from client side
       // This would need to be handled by a server function or admin action
-    } catch (error) {
-      console.error('Failed to cleanup after failed signup:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 }

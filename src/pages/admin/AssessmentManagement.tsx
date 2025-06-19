@@ -40,8 +40,8 @@ export default function AssessmentManagement() {
       setIsLoading(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
       // TODO: 실제 API 호출
-    } catch (error) {
-      console.error('Failed to load assessment data:', error);
+    } catch {
+      console.error("Error occurred");
     } finally {
       setIsLoading(false);
     }

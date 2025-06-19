@@ -61,7 +61,7 @@ export function useCreatePatient() {
       )
     },
     onError: (error: Error) => {
-      console.error('환자 등록 실패:', error.message)
+      console.error("Error occurred")
     },
   })
 }
@@ -86,7 +86,7 @@ export function useUpdatePatient() {
       )
     },
     onError: (error: Error) => {
-      console.error('환자 정보 수정 실패:', error.message)
+      console.error("Error occurred")
     },
   })
 }
@@ -106,7 +106,7 @@ export function useDeletePatient() {
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.stats() })
     },
     onError: (error: Error) => {
-      console.error('환자 삭제 실패:', error.message)
+      console.error("Error occurred")
     },
   })
 }
@@ -125,7 +125,7 @@ export function useAssignSocialWorker() {
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.lists() })
     },
     onError: (error: Error) => {
-      console.error('사회복지사 배정 실패:', error.message)
+      console.error("Error occurred")
     },
   })
 }
@@ -146,7 +146,7 @@ export function useUpdatePatientStatus() {
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.stats() })
     },
     onError: (error: Error) => {
-      console.error('환자 상태 변경 실패:', error.message)
+      console.error("Error occurred")
     },
   })
 }

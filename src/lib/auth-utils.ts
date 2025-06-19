@@ -24,8 +24,8 @@ export const isCurrentUserAdmin = async (): Promise<boolean> => {
       .maybeSingle()
 
     return !!data && !error
-  } catch (error) {
-    console.error('Error checking admin status:', error)
+  } catch {
+    console.error("Error occurred")
     return false
   }
 }
@@ -47,8 +47,8 @@ export const isAssignedWorker = async (patientId: string): Promise<boolean> => {
     if (error || !data) return false
 
     return data.primary_social_worker_id === user.id
-  } catch (error) {
-    console.error('Error checking assigned worker:', error)
+  } catch {
+    console.error("Error occurred")
     return false
   }
 }

@@ -5,7 +5,6 @@ import {
   useAIRecommendationByAssessment,
   useUpdateAIRecommendationStatus,
   useGenerateGoalsFromRecommendation,
-  type AIRecommendation,
   type ParsedGoal
 } from '@/hooks/useAIRecommendations'
 
@@ -83,8 +82,8 @@ export function AIRecommendationDisplay({
         isActive: true,
         appliedBy: patientId // 현재는 환자 ID를 사용, 실제로는 로그인한 사용자 ID
       })
-    } catch (error) {
-      console.error('Failed to approve recommendation:', error)
+    } catch {
+      console.error("Error occurred")
       alert('추천 승인 중 오류가 발생했습니다.')
     }
   }
@@ -105,8 +104,8 @@ export function AIRecommendationDisplay({
       onGoalsGenerated?.()
       
       alert(`${result.goals.length}개의 재활 목표가 생성되었습니다!`)
-    } catch (error) {
-      console.error('Failed to generate goals:', error)
+    } catch {
+      console.error("Error occurred")
       alert('목표 생성 중 오류가 발생했습니다.')
     }
   }
@@ -118,8 +117,8 @@ export function AIRecommendationDisplay({
         isActive: false
       })
       alert('AI 추천이 거절되었습니다.')
-    } catch (error) {
-      console.error('Failed to reject recommendation:', error)
+    } catch {
+      console.error("Error occurred")
       alert('추천 거절 중 오류가 발생했습니다.')
     }
   }

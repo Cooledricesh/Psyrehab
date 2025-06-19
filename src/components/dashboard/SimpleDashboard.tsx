@@ -18,8 +18,8 @@ export function SimpleDashboard() {
       setError(null)
       const dashboardData = await getDashboardStats()
       setStats(dashboardData)
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error)
+    } catch {
+      console.error("Error occurred")
       setError('대시보드 데이터를 불러오는데 실패했습니다.')
     } finally {
       setIsLoading(false)

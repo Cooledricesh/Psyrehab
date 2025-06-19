@@ -77,13 +77,13 @@ export async function POST(request: NextRequest) {
       message: 'Invalid webhook data'
     }, { status: 400 })
 
-  } catch (error) {
-    console.error('Webhook processing error:', error)
+  } catch {
+    console.error("Error occurred")
     
     return NextResponse.json(
       { 
         error: 'Internal server error', 
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: ""instanceOf Error ? "Error" : 'Unknown error'
       },
       { status: 500 }
     )

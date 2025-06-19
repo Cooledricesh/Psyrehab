@@ -135,7 +135,7 @@ export const useCreateAssessment = () => {
       )
     },
     onError: (error) => {
-      console.error('Failed to create assessment:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -161,7 +161,7 @@ export const useUpdateAssessment = () => {
       )
     },
     onError: (error) => {
-      console.error('Failed to update assessment:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -181,7 +181,7 @@ export const useDeleteAssessment = () => {
       queryClient.removeQueries({ queryKey: assessmentKeys.detail(deletedId) })
     },
     onError: (error) => {
-      console.error('Failed to delete assessment:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -205,7 +205,7 @@ export const useBulkDeleteAssessments = () => {
       })
     },
     onError: (error) => {
-      console.error('Failed to bulk delete assessments:', error)
+      console.error("Error occurred")
     }
   })
 }

@@ -64,7 +64,7 @@ export const getPatients = async (): Promise<Patient[]> => {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching patients:', error)
+      console.error("Error occurred")
       return []
     }
 
@@ -106,8 +106,8 @@ export const getPatients = async (): Promise<Patient[]> => {
         social_worker: patient.social_worker
       }
     }) || []
-  } catch (error) {
-    console.error('Error in getPatients:', error)
+  } catch {
+    console.error("Error occurred")
     return []
   }
 }
@@ -145,7 +145,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
       .single()
 
     if (error) {
-      console.error('Error creating patient:', error)
+      console.error("Error occurred")
       throw new Error(error.message)
     }
 
@@ -164,8 +164,8 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
       contact_info: data.contact_info,
       emergency_contact: data.emergency_contact
     }
-  } catch (error) {
-    console.error('Error in createPatient:', error)
+  } catch {
+    console.error("Error occurred")
     throw error
   }
 }
@@ -358,8 +358,8 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       inactivePatients,
       completedPatients
     }
-  } catch (error) {
-    console.error('Error in getPatientStats:', error)
+  } catch {
+    console.error("Error occurred")
     return {
       totalPatients: 0,
       activePatients: 0,
@@ -390,7 +390,7 @@ export const getPatientById = async (patientId: string): Promise<Patient | null>
       .single()
 
     if (error || !data) {
-      console.error('Error fetching patient:', error)
+      console.error("Error occurred")
       return null
     }
 
@@ -408,8 +408,8 @@ export const getPatientById = async (patientId: string): Promise<Patient | null>
       primary_social_worker_id: data.primary_social_worker_id,
       social_worker: data.social_worker
     }
-  } catch (error) {
-    console.error('Error in getPatientById:', error)
+  } catch {
+    console.error("Error occurred")
     return null
   }
 }
@@ -485,7 +485,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
       .single()
 
     if (error) {
-      console.error('❌ 환자 정보 수정 실패:', error)
+      console.error("Error occurred")
       throw new Error(error.message)
     }
 
@@ -504,8 +504,8 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
       contact_info: data.contact_info,
       emergency_contact: data.emergency_contact
     }
-  } catch (error) {
-    console.error('❌ updatePatient 함수 실행 실패:', error)
+  } catch {
+    console.error("Error occurred")
     throw error
   }
 }
@@ -533,7 +533,7 @@ export const updatePatientStatus = async (
       .single()
 
     if (error) {
-      console.error('❌ 환자 상태 변경 실패:', error)
+      console.error("Error occurred")
       throw new Error(error.message)
     }
 
@@ -552,8 +552,8 @@ export const updatePatientStatus = async (
       contact_info: data.contact_info,
       emergency_contact: data.emergency_contact
     }
-  } catch (error) {
-    console.error('❌ updatePatientStatus 함수 실행 실패:', error)
+  } catch {
+    console.error("Error occurred")
     throw error
   }
 }

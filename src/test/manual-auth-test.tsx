@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { AuthService } from '../services/auth'
 
 // Manual testing component for authentication system
 export const ManualAuthTest: React.FC = () => {

@@ -7,7 +7,6 @@ import type {
   UserRole, 
   Permission 
 } from '@/types/auth'
-import type { User, Session } from '@supabase/supabase-js'
 import { 
   AuthService, 
   onAuthStateChange, 
@@ -82,8 +81,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const profile = await getUserProfile(session.user.id)
         dispatch({ type: 'SET_PROFILE', payload: profile })
       }
-    } catch (error) {
-      console.error('Failed to initialize auth:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       dispatch({ type: 'SET_INITIALIZED', payload: true })
     }
@@ -104,8 +103,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         dispatch({ type: 'SET_USER', payload: null })
         dispatch({ type: 'SET_PROFILE', payload: null })
       }
-    } catch (error) {
-      console.error('Failed to refresh auth state:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }, [])
 
@@ -177,8 +176,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Reset state
       dispatch({ type: 'RESET' })
-    } catch (error) {
-      console.error('Sign out error:', error)
+    } catch {
+      console.error("Error occurred")
       // Reset state even if sign out fails
       dispatch({ type: 'RESET' })
     }
@@ -266,8 +265,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             try {
               const profile = await getUserProfile(session.user.id)
               dispatch({ type: 'SET_PROFILE', payload: profile })
-            } catch (error) {
-              console.error('Failed to get user profile:', error)
+            } catch {
+              console.error("Error occurred")
             }
           }
           break
@@ -289,8 +288,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             try {
               const profile = await getUserProfile(session.user.id)
               dispatch({ type: 'SET_PROFILE', payload: profile })
-            } catch (error) {
-              console.error('Failed to refresh user profile:', error)
+            } catch {
+              console.error("Error occurred")
             }
           }
           break

@@ -16,13 +16,13 @@ export const getTotalPatients = async (): Promise<number> => {
       .select('*', { count: 'exact', head: true })
     
     if (error) {
-      console.error('Error fetching patient count:', error)
+      console.error("Error occurred")
       return 0
     }
     
     return count || 0
-  } catch (error) {
-    console.error('Error in getTotalPatients:', error)
+  } catch {
+    console.error("Error occurred")
     return 0
   }
 }
@@ -36,13 +36,13 @@ export const getActiveGoals = async (): Promise<number> => {
       .in('status', ['pending', 'in_progress'])
     
     if (error) {
-      console.error('Error fetching active goals count:', error)
+      console.error("Error occurred")
       return 0
     }
     
     return count || 0
-  } catch (error) {
-    console.error('Error in getActiveGoals:', error)
+  } catch {
+    console.error("Error occurred")
     return 0
   }
 }
@@ -64,13 +64,13 @@ export const getThisWeekSessions = async (): Promise<number> => {
       .gte('service_date_time', mondayDate.toISOString())
     
     if (error) {
-      console.error('Error fetching this week sessions:', error)
+      console.error("Error occurred")
       return 0
     }
     
     return count || 0
-  } catch (error) {
-    console.error('Error in getThisWeekSessions:', error)
+  } catch {
+    console.error("Error occurred")
     return 0
   }
 }
@@ -104,8 +104,8 @@ export const getCompletionRate = async (): Promise<number> => {
     }
     
     return Math.round(((completedGoals || 0) / totalGoals) * 100)
-  } catch (error) {
-    console.error('Error in getCompletionRate:', error)
+  } catch {
+    console.error("Error occurred")
     return 0
   }
 }
@@ -126,8 +126,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       thisWeekSessions,
       completionRate
     }
-  } catch (error) {
-    console.error('Error in getDashboardStats:', error)
+  } catch {
+    console.error("Error occurred")
     return {
       totalPatients: 0,
       activeGoals: 0,

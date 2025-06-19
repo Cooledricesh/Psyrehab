@@ -22,8 +22,8 @@ export const Header = () => {
             initial: user.email?.charAt(0).toUpperCase() || 'U'
           })
         }
-      } catch (error) {
-        console.error('Failed to load user info:', error)
+      } catch {
+        console.error("Error occurred")
       }
     }
 
@@ -34,12 +34,12 @@ export const Header = () => {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error('Logout error:', error)
+        console.error("Error occurred")
       } else {
         navigate('/auth/login')
       }
-    } catch (error) {
-      console.error('Logout error:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

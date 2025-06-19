@@ -49,8 +49,8 @@ export function useAssessmentForm(patientId?: string) {
 
       if (error) throw error
       setPatient(data)
-    } catch (error) {
-      console.error('Error loading patient:', error)
+    } catch {
+      console.error("Error occurred")
       toast({
         title: '환자 정보 로딩 실패',
         description: '환자 정보를 불러오는 중 오류가 발생했습니다.',
@@ -167,8 +167,8 @@ export function useAssessmentForm(patientId?: string) {
       setShouldPoll(true)
       setPollingProgress({ current: 0, max: POLLING_CONFIG.maxAttempts })
 
-    } catch (error) {
-      console.error('Error submitting assessment:', error)
+    } catch {
+      console.error("Error occurred")
       toast({
         title: '제출 실패',
         description: '질문지 제출 중 오류가 발생했습니다.',

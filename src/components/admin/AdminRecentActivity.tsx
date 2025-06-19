@@ -153,8 +153,8 @@ export const AdminRecentActivity: React.FC = () => {
       
       const mockData = generateMockActivities();
       setActivities(mockData);
-    } catch (error) {
-      console.error('Failed to load activities:', error);
+    } catch {
+      console.error("Error occurred");
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

@@ -53,7 +53,7 @@ export const useAssessmentSave = ({
       onSuccess(data);
     },
     onError: (error: Error) => {
-      console.error('❌ 평가 저장 mutation 실패:', error);
+      console.error("Error occurred");
       onError(error);
     },
   });

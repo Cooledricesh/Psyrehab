@@ -96,7 +96,7 @@ export const useRealtimeUpdates = ({
           setConnectionStatus('disconnected');
         }
       });
-    } catch (error) {
+    } catch {
       if (onError) {
         onError(error as Error);
       }
@@ -223,7 +223,7 @@ export const useDashboardRealtime = (onUpdate?: (payload: any) => void) => {
     subscriptions: dashboardSubscriptions,
     onUpdate,
     onError: (error) => {
-      console.error('Dashboard realtime error:', error);
+      console.error("Error occurred");
     },
     autoReconnect: true,
     reconnectInterval: 3000,

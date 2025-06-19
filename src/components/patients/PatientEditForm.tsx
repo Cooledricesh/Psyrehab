@@ -16,8 +16,6 @@ import {
   X, 
   User, 
   Phone, 
-  Mail, 
-  MapPin, 
   Heart,
   AlertCircle,
   CheckCircle2
@@ -116,8 +114,8 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
       })
 
       onSuccess?.()
-    } catch (error) {
-      console.error('Failed to update patient:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

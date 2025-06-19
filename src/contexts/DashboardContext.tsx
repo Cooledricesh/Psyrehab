@@ -366,8 +366,8 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
         };
 
         dispatch({ type: 'SET_STATS', payload: stats });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
+      } catch {
+        console.error("Error occurred");
         dispatch({ type: 'SET_ERROR', payload: { stats: 'Failed to fetch stats' } });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: { stats: false } });
@@ -381,7 +381,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       try {
         // 임시로 빈 배열 반환 (나중에 실제 환자 데이터 구현)
         dispatch({ type: 'SET_PATIENTS', payload: [] });
-      } catch (error) {
+      } catch {
         dispatch({ type: 'SET_ERROR', payload: { patients: 'Failed to fetch patients' } });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: { patients: false } });
@@ -395,7 +395,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       try {
         // 임시로 빈 배열 반환 (나중에 실제 목표 데이터 구현)
         dispatch({ type: 'SET_GOALS', payload: [] });
-      } catch (error) {
+      } catch {
         dispatch({ type: 'SET_ERROR', payload: { goals: 'Failed to fetch goals' } });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: { goals: false } });
@@ -409,7 +409,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
       try {
         // 임시로 빈 배열 반환 (나중에 실제 세션 데이터 구현)
         dispatch({ type: 'SET_SESSIONS', payload: [] });
-      } catch (error) {
+      } catch {
         dispatch({ type: 'SET_ERROR', payload: { sessions: 'Failed to fetch sessions' } });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: { sessions: false } });
@@ -445,7 +445,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
           },
         };
         dispatch({ type: 'SET_CHART_DATA', payload: chartData });
-      } catch (error) {
+      } catch {
         dispatch({ type: 'SET_ERROR', payload: { charts: 'Failed to fetch chart data' } });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: { charts: false } });

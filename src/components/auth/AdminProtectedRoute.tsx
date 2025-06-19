@@ -35,8 +35,8 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
         .single()
 
       setIsAdmin(!!userRole)
-    } catch (error) {
-      console.error('Admin check error:', error)
+    } catch {
+      console.error("Error occurred")
       setIsAdmin(false)
     } finally {
       setIsLoading(false)

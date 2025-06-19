@@ -145,8 +145,8 @@ export const GoalForm: React.FC<GoalFormProps> = ({
       await onSubmit(data);
       onClose();
       form.reset();
-    } catch (error) {
-      console.error('Form submission error:', error);
+    } catch {
+      console.error("Error occurred");
     }
   };
 

@@ -229,7 +229,7 @@ export const ComparisonExport: React.FC<ComparisonExportProps> = ({
     try {
       const result = await simulateExport()
       setExportResult(result)
-    } catch (error) {
+    } catch {
       setExportResult({
         success: false,
         message: '내보내기 중 오류가 발생했습니다.'

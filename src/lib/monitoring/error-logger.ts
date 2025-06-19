@@ -89,7 +89,7 @@ class ErrorLogger {
     // 콘솔 출력 (개발 환경)
     if (process.env.NODE_ENV === 'development') {
       console.group(`🚨 Error Log [${logEntry.id}]`)
-      console.error('Error:', error)
+      console.error("Error occurred")
       console.info('Context:', context)
       console.info('Metadata:', metadata)
       console.info('Full Log Entry:', logEntry)
@@ -307,7 +307,7 @@ class ErrorLogger {
         const user = JSON.parse(userStr)
         return user.id
       }
-    } catch (error) {
+    } catch {
       // 무시
     }
     return undefined
@@ -359,7 +359,7 @@ class ErrorLogger {
     try {
       const recentLogs = this.logs.slice(-100) // 최근 100개만 저장
       localStorage.setItem('psyrehab_error_logs', JSON.stringify(recentLogs))
-    } catch (error) {
+    } catch {
       // 로컬 스토리지 오류 무시
     }
   }
@@ -510,7 +510,7 @@ export function measurePerformance<T extends (...args: any[]) => any>(
       logPerformance(context, duration, { args, success: true })
       return result
       
-    } catch (error) {
+    } catch {
       const duration = performance.now() - start
       logPerformance(context, duration, { args, success: false, error })
       throw error

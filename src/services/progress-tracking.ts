@@ -95,8 +95,8 @@ export const getProgressStats = async (): Promise<ProgressStats> => {
       participationRate,
       trend
     }
-  } catch (error) {
-    console.error('Error in getProgressStats:', error)
+  } catch {
+    console.error("Error occurred")
     return {
       averageProgress: 0,
       achievementRate: 0,
@@ -127,7 +127,7 @@ export const getPatientProgress = async (): Promise<PatientProgress[]> => {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching patient progress:', error)
+      console.error("Error occurred")
       return []
     }
 
@@ -152,8 +152,8 @@ export const getPatientProgress = async (): Promise<PatientProgress[]> => {
         status: goal.status
       }
     }) || []
-  } catch (error) {
-    console.error('Error in getPatientProgress:', error)
+  } catch {
+    console.error("Error occurred")
     return []
   }
 }
@@ -184,7 +184,7 @@ export const getWeeklyActivities = async (): Promise<WeeklyActivity[]> => {
       .order('service_date_time', { ascending: true })
 
     if (error) {
-      console.error('Error fetching weekly activities:', error)
+      console.error("Error occurred")
       return []
     }
 
@@ -211,8 +211,8 @@ export const getWeeklyActivities = async (): Promise<WeeklyActivity[]> => {
     })
 
     return Object.values(activitiesByDate)
-  } catch (error) {
-    console.error('Error in getWeeklyActivities:', error)
+  } catch {
+    console.error("Error occurred")
     return []
   }
 }
@@ -320,8 +320,8 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     const priorityOrder = { high: 3, medium: 2, low: 1 }
     return alerts.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority])
     
-  } catch (error) {
-    console.error('Error in getProgressAlerts:', error)
+  } catch {
+    console.error("Error occurred")
     return []
   }
 }
@@ -342,8 +342,8 @@ export const getAllProgressData = async () => {
       weeklyActivities,
       alerts
     }
-  } catch (error) {
-    console.error('Error in getAllProgressData:', error)
+  } catch {
+    console.error("Error occurred")
     return {
       stats: {
         averageProgress: 0,

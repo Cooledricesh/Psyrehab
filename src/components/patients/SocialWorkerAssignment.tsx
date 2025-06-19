@@ -41,8 +41,8 @@ export function SocialWorkerAssignment({ patient, onAssignmentChange }: SocialWo
       })
       setSelectedSocialWorkerId('')
       onAssignmentChange?.()
-    } catch (error) {
-      console.error('Failed to assign social worker:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 
@@ -50,8 +50,8 @@ export function SocialWorkerAssignment({ patient, onAssignmentChange }: SocialWo
     try {
       await unassignMutation.mutateAsync(patient.id)
       onAssignmentChange?.()
-    } catch (error) {
-      console.error('Failed to unassign social worker:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

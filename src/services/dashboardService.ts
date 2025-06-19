@@ -6,8 +6,8 @@ export const getPatientCount = async (): Promise<number> => {
     const { data, error } = await supabase.from('patients').select('id');
     if (error) throw error;
     return data?.length || 0;
-  } catch (error) {
-    console.error('Error fetching patient count:', error);
+  } catch {
+    console.error("Error occurred");
     return 0;
   }
 };
@@ -18,8 +18,8 @@ export const getActiveGoalsCount = async (): Promise<number> => {
     const { data, error } = await supabase.from('goals').select('id').eq('status', 'in_progress');
     if (error) throw error;
     return data?.length || 0;
-  } catch (error) {
-    console.error('Error fetching active goals count:', error);
+  } catch {
+    console.error("Error occurred");
     return 0;
   }
 };
@@ -79,8 +79,8 @@ export class DashboardService {
         data: stats,
         success: true,
       };
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+    } catch {
+      console.error("Error occurred");
       return {
         data: this.getMockStats(),
         success: false,
@@ -120,8 +120,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch (error) {
-      console.error('Error fetching patients:', error);
+    } catch {
+      console.error("Error occurred");
       // Return mock data on error
       return {
         data: {
@@ -168,8 +168,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch (error) {
-      console.error('Error fetching goals:', error);
+    } catch {
+      console.error("Error occurred");
       return {
         data: {
           data: this.getMockGoals(),
@@ -211,8 +211,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
+    } catch {
+      console.error("Error occurred");
       return {
         data: {
           data: this.getMockSessions(),
@@ -238,8 +238,8 @@ export class DashboardService {
         data: chartData,
         success: true,
       };
-    } catch (error) {
-      console.error('Error fetching chart data:', error);
+    } catch {
+      console.error("Error occurred");
       return {
         data: this.getMockChartData(),
         success: false,
@@ -265,8 +265,8 @@ export class DashboardService {
         data: data || [],
         success: true,
       };
-    } catch (error) {
-      console.error('Error fetching progress data:', error);
+    } catch {
+      console.error("Error occurred");
       return {
         data: this.getMockProgressData(patientId, goalId),
         success: false,

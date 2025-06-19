@@ -217,8 +217,8 @@ const AnnouncementsManagement: React.FC = () => {
       }));
       
       setAnnouncements(convertedAnnouncements);
-    } catch (error) {
-      console.error('데이터 로드 오류:', error);
+    } catch {
+      console.error("Error occurred");
       // 오류 시 기본 데이터 유지
     } finally {
       setLoading(false);
@@ -242,8 +242,8 @@ const AnnouncementsManagement: React.FC = () => {
         totalViews: statsData.totalViews,
         critical: statsData.byPriority.critical || 0
       });
-    } catch (error) {
-      console.error('통계 로드 오류:', error);
+    } catch {
+      console.error("Error occurred");
     }
   };
 
@@ -323,8 +323,8 @@ const AnnouncementsManagement: React.FC = () => {
       setEditingAnnouncement(null);
       setIsModalOpen(false);
       
-    } catch (error) {
-      console.error('공지사항 처리 오류:', error);
+    } catch {
+      console.error("Error occurred");
       alert('공지사항 처리 중 오류가 발생했습니다.');
       
       if (!editingAnnouncement) {
@@ -386,9 +386,9 @@ const AnnouncementsManagement: React.FC = () => {
         setAnnouncements(announcements.filter(a => a.id !== id));
         alert('공지사항이 삭제되었습니다. (로컬 삭제)');
       }
-    } catch (error) {
-      console.error('삭제 오류:', error);
-      alert('삭제 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'));
+    } catch {
+      console.error("Error occurred");
+      alert('삭제 중 오류가 발생했습니다');
       // 오류 시 기존 방식으로 폴백
       setAnnouncements(announcements.filter(a => a.id !== id));
       alert('공지사항이 삭제되었습니다. (로컬 삭제)');
@@ -418,8 +418,8 @@ const AnnouncementsManagement: React.FC = () => {
         await announcementService.incrementViews(announcement.dbId);
         // 조회수 증가 후 통계 새로고침
         await loadStats();
-      } catch (error) {
-        console.error('조회수 증가 오류:', error);
+      } catch {
+        console.error("Error occurred");
         // 조회수 증가 실패해도 계속 진행
       }
     }

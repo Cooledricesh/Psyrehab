@@ -77,7 +77,7 @@ export const useAIProcessing = ({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('서버 응답 오류:', errorText);
+        console.error("Error occurred");
         throw new Error(`서버 오류: ${response.status} - ${errorText}`);
       }
 
@@ -91,7 +91,7 @@ export const useAIProcessing = ({
       startPolling(data.assessmentId);
     },
     onError: (error) => {
-      console.error('❌ AI 추천 요청 실패:', error);
+      console.error("Error occurred");
       setIsProcessing(false);
     }
   });
@@ -113,7 +113,7 @@ export const useAIProcessing = ({
         .maybeSingle();
 
       if (error) {
-        console.error('폴링 중 오류:', error);
+        console.error("Error occurred");
         return;
       }
 

@@ -76,8 +76,8 @@ export function UserSettings({ onSettingsChange, className = '' }: UserSettingsP
           const parsed = JSON.parse(savedSettings)
           setSettings({ ...defaultSettings, ...parsed })
         }
-      } catch (error) {
-        console.error('Failed to load user settings:', error)
+      } catch {
+        console.error("Error occurred")
       } finally {
         setIsLoading(false)
       }
@@ -111,8 +111,8 @@ export function UserSettings({ onSettingsChange, className = '' }: UserSettingsP
       
       setHasChanges(false)
       onSettingsChange?.(settings)
-    } catch (error) {
-      console.error('Failed to save settings:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       setIsSaving(false)
     }
@@ -581,8 +581,8 @@ export function useUserSettings() {
         try {
           const parsed = JSON.parse(savedSettings)
           setSettings({ ...defaultSettings, ...parsed })
-        } catch (error) {
-          console.error('Failed to load user settings:', error)
+        } catch {
+          console.error("Error occurred")
         }
       }
     }
@@ -596,8 +596,8 @@ export function useUserSettings() {
     
     try {
       localStorage.setItem(`user_settings_${profile.user_id}`, JSON.stringify(newSettings))
-    } catch (error) {
-      console.error('Failed to save setting:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

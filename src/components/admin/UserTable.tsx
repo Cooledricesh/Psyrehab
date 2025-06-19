@@ -7,7 +7,6 @@ import {
   Edit2, 
   Trash2, 
   Eye, 
-  MoreHorizontal,
   ChevronUp,
   ChevronDown,
   CheckCircle,

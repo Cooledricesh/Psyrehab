@@ -55,8 +55,8 @@ export default function PatientDetailModal({
     try {
       const hasPermission = await canEditPatient(patientId)
       setCanEdit(hasPermission)
-    } catch (error) {
-      console.error('권한 확인 실패:', error)
+    } catch {
+      console.error("Error occurred")
       setCanEdit(false)
     }
   }

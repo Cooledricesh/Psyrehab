@@ -142,8 +142,8 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
 
       const result = await createPatientMutation.mutateAsync(patientData)
       onSuccess?.(result)
-    } catch (error) {
-      console.error('환자 등록 실패:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

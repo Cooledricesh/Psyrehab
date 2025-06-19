@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (fetchError || !assessment) {
-      console.error('Assessment fetch error:', fetchError)
+      console.error("Error occurred")
       return NextResponse.json(
         { error: 'Assessment not found', details: fetchError?.message },
         { status: 404 }
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       })
 
     } catch (n8nError) {
-      console.error('N8N webhook error:', n8nError)
+      console.error("Error occurred")
       
       // 실패 시 상태를 다시 되돌림
       await supabase
@@ -192,13 +192,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-  } catch (error) {
-    console.error('API processing error:', error)
+  } catch {
+    console.error("Error occurred")
     
     return NextResponse.json(
       { 
         error: 'Internal server error', 
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: ""instanceOf Error ? "Error" : 'Unknown error'
       },
       { status: 500 }
     )
@@ -241,13 +241,13 @@ export async function GET(request: NextRequest) {
       recommendationId: assessment.ai_recommendation_id
     })
 
-  } catch (error) {
-    console.error('Status check error:', error)
+  } catch {
+    console.error("Error occurred")
     
     return NextResponse.json(
       { 
         error: 'Internal server error', 
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: ""instanceOf Error ? "Error" : 'Unknown error'
       },
       { status: 500 }
     )

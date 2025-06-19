@@ -173,8 +173,8 @@ export async function runAssessmentIntegrationTest() {
       success: true,
       message: 'Assessment system data storage and retrieval integration test passed'
     }
-  } catch (error) {
-    console.error('❌ Integration test failed:', error)
+  } catch {
+    console.error("Error occurred")
     
     // Cleanup on failure
     if (createdAssessmentId) {

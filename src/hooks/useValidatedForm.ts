@@ -97,8 +97,8 @@ export function useValidatedForm<T extends FieldValues>({
         }
         return false
       }
-    } catch (error) {
-      console.error('Field validation error:', error)
+    } catch {
+      console.error("Error occurred")
       return false
     }
   }, [schema, form])
@@ -123,8 +123,8 @@ export function useValidatedForm<T extends FieldValues>({
         })
         return false
       }
-    } catch (error) {
-      console.error('Form validation error:', error)
+    } catch {
+      console.error("Error occurred")
       return false
     }
   }, [schema, form, clearErrors])
@@ -160,7 +160,7 @@ export function useValidatedForm<T extends FieldValues>({
         console.log('Form submitted successfully')
       }
 
-    } catch (error) {
+    } catch {
       const appError = parseError(error)
       setSubmitError(appError)
       
@@ -259,8 +259,8 @@ export function useMultiStepValidation<T extends FieldValues>(
       })
 
       return isValid
-    } catch (error) {
-      console.error(`Step ${stepIndex} validation error:`, error)
+    } catch {
+      console.error("Error occurred")
       return false
     }
   }, [steps])
@@ -318,8 +318,8 @@ export function useAsyncValidation<T>(
       setIsValid(result)
       setLastValidatedValue(value)
       return result
-    } catch (error) {
-      console.error('Async validation error:', error)
+    } catch {
+      console.error("Error occurred")
       setIsValid(false)
       return false
     } finally {

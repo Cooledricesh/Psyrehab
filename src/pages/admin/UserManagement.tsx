@@ -160,7 +160,7 @@ export default function UserManagement() {
       setUsers(uniqueUsers)
 
     } catch (error: any) {
-      console.error('Error loading users:', error)
+      console.error("Error occurred")
       toast({
         title: '오류',
         description: '사용자 목록을 불러오는 중 오류가 발생했습니다.',
@@ -210,7 +210,7 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error: any) {
-      console.error('Error updating user:', error)
+      console.error("Error occurred")
       toast({
         title: '오류',
         description: '사용자 정보 업데이트 중 오류가 발생했습니다.',
@@ -274,7 +274,7 @@ export default function UserManagement() {
             .eq('user_id', selectedUser.id)
 
           if (profileError) {
-            console.error('Profile delete error:', profileError)
+            console.error("Error occurred")
             // RLS 정책 문제인 경우 더 명확한 에러 메시지
             if (profileError.message.includes('policy')) {
               throw new Error('관리자 권한이 부족합니다. RLS 정책을 확인하세요.')
@@ -294,7 +294,7 @@ export default function UserManagement() {
         .eq('user_id', selectedUser.id)
 
       if (roleError) {
-        console.error('Role delete error:', roleError)
+        console.error("Error occurred")
         // "No rows" 에러가 아닌 경우에만 실제 에러로 처리
         if (!roleError.message.includes('No rows') && !roleError.message.includes('0 rows')) {
           throw new Error(`역할 삭제 실패: ${roleError.message}`)
@@ -309,7 +309,7 @@ export default function UserManagement() {
         .eq('user_id', selectedUser.id)
 
       if (requestError) {
-        console.error('Signup request delete error:', requestError)
+        console.error("Error occurred")
         // "No rows" 에러가 아닌 경우에만 실제 에러로 처리
         if (!requestError.message.includes('No rows') && !requestError.message.includes('0 rows')) {
           throw new Error(`신청서 삭제 실패: ${requestError.message}`)
@@ -332,7 +332,7 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error: any) {
-      console.error('Error deleting user:', error)
+      console.error("Error occurred")
       toast({
         title: '삭제 실패',
         description: error.message || '사용자 삭제 중 오류가 발생했습니다.',
@@ -408,7 +408,7 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error: any) {
-      console.error('Error approving user:', error)
+      console.error("Error occurred")
       toast({
         title: '오류',
         description: error.message || '사용자 승인 중 오류가 발생했습니다.',

@@ -98,7 +98,7 @@ export function createValidationMiddleware<T>(
         data: validatedData
       }
 
-    } catch (error) {
+    } catch {
       return {
         success: false,
         error: parseError(error)

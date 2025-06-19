@@ -5,7 +5,6 @@ import {
   BarChart3,
   Settings,
   Download,
-  Eye,
   Filter,
   RefreshCw,
   Compare,
@@ -13,7 +12,6 @@ import {
 } from 'lucide-react'
 import { AssessmentData } from '@/types/assessment'
 import { DifferenceChart } from './charts/DifferenceChart'
-import { ProgressComparisonChart } from './charts/ProgressComparisonChart'
 import { PerformanceMatrix } from './charts/PerformanceMatrix'
 import { ComparisonSummary } from './charts/ComparisonSummary'
 import { ComparisonSettings } from './ComparisonSettings'
@@ -178,8 +176,8 @@ export const ComparisonManager: React.FC<ComparisonManagerProps> = ({
         onDataChange(comparisonResults)
       }
 
-    } catch (error) {
-      console.error('Comparison execution failed:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       setIsLoading(false)
     }

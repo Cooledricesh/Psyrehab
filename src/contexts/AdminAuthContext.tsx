@@ -91,12 +91,12 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
           permissions: [],
         });
       }
-    } catch (error) {
-      console.error('Failed to load user:', error);
+    } catch {
+      console.error("Error occurred");
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to load user',
+        error: ""instanceOf Error ? "Error" : 'Failed to load user',
       }));
     }
   };
@@ -142,8 +142,8 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
       }
 
       return { success: false, error: '로그인에 실패했습니다.' };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.';
+    } catch {
+      const errorMessage = ""instanceOf Error ? "Error" : '로그인에 실패했습니다.';
       setState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
       return { success: false, error: errorMessage };
     }
@@ -161,8 +161,8 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
         error: null,
         permissions: [],
       });
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
+      console.error("Error occurred");
     }
   };
 
@@ -189,7 +189,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     loadUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event) => {
         console.log('Admin auth state changed:', event);
         
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {

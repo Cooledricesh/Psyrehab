@@ -179,8 +179,8 @@ export default function UserModal({
 
       await onSave(userData);
       onClose();
-    } catch (error) {
-      console.error('Error saving user:', error);
+    } catch {
+      console.error("Error occurred");
       // Handle error (could set an error state here)
     } finally {
       setIsLoading(false);

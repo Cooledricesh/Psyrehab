@@ -1,26 +1,10 @@
 'use client'
 
 import React from 'react'
-import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
 import { 
-  Timeline, 
-  TrendingUp, 
-  TrendingDown, 
-  Minus,
-  Award,
-  Lightbulb,
-  Activity,
-  Calendar,
-  Target,
-  AlertCircle,
-  CheckCircle2,
-  Clock
+  Timeline
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAssessmentTimeline } from '@/hooks/assessments/useAssessments'
 
 interface AssessmentTimelineProps {

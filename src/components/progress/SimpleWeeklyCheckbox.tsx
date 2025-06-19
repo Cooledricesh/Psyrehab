@@ -165,7 +165,7 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
     },
     onError: (error) => {
-      console.error('목표 상태 업데이트 실패:', error);
+      console.error("Error occurred");
       toast.error('목표 상태 업데이트에 실패했습니다.');
     }
   });
@@ -252,7 +252,7 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       .eq('id', patientId);
     
     if (error) {
-      console.error('환자 상태 업데이트 실패:', error);
+      console.error("Error occurred");
       toast.error('환자 상태 업데이트에 실패했습니다.');
     } else {
       toast.success('모든 재활 목표를 완료했습니다! 새로운 목표를 설정해주세요.');

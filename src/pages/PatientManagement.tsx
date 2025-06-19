@@ -90,8 +90,8 @@ export default function PatientManagement() {
       
       // 상태 변경 이벤트 발생
       eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, { patientId, newStatus: dbStatus })
-    } catch (error) {
-      console.error('상태 변경 실패:', error)
+    } catch {
+      console.error("Error occurred")
       alert('상태 변경에 실패했습니다. 다시 시도해주세요.')
     }
   }

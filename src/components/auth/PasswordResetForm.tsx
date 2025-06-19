@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAuthForm } from '@/hooks/useAuthState'
 import { isValidEmail } from '@/utils/auth'
-import { AuthService } from '@/services/auth'
 
 interface PasswordResetFormProps {
   onSuccess?: () => void

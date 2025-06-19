@@ -8,12 +8,10 @@ import {
   Award,
   AlertTriangle,
   CheckCircle,
-  Info,
   Calendar,
   Activity
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
 import { formatChangeIndicator, classifyImprovement } from '../utils/comparisonUtils'
 
 interface ComparisonData {

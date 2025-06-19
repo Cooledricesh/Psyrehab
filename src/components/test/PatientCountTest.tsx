@@ -16,7 +16,7 @@ export function PatientCountTest() {
         setError(null)
       } catch (err) {
         setError('데이터 로드 실패')
-        console.error('Patient count fetch error:', err)
+        console.error("Error occurred")
       } finally {
         setLoading(false)
       }

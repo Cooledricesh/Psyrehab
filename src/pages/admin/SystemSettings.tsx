@@ -175,8 +175,8 @@ export default function SystemSettings() {
       ];
       setSettingsHistory(mockHistory);
       
-    } catch (error) {
-      console.error('Failed to load settings:', error);
+    } catch {
+      console.error("Error occurred");
       setSaveStatus('error');
       setSaveMessage('설정을 불러오는데 실패했습니다.');
     } finally {
@@ -232,8 +232,8 @@ export default function SystemSettings() {
       // 성공 메시지 자동 숨김
       setTimeout(() => setSaveStatus('idle'), 3000);
       
-    } catch (error) {
-      console.error('Failed to save settings:', error);
+    } catch {
+      console.error("Error occurred");
       setSaveStatus('error');
       setSaveMessage('설정 저장에 실패했습니다.');
     } finally {

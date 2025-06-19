@@ -41,7 +41,7 @@ export const queryClient = new QueryClient({
       },
       // Global error handling for mutations
       onError: (error) => {
-        console.error('Mutation error:', error)
+        console.error("Error occurred")
         
         // Handle authentication errors globally
         if (isAuthError(error)) {

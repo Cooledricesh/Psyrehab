@@ -50,7 +50,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError('로그인 중 오류가 발생했습니다.')
-      console.error('Login error:', err)
+      console.error("Error occurred")
     } finally {
       setIsLoading(false)
     }

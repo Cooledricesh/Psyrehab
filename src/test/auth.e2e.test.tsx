@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
-import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithAuth, mockUser, mockSession, mockUserProfile, mockUserRole, mockEnvVars, mockLocalStorage, mockTimers } from './testUtils'
 import { AuthRouter } from '../components/auth/AuthRouter'

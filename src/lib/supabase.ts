@@ -71,14 +71,14 @@ export async function testSupabaseConnection() {
     
     // Even if there's no session, a successful response means connection is working
     if (error && error.message.includes('Failed to fetch')) {
-      console.error('Supabase connection error:', error.message)
+      console.error("Error occurred")
       return false
     }
     
     console.log('✅ Supabase connection successful')
     return true
-  } catch (error) {
-    console.error('Supabase connection failed:', error)
+  } catch {
+    console.error("Error occurred")
     return false
   }
 }
@@ -88,12 +88,12 @@ export async function getCurrentUser() {
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error) {
-      console.error('Error fetching user:', error.message)
+      console.error("Error occurred")
       return null
     }
     return user
-  } catch (error) {
-    console.error('Failed to get current user:', error)
+  } catch {
+    console.error("Error occurred")
     return null
   }
 }
@@ -102,12 +102,12 @@ export async function getCurrentSession() {
   try {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {
-      console.error('Error fetching session:', error.message)
+      console.error("Error occurred")
       return null
     }
     return session
-  } catch (error) {
-    console.error('Failed to get current session:', error)
+  } catch {
+    console.error("Error occurred")
     return null
   }
 }
@@ -126,13 +126,13 @@ export async function getUserRole(userId: string): Promise<string | null> {
       .single()
 
     if (error) {
-      console.error('Error fetching user role:', error.message)
+      console.error("Error occurred")
       return null
     }
 
     return data?.roles?.role_name || null
-  } catch (error) {
-    console.error('Failed to get user role:', error)
+  } catch {
+    console.error("Error occurred")
     return null
   }
 }
@@ -201,8 +201,8 @@ export async function getUserProfile(userId: string) {
     }
 
     return profile
-  } catch (error) {
-    console.error('Failed to get user profile:', error)
+  } catch {
+    console.error("Error occurred")
     return null
   }
 }
@@ -247,8 +247,8 @@ export async function hasPermission(userId: string, permission: string): Promise
     }
 
     return rolePermissions[role]?.includes(permission) || false
-  } catch (error) {
-    console.error('Failed to check permission:', error)
+  } catch {
+    console.error("Error occurred")
     return false
   }
 }

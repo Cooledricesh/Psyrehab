@@ -463,8 +463,8 @@ export function ProtectedRouteWithSupabase({ children }: ProtectedRouteProps) {
         } else {
           navigate('/auth/login')
         }
-      } catch (error) {
-        console.error('Auth check error:', error)
+      } catch {
+        console.error("Error occurred")
         navigate('/auth/login')
       } finally {
         setIsLoading(false)

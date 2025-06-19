@@ -222,7 +222,7 @@ export function useSignInMutation() {
       }
     },
     onError: (error) => {
-      console.error('Sign in error:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -251,7 +251,7 @@ export function useSignUpMutation() {
       clearUserDataFromCache()
     },
     onError: (error) => {
-      console.error('Sign up error:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -275,7 +275,7 @@ export function useSignOutMutation() {
       queryClient.clear()
     },
     onError: (error) => {
-      console.error('Sign out error:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -294,7 +294,7 @@ export function usePasswordResetMutation() {
       return result
     },
     onError: (error) => {
-      console.error('Password reset error:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -334,7 +334,7 @@ export function useUpdateProfileMutation() {
       }
     },
     onError: (error) => {
-      console.error('Update profile error:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -371,7 +371,7 @@ export function useUpdateSettingsMutation() {
       }
     },
     onError: (error) => {
-      console.error('Update settings error:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -395,7 +395,7 @@ export function useEmailVerificationMutation() {
       await invalidateAuthQueries()
     },
     onError: (error) => {
-      console.error('Email verification error:', error)
+      console.error("Error occurred")
     }
   })
 }
@@ -414,7 +414,7 @@ export function useResendVerificationMutation() {
       return result
     },
     onError: (error) => {
-      console.error('Resend verification error:', error)
+      console.error("Error occurred")
     }
   })
 } 

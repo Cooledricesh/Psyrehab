@@ -205,7 +205,7 @@ export class PatientService {
       }
 
       return data
-    } catch (error) {
+    } catch {
       const appError = parseError(error)
       logError(appError, 'PatientService.createPatient')
       throw error
@@ -259,7 +259,7 @@ export class PatientService {
       }
 
       return data
-    } catch (error) {
+    } catch {
       const appError = parseError(error)
       logError(appError, 'PatientService.updatePatient')
       throw error
@@ -387,8 +387,8 @@ export class PatientService {
 
       // null이 아닌 환자들만 필터링하여 반환
       return patientsWithGoalStatus.filter((patient) => patient !== null)
-    } catch (error) {
-      console.error('활성 목표가 없는 환자 조회 오류:', error)
+    } catch {
+      console.error("Error occurred")
       throw error
     }
   }

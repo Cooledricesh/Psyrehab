@@ -170,8 +170,8 @@ export function ServiceRecordsList({
   const handleDelete = async (recordId: string) => {
     try {
       await deleteMutation.mutateAsync(recordId)
-    } catch (error) {
-      console.error('서비스 레코드 삭제 실패:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

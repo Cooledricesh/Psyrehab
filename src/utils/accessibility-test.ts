@@ -104,8 +104,8 @@ export const runAccessibilityTests = async (element?: HTMLElement): Promise<axe.
     })
 
     return results
-  } catch (error) {
-    console.error('Accessibility testing failed:', error)
+  } catch {
+    console.error("Error occurred")
     throw error
   }
 }

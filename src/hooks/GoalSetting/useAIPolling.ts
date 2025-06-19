@@ -61,8 +61,8 @@ export const useAIPolling = ({
         console.log('⏳ AI 처리 진행 중... 상태:', recommendation?.n8n_processing_status || 'waiting');
         setPollingAttempts(prev => prev + 1);
       }
-    } catch (error) {
-      console.error('폴링 중 오류:', error);
+    } catch {
+      console.error("Error occurred");
       setPollingStatus('error');
       onError('폴링 중 오류가 발생했습니다.');
     }

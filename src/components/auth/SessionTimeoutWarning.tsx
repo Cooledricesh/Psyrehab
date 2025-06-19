@@ -57,8 +57,8 @@ export function SessionTimeoutWarning({
     try {
       await signOut()
       onLogout?.()
-    } catch (error) {
-      console.error('Error during session expiration logout:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 
@@ -72,11 +72,11 @@ export function SessionTimeoutWarning({
         setShowWarning(false)
         onExtendSession?.()
       } else {
-        console.error('Failed to extend session:', result.error)
+        console.error("Error occurred")
         handleSessionExpired()
       }
-    } catch (error) {
-      console.error('Error extending session:', error)
+    } catch {
+      console.error("Error occurred")
       handleSessionExpired()
     } finally {
       setIsExtending(false)
@@ -87,8 +87,8 @@ export function SessionTimeoutWarning({
     try {
       await signOut()
       onLogout?.()
-    } catch (error) {
-      console.error('Error during manual logout:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 
@@ -235,8 +235,8 @@ export function SessionTimeoutNotice({
       setShowNotice(false)
       setIsDismissed(true)
       onExtendSession?.()
-    } catch (error) {
-      console.error('Error extending session:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       setIsExtending(false)
     }

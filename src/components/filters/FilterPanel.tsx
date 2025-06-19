@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Filter, X, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { Filter, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 export interface FilterOption {
   value: string;

@@ -80,8 +80,8 @@ export function usePolling({
             })
           }
         }
-      } catch (error) {
-        console.error('Polling error:', error)
+      } catch {
+        console.error("Error occurred")
         attempts++
         if (attempts >= maxAttempts) {
           clearInterval(intervalId)

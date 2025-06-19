@@ -217,8 +217,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ open, onClose }) => 
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch {
+      console.error("Error occurred");
     }
   };
 

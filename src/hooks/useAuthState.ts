@@ -167,8 +167,8 @@ export function useSession() {
     try {
       await refresh()
       setLastRefresh(new Date())
-    } catch (error) {
-      console.error('Failed to refresh session:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

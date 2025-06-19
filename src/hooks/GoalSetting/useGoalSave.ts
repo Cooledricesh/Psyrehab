@@ -206,7 +206,7 @@ export const useGoalSave = () => {
       }
 
     } catch (error: any) {
-      console.error('목표 저장 중 오류:', error);
+      console.error("Error occurred");
       
       // 구체적인 오류 메시지 표시
       let errorMessage = '목표 저장 중 오류가 발생했습니다.';

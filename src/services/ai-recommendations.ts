@@ -124,7 +124,7 @@ export async function getAIRecommendationByAssessment(
     .single()
 
   if (error || !data) {
-    console.error('Error fetching AI recommendation:', error)
+    console.error("Error occurred")
     return null
   }
 

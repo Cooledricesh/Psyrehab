@@ -51,8 +51,8 @@ export function SimpleProtectedRoute({ children }: SimpleProtectedRouteProps) {
           console.log('No role, redirecting to pending approval')
           navigate('/auth/pending-approval')
         }
-      } catch (error) {
-        console.error('Auth check error:', error)
+      } catch {
+        console.error("Error occurred")
         if (mounted) {
           navigate('/auth/login')
           setIsLoading(false)

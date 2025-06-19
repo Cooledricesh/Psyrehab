@@ -130,7 +130,7 @@ export function useAIRecommendationByAssessment(
         .maybeSingle()
 
       if (error) {
-        console.error('AI 추천 조회 오류:', error);
+        console.error("Error occurred");
         throw new Error(error.message)
       }
 

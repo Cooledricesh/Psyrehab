@@ -45,7 +45,7 @@ export class AIRecommendationService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ AI API Error Response:', errorText);
+      console.error("Error occurred");
       throw new Error(`AI 추천 요청 실패: ${response.status} - ${errorText}`);
     }
 
@@ -71,7 +71,7 @@ export class AIRecommendationService {
       .maybeSingle();
 
     if (error) {
-      console.error('❌ AI 추천 상태 조회 실패:', error);
+      console.error("Error occurred");
       throw error;
     }
 
@@ -97,7 +97,7 @@ export class AIRecommendationService {
       .eq('id', recommendationId);
 
     if (error) {
-      console.error('AI 추천 상태 업데이트 실패:', error);
+      console.error("Error occurred");
       // 실패해도 계속 진행하도록 에러를 throw하지 않음
     }
   }
@@ -117,7 +117,7 @@ export class AIRecommendationService {
       .maybeSingle();
       
     if (error) {
-      console.error('AI 추천 ID 조회 실패:', error);
+      console.error("Error occurred");
       return null;
     }
     

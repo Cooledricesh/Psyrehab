@@ -15,7 +15,6 @@ interface EmailVerificationFormProps {
  */
 export function EmailVerificationForm({
   email,
-  onSuccess,
   onResendSuccess,
   className = ''
 }: EmailVerificationFormProps) {
@@ -25,8 +24,7 @@ export function EmailVerificationForm({
     setFieldError,
     clearFieldError,
     isSubmitting,
-    setIsSubmitting,
-    resetForm
+    setIsSubmitting
   } = useAuthForm()
 
   const [resendCount, setResendCount] = useState(0)
@@ -73,8 +71,8 @@ export function EmailVerificationForm({
   const handleSignOut = async () => {
     try {
       await signOut()
-    } catch (error) {
-      console.error('Sign out error:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 

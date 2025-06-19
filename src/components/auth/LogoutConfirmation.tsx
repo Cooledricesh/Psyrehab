@@ -34,8 +34,8 @@ export function LogoutConfirmation({
     try {
       await signOut()
       onConfirm?.()
-    } catch (error) {
-      console.error('Logout error:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       setIsLoggingOut(false)
     }
@@ -176,8 +176,8 @@ export function LogoutButton({
     try {
       await signOut()
       onLogoutSuccess?.()
-    } catch (error) {
-      console.error('Logout error:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       setIsLoggingOut(false)
     }
@@ -255,8 +255,8 @@ export function LogoutMenuItem({
     try {
       await signOut()
       onLogoutSuccess?.()
-    } catch (error) {
-      console.error('Logout error:', error)
+    } catch {
+      console.error("Error occurred")
     } finally {
       setIsLoggingOut(false)
     }

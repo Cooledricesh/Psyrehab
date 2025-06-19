@@ -120,7 +120,7 @@ export default function WeeklyCheckInPanel({
         .single();
 
       if (error) {
-        console.error('체크인 추가 실패:', error);
+        console.error("Error occurred");
         throw error;
       }
       return result;
@@ -133,7 +133,7 @@ export default function WeeklyCheckInPanel({
       resetForm();
     },
     onError: (error: any) => {
-      console.error('체크인 추가 실패:', error);
+      console.error("Error occurred");
       if (error.message === '로그인이 필요합니다.') {
         toast.error('로그인이 필요합니다.');
       } else if (error.message === '사회복지사 권한이 필요합니다.') {
@@ -160,7 +160,7 @@ export default function WeeklyCheckInPanel({
         .single();
 
       if (error) {
-        console.error('체크인 수정 실패:', error);
+        console.error("Error occurred");
         throw error;
       }
       return result;
@@ -173,7 +173,7 @@ export default function WeeklyCheckInPanel({
       resetForm();
     },
     onError: (error: any) => {
-      console.error('체크인 수정 실패:', error);
+      console.error("Error occurred");
       toast.error('체크인 수정에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
     }
   });

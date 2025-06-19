@@ -11,7 +11,6 @@ import {
   ReferenceLine
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
-import { ko } from 'date-fns/locale'
 import { AssessmentData } from '@/types/assessment'
 
 interface TrendData {

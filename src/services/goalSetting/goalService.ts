@@ -37,7 +37,7 @@ export class GoalService {
       .eq('plan_status', 'active');
 
     if (error) {
-      console.error('기존 계획 비활성화 실패:', error);
+      console.error("Error occurred");
       throw error;
     }
   }
@@ -143,7 +143,7 @@ export class GoalService {
       .insert(goals);
 
     if (error) {
-      console.error('목표 저장 실패:', error);
+      console.error("Error occurred");
       throw error;
     }
   }
@@ -158,7 +158,7 @@ export class GoalService {
       .eq('id', patientId);
 
     if (error) {
-      console.error('환자 상태 업데이트 실패:', error);
+      console.error("Error occurred");
       throw error;
     }
   }
@@ -174,7 +174,7 @@ export class GoalService {
       .eq('status', 'active');
     
     if (error) {
-      console.error('목표 비활성화 실패:', error);
+      console.error("Error occurred");
       throw error;
     }
   }

@@ -95,7 +95,7 @@ export const GoalBreakdownDialog: React.FC<GoalBreakdownDialogProps> = ({
       } else {
         toast.error('목표 분해에 실패했습니다');
       }
-    } catch (error) {
+    } catch {
       toast.error('분해 처리 중 오류가 발생했습니다');
     } finally {
       setIsGenerating(false);
@@ -121,7 +121,7 @@ export const GoalBreakdownDialog: React.FC<GoalBreakdownDialogProps> = ({
       toast.success(`${goalsToCreate.length}개의 ${isSixMonthGoal ? '월별' : '주별'} 목표가 생성되었습니다`);
       onSuccess?.();
       onClose();
-    } catch (error) {
+    } catch {
       toast.error('목표 저장에 실패했습니다');
     }
   };

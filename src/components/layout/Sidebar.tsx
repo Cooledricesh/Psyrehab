@@ -99,8 +99,8 @@ export const Sidebar = () => {
           setUserInfo({ name: swInfo.full_name, role: '사회복지사' })
         }
       }
-    } catch (error) {
-      console.error('Error checking user role:', error)
+    } catch {
+      console.error("Error occurred")
     }
   }
 
