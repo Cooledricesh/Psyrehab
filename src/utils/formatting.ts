@@ -1,6 +1,4 @@
-// Formatting utilities for display
 
-// Date formatting
 export const formatDate = (date: string | Date): string => {
   const d = new Date(date)
   return d.toLocaleDateString('ko-KR', {
@@ -30,7 +28,6 @@ export const formatDateShort = (date: string | Date): string => {
   })
 }
 
-// Number formatting
 export const formatProgress = (progress: number): string => {
   return `${Math.round(progress)}%`
 }
@@ -55,7 +52,6 @@ export const formatDuration = (days: number): string => {
   }
 }
 
-// Text formatting
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + '...'
@@ -70,12 +66,9 @@ export const formatName = (firstName: string, lastName: string): string => {
   return `${lastName}${firstName}`
 }
 
-// Phone number formatting
 export const formatPhoneNumber = (phone: string): string => {
-  // Remove all non-digits
   const cleaned = phone.replace(/\D/g, '')
   
-  // Format as XXX-XXXX-XXXX
   if (cleaned.length === 11) {
     return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7)}`
   }
@@ -83,7 +76,6 @@ export const formatPhoneNumber = (phone: string): string => {
   return phone
 }
 
-// Status formatting
 export const formatGoalStatus = (status: string): string => {
   const statusMap: Record<string, string> = {
     active: '진행중',

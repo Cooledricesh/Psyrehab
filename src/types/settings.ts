@@ -97,7 +97,6 @@ export interface SystemSettings {
     cdnUrl?: string;
   };
 
-  // API 설정
   api: {
     enableApiAccess: boolean;
     enableApiDocumentation: boolean;

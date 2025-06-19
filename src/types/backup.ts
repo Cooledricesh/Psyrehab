@@ -178,16 +178,11 @@ export const BACKUP_STATUS_LABELS: Record<BackupStatus, string> = {
 
 // 유틸리티 함수들
 export const formatFileSize = (bytes: number): string => {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
   if (bytes === 0) return '0 Bytes'
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
 }
 
 export const formatDuration = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
   
   if (hours > 0) {
     return `${hours}시간 ${minutes}분 ${secs}초`

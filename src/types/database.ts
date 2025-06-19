@@ -1,5 +1,3 @@
-// Database types - Generated from Supabase schema
-// Re-export types from supabase.ts for convenience
 
 export type {
   Database,
@@ -31,7 +29,6 @@ export type {
   WeeklyProgressOverview,
 } from './supabase'
 
-// AI Recommendation structured data types (n8n stores structured data directly)
 export interface AIRecommendationPlan {
   plan_number: number
   title: string
@@ -64,7 +61,6 @@ export interface StructuredAIRecommendation {
   updated_at: string
 }
 
-// Additional derived types for the application
 export interface UserProfile {
   id: string
   email: string
@@ -101,7 +97,6 @@ export interface GoalWithDetails {
   parent_goal?: unknown // RehabilitationGoal
 }
 
-// Assessment related types
 export interface AssessmentWithRecommendations {
   id: string
   patient_id: string
@@ -111,21 +106,17 @@ export interface AssessmentWithRecommendations {
   ai_recommendations?: StructuredAIRecommendation[]
 }
 
-// Assessment status checking types
 export interface AIRecommendationStatus {
   status: 'pending' | 'processing' | 'completed' | 'failed'
   recommendationId: string | null
 }
 
-// Goal hierarchy types
 export type GoalType = 'six_month' | 'monthly' | 'weekly' | 'other'
 export type GoalStatus = 'pending' | 'active' | 'completed' | 'on_hold' | 'cancelled'
 
-// Assessment stage types
 export type FocusTime = '5min' | '15min' | '30min' | '1hour'
 export type SocialPreference = 'individual' | 'small_group' | 'large_group'
 
-// Service record types
 export interface ServiceRecordWithDetails {
   id: string
   service_type: string

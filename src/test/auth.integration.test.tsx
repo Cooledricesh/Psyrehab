@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import { AuthService } from '../services/auth'
 
-// Mock Supabase
 vi.mock('../lib/supabase', () => ({
   supabase: {
     auth: {
@@ -47,7 +46,6 @@ vi.mock('../lib/supabase', () => ({
   hasPermission: vi.fn(),
 }))
 
-// Mock auth utilities
 vi.mock('../utils/auth', () => ({
   isValidEmail: vi.fn(() => true),
   validatePassword: vi.fn(() => ({ isValid: true, errors: [] })),
@@ -62,7 +60,6 @@ vi.mock('../utils/auth', () => ({
   getAuthErrorMessage: vi.fn((error) => error?.message || '인증 오류가 발생했습니다.'),
 }))
 
-// Mock auth constants
 vi.mock('../constants/auth', () => ({
   AUTH_ERROR_CODES: {
     INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
@@ -85,7 +82,6 @@ vi.mock('../constants/auth', () => ({
 describe('AuthService Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock console to avoid noise in tests
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
@@ -98,7 +94,6 @@ describe('AuthService Integration Tests', () => {
     it('successfully signs in with valid credentials', async () => {
       const { supabase, getUserProfile } = await import('../lib/supabase')
       
-      const mockUser = {
         id: 'user-123',
         email: 'test@example.com',
         email_confirmed_at: new Date().toISOString(),
@@ -109,7 +104,6 @@ describe('AuthService Integration Tests', () => {
         role: 'authenticated'
       }
 
-      const mockSession = {
         access_token: 'access-token',
         refresh_token: 'refresh-token',
         expires_in: 3600,
@@ -118,7 +112,6 @@ describe('AuthService Integration Tests', () => {
         user: mockUser
       }
 
-      const mockProfile = {
         id: 'user-123',
         full_name: '테스트 사용자',
         email: 'test@example.com',
@@ -129,18 +122,13 @@ describe('AuthService Integration Tests', () => {
         updated_at: new Date().toISOString(),
       }
 
-      // Mock successful auth
-      const mockSignInWithPassword = supabase.auth.signInWithPassword as ReturnType<typeof vi.fn>
       mockSignInWithPassword.mockResolvedValue({
         data: { user: mockUser, session: mockSession },
         error: null
       })
 
-      // Mock successful profile fetch
-      const mockGetUserProfile = getUserProfile as ReturnType<typeof vi.fn>
       mockGetUserProfile.mockResolvedValue(mockProfile)
 
-      const result = await AuthService.signIn({
         email: 'test@example.com',
         password: 'password123'
       })
@@ -160,10 +148,8 @@ describe('AuthService Integration Tests', () => {
 
     it('handles invalid email format', async () => {
       const { isValidEmail } = await import('../utils/auth')
-      const mockIsValidEmail = isValidEmail as ReturnType<typeof vi.fn>
       mockIsValidEmail.mockReturnValue(false)
 
-      const result = await AuthService.signIn({
         email: 'invalid-email',
         password: 'password123'
       })
@@ -178,10 +164,7 @@ describe('AuthService Integration Tests', () => {
       const { supabase } = await import('../lib/supabase')
       const { getAuthErrorMessage } = await import('../utils/auth')
 
-      const mockSignInWithPassword = supabase.auth.signInWithPassword as ReturnType<typeof vi.fn>
-      const mockGetAuthErrorMessage = getAuthErrorMessage as ReturnType<typeof vi.fn>
 
-      const authError = { message: 'Invalid login credentials' }
       mockSignInWithPassword.mockResolvedValue({
         data: { user: null, session: null },
         error: authError
@@ -189,7 +172,6 @@ describe('AuthService Integration Tests', () => {
 
       mockGetAuthErrorMessage.mockReturnValue('이메일 또는 비밀번호가 올바르지 않습니다.')
 
-      const result = await AuthService.signIn({
         email: 'test@example.com',
         password: 'wrongpassword'
       })
@@ -202,7 +184,6 @@ describe('AuthService Integration Tests', () => {
     it('handles unconfirmed email', async () => {
       const { supabase, getUserProfile } = await import('../lib/supabase')
 
-      const mockUser = {
         id: 'user-123',
         email: 'test@example.com',
         email_confirmed_at: null, // Unconfirmed email
@@ -213,13 +194,11 @@ describe('AuthService Integration Tests', () => {
         role: 'authenticated'
       }
 
-      const mockSignInWithPassword = supabase.auth.signInWithPassword as ReturnType<typeof vi.fn>
       mockSignInWithPassword.mockResolvedValue({
         data: { user: mockUser, session: null },
         error: null
       })
 
-      const result = await AuthService.signIn({
         email: 'test@example.com',
         password: 'password123'
       })
@@ -230,15 +209,12 @@ describe('AuthService Integration Tests', () => {
 
     it('handles rate limiting', async () => {
       const { checkRateLimit } = await import('../utils/auth')
-      const mockCheckRateLimit = checkRateLimit as ReturnType<typeof vi.fn>
 
-      const futureTime = Date.now() + 10 * 60 * 1000 // 10 minutes from now
       mockCheckRateLimit.mockReturnValue({
         allowed: false,
         resetTime: futureTime
       })
 
-      const result = await AuthService.signIn({
         email: 'test@example.com',
         password: 'password123'
       })
@@ -251,7 +227,6 @@ describe('AuthService Integration Tests', () => {
     it('handles inactive user profile', async () => {
       const { supabase, getUserProfile } = await import('../lib/supabase')
 
-      const mockUser = {
         id: 'user-123',
         email: 'test@example.com',
         email_confirmed_at: new Date().toISOString(),
@@ -262,7 +237,6 @@ describe('AuthService Integration Tests', () => {
         role: 'authenticated'
       }
 
-      const mockSession = {
         access_token: 'access-token',
         refresh_token: 'refresh-token',
         expires_in: 3600,
@@ -271,7 +245,6 @@ describe('AuthService Integration Tests', () => {
         user: mockUser
       }
 
-      const inactiveProfile = {
         id: 'user-123',
         full_name: '테스트 사용자',
         email: 'test@example.com',
@@ -282,16 +255,13 @@ describe('AuthService Integration Tests', () => {
         updated_at: new Date().toISOString(),
       }
 
-      const mockSignInWithPassword = supabase.auth.signInWithPassword as ReturnType<typeof vi.fn>
       mockSignInWithPassword.mockResolvedValue({
         data: { user: mockUser, session: mockSession },
         error: null
       })
 
-      const mockGetUserProfile = getUserProfile as ReturnType<typeof vi.fn>
       mockGetUserProfile.mockResolvedValue(inactiveProfile)
 
-      const result = await AuthService.signIn({
         email: 'test@example.com',
         password: 'password123'
       })
@@ -305,10 +275,8 @@ describe('AuthService Integration Tests', () => {
     it('successfully signs out', async () => {
       const { supabase } = await import('../lib/supabase')
 
-      const mockSignOut = supabase.auth.signOut as ReturnType<typeof vi.fn>
       mockSignOut.mockResolvedValue({ error: null })
 
-      const result = await AuthService.signOut()
 
       expect(result.success).toBe(true)
       expect(result.error).toBeUndefined()
@@ -319,14 +287,10 @@ describe('AuthService Integration Tests', () => {
       const { supabase } = await import('../lib/supabase')
       const { getAuthErrorMessage } = await import('../utils/auth')
 
-      const signOutError = { message: 'Network error' }
-      const mockSignOut = supabase.auth.signOut as ReturnType<typeof vi.fn>
-      const mockGetAuthErrorMessage = getAuthErrorMessage as ReturnType<typeof vi.fn>
 
       mockSignOut.mockResolvedValue({ error: signOutError })
       mockGetAuthErrorMessage.mockReturnValue('네트워크 오류가 발생했습니다.')
 
-      const result = await AuthService.signOut()
 
       expect(result.success).toBe(false)
       expect(result.error).toBe('네트워크 오류가 발생했습니다.')
@@ -338,10 +302,8 @@ describe('AuthService Integration Tests', () => {
     it('successfully sends reset password email', async () => {
       const { supabase } = await import('../lib/supabase')
 
-      const mockResetPasswordForEmail = supabase.auth.resetPasswordForEmail as ReturnType<typeof vi.fn>
       mockResetPasswordForEmail.mockResolvedValue({ error: null, data: {} })
 
-      const result = await AuthService.resetPassword('test@example.com')
 
       expect(result.success).toBe(true)
       expect(result.error).toBeUndefined()
@@ -352,10 +314,8 @@ describe('AuthService Integration Tests', () => {
 
     it('handles invalid email for password reset', async () => {
       const { isValidEmail } = await import('../utils/auth')
-      const mockIsValidEmail = isValidEmail as ReturnType<typeof vi.fn>
       mockIsValidEmail.mockReturnValue(false)
 
-      const result = await AuthService.resetPassword('invalid-email')
 
       expect(result.success).toBe(false)
       expect(result.error).toBe('유효한 이메일 주소를 입력해주세요.')
@@ -365,14 +325,10 @@ describe('AuthService Integration Tests', () => {
       const { supabase } = await import('../lib/supabase')
       const { getAuthErrorMessage } = await import('../utils/auth')
 
-      const resetError = { message: 'User not found' }
-      const mockResetPasswordForEmail = supabase.auth.resetPasswordForEmail as ReturnType<typeof vi.fn>
-      const mockGetAuthErrorMessage = getAuthErrorMessage as ReturnType<typeof vi.fn>
 
       mockResetPasswordForEmail.mockResolvedValue({ error: resetError, data: null })
       mockGetAuthErrorMessage.mockReturnValue('사용자를 찾을 수 없습니다.')
 
-      const result = await AuthService.resetPassword('test@example.com')
 
       expect(result.success).toBe(false)
       expect(result.error).toBe('사용자를 찾을 수 없습니다.')
@@ -384,7 +340,6 @@ describe('AuthService Integration Tests', () => {
     it('returns current user when authenticated', async () => {
       const { supabase } = await import('../lib/supabase')
 
-      const mockUser = {
         id: 'user-123',
         email: 'test@example.com',
         email_confirmed_at: new Date().toISOString(),
@@ -395,13 +350,11 @@ describe('AuthService Integration Tests', () => {
         role: 'authenticated'
       }
 
-      const mockGetUser = supabase.auth.getUser as ReturnType<typeof vi.fn>
       mockGetUser.mockResolvedValue({
         data: { user: mockUser },
         error: null
       })
 
-      const result = await AuthService.getCurrentUser()
 
       expect(result).toEqual(mockUser)
       expect(mockGetUser).toHaveBeenCalled()
@@ -410,13 +363,11 @@ describe('AuthService Integration Tests', () => {
     it('returns null when not authenticated', async () => {
       const { supabase } = await import('../lib/supabase')
 
-      const mockGetUser = supabase.auth.getUser as ReturnType<typeof vi.fn>
       mockGetUser.mockResolvedValue({
         data: { user: null },
         error: null
       })
 
-      const result = await AuthService.getCurrentUser()
 
       expect(result).toBeNull()
     })
@@ -424,13 +375,11 @@ describe('AuthService Integration Tests', () => {
     it('returns null on error', async () => {
       const { supabase } = await import('../lib/supabase')
 
-      const mockGetUser = supabase.auth.getUser as ReturnType<typeof vi.fn>
       mockGetUser.mockResolvedValue({
         data: { user: null },
         error: { message: 'No session' }
       })
 
-      const result = await AuthService.getCurrentUser()
 
       expect(result).toBeNull()
     })
@@ -440,7 +389,6 @@ describe('AuthService Integration Tests', () => {
     it('returns current session when authenticated', async () => {
       const { supabase } = await import('../lib/supabase')
 
-      const mockSession = {
         access_token: 'access-token',
         refresh_token: 'refresh-token',
         expires_in: 3600,
@@ -458,13 +406,11 @@ describe('AuthService Integration Tests', () => {
         }
       }
 
-      const mockGetSession = supabase.auth.getSession as ReturnType<typeof vi.fn>
       mockGetSession.mockResolvedValue({
         data: { session: mockSession },
         error: null
       })
 
-      const result = await AuthService.getCurrentSession()
 
       expect(result).toEqual(mockSession)
       expect(mockGetSession).toHaveBeenCalled()
@@ -473,13 +419,11 @@ describe('AuthService Integration Tests', () => {
     it('returns null when no session', async () => {
       const { supabase } = await import('../lib/supabase')
 
-      const mockGetSession = supabase.auth.getSession as ReturnType<typeof vi.fn>
       mockGetSession.mockResolvedValue({
         data: { session: null },
         error: null
       })
 
-      const result = await AuthService.getCurrentSession()
 
       expect(result).toBeNull()
     })

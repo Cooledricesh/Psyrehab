@@ -26,24 +26,19 @@ export default function AssessmentsPage() {
     }
   })
 
-  const patients = patientsData?.data || []
 
-  const handlePatientSelect = (patientId: string) => {
     setSelectedPatientId(patientId)
   }
 
-  const handleStartAssessment = () => {
     if (selectedPatientId) {
       setShowAssessmentForm(true)
     }
   }
 
-  const handleBackToSelection = () => {
     setShowAssessmentForm(false)
     setSelectedPatientId(null)
   }
 
-  const handleAssessmentComplete = (assessmentId: string) => {
     console.log('Assessment completed:', assessmentId)
     // 평가 완료 후 처리 로직
     setShowAssessmentForm(false)
@@ -125,7 +120,6 @@ export default function AssessmentsPage() {
                   {selectedPatientId && (
                     <div className="pt-4 border-t">
                       {(() => {
-                        const selectedPatient = patients.find(p => p.id.toString() === selectedPatientId)
                         if (!selectedPatient) return null
               
               return (

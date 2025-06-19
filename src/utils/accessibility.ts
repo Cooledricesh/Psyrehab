@@ -90,7 +90,6 @@ export function getAccessibilityLevel(
  */
 export const accessibleColors = {
   light: {
-    // High contrast combinations for light theme
     primary: { bg: '#ffffff', fg: '#0f172a' }, // 15.8:1
     secondary: { bg: '#f1f5f9', fg: '#0f172a' }, // 14.7:1
     success: { bg: '#ffffff', fg: '#166534' }, // 7.2:1
@@ -99,7 +98,6 @@ export const accessibleColors = {
     info: { bg: '#ffffff', fg: '#1e40af' }, // 8.6:1
   },
   dark: {
-    // High contrast combinations for dark theme
     primary: { bg: '#020617', fg: '#f8fafc' }, // 15.8:1
     secondary: { bg: '#1e293b', fg: '#f8fafc' }, // 12.6:1
     success: { bg: '#020617', fg: '#22c55e' }, // 7.8:1
@@ -118,7 +116,6 @@ export function getTextColorForBackground(backgroundColor: string): string {
 
   const luminance = getLuminance(rgb.r, rgb.g, rgb.b)
   
-  // If background is light, use dark text; if dark, use light text
   return luminance > 0.5 ? '#0f172a' : '#f8fafc'
 }
 
@@ -138,7 +135,6 @@ export function validateColorSystem(): {
     { name: 'Success on Background', fg: '#16a34a', bg: '#ffffff' },
     { name: 'Warning on Background', fg: '#f59e0b', bg: '#ffffff' },
     { name: 'Info on Background', fg: '#3b82f6', bg: '#ffffff' },
-    // Dark theme combinations
     { name: 'Primary on Dark Background', fg: '#3b82f6', bg: '#020617' },
     { name: 'Foreground on Dark Background', fg: '#f8fafc', bg: '#020617' },
     { name: 'Muted Foreground on Dark Background', fg: '#94a3b8', bg: '#020617' },
@@ -170,7 +166,6 @@ export function generateAccessiblePalette(baseColor: string): {
   light: { background: string; foreground: string }
   dark: { background: string; foreground: string }
 } {
-  // This is a simplified version - in practice, you'd want more sophisticated color generation
   const rgb = hexToRgb(baseColor)
   if (!rgb) {
     throw new Error('Invalid base color')

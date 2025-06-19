@@ -1,12 +1,10 @@
 import type { UserRole, Permission } from '@/types/auth'
 
-// Route configuration types
 export interface RouteConfig {
   path: string
   title: string
   component?: React.ComponentType<any>
   
-  // Access control
   requireAuth?: boolean
   requireEmailVerification?: boolean
   allowedRoles?: UserRole[]
@@ -14,36 +12,29 @@ export interface RouteConfig {
   requiredPermissions?: Permission[]
   requireAllPermissions?: boolean
   
-  // Navigation
   showInMenu?: boolean
   menuOrder?: number
   menuIcon?: React.ReactNode
   parentPath?: string
   
-  // Meta information
   description?: string
   keywords?: string[]
   isPublic?: boolean
   isDevelopmentOnly?: boolean
   
-  // Redirects
   redirectTo?: string
   redirectOnAuth?: string
   redirectOnDenied?: string
   
-  // Layout
   layout?: 'default' | 'auth' | 'minimal' | 'fullscreen'
   hideHeader?: boolean
   hideFooter?: boolean
   hideSidebar?: boolean
 }
 
-// Predefined route paths
 export const ROUTE_PATHS = {
-  // Root
   HOME: '/',
   
-  // Authentication
   AUTH: {
     SIGNIN: '/auth/signin',
     SIGNUP: '/auth/signup',
@@ -53,7 +44,6 @@ export const ROUTE_PATHS = {
     EMAIL_CONFIRMED: '/auth/email-confirmed',
   },
   
-  // Admin routes
   ADMIN: {
     DASHBOARD: '/admin/dashboard',
     USERS: '/admin/users',
@@ -65,7 +55,6 @@ export const ROUTE_PATHS = {
     SYSTEM: '/admin/system',
   },
   
-  // Social worker routes
   SOCIAL_WORKER: {
     DASHBOARD: '/social-worker/dashboard',
     PATIENTS: '/social-worker/patients',
@@ -81,7 +70,6 @@ export const ROUTE_PATHS = {
     PROFILE: '/social-worker/profile',
   },
   
-  // Patient routes
   PATIENT: {
     DASHBOARD: '/patient/dashboard',
     GOALS: '/patient/goals',
@@ -93,7 +81,6 @@ export const ROUTE_PATHS = {
     PROGRESS: '/patient/progress',
   },
   
-  // General routes
   DASHBOARD: '/dashboard',
   PROFILE: '/profile',
   SETTINGS: '/settings',
@@ -101,14 +88,12 @@ export const ROUTE_PATHS = {
   ABOUT: '/about',
   CONTACT: '/contact',
   
-  // Error pages
   NOT_FOUND: '/404',
   FORBIDDEN: '/403',
   SERVER_ERROR: '/500',
   MAINTENANCE: '/maintenance',
 } as const
 
-// Route groups by role
 export const ROLE_ROUTES = {
   administrator: [
     ROUTE_PATHS.ADMIN.DASHBOARD,
@@ -146,7 +131,6 @@ export const ROLE_ROUTES = {
   ],
 } as const
 
-// Public routes (no authentication required)
 export const PUBLIC_ROUTES = [
   ROUTE_PATHS.HOME,
   ROUTE_PATHS.AUTH.SIGNIN,
@@ -164,14 +148,12 @@ export const PUBLIC_ROUTES = [
   ROUTE_PATHS.MAINTENANCE,
 ] as const
 
-// Auth-only routes (redirect authenticated users)
 export const AUTH_ONLY_ROUTES = [
   ROUTE_PATHS.AUTH.SIGNIN,
   ROUTE_PATHS.AUTH.SIGNUP,
   ROUTE_PATHS.AUTH.FORGOT_PASSWORD,
 ] as const
 
-// Route utility functions
 export class RouteUtils {
   /**
    * Check if a route requires authentication
@@ -223,7 +205,6 @@ export class RouteUtils {
    * Match a current path against a route pattern
    */
   static matchPath(currentPath: string, routePattern: string): boolean {
-    // Convert route pattern to regex
     const pattern = routePattern
       .replace(/:[^/]+/g, '[^/]+') // Replace :param with regex
       .replace(/\*/g, '.*') // Replace * with regex
@@ -294,7 +275,6 @@ export class RouteUtils {
     parts.forEach(part => {
       currentPath += `/${part}`
       
-      // Get title for the path part
       const title = this.getPathTitle(currentPath, part)
       
       breadcrumbs.push({
@@ -310,7 +290,6 @@ export class RouteUtils {
    * Get a human-readable title for a path
    */
   static getPathTitle(fullPath: string, pathPart: string): string {
-    // Check if it's a known route
     const routeTitles: Record<string, string> = {
       'admin': '관리자',
       'social-worker': '사회복지사',
@@ -410,7 +389,6 @@ export class RouteUtils {
   }
 }
 
-// Export commonly used functions
 export const {
   requiresAuth,
   isAccessibleByRole,

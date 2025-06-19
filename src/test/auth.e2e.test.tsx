@@ -5,7 +5,6 @@ import { renderWithAuth, mockUser, mockSession, mockUserProfile, mockUserRole, m
 import { AuthRouter } from '../components/auth/AuthRouter'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
 
-// Mock the auth service for e2e testing
 vi.mock('../services/authService', () => ({
   authService: {
     signIn: vi.fn(),
@@ -26,7 +25,6 @@ vi.mock('../services/authService', () => ({
   },
 }))
 
-// Test component that requires authentication
 const ProtectedComponent = () => (
   <div>
     <h1>보호된 콘텐츠</h1>
@@ -34,7 +32,6 @@ const ProtectedComponent = () => (
   </div>
 )
 
-// Test component for admin-only content
 const AdminComponent = () => (
   <div>
     <h1>관리자 전용</h1>
@@ -69,7 +66,6 @@ describe('Authentication E2E Tests', () => {
       const mockGetCurrentUser = authService.getCurrentUser as ReturnType<typeof vi.fn>
       const mockGetSession = authService.getSession as ReturnType<typeof vi.fn>
 
-      // Initially no user
       mockGetCurrentUser.mockResolvedValue({ user: null, error: null })
       mockGetSession.mockResolvedValue({ session: null, error: null })
 
@@ -86,18 +82,15 @@ describe('Authentication E2E Tests', () => {
         }
       )
 
-      // Should show sign in form
       expect(screen.getByText('로그인')).toBeInTheDocument()
       expect(screen.queryByText('보호된 콘텐츠')).not.toBeInTheDocument()
 
-      // Mock successful sign in
       mockSignIn.mockResolvedValue({
         user: mockUser,
         session: mockSession,
         error: null,
       })
 
-      // Fill and submit sign in form
       const emailInput = screen.getByLabelText('이메일')
       const passwordInput = screen.getByLabelText('비밀번호')
       const submitButton = screen.getByRole('button', { name: '로그인' })
@@ -106,19 +99,16 @@ describe('Authentication E2E Tests', () => {
       await user.type(passwordInput, 'password123')
       await user.click(submitButton)
 
-      // Wait for sign in to complete
       await waitFor(() => {
         expect(mockSignIn).toHaveBeenCalledWith('test@example.com', 'password123')
       })
 
-      // Rerender with authenticated state
       rerender(
         <ProtectedRoute>
           <ProtectedComponent />
         </ProtectedRoute>
       )
 
-      // Should now show protected content
       await waitFor(() => {
         expect(screen.getByText('보호된 콘텐츠')).toBeInTheDocument()
       })
@@ -138,11 +128,9 @@ describe('Authentication E2E Tests', () => {
         <AuthRouter />
       )
 
-      // Navigate to sign up
       const signUpTab = screen.getByText('회원가입')
       await user.click(signUpTab)
 
-      // Fill sign up form
       const emailInput = screen.getByLabelText('이메일')
       const passwordInput = screen.getByLabelText('비밀번호')
       const confirmPasswordInput = screen.getByLabelText('비밀번호 확인')
@@ -161,7 +149,6 @@ describe('Authentication E2E Tests', () => {
       await user.click(agreeCheckbox)
       await user.click(submitButton)
 
-      // Should show email verification message
       await waitFor(() => {
         expect(mockSignUp).toHaveBeenCalledWith({
           email: 'newuser@example.com',
@@ -176,7 +163,6 @@ describe('Authentication E2E Tests', () => {
     })
 
     it('handles role-based access control flow', async () => {
-      // Test with regular user trying to access admin content
       renderWithAuth(
         <ProtectedRoute requiredRole="admin">
           <AdminComponent />
@@ -191,11 +177,9 @@ describe('Authentication E2E Tests', () => {
         }
       )
 
-      // Should show access denied
       expect(screen.getByText('접근 권한이 없습니다')).toBeInTheDocument()
       expect(screen.queryByText('관리자 전용')).not.toBeInTheDocument()
 
-      // Test with admin user
       const { rerender } = renderWithAuth(
         <ProtectedRoute requiredRole="admin">
           <AdminComponent />
@@ -210,7 +194,6 @@ describe('Authentication E2E Tests', () => {
         }
       )
 
-      // Should show admin content
       expect(screen.getByText('관리자 전용')).toBeInTheDocument()
     })
 
@@ -238,20 +221,16 @@ describe('Authentication E2E Tests', () => {
         }
       )
 
-      // Initially showing protected content
       expect(screen.getByText('보호된 콘텐츠')).toBeInTheDocument()
 
-      // Simulate session expiry
       rerender(
         <ProtectedRoute>
           <ProtectedComponent />
         </ProtectedRoute>
       )
 
-      // Fast forward time to trigger session check
       timers.advanceTimersByTime(300000) // 5 minutes
 
-      // Should eventually redirect to sign in
       await waitFor(() => {
         expect(screen.getByText('로그인')).toBeInTheDocument()
       })
@@ -267,21 +246,17 @@ describe('Authentication E2E Tests', () => {
         <AuthRouter />
       )
 
-      // Click forgot password link
       const forgotPasswordLink = screen.getByText('비밀번호를 잊으셨나요?')
       await user.click(forgotPasswordLink)
 
-      // Should show password reset form
       expect(screen.getByText('비밀번호 재설정')).toBeInTheDocument()
 
-      // Fill and submit reset form
       const emailInput = screen.getByLabelText('이메일')
       const submitButton = screen.getByRole('button', { name: '재설정 링크 전송' })
 
       await user.type(emailInput, 'test@example.com')
       await user.click(submitButton)
 
-      // Should show success message
       await waitFor(() => {
         expect(mockResetPassword).toHaveBeenCalledWith('test@example.com')
         expect(screen.getByText(/비밀번호 재설정 링크를 이메일로 전송했습니다/)).toBeInTheDocument()
@@ -303,7 +278,6 @@ describe('Authentication E2E Tests', () => {
         error: null,
       })
 
-      // This would be a profile edit component in a real app
       const ProfileEditComponent = () => {
         const handleSubmit = async () => {
           await authService.updateProfile({
@@ -351,7 +325,6 @@ describe('Authentication E2E Tests', () => {
 
       mockSignOut.mockResolvedValue({ error: null })
 
-      // Simple component with logout button
       const ComponentWithLogout = () => {
         const handleLogout = async () => {
           await authService.signOut()
@@ -378,7 +351,6 @@ describe('Authentication E2E Tests', () => {
         }
       )
 
-      // Click logout button
       const logoutButton = screen.getByRole('button', { name: '로그아웃' })
       await user.click(logoutButton)
 
@@ -386,14 +358,12 @@ describe('Authentication E2E Tests', () => {
         expect(mockSignOut).toHaveBeenCalled()
       })
 
-      // Rerender with logged out state
       rerender(
         <ProtectedRoute>
           <ComponentWithLogout />
         </ProtectedRoute>
       )
 
-      // Should redirect to sign in
       expect(screen.getByText('로그인')).toBeInTheDocument()
     })
   })
@@ -427,7 +397,6 @@ describe('Authentication E2E Tests', () => {
         <AuthRouter />
       )
 
-      // Try to submit empty form
       const submitButton = screen.getByRole('button', { name: '로그인' })
       await user.click(submitButton)
 
@@ -473,7 +442,6 @@ describe('Authentication E2E Tests', () => {
 
       const emailInput = screen.getByLabelText('이메일')
       
-      // Tab navigation should work
       await user.tab()
       expect(emailInput).toHaveFocus()
 

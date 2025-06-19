@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 
-// Create a test query client
 function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -17,7 +16,6 @@ function createTestQueryClient() {
   })
 }
 
-// Wrapper component for tests that need React Query
 function TestWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient()
   

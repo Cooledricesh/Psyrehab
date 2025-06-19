@@ -1,5 +1,3 @@
-// Assessment options and related constants
-// These match the data in the assessment_options table
 
 export interface AssessmentOption {
   id: string
@@ -9,7 +7,6 @@ export interface AssessmentOption {
   option_order: number
 }
 
-// Focus time options
 export const FOCUS_TIME_OPTIONS = [
   { value: '5min', label: '5분 정도', order: 1 },
   { value: '15min', label: '15분 정도', order: 2 },
@@ -17,14 +14,12 @@ export const FOCUS_TIME_OPTIONS = [
   { value: '1hour', label: '1시간 이상', order: 4 },
 ] as const
 
-// Social preference options
 export const SOCIAL_PREFERENCE_OPTIONS = [
   { value: 'individual', label: '혼자 하는 게 편함', order: 1 },
   { value: 'small_group', label: '소수의 사람들과는 괜찮음 (2-3명)', order: 2 },
   { value: 'large_group', label: '많은 사람과도 괜찮음 (10명 이상)', order: 3 },
 ] as const
 
-// Past success options
 export const PAST_SUCCESS_OPTIONS = [
   { value: 'crafting', label: '만들기/그리기', order: 1 },
   { value: 'sports', label: '운동/산책', order: 2 },
@@ -34,7 +29,6 @@ export const PAST_SUCCESS_OPTIONS = [
   { value: 'social', label: '사람들과 대화', order: 6 },
 ] as const
 
-// Constraint options
 export const CONSTRAINT_OPTIONS = [
   { value: 'financial', label: '재정적 제약', order: 1 },
   { value: 'transportation', label: '교통편 제약', order: 2 },
@@ -44,7 +38,6 @@ export const CONSTRAINT_OPTIONS = [
   { value: 'confidence', label: '자신감 부족', order: 6 },
 ] as const
 
-// Motivation level scale (1-10)
 export const MOTIVATION_LEVELS = Array.from({ length: 10 }, (_, i) => ({
   value: i + 1,
   label: `${i + 1}점`,
@@ -53,7 +46,6 @@ export const MOTIVATION_LEVELS = Array.from({ length: 10 }, (_, i) => ({
                i === 9 ? '매우 높음' : ''
 }))
 
-// Assessment form validation
 export const ASSESSMENT_VALIDATION = {
   motivation_level: { min: 1, max: 10 },
   focus_time: FOCUS_TIME_OPTIONS.map(opt => opt.value),
@@ -62,7 +54,6 @@ export const ASSESSMENT_VALIDATION = {
   constraints: CONSTRAINT_OPTIONS.map(opt => opt.value),
 } as const
 
-// Helper functions
 export const getFocusTimeLabel = (value: string) => 
   FOCUS_TIME_OPTIONS.find(opt => opt.value === value)?.label || value
 

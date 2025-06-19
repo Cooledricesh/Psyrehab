@@ -1,6 +1,4 @@
-// Rehabilitation Goals related constants
 
-// Goal status options
 export const REHAB_GOAL_STATUS = {
   PENDING: 'pending',
   IN_PROGRESS: 'in_progress',
@@ -19,7 +17,6 @@ export const REHAB_GOAL_STATUS_LABELS = {
   [REHAB_GOAL_STATUS.DEFERRED]: '연기',
 } as const
 
-// Goal types
 export const REHAB_GOAL_TYPES = {
   LONG_TERM: 'long_term',
   SHORT_TERM: 'short_term',
@@ -38,7 +35,6 @@ export const REHAB_GOAL_TYPE_LABELS = {
   [REHAB_GOAL_TYPES.OTHER]: '기타',
 } as const
 
-// Goal priorities (1-5 scale)
 export const REHAB_GOAL_PRIORITIES = {
   CRITICAL: 5,
   HIGH: 4,
@@ -55,7 +51,6 @@ export const REHAB_GOAL_PRIORITY_LABELS = {
   [REHAB_GOAL_PRIORITIES.MINIMAL]: '최소',
 } as const
 
-// Goal categories (aligned with mental health rehabilitation)
 export const REHAB_GOAL_CATEGORIES = {
   SOCIAL_SKILLS: 'social_skills',
   COGNITIVE_FUNCTION: 'cognitive_function',
@@ -86,7 +81,6 @@ export const REHAB_GOAL_CATEGORY_LABELS = {
   [REHAB_GOAL_CATEGORIES.COMMUNITY_INTEGRATION]: '지역사회 통합',
 } as const
 
-// Completion rate ranges
 export const COMPLETION_RATE_RANGES = {
   NOT_STARTED: { min: 0, max: 0, label: '시작 안함' },
   MINIMAL: { min: 1, max: 25, label: '최소 진행 (1-25%)' },
@@ -96,7 +90,6 @@ export const COMPLETION_RATE_RANGES = {
   COMPLETE: { min: 100, max: 100, label: '완료 (100%)' },
 } as const
 
-// Evaluation criteria types
 export const EVALUATION_CRITERIA_TYPES = {
   BEHAVIORAL_OBSERVATION: 'behavioral_observation',
   SELF_REPORT: 'self_report',
@@ -119,7 +112,6 @@ export const EVALUATION_CRITERIA_TYPE_LABELS = {
   [EVALUATION_CRITERIA_TYPES.COMPLETION_CHECKLIST]: '완료 체크리스트',
 } as const
 
-// Goal duration types (for scheduling)
 export const GOAL_DURATIONS = {
   ONE_WEEK: { weeks: 1, label: '1주' },
   TWO_WEEKS: { weeks: 2, label: '2주' },
@@ -130,7 +122,6 @@ export const GOAL_DURATIONS = {
   ONE_YEAR: { weeks: 52, label: '1년' },
 } as const
 
-// Helper functions
 export const getRehabGoalStatusLabel = (status: string) =>
   REHAB_GOAL_STATUS_LABELS[status as keyof typeof REHAB_GOAL_STATUS_LABELS] || status
 
@@ -192,7 +183,6 @@ export const getUrgencyLabel = (urgency: string) => {
   return labels[urgency as keyof typeof labels] || urgency
 }
 
-// Validation rules
 export const GOAL_VALIDATION = {
   title: {
     minLength: 5,
@@ -232,7 +222,6 @@ export const GOAL_VALIDATION = {
   },
 } as const
 
-// Default structures
 export const REHAB_DEFAULT_GOAL_STRUCTURE = {
   title: '',
   description: '',
@@ -254,7 +243,6 @@ export const DEFAULT_EVALUATION_CRITERIA = {
   notes: '',
 } as const
 
-// Goal hierarchy configuration
 export const REHAB_GOAL_HIERARCHY = {
   MAX_DEPTH: 3, // Long-term -> Short-term -> Weekly
   MAX_CHILDREN_PER_PARENT: 10,

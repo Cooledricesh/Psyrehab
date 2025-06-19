@@ -6,13 +6,10 @@ import axe from '@axe-core/react'
  * Accessibility testing utilities for PsyRehab
  */
 
-// Configure axe for development environment
 export const initializeAccessibilityTesting = () => {
   if (process.env.NODE_ENV === 'development') {
     axe(React, ReactDOM, 1000, {
-      // Axe configuration options
       rules: {
-        // Enable all rules for comprehensive testing
         'color-contrast': { enabled: true },
         'keyboard-navigation': { enabled: true },
         'aria-labels': { enabled: true },
@@ -118,12 +115,10 @@ export const formatAccessibilityResults = (results: axe.AxeResults): string => {
   
   let output = '\n=== 접근성 테스트 결과 ===\n'
   
-  // Summary
   output += `✅ 통과: ${passes.length}개\n`
   output += `❌ 위반: ${violations.length}개\n`
   output += `⚠️ 불완전: ${incomplete.length}개\n\n`
   
-  // Violations
   if (violations.length > 0) {
     output += '🚨 접근성 위반 사항:\n'
     violations.forEach((violation, index) => {
@@ -135,7 +130,6 @@ export const formatAccessibilityResults = (results: axe.AxeResults): string => {
     })
   }
   
-  // Incomplete tests
   if (incomplete.length > 0) {
     output += '⚠️ 수동 확인 필요:\n'
     incomplete.forEach((item, index) => {

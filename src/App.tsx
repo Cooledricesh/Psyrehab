@@ -23,7 +23,6 @@ import UserManagement from '@/pages/admin/UserManagement'
 import LoginPage from '@/pages/auth/LoginPage'
 import SignUpPage from '@/pages/auth/SignUpPage'
 
-// QueryClient 인스턴스 생성
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

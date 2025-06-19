@@ -4,7 +4,6 @@ import { ReactNode } from 'react'
 import { AuthQueryProvider, useEnhancedAuth } from '../AuthQueryContext'
 import { mockUser, mockSession, mockUserProfile, mockUserRole, mockEnvVars } from '../../test/testUtils'
 
-// Mock the auth service
 vi.mock('../../services/authService', () => ({
   authService: {
     getCurrentUser: vi.fn(),
@@ -24,7 +23,6 @@ vi.mock('../../services/authService', () => ({
   },
 }))
 
-// Mock Supabase client
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
@@ -58,10 +56,6 @@ describe('AuthQueryContext', () => {
   describe('useEnhancedAuth', () => {
     it('provides enhanced authentication context with query states', async () => {
       const { authService } = await import('../../services/authService')
-      const mockGetCurrentUser = authService.getCurrentUser as ReturnType<typeof vi.fn>
-      const mockGetSession = authService.getSession as ReturnType<typeof vi.fn>
-      const mockGetUserProfile = authService.getUserProfile as ReturnType<typeof vi.fn>
-      const mockGetUserRole = authService.getUserRole as ReturnType<typeof vi.fn>
 
       mockGetCurrentUser.mockResolvedValue({ user: mockUser, error: null })
       mockGetSession.mockResolvedValue({ session: mockSession, error: null })
@@ -72,23 +66,19 @@ describe('AuthQueryContext', () => {
         wrapper: createWrapper(),
       })
 
-      // Check initial state
       expect(result.current.isLoading).toBe(true)
       expect(result.current.user).toBeNull()
       expect(result.current.session).toBeNull()
 
-      // Wait for queries to complete
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Check enhanced context properties
       expect(result.current.userQuery).toBeDefined()
       expect(result.current.sessionQuery).toBeDefined()
       expect(result.current.profileQuery).toBeDefined()
       expect(result.current.roleQuery).toBeDefined()
 
-      // Check mutation states
       expect(result.current.signInMutation).toBeDefined()
       expect(result.current.signUpMutation).toBeDefined()
       expect(result.current.signOutMutation).toBeDefined()
@@ -97,8 +87,6 @@ describe('AuthQueryContext', () => {
 
     it('handles sign in through enhanced context', async () => {
       const { authService } = await import('../../services/authService')
-      const mockSignIn = authService.signIn as ReturnType<typeof vi.fn>
-      const mockGetCurrentUser = authService.getCurrentUser as ReturnType<typeof vi.fn>
 
       mockSignIn.mockResolvedValue({
         user: mockUser,
@@ -112,12 +100,10 @@ describe('AuthQueryContext', () => {
         wrapper: createWrapper(),
       })
 
-      // Wait for initial load
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Test enhanced sign in
       await act(async () => {
         await result.current.signIn('test@example.com', 'password123')
       })
@@ -127,7 +113,6 @@ describe('AuthQueryContext', () => {
 
     it('handles sign up through enhanced context', async () => {
       const { authService } = await import('../../services/authService')
-      const mockSignUp = authService.signUp as ReturnType<typeof vi.fn>
 
       mockSignUp.mockResolvedValue({
         user: mockUser,
@@ -143,7 +128,6 @@ describe('AuthQueryContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      const signUpData = {
         email: 'test@example.com',
         password: 'password123',
         fullName: '테스트 사용자',
@@ -160,7 +144,6 @@ describe('AuthQueryContext', () => {
 
     it('handles sign out through enhanced context', async () => {
       const { authService } = await import('../../services/authService')
-      const mockSignOut = authService.signOut as ReturnType<typeof vi.fn>
 
       mockSignOut.mockResolvedValue({ error: null })
 
@@ -181,9 +164,7 @@ describe('AuthQueryContext', () => {
 
     it('handles profile updates through enhanced context', async () => {
       const { authService } = await import('../../services/authService')
-      const mockUpdateProfile = authService.updateProfile as ReturnType<typeof vi.fn>
 
-      const updatedProfile = {
         ...mockUserProfile,
         full_name: '업데이트된 사용자',
       }
@@ -210,10 +191,6 @@ describe('AuthQueryContext', () => {
 
     it('provides backward compatibility with original AuthContext', async () => {
       const { authService } = await import('../../services/authService')
-      const mockGetCurrentUser = authService.getCurrentUser as ReturnType<typeof vi.fn>
-      const mockGetSession = authService.getSession as ReturnType<typeof vi.fn>
-      const mockGetUserProfile = authService.getUserProfile as ReturnType<typeof vi.fn>
-      const mockGetUserRole = authService.getUserRole as ReturnType<typeof vi.fn>
 
       mockGetCurrentUser.mockResolvedValue({ user: mockUser, error: null })
       mockGetSession.mockResolvedValue({ session: mockSession, error: null })
@@ -228,7 +205,6 @@ describe('AuthQueryContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Check that original AuthContext methods are available
       expect(result.current.signIn).toBeDefined()
       expect(result.current.signUp).toBeDefined()
       expect(result.current.signOut).toBeDefined()
@@ -245,12 +221,7 @@ describe('AuthQueryContext', () => {
 
     it('handles permission checking correctly', async () => {
       const { authService } = await import('../../services/authService')
-      const mockGetCurrentUser = authService.getCurrentUser as ReturnType<typeof vi.fn>
-      const mockGetUserRole = authService.getUserRole as ReturnType<typeof vi.fn>
-      const mockGetUserPermissions = authService.getUserPermissions as ReturnType<typeof vi.fn>
 
-      const adminRole = { ...mockUserRole, role: 'admin' as const }
-      const adminPermissions = ['read', 'write', 'delete']
 
       mockGetCurrentUser.mockResolvedValue({ user: mockUser, error: null })
       mockGetUserRole.mockResolvedValue({ role: adminRole, error: null })
@@ -264,24 +235,20 @@ describe('AuthQueryContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Test permission checking
       expect(result.current.hasPermission('read')).toBe(true)
       expect(result.current.hasPermission('write')).toBe(true)
       expect(result.current.hasPermission('delete')).toBe(true)
       expect(result.current.hasPermission('invalid')).toBe(false)
 
-      // Test role checking
       expect(result.current.hasRole('admin')).toBe(true)
       expect(result.current.hasRole('user')).toBe(false)
 
-      // Test multiple role checking
       expect(result.current.hasAnyRole(['admin', 'moderator'])).toBe(true)
       expect(result.current.hasAnyRole(['user', 'moderator'])).toBe(false)
     })
 
     it('handles error states properly', async () => {
       const { authService } = await import('../../services/authService')
-      const mockGetCurrentUser = authService.getCurrentUser as ReturnType<typeof vi.fn>
 
       mockGetCurrentUser.mockResolvedValue({
         user: null,
@@ -301,7 +268,6 @@ describe('AuthQueryContext', () => {
 
     it('handles mutation loading states', async () => {
       const { authService } = await import('../../services/authService')
-      const mockSignIn = authService.signIn as ReturnType<typeof vi.fn>
 
       mockSignIn.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 1000)))
 

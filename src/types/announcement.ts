@@ -1,4 +1,3 @@
-// Base announcement types
 export enum AnnouncementType {
   GENERAL = 'general',
   EMERGENCY = 'emergency',
@@ -20,7 +19,6 @@ export enum Status {
   ARCHIVED = 'archived'
 }
 
-// Main announcement interface
 export interface Announcement {
   id: string;
   title: string;
@@ -37,7 +35,6 @@ export interface Announcement {
   createdByName?: string; // From join with administrators
 }
 
-// CRUD operation types
 export interface CreateAnnouncementData {
   title: string;
   content: string;
@@ -58,7 +55,6 @@ export interface UpdateAnnouncementData {
   end_date?: string;
 }
 
-// Filter types
 export interface AnnouncementFilters {
   type?: AnnouncementType;
   priority?: Priority;
@@ -69,7 +65,6 @@ export interface AnnouncementFilters {
   };
 }
 
-// Statistics interface
 export interface AnnouncementStats {
   total: number;
   active: number;
@@ -77,7 +72,6 @@ export interface AnnouncementStats {
   byPriority: Record<string, number>;
 }
 
-// Form data interface for UI
 export interface AnnouncementFormData {
   title: string;
   content: string;
@@ -88,7 +82,6 @@ export interface AnnouncementFormData {
   end_date: string;
 }
 
-// UI helper functions
 export const getTypeEmoji = (type: AnnouncementType): string => {
   switch (type) {
     case AnnouncementType.GENERAL:
@@ -464,7 +457,6 @@ export const getUserGroupLabel = (group: UserGroupType): string => {
 };
 
 export const isAnnouncementActive = (announcement: Announcement): boolean => {
-  const now = new Date();
   if (announcement.status !== Status.ACTIVE) return false;
   if (announcement.end_date && now > new Date(announcement.end_date)) return false;
   return true;

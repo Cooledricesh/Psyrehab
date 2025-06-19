@@ -18,7 +18,6 @@ import {
 import { setupAuthListeners, supabase } from '@/lib/supabase'
 import { ROLE_PERMISSIONS } from '@/types/auth'
 
-// Initial auth state
 const initialAuthState: AuthState = {
   user: null,
   session: null,
@@ -27,7 +26,6 @@ const initialAuthState: AuthState = {
   initialized: false
 }
 
-// Auth reducer
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'SET_LOADING':
@@ -53,32 +51,22 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-// Create auth context
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Auth provider props
 interface AuthProviderProps {
   children: React.ReactNode
 }
 
-// Auth provider component
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialAuthState)
 
-  // Initialize auth state
-  const initializeAuth = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
 
-      // Get current session
-      const session = await getCurrentSession()
       dispatch({ type: 'SET_SESSION', payload: session })
 
       if (session?.user) {
         dispatch({ type: 'SET_USER', payload: session.user })
 
-        // Get user profile
-        const profile = await getUserProfile(session.user.id)
         dispatch({ type: 'SET_PROFILE', payload: profile })
       }
     } catch {
@@ -88,16 +76,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
-  // Refresh auth state
-  const refresh = useCallback(async () => {
     try {
-      const session = await getCurrentSession()
       dispatch({ type: 'SET_SESSION', payload: session })
 
       if (session?.user) {
         dispatch({ type: 'SET_USER', payload: session.user })
         
-        const profile = await getUserProfile(session.user.id)
         dispatch({ type: 'SET_PROFILE', payload: profile })
       } else {
         dispatch({ type: 'SET_USER', payload: null })
@@ -108,12 +92,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
-  // Sign in
-  const signIn = useCallback(async (email: string, password: string) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
 
-      const result = await AuthService.signIn({ email, password })
       
       if (result.success && result.user && result.session) {
         dispatch({ type: 'SET_USER', payload: result.user })
@@ -131,12 +112,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
-  // Sign up
-  const signUp = useCallback(async (email: string, password: string, userData: unknown) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
 
-      const result = await AuthService.signUp({
         email,
         password,
         confirmPassword: password,
@@ -153,8 +131,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             message: '이메일 확인이 필요합니다. 이메일을 확인해주세요.'
           }
         } else if (result.user) {
-          // Auto sign in after successful signup
-          const signInResult = await signIn(email, password)
           return signInResult
         }
       }
@@ -167,34 +143,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [signIn])
 
-  // Sign out
-  const signOut = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       
       await AuthService.signOut()
       
-      // Reset state
       dispatch({ type: 'RESET' })
     } catch {
       console.error("Error occurred")
-      // Reset state even if sign out fails
       dispatch({ type: 'RESET' })
     }
   }, [])
 
-  // Reset password
-  const resetPassword = useCallback(async (email: string) => {
     try {
-      const result = await AuthService.resetPassword(email)
       return result
     } catch (error: unknown) {
       return { success: false, error: error.message || '비밀번호 재설정 중 오류가 발생했습니다.' }
     }
   }, [])
 
-  // Update profile
-  const updateProfile = useCallback(async (updates: Partial<AnyUserProfile>) => {
     try {
       if (!state.user?.id) {
         return { success: false, error: '사용자 정보를 찾을 수 없습니다.' }
@@ -202,7 +169,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       dispatch({ type: 'SET_LOADING', payload: true })
 
-      const result = await AuthService.updateProfile(state.user.id, updates)
       
       if (result.success && result.profile) {
         dispatch({ type: 'SET_PROFILE', payload: result.profile })
@@ -217,40 +183,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [state.user?.id])
 
-  // Update password
-  const updatePassword = useCallback(async (currentPassword: string, newPassword: string) => {
     try {
-      const result = await AuthService.updatePassword(currentPassword, newPassword)
       return result
     } catch (error: unknown) {
       return { success: false, error: error.message || '비밀번호 변경 중 오류가 발생했습니다.' }
     }
   }, [])
 
-  // Check permission
-  const hasPermission = useCallback((permission: string): boolean => {
     if (!state.profile?.role) {
       return false
     }
 
-    const rolePermissions = ROLE_PERMISSIONS[state.profile.role as UserRole] || []
     return rolePermissions.includes(permission as Permission)
   }, [state.profile?.role])
 
-  // Check role
-  const isRole = useCallback((role: UserRole): boolean => {
     return state.profile?.role === role
   }, [state.profile?.role])
 
-  // Setup auth listeners on mount
   useEffect(() => {
     let mounted = true
 
-    // Initialize auth state
     initializeAuth()
 
-    // Setup auth state change listener
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = onAuthStateChange(async (event) => {
       if (!mounted) return
 
       console.log('Auth state changed:', event, session?.user?.email)
@@ -261,9 +216,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             dispatch({ type: 'SET_USER', payload: session.user })
             dispatch({ type: 'SET_SESSION', payload: session })
             
-            // Get user profile
             try {
-              const profile = await getUserProfile(session.user.id)
               dispatch({ type: 'SET_PROFILE', payload: profile })
             } catch {
               console.error("Error occurred")
@@ -284,9 +237,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         case 'USER_UPDATED':
           if (session?.user) {
             dispatch({ type: 'SET_USER', payload: session.user })
-            // Refresh profile in case user data changed
             try {
-              const profile = await getUserProfile(session.user.id)
               dispatch({ type: 'SET_PROFILE', payload: profile })
             } catch {
               console.error("Error occurred")
@@ -298,7 +249,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: 'SET_LOADING', payload: false })
     })
 
-    // Setup additional auth listeners
     setupAuthListeners()
 
     return () => {
@@ -307,7 +257,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [initializeAuth])
 
-  // Context value
   const contextValue: AuthContextType = {
     ...state,
     signIn,
@@ -328,9 +277,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   )
 }
 
-// Hook to use auth context
 export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext)
   
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
@@ -339,5 +286,4 @@ export function useAuth(): AuthContextType {
   return context
 }
 
-// Export context for testing
 export { AuthContext } 

@@ -1,37 +1,29 @@
-// Authentication error codes
 export const AUTH_ERROR_CODES = {
-  // Generic errors
   UNKNOWN_ERROR: 'unknown_error',
   NETWORK_ERROR: 'network_error',
   
-  // Authentication errors
   INVALID_CREDENTIALS: 'invalid_credentials',
   USER_NOT_FOUND: 'user_not_found',
   WEAK_PASSWORD: 'weak_password',
   EMAIL_NOT_CONFIRMED: 'email_not_confirmed',
   TOO_MANY_REQUESTS: 'too_many_requests',
   
-  // Authorization errors
   INSUFFICIENT_PERMISSIONS: 'insufficient_permissions',
   ACCOUNT_DISABLED: 'account_disabled',
   
-  // Profile errors
   PROFILE_NOT_FOUND: 'profile_not_found',
   INVALID_ROLE: 'invalid_role',
   ROLE_ASSIGNMENT_FAILED: 'role_assignment_failed',
   PROFILE_CREATION_FAILED: 'profile_creation_failed',
   
-  // Password errors
   PASSWORD_MISMATCH: 'password_mismatch',
   OLD_PASSWORD_INCORRECT: 'old_password_incorrect',
   
-  // Email errors
   INVALID_EMAIL: 'invalid_email',
   EMAIL_ALREADY_EXISTS: 'email_already_exists',
   EMAIL_NOT_VERIFIED: 'email_not_verified'
 } as const
 
-// Authentication error messages (Korean)
 export const AUTH_ERROR_MESSAGES = {
   [AUTH_ERROR_CODES.UNKNOWN_ERROR]: '알 수 없는 오류가 발생했습니다.',
   [AUTH_ERROR_CODES.NETWORK_ERROR]: '네트워크 오류가 발생했습니다.',
@@ -53,7 +45,6 @@ export const AUTH_ERROR_MESSAGES = {
   [AUTH_ERROR_CODES.EMAIL_NOT_VERIFIED]: '이메일 인증이 완료되지 않았습니다.'
 } as const
 
-// Password requirements
 export const PASSWORD_REQUIREMENTS = {
   MIN_LENGTH: 8,
   REQUIRE_UPPERCASE: true,
@@ -69,7 +60,6 @@ export const PASSWORD_REQUIREMENTS = {
   ]
 } as const
 
-// Session configuration
 export const SESSION_CONFIG = {
   REFRESH_THRESHOLD: 300, // 5 minutes before expiry
   MAX_IDLE_TIME: 3600000, // 1 hour in milliseconds
@@ -77,7 +67,6 @@ export const SESSION_CONFIG = {
   USER_STORAGE_KEY: 'supabase.auth.user'
 } as const
 
-// Authentication flow configuration
 export const AUTH_FLOW_CONFIG = {
   SIGNUP_REDIRECT_URL: '/auth/verify-email',
   SIGNIN_REDIRECT_URL: '/dashboard',
@@ -86,7 +75,6 @@ export const AUTH_FLOW_CONFIG = {
   EMAIL_CONFIRMATION_REDIRECT_URL: '/auth/email-confirmed'
 } as const
 
-// Rate limiting
 export const RATE_LIMITS = {
   SIGNIN_ATTEMPTS: 5,
   SIGNUP_ATTEMPTS: 3,
@@ -94,7 +82,6 @@ export const RATE_LIMITS = {
   LOCKOUT_DURATION: 900000 // 15 minutes in milliseconds
 } as const
 
-// User role configuration
 export const USER_ROLE_CONFIG = {
   DEFAULT_ROLE: 'patient' as const,
   ADMIN_ROLES: ['administrator'] as const,
@@ -102,7 +89,6 @@ export const USER_ROLE_CONFIG = {
   CLIENT_ROLES: ['patient'] as const
 } as const
 
-// OAuth providers
 export const OAUTH_PROVIDERS = {
   GOOGLE: 'google',
   GITHUB: 'github',
@@ -110,7 +96,6 @@ export const OAUTH_PROVIDERS = {
   FACEBOOK: 'facebook'
 } as const
 
-// Authentication events
 export const AUTH_EVENTS = {
   SIGNED_IN: 'SIGNED_IN',
   SIGNED_OUT: 'SIGNED_OUT',

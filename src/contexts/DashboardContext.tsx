@@ -14,7 +14,6 @@ import {
 import { getPatientCount, getActiveGoalsCount } from '@/services/dashboardService';
 import { useDashboardRealtime } from '@/hooks/useRealtimeUpdates';
 
-// Action types
 type DashboardAction =
   | { type: 'SET_LOADING'; payload: Partial<LoadingState> }
   | { type: 'SET_ERROR'; payload: Partial<ErrorState> }
@@ -34,7 +33,6 @@ type DashboardAction =
   | { type: 'REALTIME_UPDATE'; payload: unknown }
   | { type: 'SET_REALTIME_STATUS'; payload: { connectionStatus: string; lastUpdate: string } };
 
-// Initial state
 const initialState: DashboardState = {
   stats: {
     totalPatients: 0,
@@ -96,7 +94,6 @@ const initialState: DashboardState = {
   lastUpdated: new Date().toISOString(),
 };
 
-// Reducer
 function dashboardReducer(state: DashboardState, action: DashboardAction): DashboardState {
   switch (action.type) {
     case 'SET_LOADING':
@@ -202,7 +199,6 @@ function dashboardReducer(state: DashboardState, action: DashboardAction): Dashb
       return initialState;
 
     case 'REALTIME_UPDATE':
-      // Handle different types of real-time updates
       const { eventType, table, record } = action.payload;
       switch (table) {
         case 'patients':
@@ -286,7 +282,6 @@ function dashboardReducer(state: DashboardState, action: DashboardAction): Dashb
   }
 }
 
-// Context types
 interface DashboardContextType {
   state: DashboardState;
   dispatch: React.Dispatch<DashboardAction>;
@@ -312,10 +307,7 @@ interface DashboardContextType {
   };
 }
 
-// Create context
-const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-// Provider component
 interface DashboardProviderProps {
   children: ReactNode;
 }
@@ -323,8 +315,6 @@ interface DashboardProviderProps {
 export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(dashboardReducer, initialState);
 
-  // Real-time updates
-  const handleRealtimeUpdate = (payload: unknown) => {
     console.log('Real-time update received:', payload);
     dispatch({
       type: 'REALTIME_UPDATE',
@@ -336,10 +326,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
     });
   };
 
-  const realtimeStatus = useDashboardRealtime(handleRealtimeUpdate);
 
-  // Actions
-  const actions = {
     fetchStats: async (filters?: DashboardFilters) => {
       dispatch({ type: 'SET_LOADING', payload: { stats: true } });
       dispatch({ type: 'SET_ERROR', payload: { stats: null } });
@@ -475,13 +462,11 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
     },
   };
 
-  // Selectors
-  const selectors = {
     getActivePatients: () => state.patients.filter(p => p.status === 'active'),
     getActiveGoals: () => state.goals.filter(g => g.status === 'in_progress'),
     getRecentSessions: () => 
       state.sessions
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort((a) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 10),
     getPatientsByStatus: (status: string) => state.patients.filter(p => p.status === status),
     getGoalsByCategory: (category: string) => state.goals.filter(g => g.category === category),
@@ -489,7 +474,6 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
     hasErrors: () => Object.values(state.errors).some(error => error !== null),
   };
 
-  // Initialize data on mount
   useEffect(() => {
     actions.fetchAllData();
   }, []);
@@ -508,9 +492,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
   );
 };
 
-// Custom hook
 export const useDashboard = () => {
-  const context = useContext(DashboardContext);
   if (context === undefined) {
     throw new Error('useDashboard must be used within a DashboardProvider');
   }

@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 
-// Manual testing component for authentication system
 export const ManualAuthTest: React.FC = () => {
-  const [results, setResults] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   const addResult = (message: string) => {
@@ -16,7 +14,6 @@ export const ManualAuthTest: React.FC = () => {
   const testEmailValidation = () => {
     addResult('=== 이메일 검증 테스트 ===')
     
-    // Test valid emails
     const validEmails = ['test@example.com', 'user.name@domain.co.kr', 'admin@company.org']
     const invalidEmails = ['invalid-email', '@domain.com', 'user@', 'user.domain.com']
     
@@ -54,16 +51,13 @@ export const ManualAuthTest: React.FC = () => {
   const testAuthStateManagement = () => {
     addResult('=== 인증 상태 관리 테스트 ===')
     
-    // Simulate auth state changes
     let authState = { isAuthenticated: false, user: null }
     
-    // Test sign in
     const mockUser = { id: '123', email: 'test@example.com', name: '테스트 사용자' }
     authState = { isAuthenticated: true, user: mockUser }
     addResult(`✅ 로그인 시뮬레이션: 인증 상태 = ${authState.isAuthenticated}`)
     addResult(`   사용자 정보: ${JSON.stringify(authState.user)}`)
     
-    // Test sign out
     authState = { isAuthenticated: false, user: null }
     addResult(`✅ 로그아웃 시뮬레이션: 인증 상태 = ${authState.isAuthenticated}`)
     addResult(`   사용자 정보: ${authState.user}`)
@@ -182,16 +176,13 @@ export const ManualAuthTest: React.FC = () => {
     
     const mockUser = { id: '123', email: 'test@example.com' }
     
-    // Test valid session
     const validSession = createSession(mockUser, 60)
     addResult(`✅ 유효한 세션 생성: ${isSessionValid(validSession) ? '성공' : '실패'}`)
     addResult(`   만료 시간: ${new Date(validSession.expiresAt).toLocaleString()}`)
     
-    // Test expired session
     const expiredSession = createSession(mockUser, -1) // Expired 1 minute ago
     addResult(`✅ 만료된 세션 검증: ${isSessionValid(expiredSession) ? '실패' : '성공'}`)
     
-    // Test session refresh simulation
     const refreshedSession = { ...expiredSession, expiresAt: Date.now() + 3600000 }
     addResult(`✅ 세션 갱신 시뮬레이션: ${isSessionValid(refreshedSession) ? '성공' : '실패'}`)
   }
@@ -203,7 +194,6 @@ export const ManualAuthTest: React.FC = () => {
     addResult('🚀 인증 시스템 테스트 시작')
     addResult('=====================================')
     
-    // Run all tests with delays for better UX
     await new Promise(resolve => setTimeout(resolve, 100))
     testEmailValidation()
     

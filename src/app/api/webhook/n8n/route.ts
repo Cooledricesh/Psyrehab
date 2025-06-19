@@ -9,10 +9,8 @@ interface WebhookCompletionData {
   error?: string
 }
 
-// POST: n8n에서 AI 추천 완료 신호를 받는 웹훅 엔드포인트
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
     
     // 요청 본문 파싱
     const data: WebhookCompletionData = await request.json()
@@ -90,7 +88,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: 웹훅 엔드포인트 상태 확인용
 export async function GET() {
   return NextResponse.json({
     status: 'active',

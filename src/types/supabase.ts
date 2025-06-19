@@ -46,14 +46,12 @@ export type Database = {
           execution_strategy: Json | null
           id: string
           is_active: boolean | null
-          // New structured format
           recommendations: Json
           patient_analysis: Json
           patient_id: string
           recommendation_date: string
           success_indicators: Json | null
           updated_at: string
-          // Legacy fields (deprecated but kept for backward compatibility)
           monthly_plans: Json | null
           six_month_goals: Json | null
           weekly_plans: Json | null
@@ -67,14 +65,12 @@ export type Database = {
           execution_strategy?: Json | null
           id?: string
           is_active?: boolean | null
-          // New structured format
           recommendations: Json
           patient_analysis: Json
           patient_id: string
           recommendation_date: string
           success_indicators?: Json | null
           updated_at?: string
-          // Legacy fields (deprecated but kept for backward compatibility)
           monthly_plans?: Json | null
           six_month_goals?: Json | null
           weekly_plans?: Json | null
@@ -88,14 +84,12 @@ export type Database = {
           execution_strategy?: Json | null
           id?: string
           is_active?: boolean | null
-          // New structured format
           recommendations?: Json
           patient_analysis?: Json
           patient_id?: string
           recommendation_date?: string
           success_indicators?: Json | null
           updated_at?: string
-          // Legacy fields (deprecated but kept for backward compatibility)
           monthly_plans?: Json | null
           six_month_goals?: Json | null
           weekly_plans?: Json | null
@@ -143,7 +137,6 @@ export type Database = {
           patient_id: string
           social_preference: string
           updated_at: string
-          // AI recommendation tracking fields
           ai_recommendation_status: string | null
           ai_recommendation_id: string | null
         }
@@ -160,7 +153,6 @@ export type Database = {
           patient_id: string
           social_preference: string
           updated_at?: string
-          // AI recommendation tracking fields
           ai_recommendation_status?: string | null
           ai_recommendation_id?: string | null
         }
@@ -177,7 +169,6 @@ export type Database = {
           patient_id?: string
           social_preference?: string
           updated_at?: string
-          // AI recommendation tracking fields
           ai_recommendation_status?: string | null
           ai_recommendation_id?: string | null
         }
@@ -756,5 +747,4 @@ export type GoalHierarchy = Database['public']['Views']['goal_hierarchy']['Row']
 export type PendingWeeklyCheckins = Database['public']['Views']['pending_weekly_checkins']['Row']
 export type WeeklyProgressOverview = Database['public']['Views']['weekly_progress_overview']['Row']
 
-// Union types
 export type User = SocialWorker | Administrator 

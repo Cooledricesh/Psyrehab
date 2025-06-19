@@ -5,7 +5,6 @@ import { AuthProvider } from '../contexts/AuthContext'
 import { AuthQueryProvider } from '../contexts/AuthQueryContext'
 import { vi } from 'vitest'
 
-// Mock Supabase
 export const mockSupabaseClient = {
   auth: {
     getUser: vi.fn(),
@@ -51,7 +50,6 @@ export const mockSupabaseClient = {
   rpc: vi.fn(),
 }
 
-// Mock user data
 export const mockUser = {
   id: 'test-user-id',
   email: 'test@example.com',
@@ -96,7 +94,6 @@ export const mockUserRole = {
   updated_at: '2023-01-01T00:00:00.000Z',
 }
 
-// Create test query client
 export function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -111,7 +108,6 @@ export function createTestQueryClient() {
   })
 }
 
-// Test wrapper with auth context
 interface AuthTestWrapperProps {
   children: ReactNode
   initialAuth?: {
@@ -127,7 +123,6 @@ export function AuthTestWrapper({
   children, 
   initialAuth = {} 
 }: AuthTestWrapperProps) {
-  const queryClient = createTestQueryClient()
   
   const {
     user = null,
@@ -137,8 +132,6 @@ export function AuthTestWrapper({
     role = null,
   } = initialAuth
 
-  // Mock AuthContext value
-  const mockAuthContextValue = {
     user,
     session,
     isLoading,
@@ -178,12 +171,10 @@ export function AuthTestWrapper({
   )
 }
 
-// Enhanced test wrapper with Query integration
 export function AuthQueryTestWrapper({ 
   children, 
   initialAuth = {} 
 }: AuthTestWrapperProps) {
-  const queryClient = createTestQueryClient()
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -194,7 +185,6 @@ export function AuthQueryTestWrapper({
   )
 }
 
-// Custom render function
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   initialAuth?: AuthTestWrapperProps['initialAuth']
   useAuthQuery?: boolean
@@ -204,7 +194,6 @@ export function renderWithAuth(
   ui: ReactElement,
   { initialAuth, useAuthQuery = false, ...renderOptions }: CustomRenderOptions = {}
 ) {
-  const Wrapper = useAuthQuery ? AuthQueryTestWrapper : AuthTestWrapper
   
   return render(ui, {
     wrapper: ({ children }) => (
@@ -216,15 +205,12 @@ export function renderWithAuth(
   })
 }
 
-// Mock environment variables
 export function mockEnvVars() {
   vi.stubEnv('VITE_SUPABASE_URL', 'https://test.supabase.co')
   vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key')
 }
 
-// Mock localStorage
 export function mockLocalStorage() {
-  const localStorageMock = {
     getItem: vi.fn(),
     setItem: vi.fn(),
     removeItem: vi.fn(),
@@ -239,9 +225,7 @@ export function mockLocalStorage() {
   return localStorageMock
 }
 
-// Mock sessionStorage
 export function mockSessionStorage() {
-  const sessionStorageMock = {
     getItem: vi.fn(),
     setItem: vi.fn(),
     removeItem: vi.fn(),
@@ -256,7 +240,6 @@ export function mockSessionStorage() {
   return sessionStorageMock
 }
 
-// Mock timer functions
 export function mockTimers() {
   vi.useFakeTimers()
   return {

@@ -34,7 +34,6 @@ export interface BaseGoal {
   target_completion_rate: number // 문서 스펙: 목표 달성률
   priority: GoalPriority
   
-  // AI 추천 관련 (문서 스펙)
   is_ai_suggested: boolean
   source_recommendation_id?: string
   is_from_ai_recommendation: boolean
@@ -197,7 +196,6 @@ export interface CreateGoalRequest {
   target_completion_rate?: number
   priority?: GoalPriority
   
-  // AI 추천 관련
   is_ai_suggested?: boolean
   source_recommendation_id?: string
   
@@ -258,7 +256,6 @@ export interface GoalStatistics {
   completedThisWeek: number
   completedThisMonth: number
   
-  // AI 관련 통계
   aiSuggestedGoals: number
   aiSuggestedCompletionRate: number
   

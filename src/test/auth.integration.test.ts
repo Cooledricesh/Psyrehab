@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import { AuthService } from '../services/auth'
 
-// Mock Supabase
 vi.mock('../lib/supabase', () => ({
   supabase: {
     auth: {
@@ -47,7 +46,6 @@ vi.mock('../lib/supabase', () => ({
   hasPermission: vi.fn(),
 }))
 
-// Mock auth utilities
 vi.mock('../utils/auth', () => ({
   isValidEmail: vi.fn(() => true),
   validatePassword: vi.fn(() => ({ isValid: true, errors: [] })),
@@ -62,7 +60,6 @@ vi.mock('../utils/auth', () => ({
   getAuthErrorMessage: vi.fn((error) => error?.message || '인증 오류가 발생했습니다.'),
 }))
 
-// Mock auth constants
 vi.mock('../constants/auth', () => ({
   AUTH_ERROR_CODES: {
     INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
@@ -85,7 +82,6 @@ vi.mock('../constants/auth', () => ({
 describe('AuthService Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock console to avoid noise in tests
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
@@ -129,14 +125,12 @@ describe('AuthService Integration Tests', () => {
         updated_at: new Date().toISOString(),
       }
 
-      // Mock successful auth
       const mockSignInWithPassword = supabase.auth.signInWithPassword as ReturnType<typeof vi.fn>
       mockSignInWithPassword.mockResolvedValue({
         data: { user: mockUser, session: mockSession },
         error: null
       })
 
-      // Mock successful profile fetch
       const mockGetUserProfile = getUserProfile as ReturnType<typeof vi.fn>
       mockGetUserProfile.mockResolvedValue(mockProfile)
 

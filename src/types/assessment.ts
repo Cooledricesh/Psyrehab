@@ -172,7 +172,6 @@ export interface AssessmentValidationConfig {
   }[]
 }
 
-// API 응답 타입들
 export interface AssessmentListResponse {
   data: AssessmentSummary[]
   count: number
@@ -237,7 +236,6 @@ export interface AssessmentVisualizationData {
   }[]
 }
 
-// History tracking types
 export interface AssessmentHistory {
   id: string
   assessment_id: string
@@ -285,7 +283,6 @@ export interface ScoreChange {
   trend: 'improved' | 'declined' | 'stable'
 }
 
-// Assessment timeline and progression
 export interface AssessmentTimeline {
   patient_id: string
   assessments: AssessmentTimelineEntry[]
@@ -355,7 +352,6 @@ export interface ProgressInsight {
   priority: 'low' | 'medium' | 'high'
 }
 
-// History query and filtering
 export interface AssessmentHistoryParams {
   assessment_id?: string
   patient_id?: string
@@ -380,7 +376,6 @@ export interface AssessmentVersionInfo {
   minor_changes: number
 }
 
-// Progress tracking requests
 export interface CreateHistoryEntryRequest {
   assessment_id: string
   change_type: AssessmentHistory['change_type']
@@ -408,7 +403,6 @@ export interface ProgressTrackingConfig {
   }
 }
 
-// Analytics and reporting
 export interface ProgressReport {
   patient_id: string
   report_period: {

@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom'
 import { beforeAll, afterAll } from 'vitest'
 
-// Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
@@ -16,7 +15,6 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 })
 
-// Suppress console.error and console.warn in tests unless needed
 const originalError = console.error
 const originalWarn = console.warn
 

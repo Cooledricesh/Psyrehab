@@ -6,11 +6,9 @@
 import { AssessmentService } from '@/services/assessments'
 import type { 
   AssessmentCreateRequest, 
-  AssessmentUpdateRequest,
-  AssessmentData 
+  AssessmentUpdateRequest
 } from '@/types/assessment'
 
-// Mock data for testing
 const mockPatientId = '123e4567-e89b-12d3-a456-426614174001'
 const mockAssessorId = '123e4567-e89b-12d3-a456-426614174002'
 
@@ -68,7 +66,6 @@ export async function runAssessmentIntegrationTest() {
   let createdAssessmentId: string
   
   try {
-    // Test 1: Create Assessment
     console.log('🧪 Test 1: Creating new assessment...')
     const created = await AssessmentService.createAssessment(mockAssessmentData)
     
@@ -79,7 +76,6 @@ export async function runAssessmentIntegrationTest() {
     createdAssessmentId = created.id
     console.log('✅ Assessment created successfully:', created.id)
 
-    // Test 2: Retrieve Assessment
     console.log('🧪 Test 2: Retrieving assessment...')
     const retrieved = await AssessmentService.getAssessment(createdAssessmentId)
     
@@ -91,7 +87,6 @@ export async function runAssessmentIntegrationTest() {
     
     console.log('✅ Assessment retrieved successfully with all data intact')
 
-    // Test 3: Update Assessment
     console.log('🧪 Test 3: Updating assessment...')
     const updateData: AssessmentUpdateRequest = {
       assessment_data: {
@@ -116,7 +111,6 @@ export async function runAssessmentIntegrationTest() {
     
     console.log('✅ Assessment updated successfully')
 
-    // Test 4: List Assessments
     console.log('🧪 Test 4: Testing assessment listing...')
     const listResult = await AssessmentService.getAssessments({
       page: 1,
@@ -130,7 +124,6 @@ export async function runAssessmentIntegrationTest() {
     
     console.log('✅ Assessment listing working correctly')
 
-    // Test 5: Statistics
     console.log('🧪 Test 5: Testing statistics calculation...')
     const stats = await AssessmentService.getPatientAssessmentStats(mockPatientId)
     
@@ -140,7 +133,6 @@ export async function runAssessmentIntegrationTest() {
     
     console.log('✅ Statistics calculated successfully')
 
-    // Test 6: Visualization Data
     console.log('🧪 Test 6: Testing visualization data...')
     const vizData = await AssessmentService.getVisualizationData(mockPatientId)
     
@@ -150,7 +142,6 @@ export async function runAssessmentIntegrationTest() {
     
     console.log('✅ Visualization data generated successfully')
 
-    // Test 7: Assessment Comparison
     console.log('🧪 Test 7: Testing assessment comparison...')
     const comparison = await AssessmentService.compareAssessments(createdAssessmentId)
     
@@ -160,7 +151,6 @@ export async function runAssessmentIntegrationTest() {
     
     console.log('✅ Assessment comparison working correctly')
 
-    // Test 8: Cleanup
     console.log('🧪 Test 8: Cleaning up...')
     await AssessmentService.deleteAssessment(createdAssessmentId)
     console.log('✅ Assessment deleted successfully')
@@ -176,7 +166,6 @@ export async function runAssessmentIntegrationTest() {
   } catch {
     console.error("Error occurred")
     
-    // Cleanup on failure
     if (createdAssessmentId) {
       try {
         await AssessmentService.deleteAssessment(createdAssessmentId)

@@ -147,7 +147,6 @@ export interface DashboardState {
   lastUpdated: string;
 }
 
-// API endpoint types
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

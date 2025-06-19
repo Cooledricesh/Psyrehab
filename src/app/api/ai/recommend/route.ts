@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 // n8n 웹훅 URL (환경변수로 관리)
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://baclava.uk/webhook/09b18ab5-1bdb-4e04-88e4-63babb1f4b46'
 
 // 평가 데이터를 AI 분석용으로 변환하는 유틸리티 함수 (GoalSetting.tsx 구조에 맞게 수정)
 function transformAssessmentForAI(assessment: unknown) {
   // focus_time을 분 단위 duration으로 변환
-  const getDurationFromFocusTime = (focusTime: string): number => {
     switch (focusTime) {
       case '5min': return 5
       case '15min': return 15
@@ -63,15 +61,12 @@ function transformAssessmentForAI(assessment: unknown) {
       previousAssessments: 0,
       urgencyLevel: 'medium'
     },
-    // AI 모델이 응답을 보낼 웹훅 URL
     callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://606a-119-201-55-170.ngrok-free.app'}/api/webhook/n8n`
   }
 }
 
-// POST: 평가 데이터를 기반으로 AI 목표 추천 요청
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
     const { assessmentId } = await request.json()
 
     if (!assessmentId) {
@@ -141,11 +136,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 평가 데이터를 AI 분석용으로 변환
-    const aiPayload = transformAssessmentForAI(assessment)
 
     try {
       // n8n 웹훅으로 데이터 전송
-      const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +150,6 @@ export async function POST(request: NextRequest) {
         throw new Error(`N8N webhook failed: ${n8nResponse.status} ${n8nResponse.statusText}`)
       }
 
-      const n8nResult = await n8nResponse.json()
 
       return NextResponse.json({
         success: true,
@@ -205,11 +197,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: AI 추천 상태 확인
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const assessmentId = searchParams.get('assessmentId')
 
     if (!assessmentId) {
       return NextResponse.json(
@@ -218,7 +208,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createClient()
 
     const { data: assessment, error } = await supabase
       .from('assessments')

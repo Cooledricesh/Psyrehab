@@ -2,10 +2,8 @@ import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import type { Database } from './supabase'
 
 
-// User roles
 export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest'
 
-// User profile based on role
 export interface UserProfile {
   user_id: string
   role: UserRole
@@ -40,10 +38,8 @@ export interface PatientProfile extends UserProfile {
   additional_info?: unknown
 }
 
-// Union type for all profiles
 export type AnyUserProfile = SocialWorkerProfile | AdministratorProfile | PatientProfile
 
-// Authentication state
 export interface AuthState {
   user: SupabaseUser | null
   session: Session | null
@@ -54,7 +50,6 @@ export interface AuthState {
   error: string | null
 }
 
-// Authentication context
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signUp: (email: string, password: string, userData: unknown) => Promise<{ success: boolean; error?: string }>
@@ -67,7 +62,6 @@ export interface AuthContextType extends AuthState {
   refresh: () => Promise<void>
 }
 
-// Permission types
 export type Permission = 
   | 'manage_users'
   | 'manage_social_workers'
@@ -116,7 +110,6 @@ export type Permission =
   | 'report:read'
   | 'report:export'
 
-// All permissions array
 const ALL_PERMISSIONS: Permission[] = [
   'manage_users',
   'manage_social_workers',
@@ -166,7 +159,6 @@ const ALL_PERMISSIONS: Permission[] = [
   'report:export'
 ]
 
-// Role permissions mapping
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   super_admin: ALL_PERMISSIONS,
   admin: [
@@ -250,7 +242,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ]
 }
 
-// Authentication form types
 export interface SignInForm {
   email: string
   password: string
@@ -262,7 +253,6 @@ export interface SignUpForm {
   confirmPassword: string
   full_name: string
   role: UserRole
-  // Additional fields based on role
   employee_id?: string
   department?: string
   contact_number?: string
@@ -282,14 +272,12 @@ export interface UpdatePasswordForm {
   confirmPassword: string
 }
 
-// Authentication error types
 export interface AuthError {
   message: string
   status?: number
   details?: unknown
 }
 
-// Authentication events
 export type AuthEvent = 
   | 'SIGNED_IN'
   | 'SIGNED_OUT'
@@ -297,7 +285,6 @@ export type AuthEvent =
   | 'USER_UPDATED'
   | 'PASSWORD_RECOVERY'
 
-// Protected route props
 export interface ProtectedRouteProps {
   children: React.ReactNode
   requiredRole?: UserRole | UserRole[]
@@ -306,7 +293,6 @@ export interface ProtectedRouteProps {
   redirectTo?: string
 }
 
-// Hook return types
 export interface UseAuthReturn extends AuthContextType {}
 
 export interface UsePermissionsReturn {
@@ -317,7 +303,6 @@ export interface UsePermissionsReturn {
   isAnyRole: (roles: UserRole[]) => boolean
 }
 
-// Auth action types for reducers
 export type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: SupabaseUser | null }
@@ -326,7 +311,6 @@ export type AuthAction =
   | { type: 'SET_INITIALIZED'; payload: boolean }
   | { type: 'RESET' }
 
-// Export utility type guards
 export const isAdministrator = (profile: AnyUserProfile | null): profile is AdministratorProfile => {
   return profile?.role === 'administrator'
 }

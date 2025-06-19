@@ -20,7 +20,6 @@ interface AdminAuthContextType extends AdminAuthState {
   refreshUser: () => Promise<void>;
 }
 
-const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
 interface AdminAuthProviderProps {
   children: ReactNode;
@@ -37,7 +36,6 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   });
 
   // 사용자 정보 로드
-  const loadUser = async () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -71,7 +69,6 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
           department: profile.department,
         };
 
-        const isUserAdmin = isAdminRole(userData.role);
 
         setState({
           user: userData,
@@ -102,7 +99,6 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   };
 
   // 로그인
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -123,7 +119,6 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
           .eq('id', data.user.id)
           .single();
 
-        const userRole = profile?.role as UserRole;
         if (!isAdminRole(userRole)) {
           await supabase.auth.signOut();
           return { 
@@ -143,14 +138,12 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
 
       return { success: false, error: '로그인에 실패했습니다.' };
     } catch {
-      const errorMessage = ""instanceOf Error ? "Error" : '로그인에 실패했습니다.';
       setState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
       return { success: false, error: errorMessage };
     }
   };
 
   // 로그아웃
-  const logout = async (): Promise<void> => {
     try {
       await supabase.auth.signOut();
       setState({
@@ -167,20 +160,16 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   };
 
   // 권한 체크 함수들
-  const checkPermission = (permission: Permission): boolean => {
     return hasPermission(state.permissions, permission);
   };
 
-  const checkAnyPermission = (permissions: Permission[]): boolean => {
     return permissions.some(permission => hasPermission(state.permissions, permission));
   };
 
-  const checkAllPermissions = (permissions: Permission[]): boolean => {
     return permissions.every(permission => hasPermission(state.permissions, permission));
   };
 
   // 사용자 정보 새로고침
-  const refreshUser = async (): Promise<void> => {
     await loadUser();
   };
 
@@ -228,7 +217,6 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
 };
 
 export const useAdminAuth = (): AdminAuthContextType => {
-  const context = useContext(AdminAuthContext);
   if (context === undefined) {
     throw new Error('useAdminAuth must be used within an AdminAuthProvider');
   }

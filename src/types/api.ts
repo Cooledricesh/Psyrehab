@@ -1,6 +1,4 @@
-// API related types
 
-// Base API response structure
 export interface ApiResponse<T = unknown> {
   data: T
   message?: string
@@ -13,7 +11,6 @@ export interface ApiError {
   details?: unknown
 }
 
-// Pagination types
 export interface PaginationParams {
   page?: number
   limit?: number
@@ -31,7 +28,6 @@ export interface PaginatedResponse<T> {
   }
 }
 
-// Auth types
 export interface LoginCredentials {
   email: string
   password: string
@@ -58,7 +54,6 @@ export interface AuthResponse {
   }
 }
 
-// Patient types
 export interface CreatePatientData {
   patientId: string
   firstName: string
@@ -79,7 +74,6 @@ export interface PatientSearchParams extends PaginationParams {
   hasActiveGoals?: boolean
 }
 
-// Goal types
 export interface CreateGoalData {
   patientId: string
   parentGoalId?: string
@@ -103,7 +97,6 @@ export interface GoalSearchParams extends PaginationParams {
   dateTo?: string
 }
 
-// Assessment types
 export interface CreateAssessmentData {
   patientId: string
   assessmentStage: 'initial' | 'ongoing' | 'interim' | 'discharge' | 'follow_up'
@@ -117,7 +110,6 @@ export interface UpdateAssessmentData extends Partial<CreateAssessmentData> {
   id: string
 }
 
-// AI Recommendation types
 export interface CreateAIRecommendationData {
   patientId: string
   recommendationType: string
@@ -131,7 +123,6 @@ export interface UpdateAIRecommendationData {
   reviewNotes?: string
 }
 
-// Progress tracking types
 export interface RecordProgressData {
   goalId: string
   progressDate: string
@@ -139,7 +130,6 @@ export interface RecordProgressData {
   notes?: string
 }
 
-// Dashboard types
 export interface DashboardStats {
   totalPatients: number
   activeGoals: number
