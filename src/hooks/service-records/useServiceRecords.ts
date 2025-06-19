@@ -21,7 +21,7 @@ type TablesUpdate<T extends string> = any
 export const serviceRecordKeys = {
   all: ['service-records'] as const,
   lists: () => [...serviceRecordKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...serviceRecordKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...serviceRecordKeys.lists(), filters] as const,
   patient: (patientId: string) => [...serviceRecordKeys.all, 'patient', patientId] as const,
   socialWorker: (socialWorkerId: string) => [...serviceRecordKeys.all, 'social-worker', socialWorkerId] as const,
   details: () => [...serviceRecordKeys.all, 'detail'] as const,

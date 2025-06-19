@@ -153,7 +153,7 @@ export interface AssessmentFieldConfig {
   dependencies?: Array<{
     field: string
     affects: 'options' | 'validation' | 'visibility'
-    mapping?: Record<string, any>
+    mapping?: Record<string, unknown>
   }>
   validation?: {
     pattern?: string

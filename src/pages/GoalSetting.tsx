@@ -51,7 +51,7 @@ const GoalSetting: React.FC = () => {
 
   // 추가 상태 (훅으로 옮기지 않은 것들)
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [aiRecommendations, setAiRecommendations] = useState<any>(null);
+  const [aiRecommendations, setAiRecommendations] = useState<unknown>(null);
   
   // AI 응답 파싱 훅
   const { parseAIResponse } = useAIResponseParser();

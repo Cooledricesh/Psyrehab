@@ -23,13 +23,13 @@ type TablesUpdate<T extends string> = any
 export const aiRecommendationKeys = {
   all: ['ai-recommendations'] as const,
   lists: () => [...aiRecommendationKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...aiRecommendationKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...aiRecommendationKeys.lists(), filters] as const,
   patient: (patientId: string) => [...aiRecommendationKeys.all, 'patient', patientId] as const,
   activePatient: (patientId: string) => [...aiRecommendationKeys.all, 'active-patient', patientId] as const,
   details: () => [...aiRecommendationKeys.all, 'detail'] as const,
   detail: (id: string) => [...aiRecommendationKeys.details(), id] as const,
   statistics: () => [...aiRecommendationKeys.all, 'statistics'] as const,
-  stats: (filters?: Record<string, any>) => [...aiRecommendationKeys.statistics(), filters] as const,
+  stats: (filters?: Record<string, unknown>) => [...aiRecommendationKeys.statistics(), filters] as const,
   recent: (limit?: number) => [...aiRecommendationKeys.all, 'recent', limit] as const,
 }
 

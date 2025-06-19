@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MultiSelectInput: React.FC<any> = ({ label, value = [], onChange, options = [] }) => (
+const MultiSelectInput: React.FC<unknown> = ({ label, value = [], onChange, options = [] }) => (
   <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <div className="space-y-2">

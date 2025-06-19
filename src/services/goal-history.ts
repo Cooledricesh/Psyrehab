@@ -234,12 +234,12 @@ export async function getGoalHistoryStatistics(filters?: {
       return acc
     }, {} as Record<string, number>),
     goal_types: data.reduce((acc, history) => {
-      const goalType = (history.goal as any)?.goal_type || 'unknown'
+      const goalType = (history.goal as unknown)?.goal_type || 'unknown'
       acc[goalType] = (acc[goalType] || 0) + 1
       return acc
     }, {} as Record<string, number>),
     categories: data.reduce((acc, history) => {
-      const categoryName = (history.goal as any)?.category?.name || 'unknown'
+      const categoryName = (history.goal as unknown)?.category?.name || 'unknown'
       acc[categoryName] = (acc[categoryName] || 0) + 1
       return acc
     }, {} as Record<string, number>),

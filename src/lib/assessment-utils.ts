@@ -22,7 +22,7 @@ export function shouldRenderField(
       : [null, conditionField]
     
     if (stepKey && formData[stepKey as AssessmentStep]) {
-      fieldValue = (formData[stepKey as AssessmentStep] as any)?.[fieldKey]
+      fieldValue = (formData[stepKey as AssessmentStep] as unknown)?.[fieldKey]
     }
   }
 

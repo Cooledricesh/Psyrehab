@@ -18,12 +18,12 @@ type TablesInsert<T extends string> = any
 export const goalHistoryKeys = {
   all: ['goal-history'] as const,
   lists: () => [...goalHistoryKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...goalHistoryKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...goalHistoryKeys.lists(), filters] as const,
   goalHistory: (goalId: string) => [...goalHistoryKeys.all, 'goal', goalId] as const,
   details: () => [...goalHistoryKeys.all, 'detail'] as const,
   detail: (id: string) => [...goalHistoryKeys.details(), id] as const,
   statistics: () => [...goalHistoryKeys.all, 'statistics'] as const,
-  stats: (filters?: Record<string, any>) => [...goalHistoryKeys.statistics(), filters] as const,
+  stats: (filters?: Record<string, unknown>) => [...goalHistoryKeys.statistics(), filters] as const,
   timeline: (goalId: string) => [...goalHistoryKeys.all, 'timeline', goalId] as const,
   recent: (limit?: number) => [...goalHistoryKeys.all, 'recent', limit] as const,
 }
@@ -287,7 +287,7 @@ export function useHistoryFilters() {
       if (!acc[month]) acc[month] = []
       acc[month].push(entry)
       return acc
-    }, {} as Record<string, any[]>) || {}
+    }, {} as Record<string, unknown[]>) || {}
   }
   
   const groupHistoryByChangeType = (history: unknown[]) => {
@@ -296,7 +296,7 @@ export function useHistoryFilters() {
       if (!acc[type]) acc[type] = []
       acc[type].push(entry)
       return acc
-    }, {} as Record<string, any[]>) || {}
+    }, {} as Record<string, unknown[]>) || {}
   }
   
   return {

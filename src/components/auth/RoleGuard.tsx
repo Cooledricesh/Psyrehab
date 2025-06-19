@@ -256,7 +256,7 @@ export function withRoleGuard<P extends object>(
     roles?: UserRole | UserRole[]
     permissions?: Permission | Permission[]
     requireAll?: boolean
-    fallback?: React.ComponentType<any>
+    fallback?: React.ComponentType<unknown>
   }
 ) {
   return function GuardedComponent(props: P) {
@@ -283,7 +283,7 @@ export function withPermission<P extends object>(
   permission: Permission | Permission[],
   options?: {
     requireAll?: boolean
-    fallback?: React.ComponentType<any>
+    fallback?: React.ComponentType<unknown>
   }
 ) {
   return function PermissionGuardedComponent(props: P) {

@@ -191,7 +191,7 @@ export default function PatientDetailModal({
                     <label className="block text-sm font-medium text-gray-500">환자 연락처</label>
                     <p className="text-gray-900">
                       {patient.contact_info && typeof patient.contact_info === 'object' && 'phone' in patient.contact_info 
-                        ? (patient.contact_info as any).phone || '정보 없음'
+                        ? (patient.contact_info as unknown).phone || '정보 없음'
                         : typeof patient.contact_info === 'string' 
                         ? patient.contact_info 
                         : '정보 없음'}

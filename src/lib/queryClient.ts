@@ -61,12 +61,12 @@ function isAuthError(error: unknown): boolean {
   }
   
   if (error && typeof error === 'object' && 'status' in error) {
-    const status = (error as any).status
+    const status = (error as unknown).status
     return status === 401 || status === 403
   }
   
   if (error && typeof error === 'object' && 'message' in error) {
-    const message = (error as any).message?.toLowerCase() || ''
+    const message = (error as unknown).message?.toLowerCase() || ''
     return message.includes('unauthorized') || 
            message.includes('forbidden') || 
            message.includes('invalid token') ||
@@ -82,7 +82,7 @@ function isAuthError(error: unknown): boolean {
  */
 function isClientError(error: unknown): boolean {
   if (error && typeof error === 'object' && 'status' in error) {
-    const status = (error as any).status
+    const status = (error as unknown).status
     return status >= 400 && status < 500
   }
   return false

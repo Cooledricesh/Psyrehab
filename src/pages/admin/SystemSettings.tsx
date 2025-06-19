@@ -203,8 +203,8 @@ export default function SystemSettings() {
         const originalSection = originalSettings[section];
 
         Object.keys(currentSection).forEach(fieldKey => {
-          const currentValue = (currentSection as any)[fieldKey];
-          const originalValue = (originalSection as any)[fieldKey];
+          const currentValue = (currentSection as unknown)[fieldKey];
+          const originalValue = (originalSection as unknown)[fieldKey];
 
           if (JSON.stringify(currentValue) !== JSON.stringify(originalValue)) {
             changes.push({

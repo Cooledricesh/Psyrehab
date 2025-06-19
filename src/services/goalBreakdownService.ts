@@ -316,7 +316,7 @@ export class GoalBreakdownService {
     goal: BaseGoal,
     patientContext?: {
       previousGoals?: BaseGoal[];
-      preferences?: Record<string, any>;
+      preferences?: Record<string, unknown>;
       constraints?: string[];
     }
   ): {

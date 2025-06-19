@@ -2,7 +2,7 @@ import React from 'react'
 import { cn } from '@/lib/utils'
 
 interface AccessibleIconProps {
-  icon: React.ComponentType<any>
+  icon: React.ComponentType<unknown>
   label: string
   description?: string
   size?: number | string
@@ -99,7 +99,7 @@ export const EmojiIcon: React.FC<EmojiIconProps> = ({
 }
 
 interface IconButtonProps {
-  icon: React.ComponentType<any>
+  icon: React.ComponentType<unknown>
   label: string
   onClick?: () => void
   disabled?: boolean

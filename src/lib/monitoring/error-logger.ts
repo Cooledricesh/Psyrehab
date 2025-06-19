@@ -22,7 +22,7 @@ export interface ErrorLogEntry {
   userAgent?: string
   url?: string
   stackTrace?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface ErrorMetrics {
@@ -59,7 +59,7 @@ class ErrorLogger {
   logError(
     error: AppError,
     context?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): ErrorLogEntry {
     if (!this.isEnabled) return {} as ErrorLogEntry
 
@@ -108,7 +108,7 @@ class ErrorLogger {
   logWarning(
     message: string,
     context?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): ErrorLogEntry {
     const warningError: AppError = {
       type: 'UNKNOWN_ERROR',
@@ -143,7 +143,7 @@ class ErrorLogger {
   logInfo(
     message: string,
     context?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): ErrorLogEntry {
     const infoError: AppError = {
       type: 'UNKNOWN_ERROR',
@@ -374,8 +374,8 @@ class ErrorLogger {
 
   private sendToSentry(logEntry: ErrorLogEntry): void {
     // Sentry 전송 로직 (실제 구현 시 @sentry/browser 사용)
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(logEntry.error, {
+    if (typeof window !== 'undefined' && (window as unknown).Sentry) {
+      (window as unknown).Sentry.captureException(logEntry.error, {
         tags: {
           context: logEntry.context,
           errorType: logEntry.error.type,
@@ -409,7 +409,7 @@ export const errorLogger = new ErrorLogger()
 export function logError(
   error: AppError,
   context?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): ErrorLogEntry {
   return errorLogger.logError(error, context, metadata)
 }
@@ -420,7 +420,7 @@ export function logError(
 export function logWarning(
   message: string,
   context?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): ErrorLogEntry {
   return errorLogger.logWarning(message, context, metadata)
 }
@@ -431,7 +431,7 @@ export function logWarning(
 export function logInfo(
   message: string,
   context?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): ErrorLogEntry {
   return errorLogger.logInfo(message, context, metadata)
 }
@@ -442,7 +442,7 @@ export function logInfo(
 export function logPerformance(
   operation: string,
   duration: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): void {
   logInfo(
     `Performance: ${operation} took ${duration}ms`,
@@ -460,7 +460,7 @@ export function logPerformance(
  */
 export function logUserAction(
   action: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): void {
   logInfo(
     `User Action: ${action}`,
@@ -480,7 +480,7 @@ export function logUserAction(
 /**
  * 함수 실행 시간 측정 데코레이터
  */
-export function measurePerformance<T extends (...args: unknown[]) => any>(
+export function measurePerformance<T extends (...args: unknown[]) => unknown>(
   fn: T,
   context: string
 ): T {
@@ -525,7 +525,7 @@ export function usePerformanceLogger(operation: string) {
   const start = performance.now()
   
   return {
-    end: (metadata?: Record<string, any>) => {
+    end: (metadata?: Record<string, unknown>) => {
       const duration = performance.now() - start
       logPerformance(operation, duration, metadata)
       return duration

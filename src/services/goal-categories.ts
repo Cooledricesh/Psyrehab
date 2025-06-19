@@ -210,7 +210,7 @@ export async function getCategoryStatistics(categoryId?: string) {
     ),
     categories: data.reduce((acc, goal) => {
       const categoryId = goal.category_id
-      const categoryName = (goal.goal_categories as any)?.name || 'Unknown'
+      const categoryName = (goal.goal_categories as unknown)?.name || 'Unknown'
       
       if (!acc[categoryId]) {
         acc[categoryId] = {
@@ -229,7 +229,7 @@ export async function getCategoryStatistics(categoryId?: string) {
       if (goal.status === 'pending') acc[categoryId].pending++
       
       return acc
-    }, {} as Record<string, any>),
+    }, {} as Record<string, unknown>),
   }
 
   // Calculate average completion rates for each category

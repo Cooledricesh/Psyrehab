@@ -283,12 +283,12 @@ export async function getEvaluationStatistics(filters?: {
       return acc
     }, {} as Record<string, number>),
     goal_types: data.reduce((acc, evaluation) => {
-      const goalType = (evaluation.goal as any)?.goal_type || 'unknown'
+      const goalType = (evaluation.goal as unknown)?.goal_type || 'unknown'
       acc[goalType] = (acc[goalType] || 0) + 1
       return acc
     }, {} as Record<string, number>),
     categories: data.reduce((acc, evaluation) => {
-      const categoryName = (evaluation.goal as any)?.category?.name || 'unknown'
+      const categoryName = (evaluation.goal as unknown)?.category?.name || 'unknown'
       acc[categoryName] = (acc[categoryName] || 0) + 1
       return acc
     }, {} as Record<string, number>),
@@ -307,7 +307,7 @@ export async function getEvaluationStatistics(filters?: {
         acc[month].total_completion_rate / acc[month].count
       )
       return acc
-    }, {} as Record<string, any>),
+    }, {} as Record<string, unknown>),
   }
 
   return stats

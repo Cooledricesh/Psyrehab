@@ -43,7 +43,7 @@ export const useGoalSettingFlow = (): UseGoalSettingFlowReturn => {
   const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<string>('');
-  const [detailedGoals, setDetailedGoals] = useState<any>(null);
+  const [detailedGoals, setDetailedGoals] = useState<unknown>(null);
   const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   const [formData, setFormData] = useState<AssessmentFormData>(initialFormData);
 

@@ -111,10 +111,10 @@ export function useUserProfile() {
     switch (profile.role) {
       case 'social_worker':
         // Social workers should have employee_id and department
-        return !!(profile as any).employee_id
+        return !!(profile as unknown).employee_id
       case 'patient':
         // Patients should have patient_identifier
-        return !!(profile as any).patient_identifier
+        return !!(profile as unknown).patient_identifier
       case 'administrator':
         // Administrators are complete with just basic info
         return true
@@ -132,13 +132,13 @@ export function useUserProfile() {
     
     switch (profile.role) {
       case 'social_worker':
-        if (!(profile as any).employee_id) missing.push('직원 번호')
-        if (!(profile as any).department) missing.push('부서')
-        if (!(profile as any).contact_number) missing.push('연락처')
+        if (!(profile as unknown).employee_id) missing.push('직원 번호')
+        if (!(profile as unknown).department) missing.push('부서')
+        if (!(profile as unknown).contact_number) missing.push('연락처')
         break
       case 'patient':
-        if (!(profile as any).patient_identifier) missing.push('환자 식별번호')
-        if (!(profile as any).date_of_birth) missing.push('생년월일')
+        if (!(profile as unknown).patient_identifier) missing.push('환자 식별번호')
+        if (!(profile as unknown).date_of_birth) missing.push('생년월일')
         break
     }
     

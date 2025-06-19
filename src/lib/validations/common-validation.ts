@@ -251,7 +251,7 @@ export const passwordConfirmSchema = (passwordField = 'password') => ({
   confirmPassword: z.string()
     .min(1, ERROR_MESSAGES.REQUIRED)
     .refine((val, ctx) => {
-      const password = (ctx.parent as any)[passwordField]
+      const password = (ctx.parent as unknown)[passwordField]
       return val === password
     }, ERROR_MESSAGES.PASSWORDS_DO_NOT_MATCH)
 })

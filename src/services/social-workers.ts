@@ -173,7 +173,7 @@ export class SocialWorkerService {
   /**
    * 특정 사회복지사의 담당 환자 목록 조회
    */
-  static async getPatientsBySocialWorker(socialWorkerId: string): Promise<any[]> {
+  static async getPatientsBySocialWorker(socialWorkerId: string): Promise<unknown[]> {
     const { data, error } = await supabase
       .from('patients')
       .select(`

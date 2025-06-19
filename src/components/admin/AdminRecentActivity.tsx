@@ -25,7 +25,7 @@ interface Activity {
   };
   timestamp: Date;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const AdminRecentActivity: React.FC = () => {

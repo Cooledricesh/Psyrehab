@@ -8,7 +8,7 @@ import { AppError, parseError } from '../error-handling'
 /**
  * 서버 사이드 검증 응답 인터페이스
  */
-export interface ValidationResult<T = any> {
+export interface ValidationResult<T = unknown> {
   success: boolean
   data?: T
   error?: AppError
@@ -37,7 +37,7 @@ export interface ValidationMiddlewareOptions {
 /**
  * 커스텀 검증 함수 타입
  */
-export type ValidationFunction<T = any> = (data: T) => Promise<ValidationError[]> | ValidationError[]
+export type ValidationFunction<T = unknown> = (data: T) => Promise<ValidationError[]> | ValidationError[]
 
 // =============================================================================
 // CORE VALIDATION MIDDLEWARE

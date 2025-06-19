@@ -21,7 +21,7 @@ export interface FilterGroup {
 export interface FilterPanelProps {
   title?: string;
   groups: FilterGroup[];
-  values: Record<string, any>;
+  values: Record<string, unknown>;
   onChange: (filterId: string, value: unknown) => void;
   onReset: () => void;
   className?: string;

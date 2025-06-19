@@ -67,7 +67,7 @@ export const ProgressComparisonChart: React.FC<ProgressComparisonChartProps> = (
       acc.push(newEntry)
     }
     return acc
-  }, [] as any[])
+  }, [] as unknown[])
 
   // 각 환자별 최신 진전도 계산
   const getLatestProgress = () => {

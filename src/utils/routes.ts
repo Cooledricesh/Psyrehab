@@ -3,7 +3,7 @@ import type { UserRole, Permission } from '@/types/auth'
 export interface RouteConfig {
   path: string
   title: string
-  component?: React.ComponentType<any>
+  component?: React.ComponentType<unknown>
   
   requireAuth?: boolean
   requireEmailVerification?: boolean
@@ -159,7 +159,7 @@ export class RouteUtils {
    * Check if a route requires authentication
    */
   static requiresAuth(path: string): boolean {
-    return !PUBLIC_ROUTES.includes(path as any)
+    return !PUBLIC_ROUTES.includes(path as unknown)
   }
 
   /**
@@ -253,14 +253,14 @@ export class RouteUtils {
    * Check if current path is an auth route
    */
   static isAuthRoute(path: string): boolean {
-    return Object.values(ROUTE_PATHS.AUTH).includes(path as any)
+    return Object.values(ROUTE_PATHS.AUTH).includes(path as unknown)
   }
 
   /**
    * Check if current path is a public route
    */
   static isPublicRoute(path: string): boolean {
-    return PUBLIC_ROUTES.includes(path as any)
+    return PUBLIC_ROUTES.includes(path as unknown)
   }
 
   /**

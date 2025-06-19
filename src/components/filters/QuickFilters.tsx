@@ -7,14 +7,14 @@ export interface QuickFilter {
   icon?: React.ReactNode;
   count?: number;
   color?: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'gray';
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
 }
 
 export interface QuickFiltersProps {
   title?: string;
   filters: QuickFilter[];
   activeFilters?: string[];
-  onFilterToggle: (filterId: string, filters: Record<string, any>) => void;
+  onFilterToggle: (filterId: string, filters: Record<string, unknown>) => void;
   onClearAll?: () => void;
   className?: string;
   showClearAll?: boolean;

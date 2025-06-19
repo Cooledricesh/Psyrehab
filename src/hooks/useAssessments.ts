@@ -63,7 +63,7 @@ const assessmentApi = {
 export const assessmentKeys = {
   all: ['assessments'] as const,
   lists: () => [...assessmentKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...assessmentKeys.lists(), { filters }] as const,
+  list: (filters: Record<string, unknown>) => [...assessmentKeys.lists(), { filters }] as const,
   details: () => [...assessmentKeys.all, 'detail'] as const,
   detail: (id: string) => [...assessmentKeys.details(), id] as const,
   byPatient: (patientId: string) => [...assessmentKeys.all, 'byPatient', patientId] as const,
@@ -71,7 +71,7 @@ export const assessmentKeys = {
 }
 
 // 모든 평가 조회 훅
-export const useAssessments = (filters?: Record<string, any>) => {
+export const useAssessments = (filters?: Record<string, unknown>) => {
   return useQuery({
     queryKey: assessmentKeys.list(filters || {}),
     queryFn: () => assessmentApi.getAll(),

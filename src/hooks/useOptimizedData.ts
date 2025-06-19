@@ -211,7 +211,7 @@ export const useOptimizedPatientsData = (params?: {
       Object.entries(debouncedParams.filters).forEach(([key, value]) => {
         if (value && Array.isArray(value) && value.length > 0) {
           filteredPatients = filteredPatients.filter(patient =>
-            value.includes((patient as any)[key])
+            value.includes((patient as unknown)[key])
           );
         }
       });
@@ -286,12 +286,12 @@ export const usePerformanceMonitor = (componentName: string) => {
 
 // Memory usage hook
 export const useMemoryMonitor = () => {
-  const [memoryInfo, setMemoryInfo] = useState<any>(null);
+  const [memoryInfo, setMemoryInfo] = useState<unknown>(null);
   
   useEffect(() => {
     const updateMemoryInfo = () => {
       if ('memory' in performance) {
-        setMemoryInfo((performance as any).memory);
+        setMemoryInfo((performance as unknown).memory);
       }
     };
     
@@ -310,14 +310,14 @@ export const useCacheManager = () => {
     clearAll: () => dataCache.clear(),
     clearByPattern: (pattern: string) => {
       // Clear cache entries matching pattern
-      const keys = Array.from((dataCache as any).cache.keys());
+      const keys = Array.from((dataCache as unknown).cache.keys());
       keys.forEach(key => {
         if (key.includes(pattern)) {
           dataCache.delete(key);
         }
       });
     },
-    getCacheSize: () => (dataCache as any).cache.size,
+    getCacheSize: () => (dataCache as unknown).cache.size,
   };
 };
 

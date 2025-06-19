@@ -132,9 +132,9 @@ export interface GoalEvaluation {
   evaluation_date: string
   completion_rate: number // 0-100
   evaluation_notes?: string
-  strengths?: Record<string, any>
-  challenges?: Record<string, any>
-  next_steps?: Record<string, any>
+  strengths?: Record<string, unknown>
+  challenges?: Record<string, unknown>
+  next_steps?: Record<string, unknown>
   evaluated_by: string // social_worker user_id
   created_at: string
   updated_at: string
@@ -177,8 +177,8 @@ export interface GoalHistory {
   goal_id: string
   changed_by: string // social_worker user_id
   change_type: 'created' | 'updated' | 'status_changed' | 'completed'
-  previous_values?: Record<string, any>
-  new_values?: Record<string, any>
+  previous_values?: Record<string, unknown>
+  new_values?: Record<string, unknown>
   change_reason?: string
   created_at: string
 }

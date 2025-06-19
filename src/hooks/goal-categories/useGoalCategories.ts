@@ -28,7 +28,7 @@ export const goalCategoryKeys = {
   details: () => [...goalCategoryKeys.all, 'detail'] as const,
   detail: (id: string) => [...goalCategoryKeys.details(), id] as const,
   goals: () => [...goalCategoryKeys.all, 'goals'] as const,
-  goalsByCategory: (categoryId: string, filters?: Record<string, any>) => 
+  goalsByCategory: (categoryId: string, filters?: Record<string, unknown>) => 
     [...goalCategoryKeys.goals(), categoryId, filters] as const,
   statistics: () => [...goalCategoryKeys.all, 'statistics'] as const,
   stats: (categoryId?: string) => [...goalCategoryKeys.statistics(), categoryId] as const,

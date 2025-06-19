@@ -76,8 +76,8 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
       if (!item.previousScores) return { ...item, changes: null }
 
       const changes = Object.keys(item.scores).reduce((acc, key) => {
-        const current = (item.scores as any)[key]
-        const previous = (item.previousScores as any)[key]
+        const current = (item.scores as unknown)[key]
+        const previous = (item.previousScores as unknown)[key]
         const changeRate = ((current - previous) / previous) * 100
         
         acc[key] = {
@@ -88,7 +88,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
           classification: classifyImprovement(changeRate)
         }
         return acc
-      }, {} as any)
+      }, {} as unknown)
 
       return { ...item, changes }
     })
@@ -112,7 +112,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
 
   // 영역별 평균 계산
   const dimensionAverages = Object.keys(dimensionNames).reduce((acc, key) => {
-    acc[key] = data.reduce((sum, item) => sum + (item.scores as any)[key], 0) / data.length
+    acc[key] = data.reduce((sum, item) => sum + (item.scores as unknown)[key], 0) / data.length
     return acc
   }, {} as { [key: string]: number })
 
@@ -169,7 +169,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
       type: 'info',
       icon: Award,
       title: '강점 영역',
-      message: `${(dimensionNames as any)[strongestDimension.key]} 영역이 가장 뛰어난 성과를 보입니다 (평균 ${strongestDimension.value.toFixed(2)}).`
+      message: `${(dimensionNames as unknown)[strongestDimension.key]} 영역이 가장 뛰어난 성과를 보입니다 (평균 ${strongestDimension.value.toFixed(2)}).`
     })
 
     if (weakestDimension.value < 3.0) {
@@ -177,7 +177,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
         type: 'warning',
         icon: Target,
         title: '집중 개선 영역',
-        message: `${(dimensionNames as any)[weakestDimension.key]} 영역의 집중적인 개선이 필요합니다 (평균 ${weakestDimension.value.toFixed(2)}).`
+        message: `${(dimensionNames as unknown)[weakestDimension.key]} 영역의 집중적인 개선이 필요합니다 (평균 ${weakestDimension.value.toFixed(2)}).`
       })
     }
 
@@ -217,7 +217,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
     // 영역별 권장사항
     const weakDimensions = Object.entries(dimensionAverages)
       .filter(([key, value]) => value < 2.5)
-      .map(([key, value]) => ({ key, value, name: (dimensionNames as any)[key] }))
+      .map(([key, value]) => ({ key, value, name: (dimensionNames as unknown)[key] }))
 
     if (weakDimensions.length > 0) {
       recommendations.push({
@@ -359,7 +359,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
 
                 <div className="grid grid-cols-5 gap-3">
                   {Object.entries(dimensionNames).slice(0, 5).map(([key, name]) => {
-                    const score = (item.scores as any)[key]
+                    const score = (item.scores as unknown)[key]
                     const change = item.changes ? item.changes[key] : null
                     
                     return (

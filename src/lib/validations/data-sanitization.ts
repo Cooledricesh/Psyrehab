@@ -287,9 +287,9 @@ export function sanitizePatientId(patientId: string): string {
 /**
  * 객체의 모든 문자열 필드 정화
  */
-export function sanitizeObject<T extends Record<string, any>>(
+export function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
-  fieldRules: Record<keyof T, (value: unknown) => any> = {}
+  fieldRules: Record<keyof T, (value: unknown) => unknown> = {}
 ): T {
   if (!obj || typeof obj !== 'object') return obj
 

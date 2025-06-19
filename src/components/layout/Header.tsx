@@ -6,7 +6,7 @@ import { supabase, getCurrentUser } from '@/lib/supabase'
 export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<unknown>(null)
   const navigate = useNavigate()
 
   useEffect(() => {

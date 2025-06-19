@@ -16,12 +16,12 @@ type TablesUpdate<T extends string> = any
 export const weeklyCheckInKeys = {
   all: ['weekly-check-ins'] as const,
   lists: () => [...weeklyCheckInKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...weeklyCheckInKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...weeklyCheckInKeys.lists(), filters] as const,
   goalCheckIns: (goalId: string) => [...weeklyCheckInKeys.all, 'goal', goalId] as const,
   details: () => [...weeklyCheckInKeys.all, 'detail'] as const,
   detail: (id: string) => [...weeklyCheckInKeys.details(), id] as const,
   statistics: () => [...weeklyCheckInKeys.all, 'statistics'] as const,
-  stats: (filters?: Record<string, any>) => [...weeklyCheckInKeys.statistics(), filters] as const,
+  stats: (filters?: Record<string, unknown>) => [...weeklyCheckInKeys.statistics(), filters] as const,
   progress: (goalId: string) => [...weeklyCheckInKeys.all, 'progress', goalId] as const,
   recent: (limit?: number) => [...weeklyCheckInKeys.all, 'recent', limit] as const,
 }

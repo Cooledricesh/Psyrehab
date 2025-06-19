@@ -96,7 +96,7 @@ export const PerformanceMatrix: React.FC<PerformanceMatrixProps> = ({
     averageOverall: data.reduce((sum, p) => sum + p.overall, 0) / data.length,
     topPerformer: data.reduce((max, p) => p.overall > max.overall ? p : max, data[0]),
     dimensionAverages: dimensionNames.slice(0, 5).reduce((acc, dim) => {
-      acc[dim.key] = data.reduce((sum, p) => sum + (p as any)[dim.key], 0) / data.length
+      acc[dim.key] = data.reduce((sum, p) => sum + (p as unknown)[dim.key], 0) / data.length
       return acc
     }, {} as { [key: string]: number })
   }
@@ -199,7 +199,7 @@ export const PerformanceMatrix: React.FC<PerformanceMatrixProps> = ({
 
               {/* 각 영역별 점수 */}
               {dimensionNames.map((dim) => {
-                const score = (patient as any)[dim.key]
+                const score = (patient as unknown)[dim.key]
                 const style = getScoreStyle(score)
                 
                 return (

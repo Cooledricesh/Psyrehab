@@ -173,7 +173,7 @@ export function ServiceRecordForm({
               <Label htmlFor="service_type">서비스 유형 *</Label>
               <Select
                 value={watch('service_type')}
-                onValueChange={(value) => setValue('service_type', value as any)}
+                onValueChange={(value) => setValue('service_type', value as unknown)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="서비스 유형 선택" />
@@ -195,7 +195,7 @@ export function ServiceRecordForm({
               <Label htmlFor="service_category">서비스 카테고리 *</Label>
               <Select
                 value={watch('service_category')}
-                onValueChange={(value) => setValue('service_category', value as any)}
+                onValueChange={(value) => setValue('service_category', value as unknown)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="카테고리 선택" />

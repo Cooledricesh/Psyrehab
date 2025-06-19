@@ -21,7 +21,7 @@ export class AssessmentService {
     assessmentData: AssessmentFormData,
     patientId: string,
     userId: string
-  ): Promise<any> {
+  ): Promise<unknown> {
     const dataToInsert: AssessmentData = {
       patient_id: patientId,
       focus_time: assessmentData.focusTime,

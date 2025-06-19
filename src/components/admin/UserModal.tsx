@@ -173,8 +173,8 @@ export default function UserModal({
 
       // Only include password for create mode
       if (mode === 'create' && formData.password) {
-        (userData as any).password = formData.password;
-        (userData as any).send_welcome_email = formData.send_welcome_email;
+        (userData as unknown).password = formData.password;
+        (userData as unknown).send_welcome_email = formData.send_welcome_email;
       }
 
       await onSave(userData);

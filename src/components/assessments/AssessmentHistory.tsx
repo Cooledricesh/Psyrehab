@@ -246,7 +246,7 @@ export function AssessmentHistory({
                       <div className="flex items-center gap-2 mb-2">
                         <User className="h-3 w-3 text-gray-400" />
                         <span className="text-sm text-gray-600">
-                          {(entry as any).changed_by_info?.full_name || '알 수 없음'}
+                          {(entry as unknown).changed_by_info?.full_name || '알 수 없음'}
                         </span>
                       </div>
 

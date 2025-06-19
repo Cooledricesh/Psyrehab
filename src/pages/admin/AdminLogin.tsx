@@ -112,7 +112,7 @@ export const AdminLogin: React.FC = () => {
 
   // 이미 로그인된 관리자 리다이렉트
   if (isAuthenticated && isAdmin) {
-    const from = (location.state as any)?.from || '/admin';
+    const from = (location.state as unknown)?.from || '/admin';
     return <Navigate to={from} replace />;
   }
 

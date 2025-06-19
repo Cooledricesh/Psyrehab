@@ -308,9 +308,9 @@ export async function getWeeklyCheckInStatistics(filters?: {
         : 0
       
       return acc
-    }, {} as Record<string, any>),
+    }, {} as Record<string, unknown>),
     goal_types: data.reduce((acc, checkIn) => {
-      const goalType = (checkIn.goal as any)?.goal_type || 'unknown'
+      const goalType = (checkIn.goal as unknown)?.goal_type || 'unknown'
       if (!acc[goalType]) {
         acc[goalType] = { total: 0, completed: 0, completion_rate: 0 }
       }
@@ -318,9 +318,9 @@ export async function getWeeklyCheckInStatistics(filters?: {
       if (checkIn.is_completed) acc[goalType].completed++
       acc[goalType].completion_rate = Math.round((acc[goalType].completed / acc[goalType].total) * 100)
       return acc
-    }, {} as Record<string, any>),
+    }, {} as Record<string, unknown>),
     categories: data.reduce((acc, checkIn) => {
-      const categoryName = (checkIn.goal as any)?.category?.name || 'unknown'
+      const categoryName = (checkIn.goal as unknown)?.category?.name || 'unknown'
       if (!acc[categoryName]) {
         acc[categoryName] = { total: 0, completed: 0, completion_rate: 0 }
       }
@@ -328,7 +328,7 @@ export async function getWeeklyCheckInStatistics(filters?: {
       if (checkIn.is_completed) acc[categoryName].completed++
       acc[categoryName].completion_rate = Math.round((acc[categoryName].completed / acc[categoryName].total) * 100)
       return acc
-    }, {} as Record<string, any>),
+    }, {} as Record<string, unknown>),
     mood_distribution: moodRatings.reduce((acc, rating) => {
       acc[rating] = (acc[rating] || 0) + 1
       return acc

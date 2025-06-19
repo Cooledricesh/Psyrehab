@@ -108,7 +108,7 @@ export async function getActivePatientRecommendation(patientId: string) {
 export async function getAIRecommendationByAssessment(
   assessmentId: string,
   patientId: string
-): Promise<any | null> {
+): Promise<unknown | null> {
   const { data, error } = await supabase
     .from('ai_goal_recommendations')
     .select(`

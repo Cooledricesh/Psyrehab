@@ -21,12 +21,12 @@ type TablesUpdate<T extends string> = any
 export const goalEvaluationKeys = {
   all: ['goal-evaluations'] as const,
   lists: () => [...goalEvaluationKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...goalEvaluationKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...goalEvaluationKeys.lists(), filters] as const,
   goalEvaluations: (goalId: string) => [...goalEvaluationKeys.all, 'goal', goalId] as const,
   details: () => [...goalEvaluationKeys.all, 'detail'] as const,
   detail: (id: string) => [...goalEvaluationKeys.details(), id] as const,
   statistics: () => [...goalEvaluationKeys.all, 'statistics'] as const,
-  stats: (filters?: Record<string, any>) => [...goalEvaluationKeys.statistics(), filters] as const,
+  stats: (filters?: Record<string, unknown>) => [...goalEvaluationKeys.statistics(), filters] as const,
   progress: (goalId: string) => [...goalEvaluationKeys.all, 'progress', goalId] as const,
   recent: (limit?: number) => [...goalEvaluationKeys.all, 'recent', limit] as const,
 }

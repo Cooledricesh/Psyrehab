@@ -98,7 +98,7 @@ const DashboardContent: React.FC = () => {
   
   // Filter states
   const [searchQuery, setSearchQuery] = React.useState('')
-  const [filterValues, setFilterValues] = React.useState<Record<string, any>>({})
+  const [filterValues, setFilterValues] = React.useState<Record<string, unknown>>({})
   const [activeQuickFilters, setActiveQuickFilters] = React.useState<string[]>([])
 
   const formatLastUpdated = (timestamp: string) => {
@@ -196,7 +196,7 @@ const DashboardContent: React.FC = () => {
     setActiveQuickFilters([])
   }
 
-  const handleQuickFilterToggle = (filterId: string, filters: Record<string, any>) => {
+  const handleQuickFilterToggle = (filterId: string, filters: Record<string, unknown>) => {
     if (activeQuickFilters.includes(filterId)) {
       setActiveQuickFilters(prev => prev.filter(id => id !== filterId))
       // Remove the filters

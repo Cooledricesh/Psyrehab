@@ -224,7 +224,7 @@ export default function PatientRegistrationModal({
               </label>
               <input
                 type="tel"
-                value={(formData.contact_info as any)?.phone || ''}
+                value={(formData.contact_info as unknown)?.phone || ''}
                 onChange={(e) => handleContactInfoChange('phone', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="010-1234-5678"
@@ -238,7 +238,7 @@ export default function PatientRegistrationModal({
               </label>
               <input
                 type="email"
-                value={(formData.contact_info as any)?.email || ''}
+                value={(formData.contact_info as unknown)?.email || ''}
                 onChange={(e) => handleContactInfoChange('email', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="patient@example.com"

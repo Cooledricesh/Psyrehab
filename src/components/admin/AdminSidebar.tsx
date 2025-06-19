@@ -28,7 +28,7 @@ interface AdminSidebarProps {
 interface NavItem {
   name: string;
   href: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<unknown>;
   permission?: Permission;
   badge?: string;
   children?: NavItem[];

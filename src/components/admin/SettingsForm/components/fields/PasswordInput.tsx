@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PasswordInput: React.FC<any> = ({ label, value, onChange }) => (
+const PasswordInput: React.FC<unknown> = ({ label, value, onChange }) => (
   <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <input
