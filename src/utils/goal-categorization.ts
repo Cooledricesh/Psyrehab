@@ -6,7 +6,6 @@ import {
   GoalPriority 
 } from '@/types/goals'
 import { 
-  ALL_GOAL_TAGS,
   GOAL_TAG_CATEGORIES,
   getTagById,
   getTagsByCategory,

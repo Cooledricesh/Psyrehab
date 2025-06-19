@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import type { BackupItem, BackupFilter } from '@/types/backup'
-import { BackupType, BackupStatus, BACKUP_TYPE_LABELS, BACKUP_STATUS_LABELS, BACKUP_TYPE_COLORS, BACKUP_STATUS_COLORS, formatFileSize, formatDuration } from '@/types/backup'
+import { BackupType, BackupStatus, BACKUP_TYPE_LABELS, BACKUP_STATUS_LABELS, formatFileSize, formatDuration } from '@/types/backup'
 
 interface BackupsListProps {
   backups: BackupItem[]

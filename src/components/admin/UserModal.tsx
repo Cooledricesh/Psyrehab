@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Eye, EyeOff, Save, User, Mail, Shield, Building, Calendar, AlertCircle } from 'lucide-react';
+import { X, Eye, EyeOff, Save, User, Mail, Shield, Building, AlertCircle } from 'lucide-react';
 import { UserRole } from '../../types/auth';
 
 export interface User {

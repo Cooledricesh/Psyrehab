@@ -9,7 +9,6 @@ import {
   ChevronRight, 
   ChevronDown,
   Grip,
-  MoreVertical,
   Eye,
   EyeOff,
   Copy

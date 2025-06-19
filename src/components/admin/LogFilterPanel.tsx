@@ -1,6 +1,6 @@
 import React from 'react'
 import type { LogFilter } from '@/types/logs'
-import { LogLevel, LogCategory, LOG_CATEGORY_LABELS, DEFAULT_LOG_FILTER } from '@/types/logs'
+import { LogLevel, LogCategory, LOG_CATEGORY_LABELS } from '@/types/logs'
 
 interface LogFilterPanelProps {
   filter: LogFilter

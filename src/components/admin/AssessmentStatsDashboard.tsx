@@ -8,28 +8,19 @@ import {
   AssessmentType 
 } from '../../types/assessment';
 import {
-  BarChart3,
   TrendingUp,
   TrendingDown,
   Users,
-  Calendar,
   Clock,
   Target,
   Award,
-  AlertTriangle,
   CheckCircle,
-  FileText,
   Activity,
   Zap,
-  Percent,
   Download,
-  Filter,
   RefreshCw,
-  ChevronDown,
-  Eye,
   Star,
-  ThumbsUp,
-  MessageSquare
+  ThumbsUp
 } from 'lucide-react';
 
 interface AssessmentStatsDashboardProps {

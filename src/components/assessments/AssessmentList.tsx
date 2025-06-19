@@ -1,36 +1,20 @@
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
-  Search, 
-  Plus, 
-  Eye, 
-  Edit, 
   Trash2, 
-  Filter,
   Calendar,
   User,
   FileText,
-  TrendingUp,
-  MoreHorizontal,
   ChevronUp,
   ChevronDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock,
+  AlertCircle
 } from 'lucide-react'
-import { AssessmentService } from '@/services/assessments'
-import type { AssessmentSummary, AssessmentListParams } from '@/types/assessment'
+import type { AssessmentListParams } from '@/types/assessment'
 import { formatDate } from '@/utils/date'
-import { cn } from '@/lib/utils'
 import { useAssessments, useDeleteAssessment, useUpdateAssessmentStatus } from '@/hooks/assessments/useAssessments'
 import { toast } from 'react-hot-toast'
-import Link from 'next/link'
-import { Menu } from '@/components/ui/menu'
 
 interface AssessmentListProps {
   patientId?: string
@@ -77,7 +61,7 @@ export function AssessmentList({
       try {
         await deleteAssessmentMutation.mutateAsync(id)
         toast.success('평가가 삭제되었습니다')
-      } catch (error) {
+      } catch {
         toast.error('평가 삭제에 실패했습니다')
       }
     }
@@ -87,7 +71,7 @@ export function AssessmentList({
     try {
       await updateStatusMutation.mutateAsync({ id, status })
       toast.success('평가 상태가 변경되었습니다')
-    } catch (error) {
+    } catch {
       toast.error('상태 변경에 실패했습니다')
     }
   }
@@ -273,68 +257,6 @@ export function AssessmentList({
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-2 ml-4">
-                {/* Status Change Dropdown */}
-                <Menu as="div" className="relative">
-                  <Menu.Button className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                    상태 변경
-                    <ChevronDown className="ml-1 h-4 w-4" />
-                  </Menu.Button>
-                  
-                  <Menu.Items className="absolute right-0 z-10 mt-2 w-36 bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg">
-                    <div className="py-1">
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={() => handleStatusChange(assessment.id, 'draft')}
-                            className={`${active ? 'bg-gray-100' : ''} block px-4 py-2 text-sm text-gray-700 w-full text-left`}
-                            disabled={assessment.status === 'draft'}
-                          >
-                            임시저장
-                          </button>
-                        )}
-                      </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={() => handleStatusChange(assessment.id, 'completed')}
-                            className={`${active ? 'bg-gray-100' : ''} block px-4 py-2 text-sm text-gray-700 w-full text-left`}
-                            disabled={assessment.status === 'completed'}
-                          >
-                            완료
-                          </button>
-                        )}
-                      </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={() => handleStatusChange(assessment.id, 'reviewed')}
-                            className={`${active ? 'bg-gray-100' : ''} block px-4 py-2 text-sm text-gray-700 w-full text-left`}
-                            disabled={assessment.status === 'reviewed'}
-                          >
-                            검토됨
-                          </button>
-                        )}
-                      </Menu.Item>
-                    </div>
-                  </Menu.Items>
-                </Menu>
-
-                <Link
-                  href={`/assessments/${assessment.id}`}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  보기
-                </Link>
-
-                <Link
-                  href={`/assessments/${assessment.id}/edit`}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-500"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  수정
-                </Link>
-
                 <button
                   onClick={() => handleDelete(assessment.id)}
                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-500"

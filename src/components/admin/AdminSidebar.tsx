@@ -13,7 +13,6 @@ import {
   Database,
   Bell,
   LogOut,
-  ChevronRight,
   Calendar,
   ClipboardList,
   Heart,

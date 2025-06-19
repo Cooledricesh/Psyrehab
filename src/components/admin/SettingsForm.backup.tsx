@@ -11,13 +11,11 @@ import {
   BellOff, 
   Database, 
   HardDrive, 
-  Activity, 
   Zap, 
   Code2, 
   Palette, 
   BarChart, 
   Heart,
-  Info,
   HelpCircle
 } from 'lucide-react';
 

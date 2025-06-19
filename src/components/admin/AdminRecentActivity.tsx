@@ -8,7 +8,6 @@ import {
   Settings, 
   FileText, 
   Calendar,
-  AlertTriangle,
   CheckCircle,
   XCircle,
   Clock,
