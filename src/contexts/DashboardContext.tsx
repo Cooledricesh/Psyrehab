@@ -31,7 +31,7 @@ type DashboardAction =
   | { type: 'DELETE_PATIENT'; payload: string }
   | { type: 'DELETE_GOAL'; payload: string }
   | { type: 'RESET_STATE' }
-  | { type: 'REALTIME_UPDATE'; payload: any }
+  | { type: 'REALTIME_UPDATE'; payload: unknown }
   | { type: 'SET_REALTIME_STATUS'; payload: { connectionStatus: string; lastUpdate: string } };
 
 // Initial state
@@ -324,7 +324,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }
   const [state, dispatch] = useReducer(dashboardReducer, initialState);
 
   // Real-time updates
-  const handleRealtimeUpdate = (payload: any) => {
+  const handleRealtimeUpdate = (payload: unknown) => {
     console.log('Real-time update received:', payload);
     dispatch({
       type: 'REALTIME_UPDATE',

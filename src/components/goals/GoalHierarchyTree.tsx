@@ -7,7 +7,7 @@ interface GoalHierarchyTreeProps {
   goals: BaseGoal[]
   onEdit?: (goal: BaseGoal) => void
   onDelete?: (goalId: string) => void
-  onStatusChange?: (goalId: string, status: any) => void
+  onStatusChange?: (goalId: string, status: unknown) => void
   onProgressUpdate?: (goalId: string, progress: number) => void
   className?: string
   expandedByDefault?: boolean

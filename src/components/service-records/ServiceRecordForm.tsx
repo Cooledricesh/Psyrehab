@@ -72,7 +72,7 @@ interface ServiceRecordFormProps {
   existingRecord?: ServiceRecordWithDetails
   patientId?: string
   socialWorkerId?: string
-  onSuccess?: (record: any) => void
+  onSuccess?: (record: unknown) => void
   onCancel?: () => void
   className?: string
 }

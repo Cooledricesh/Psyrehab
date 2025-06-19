@@ -38,11 +38,11 @@ export interface PatientProfile extends UserProfile {
   patient_identifier: string
   date_of_birth?: string
   gender?: string
-  contact_info?: any
+  contact_info?: unknown
   admission_date?: string
   primary_social_worker_id?: string
   status: string
-  additional_info?: any
+  additional_info?: unknown
 }
 
 // Union type for all profiles
@@ -62,7 +62,7 @@ export interface AuthState {
 // Authentication context
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signUp: (email: string, password: string, userData: any) => Promise<{ success: boolean; error?: string }>
+  signUp: (email: string, password: string, userData: unknown) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
   updateProfile: (updates: Partial<AnyUserProfile>) => Promise<{ success: boolean; error?: string; profile?: AnyUserProfile }>
@@ -291,7 +291,7 @@ export interface UpdatePasswordForm {
 export interface AuthError {
   message: string
   status?: number
-  details?: any
+  details?: unknown
 }
 
 // Authentication events

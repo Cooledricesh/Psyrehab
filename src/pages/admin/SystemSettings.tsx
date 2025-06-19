@@ -251,7 +251,7 @@ export default function SystemSettings() {
   };
 
   // 설정 변경 핸들러
-  const handleSettingsChange = (section: keyof SystemSettingsType, field: string, value: any) => {
+  const handleSettingsChange = (section: keyof SystemSettingsType, field: string, value: unknown) => {
     setSettings(prev => ({
       ...prev,
       [section]: {

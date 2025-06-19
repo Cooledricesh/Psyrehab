@@ -90,7 +90,7 @@ export function UserSettings({ onSettingsChange, className = '' }: UserSettingsP
     }
   }, [profile?.user_id])
 
-  const handleSettingChange = (key: keyof UserSettings, value: any) => {
+  const handleSettingChange = (key: keyof UserSettings, value: unknown) => {
     setSettings(prev => {
       const newSettings = { ...prev, [key]: value }
       setHasChanges(true)
@@ -277,7 +277,7 @@ export function UserSettings({ onSettingsChange, className = '' }: UserSettingsP
  */
 interface SettingsSectionProps {
   settings: UserSettings
-  onChange: (key: keyof UserSettings, value: any) => void
+  onChange: (key: keyof UserSettings, value: unknown) => void
 }
 
 function NotificationSettings({ settings, onChange }: SettingsSectionProps) {
@@ -588,7 +588,7 @@ export function useUserSettings() {
     }
   }, [profile?.user_id])
 
-  const updateSetting = (key: keyof UserSettings, value: any) => {
+  const updateSetting = (key: keyof UserSettings, value: unknown) => {
     if (!profile?.user_id) return
 
     const newSettings = { ...settings, [key]: value }

@@ -32,7 +32,7 @@ describe('Authentication System Tests', () => {
     it('should handle auth state changes', () => {
       let authState = { isAuthenticated: false, user: null }
       
-      const setAuthenticatedUser = (user: any) => {
+      const setAuthenticatedUser = (user: unknown) => {
         authState = { isAuthenticated: true, user }
       }
       
@@ -58,11 +58,11 @@ describe('Authentication System Tests', () => {
       const adminUser = { id: '1', role: 'admin', permissions: ['read', 'write', 'delete'] }
       const regularUser = { id: '2', role: 'user', permissions: ['read'] }
       
-      const hasPermission = (user: any, permission: string) => {
+      const hasPermission = (user: unknown, permission: string) => {
         return user.permissions?.includes(permission) || false
       }
       
-      const hasRole = (user: any, role: string) => {
+      const hasRole = (user: unknown, role: string) => {
         return user.role === role
       }
       
@@ -81,14 +81,14 @@ describe('Authentication System Tests', () => {
     })
 
     it('should handle session management', () => {
-      const createSession = (user: any) => ({
+      const createSession = (user: unknown) => ({
         user,
         accessToken: 'mock-access-token',
         expiresAt: Date.now() + 3600000, // 1 hour
         isValid: true
       })
       
-      const isSessionValid = (session: any) => {
+      const isSessionValid = (session: unknown) => {
         return session.isValid && session.expiresAt > Date.now()
       }
       

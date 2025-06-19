@@ -132,7 +132,7 @@ export default function WeeklyCheckInPanel({
       setIsAddingCheckIn(false);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Error occurred");
       if (error.message === '로그인이 필요합니다.') {
         toast.error('로그인이 필요합니다.');
@@ -172,7 +172,7 @@ export default function WeeklyCheckInPanel({
       setEditingCheckIn(null);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Error occurred");
       toast.error('체크인 수정에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
     }

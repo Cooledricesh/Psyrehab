@@ -78,7 +78,7 @@ export const ManualAuthTest: React.FC = () => {
       { id: '3', role: 'user', permissions: ['read'] }
     ]
     
-    const hasPermission = (user: any, permission: string) => 
+    const hasPermission = (user: unknown, permission: string) => 
       user.permissions?.includes(permission) || false
     
     const testPermissions = ['read', 'write', 'delete']
@@ -168,7 +168,7 @@ export const ManualAuthTest: React.FC = () => {
   const testSessionManagement = () => {
     addResult('=== 세션 관리 테스트 ===')
     
-    const createSession = (user: any, expiresInMinutes: number = 60) => ({
+    const createSession = (user: unknown, expiresInMinutes: number = 60) => ({
       user,
       accessToken: `token_${Date.now()}`,
       refreshToken: `refresh_${Date.now()}`,
@@ -176,7 +176,7 @@ export const ManualAuthTest: React.FC = () => {
       isValid: true
     })
     
-    const isSessionValid = (session: any) => {
+    const isSessionValid = (session: unknown) => {
       return session.isValid && session.expiresAt > Date.now()
     }
     

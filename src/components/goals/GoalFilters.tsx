@@ -32,7 +32,7 @@ export function GoalFilters({
   const { data: categories = [] } = useGoalCategories()
 
   // 필터 변경 핸들러
-  const handleFilterChange = (key: keyof AdvancedGoalFilters, value: any) => {
+  const handleFilterChange = (key: keyof AdvancedGoalFilters, value: unknown) => {
     onChange({
       ...filters,
       [key]: value

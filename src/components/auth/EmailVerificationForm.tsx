@@ -61,7 +61,7 @@ export function EmailVerificationForm({
       } else {
         setFieldError('submit', result.error || '인증 이메일 재전송에 실패했습니다.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || '인증 이메일 재전송 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
@@ -83,7 +83,7 @@ export function EmailVerificationForm({
     try {
       // Force refresh user session to check verification status
       window.location.reload()
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', '확인 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)

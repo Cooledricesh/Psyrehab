@@ -489,14 +489,14 @@ export class AssessmentService {
   }
 
   // 헬퍼 메서드들
-  private static calculateAverageScore(assessments: any[]): number {
+  private static calculateAverageScore(assessments: unknown[]): number {
     if (assessments.length === 0) return 0
     
     const scores = assessments.map(assessment => this.calculateOverallScore(assessment))
     return scores.reduce((sum, score) => sum + score, 0) / scores.length
   }
 
-  private static calculateOverallScore(assessment: any): number {
+  private static calculateOverallScore(assessment: unknown): number {
     const concentrationScore = this.extractConcentrationScore(assessment)
     const motivationScore = this.extractMotivationScore(assessment)
     const socialScore = this.extractSocialScore(assessment)
@@ -504,7 +504,7 @@ export class AssessmentService {
     return (concentrationScore + motivationScore + socialScore) / 3
   }
 
-  private static extractConcentrationScore(assessment: any): number {
+  private static extractConcentrationScore(assessment: unknown): number {
     if (!assessment.concentration_time?.duration) return 0
     
     const duration = assessment.concentration_time.duration
@@ -515,7 +515,7 @@ export class AssessmentService {
     return 1
   }
 
-  private static extractMotivationScore(assessment: any): number {
+  private static extractMotivationScore(assessment: unknown): number {
     if (!assessment.motivation_level) return 0
     
     const motivationData = assessment.motivation_level
@@ -529,7 +529,7 @@ export class AssessmentService {
     return scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0
   }
 
-  private static extractSocialScore(assessment: any): number {
+  private static extractSocialScore(assessment: unknown): number {
     if (!assessment.social_preference) return 0
     
     const socialData = assessment.social_preference
@@ -548,7 +548,7 @@ export class AssessmentService {
     return Math.min(score, 5)
   }
 
-  private static extractScoresFromAssessment(assessment: any) {
+  private static extractScoresFromAssessment(assessment: unknown) {
     return {
       concentration: this.extractConcentrationScore(assessment),
       motivation: this.extractMotivationScore(assessment),
@@ -576,7 +576,7 @@ export class AssessmentService {
     }
   }
 
-  private static analyzeCategoryBreakdown(assessments: any[]) {
+  private static analyzeCategoryBreakdown(assessments: unknown[]) {
     const concentrationEnvironments: Record<string, number> = {}
     const motivationFactors: Record<string, number> = {}
     const socialPreferences: Record<string, number> = {}

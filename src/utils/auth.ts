@@ -317,7 +317,7 @@ export function recordAttempt(type: 'signin' | 'signup' | 'reset', identifier: s
 }
 
 // Error message helper
-export function getAuthErrorMessage(error: any): string {
+export function getAuthErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     return error
   }

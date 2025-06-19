@@ -63,7 +63,7 @@ export class AssessmentService {
   /**
    * RLS 에러인지 확인
    */
-  static isRLSError(error: any): boolean {
+  static isRLSError(error: unknown): boolean {
     return error.code === '42501' || 
            error.message.includes('row-level security') ||
            error.message.includes('policy') ||

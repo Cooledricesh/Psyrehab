@@ -4,7 +4,7 @@ import type { AssessmentFormData } from '@/utils/GoalSetting/types';
 
 interface UseAssessmentSaveProps {
   selectedPatient: string | null;
-  onSuccess: (data: any) => void;
+  onSuccess: (data: unknown) => void;
   onError: (error: Error) => void;
 }
 
@@ -32,7 +32,7 @@ export const useAssessmentSave = ({
         
         // 평가 데이터 저장 시도
         return await AssessmentService.saveAssessment(formData, selectedPatient, userId);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // RLS 에러이고 아직 재시도하지 않은 경우
         if (AssessmentService.isRLSError(error) && !retryWithAdmin) {
           console.log('🔄 RLS 오류 감지됨. Admin으로 재시도...');

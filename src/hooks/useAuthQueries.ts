@@ -348,7 +348,7 @@ export function useUpdateSettingsMutation() {
   
   return useMutation({
     mutationKey: [authMutationKeys.updateSettings],
-    mutationFn: async (settings: any) => {
+    mutationFn: async (settings: unknown) => {
       if (!user?.id) throw new Error('User not authenticated')
       
       const { data, error } = await supabase

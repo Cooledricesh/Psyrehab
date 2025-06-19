@@ -176,7 +176,7 @@ export function SignUpForm({
       } else {
         setFieldError('submit', result.error || '회원가입에 실패했습니다.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || '회원가입 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)

@@ -1,20 +1,20 @@
 // 간단한 이벤트 버스 구현
 class EventBus {
-  private events: { [key: string]: Array<(...args: any[]) => void> } = {};
+  private events: { [key: string]: Array<(...args: unknown[]) => void> } = {};
 
-  on(event: string, callback: (...args: any[]) => void) {
+  on(event: string, callback: (...args: unknown[]) => void) {
     if (!this.events[event]) {
       this.events[event] = [];
     }
     this.events[event].push(callback);
   }
 
-  off(event: string, callback: (...args: any[]) => void) {
+  off(event: string, callback: (...args: unknown[]) => void) {
     if (!this.events[event]) return;
     this.events[event] = this.events[event].filter(cb => cb !== callback);
   }
 
-  emit(event: string, ...args: any[]) {
+  emit(event: string, ...args: unknown[]) {
     if (!this.events[event]) return;
     this.events[event].forEach(callback => callback(...args));
   }

@@ -20,7 +20,7 @@ export interface ValidationResult<T = any> {
  */
 export interface ValidationError {
   field: string
-  value: any
+  value: unknown
   message: string
   code: string
 }
@@ -133,7 +133,7 @@ export const patientValidators = {
   /**
    * 환자 식별번호 중복 검증
    */
-  uniquePatientIdentifier: (supabase: any) => async (data: any): Promise<ValidationError[]> => {
+  uniquePatientIdentifier: (supabase: unknown) => async (data: unknown): Promise<ValidationError[]> => {
     if (!data.patient_identifier) return []
 
     const { data: existing } = await supabase
@@ -157,7 +157,7 @@ export const patientValidators = {
   /**
    * 환자 나이 검증
    */
-  validatePatientAge: () => async (data: any): Promise<ValidationError[]> => {
+  validatePatientAge: () => async (data: unknown): Promise<ValidationError[]> => {
     if (!data.date_of_birth) return []
 
     const age = new Date().getFullYear() - new Date(data.date_of_birth).getFullYear()
@@ -177,7 +177,7 @@ export const patientValidators = {
   /**
    * 사회복지사 배정 검증
    */
-  validateSocialWorkerAssignment: (supabase: any) => async (data: any): Promise<ValidationError[]> => {
+  validateSocialWorkerAssignment: (supabase: unknown) => async (data: unknown): Promise<ValidationError[]> => {
     if (!data.social_worker_id) return []
 
     const { data: socialWorker } = await supabase
@@ -207,7 +207,7 @@ export const serviceValidators = {
   /**
    * 서비스 날짜 검증
    */
-  validateServiceDate: () => async (data: any): Promise<ValidationError[]> => {
+  validateServiceDate: () => async (data: unknown): Promise<ValidationError[]> => {
     if (!data.service_date_time) return []
 
     const serviceDate = new Date(data.service_date_time)
@@ -228,7 +228,7 @@ export const serviceValidators = {
   /**
    * 서비스 참가자 수 검증
    */
-  validateServiceCapacity: (supabase: any) => async (data: any): Promise<ValidationError[]> => {
+  validateServiceCapacity: (supabase: unknown) => async (data: unknown): Promise<ValidationError[]> => {
     if (!data.service_type || !data.participants) return []
 
     const { data: serviceType } = await supabase
@@ -257,7 +257,7 @@ export const goalValidators = {
   /**
    * 목표 계층 구조 검증
    */
-  validateGoalHierarchy: () => async (data: any): Promise<ValidationError[]> => {
+  validateGoalHierarchy: () => async (data: unknown): Promise<ValidationError[]> => {
     const errors: ValidationError[] = []
 
     // 6개월 목표는 부모가 없어야 함
@@ -286,7 +286,7 @@ export const goalValidators = {
   /**
    * 목표 날짜 검증
    */
-  validateGoalDates: () => async (data: any): Promise<ValidationError[]> => {
+  validateGoalDates: () => async (data: unknown): Promise<ValidationError[]> => {
     const errors: ValidationError[] = []
 
     if (data.start_date && data.end_date) {
@@ -344,7 +344,7 @@ export const goalValidators = {
 /**
  * 중첩된 객체에서 경로를 통해 값 추출
  */
-function getValueAtPath(obj: any, path: (string | number)[]): any {
+function getValueAtPath(obj: unknown, path: (string | number)[]): unknown {
   return path.reduce((current, key) => current?.[key], obj)
 }
 
@@ -392,7 +392,7 @@ function sanitizeData<T>(data: T): T {
   }
 
   if (typeof data === 'object' && data !== null) {
-    const sanitized: any = {}
+    const sanitized: unknown = {}
     for (const [key, value] of Object.entries(data)) {
       sanitized[key] = sanitizeData(value)
     }

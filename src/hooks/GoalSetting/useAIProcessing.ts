@@ -7,7 +7,7 @@ import { eventBus, EVENTS } from '@/lib/eventBus';
 
 interface UseAIProcessingParams {
   selectedPatient: string | null;
-  formData: any;
+  formData: unknown;
   maxPollingAttempts?: number;
   pollingInterval?: number;
 }

@@ -161,7 +161,7 @@ export interface SettingField {
   label: string;
   description?: string;
   type: 'text' | 'number' | 'boolean' | 'select' | 'multiselect' | 'textarea' | 'password' | 'time' | 'color' | 'url' | 'email';
-  value: any;
+  value: unknown;
   options?: { label: string; value: string | number | boolean }[];
   required?: boolean;
   min?: number;
@@ -174,8 +174,8 @@ export interface SettingField {
 export interface SettingsChange {
   section: keyof SystemSettings;
   field: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   timestamp: string;
   userId: string;
   userEmail: string;

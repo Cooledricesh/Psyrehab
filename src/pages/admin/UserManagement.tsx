@@ -159,7 +159,7 @@ export default function UserManagement() {
 
       setUsers(uniqueUsers)
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred")
       toast({
         title: '오류',
@@ -209,7 +209,7 @@ export default function UserManagement() {
       setShowEditDialog(false)
       loadUsers()
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred")
       toast({
         title: '오류',
@@ -331,7 +331,7 @@ export default function UserManagement() {
       setShowDeleteDialog(false)
       loadUsers()
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred")
       toast({
         title: '삭제 실패',
@@ -407,7 +407,7 @@ export default function UserManagement() {
 
       loadUsers()
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred")
       toast({
         title: '오류',

@@ -5,7 +5,7 @@ import { PatientRegistrationForm } from '@/components/patients'
 export function PatientRegistrationPage() {
   const navigate = useNavigate()
 
-  const handleSuccess = (patient: any) => {
+  const handleSuccess = (patient: unknown) => {
     console.log('환자 등록 성공:', patient)
     // 성공 시 환자 목록 페이지로 이동
     navigate('/patients')

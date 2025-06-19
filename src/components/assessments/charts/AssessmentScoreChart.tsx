@@ -111,12 +111,12 @@ const AssessmentScoreChart: React.FC<AssessmentScoreChartProps> = ({
   }
 
   // 커스텀 툴팁
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: unknown) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <h4 className="font-semibold text-gray-900 mb-2">{label}</h4>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: unknown, index: number) => (
             <div key={index} className="flex items-center gap-2 text-sm">
               <div 
                 className="w-3 h-3 rounded-full" 

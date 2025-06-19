@@ -17,7 +17,7 @@ export function useErrorHandler() {
   const toast = useToastHelpers()
 
   const handleError = useCallback((
-    error: any,
+    error: unknown,
     options: ErrorHandlerOptions = {}
   ) => {
     const {
@@ -40,7 +40,7 @@ export function useErrorHandler() {
 
     // Toast 알림 표시
     if (showToast) {
-      const toastOptions: any = {
+      const toastOptions: unknown = {
         duration: getToastDuration(appError.type)
       }
 
@@ -88,8 +88,8 @@ export function useErrorHandler() {
 
   // 폼 에러 처리용 헬퍼
   const handleFormError = useCallback((
-    error: any,
-    setError: (field: string, error: any) => void,
+    error: unknown,
+    setError: (field: string, error: unknown) => void,
     options: Omit<ErrorHandlerOptions, 'showToast'> = {}
   ) => {
     const appError = handleError(error, { ...options, showToast: false })
@@ -113,7 +113,7 @@ export function useErrorHandler() {
 
   // Query 에러 처리용 헬퍼
   const handleQueryError = useCallback((
-    error: any,
+    error: unknown,
     context: string,
     retryFn?: () => void
   ) => {
@@ -126,7 +126,7 @@ export function useErrorHandler() {
 
   // Mutation 에러 처리용 헬퍼
   const handleMutationError = useCallback((
-    error: any,
+    error: unknown,
     context: string,
     retryFn?: () => void
   ) => {
@@ -202,7 +202,7 @@ export function createQueryErrorHandler(
   context: string,
   toast: ReturnType<typeof useToastHelpers>
 ) {
-  return (error: any) => {
+  return (error: unknown) => {
     const appError = parseError(error)
     const userMessage = getUserFriendlyMessage(appError)
     
@@ -226,7 +226,7 @@ export function createQueryErrorHandler(
 export function useAuthErrorHandler() {
   const { handleError, showWarning } = useErrorHandler()
 
-  const handleAuthError = useCallback((error: any) => {
+  const handleAuthError = useCallback((error: unknown) => {
     const appError = parseError(error)
     
     if (appError.type === 'AUTHENTICATION_ERROR') {
@@ -267,7 +267,7 @@ export function useAuthErrorHandler() {
 export function useFileUploadErrorHandler() {
   const { handleError } = useErrorHandler()
 
-  const handleUploadError = useCallback((error: any, filename?: string) => {
+  const handleUploadError = useCallback((error: unknown, filename?: string) => {
     const appError = parseError(error)
     
     let customMessage = appError.message

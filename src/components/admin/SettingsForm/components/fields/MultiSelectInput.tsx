@@ -4,7 +4,7 @@ const MultiSelectInput: React.FC<any> = ({ label, value = [], onChange, options 
   <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <div className="space-y-2">
-      {options.map((option: any) => (
+      {options.map((option: unknown) => (
         <label key={option.value} className="flex items-center">
           <input
             type="checkbox"
@@ -13,7 +13,7 @@ const MultiSelectInput: React.FC<any> = ({ label, value = [], onChange, options 
               if (e.target.checked) {
                 onChange([...value, option.value]);
               } else {
-                onChange(value.filter((v: any) => v !== option.value));
+                onChange(value.filter((v: unknown) => v !== option.value));
               }
             }}
             className="mr-2"

@@ -3,14 +3,14 @@ import { Calendar, Check, ChevronDown, ChevronRight, User } from 'lucide-react';
 import { formatText } from '@/utils/GoalSetting/helpers';
 
 interface GoalDetailDisplayProps {
-  detailedGoals: any;
+  detailedGoals: unknown;
   selectedGoal: string;
   viewMode: 'monthly' | 'weekly';
   onViewModeChange: (mode: 'monthly' | 'weekly') => void;
   onGoalSelect: (goalId: string) => void;
   onSave: () => void;
   isProcessing: boolean;
-  patients: any[];
+  patients: unknown[];
   selectedPatient: string | null;
 }
 
@@ -76,7 +76,7 @@ const GoalDetailDisplay: React.FC<GoalDetailDisplayProps> = ({
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">목표를 선택하세요:</h3>
         <div className="grid grid-cols-1 gap-4">
-          {detailedGoals.options?.map((option: any, index: number) => (
+          {detailedGoals.options?.map((option: unknown, index: number) => (
             <div
               key={option.plan_id || index}
               onClick={() => onGoalSelect(index.toString())}
@@ -106,7 +106,7 @@ const GoalDetailDisplay: React.FC<GoalDetailDisplayProps> = ({
                   <div className="border-t pt-4">
                     <h5 className="font-medium text-gray-900 mb-3">6개월 목표</h5>
                     <div className="space-y-3">
-                      {option.sixMonthGoals?.map((goal: any, gIdx: number) => (
+                      {option.sixMonthGoals?.map((goal: unknown, gIdx: number) => (
                         <div key={gIdx} className="flex items-start">
                           <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                             <span className="text-sm font-medium text-blue-600">{gIdx + 1}</span>
@@ -122,8 +122,8 @@ const GoalDetailDisplay: React.FC<GoalDetailDisplayProps> = ({
                     <div className="border-t pt-4">
                       <h5 className="font-medium text-gray-900 mb-3">월간 계획</h5>
                       <div className="space-y-3">
-                        {option.sixMonthGoals?.map((goal: any, gIdx: number) => 
-                          goal.monthlyPlans?.map((monthPlan: any, mIdx: number) => (
+                        {option.sixMonthGoals?.map((goal: unknown, gIdx: number) => 
+                          goal.monthlyPlans?.map((monthPlan: unknown, mIdx: number) => (
                             <div key={`${gIdx}-${mIdx}`} className="border rounded-lg p-4">
                               <div className="flex items-center justify-between mb-2">
                                 <h6 className="font-medium text-gray-800">
@@ -154,7 +154,7 @@ const GoalDetailDisplay: React.FC<GoalDetailDisplayProps> = ({
                               {/* 주간 계획 (확장 시) */}
                               {expandedMonths[`${gIdx}-${mIdx}`] && monthPlan.weeklyPlans && (
                                 <div className="mt-3 pl-4 space-y-2">
-                                  {monthPlan.weeklyPlans.map((weekPlan: any, wIdx: number) => (
+                                  {monthPlan.weeklyPlans.map((weekPlan: unknown, wIdx: number) => (
                                     <div key={wIdx} className="bg-gray-50 rounded p-3">
                                       <h7 className="text-sm font-medium text-gray-700 mb-1">
                                         {weekPlan.week || `${wIdx + 1}`}주차
@@ -181,9 +181,9 @@ const GoalDetailDisplay: React.FC<GoalDetailDisplayProps> = ({
                     <div className="border-t pt-4">
                       <h5 className="font-medium text-gray-900 mb-3">주간 계획</h5>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {option.sixMonthGoals?.map((goal: any) => 
-                          goal.monthlyPlans?.map((monthPlan: any) => 
-                            monthPlan.weeklyPlans?.map((weekPlan: any, wIdx: number) => (
+                        {option.sixMonthGoals?.map((goal: unknown) => 
+                          goal.monthlyPlans?.map((monthPlan: unknown) => 
+                            monthPlan.weeklyPlans?.map((weekPlan: unknown, wIdx: number) => (
                               <div key={wIdx} className="bg-gray-50 rounded-lg p-4">
                                 <div className="flex items-center mb-2">
                                   <Calendar className="h-4 w-4 text-gray-400 mr-2" />

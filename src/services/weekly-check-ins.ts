@@ -502,7 +502,7 @@ export const getMoodRatingLabel = (rating: number) =>
 export const getMoodRatingColor = (rating: number) =>
   MOOD_RATING_COLORS[rating as keyof typeof MOOD_RATING_COLORS] || '#6B7280'
 
-export const calculateWeeklyTrend = (checkIns: any[]) => {
+export const calculateWeeklyTrend = (checkIns: unknown[]) => {
   if (checkIns.length < 3) return 'insufficient_data'
   
   const recentWeeks = checkIns.slice(-3)

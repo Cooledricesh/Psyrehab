@@ -102,7 +102,7 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
       setPatients(patientsData || [])
       setSocialWorkers(workersWithCount || [])
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred")
       toast.error('데이터를 불러오는 중 오류가 발생했습니다.')
     } finally {
@@ -126,7 +126,7 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
       toast.success(socialWorkerId ? '담당 사회복지사가 배정되었습니다.' : '담당 사회복지사 배정이 해제되었습니다.')
       await loadData()
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred")
       toast.error('배정 중 오류가 발생했습니다.')
     } finally {

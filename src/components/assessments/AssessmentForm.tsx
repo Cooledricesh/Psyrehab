@@ -116,7 +116,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
   const nextIncompleteField = findNextIncompleteField(formData, allFields, currentStep, assessmentStepOrder)
 
   // 필드 값 업데이트
-  const updateFieldValue = (stepKey: AssessmentStep, fieldId: string, value: any) => {
+  const updateFieldValue = (stepKey: AssessmentStep, fieldId: string, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [stepKey]: {

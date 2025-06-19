@@ -109,7 +109,7 @@ export default function AdminDashboard() {
         totalAssessments: assessments?.length || 0
       })
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading system stats:', err)
       setError(err.message || '통계를 불러오는 중 오류가 발생했습니다.')
     } finally {

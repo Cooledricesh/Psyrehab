@@ -18,7 +18,7 @@ export interface RealtimeSubscription {
 
 export interface UseRealtimeUpdatesOptions {
   subscriptions: RealtimeConfig[];
-  onUpdate?: (payload: any) => void;
+  onUpdate?: (payload: unknown) => void;
   onError?: (error: Error) => void;
   autoReconnect?: boolean;
   reconnectInterval?: number;
@@ -67,7 +67,7 @@ export const useRealtimeUpdates = ({
   }, []);
 
   // Handle real-time updates
-  const handleRealtimeUpdate = useCallback((payload: any) => {
+  const handleRealtimeUpdate = useCallback((payload: unknown) => {
     setLastUpdate(new Date().toISOString());
     if (onUpdate) {
       onUpdate(payload);
@@ -211,7 +211,7 @@ export const useRealtimeUpdates = ({
 };
 
 // Hook specifically for dashboard real-time updates
-export const useDashboardRealtime = (onUpdate?: (payload: any) => void) => {
+export const useDashboardRealtime = (onUpdate?: (payload: unknown) => void) => {
   const dashboardSubscriptions: RealtimeConfig[] = [
     { table: 'patients', event: '*', enabled: true },
     { table: 'goals', event: '*', enabled: true },

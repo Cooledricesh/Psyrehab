@@ -100,8 +100,8 @@ export interface AssessmentComparison {
   changes: {
     step: AssessmentStep
     field: string
-    previous_value: any
-    current_value: any
+    previous_value: unknown
+    current_value: unknown
     change_type: 'improvement' | 'decline' | 'stable'
   }[]
   overall_progress: 'improvement' | 'decline' | 'stable'
@@ -148,7 +148,7 @@ export interface AssessmentFieldConfig {
   condition?: {
     field: string
     operator: 'equals' | 'not_equals' | 'includes' | 'not_includes' | 'greater_than' | 'less_than'
-    value: any
+    value: unknown
   }
   dependencies?: Array<{
     field: string
@@ -158,7 +158,7 @@ export interface AssessmentFieldConfig {
   validation?: {
     pattern?: string
     message?: string
-    custom?: (value: any, formData: any) => string | null
+    custom?: (value: unknown, formData: unknown) => string | null
   }
 }
 
@@ -271,8 +271,8 @@ export interface AssessmentChangeDetails {
 export interface FieldChange {
   field_path: string
   field_name: string
-  old_value: any
-  new_value: any
+  old_value: unknown
+  new_value: unknown
   change_type: 'added' | 'modified' | 'removed'
   impact_level: 'minor' | 'moderate' | 'significant'
 }
@@ -350,7 +350,7 @@ export interface ProgressInsight {
   title: string
   description: string
   confidence: number // 0-1
-  supporting_data: any[]
+  supporting_data: unknown[]
   actionable_recommendations: string[]
   priority: 'low' | 'medium' | 'high'
 }
@@ -692,7 +692,7 @@ export interface AssessmentConfig {
 export interface AssessmentChoice {
   id: string;
   text: string;
-  value: any;
+  value: unknown;
   order: number;
   isExclusive?: boolean; // 이 선택지를 고르면 다른 것 선택 불가
   triggerSkip?: string[]; // 이 선택지를 고르면 건너뛸 질문들
@@ -710,7 +710,7 @@ export interface ConditionalLogic {
 export interface LogicCondition {
   questionId: string;
   operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains';
-  value: any;
+  value: unknown;
 }
 
 export interface LogicAction {
@@ -911,7 +911,7 @@ export enum AssessmentStatus {
 export interface AssessmentResponse {
   questionId: string;
   optionId: string;
-  value: any;
+  value: unknown;
   timestamp: string;
   timeSpent?: number; // 이 질문에 소요된 시간(초)
   
@@ -923,8 +923,8 @@ export interface AssessmentResponse {
 
 // 응답 변경 이력
 export interface ResponseChange {
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   timestamp: string;
   reason?: string;
 }
@@ -947,7 +947,7 @@ export interface AssessmentScore {
 // 점수 구성 요소
 export interface ScoreComponent {
   questionId: string;
-  rawValue: any;
+  rawValue: unknown;
   score: number;
   weight: number;
   explanation?: string;

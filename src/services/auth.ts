@@ -106,7 +106,7 @@ export class AuthService {
         session: data.session,
         profile: profile || undefined
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       recordAttempt('signin', credentials.email, false)
       return {
         success: false,
@@ -198,7 +198,7 @@ export class AuthService {
         user: data.user,
         requiresEmailConfirmation: false
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       recordAttempt('signup', formData.email, false)
       return {
         success: false,
@@ -229,7 +229,7 @@ export class AuthService {
       }
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -274,7 +274,7 @@ export class AuthService {
       }
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       recordAttempt('reset', email, false)
       return {
         success: false,
@@ -333,7 +333,7 @@ export class AuthService {
       }
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -362,7 +362,7 @@ export class AuthService {
       }
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -396,7 +396,7 @@ export class AuthService {
       }
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -575,7 +575,7 @@ export class AuthService {
         success: true,
         profile: result as AnyUserProfile
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -691,7 +691,7 @@ export class AuthService {
       }
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -793,7 +793,7 @@ export class AuthService {
       }
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -843,7 +843,7 @@ export async function checkUserRole(userId: string, role: UserRole): Promise<boo
 }
 
 // Session management
-export function onAuthStateChange(callback: (event: any, session: Session | null) => void) {
+export function onAuthStateChange(callback: (event: unknown, session: Session | null) => void) {
   return supabase.auth.onAuthStateChange(callback)
 }
 

@@ -3,9 +3,9 @@ import { useDashboard } from '@/contexts/DashboardContext';
 
 // Cache implementation
 class DataCache {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
   
-  set(key: string, data: any, ttl: number = 5 * 60 * 1000) { // 5 minutes default TTL
+  set(key: string, data: unknown, ttl: number = 5 * 60 * 1000) { // 5 minutes default TTL
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -13,7 +13,7 @@ class DataCache {
     });
   }
   
-  get(key: string): any | null {
+  get(key: string): unknown | null {
     const item = this.cache.get(key);
     if (!item) return null;
     
@@ -75,7 +75,7 @@ export const useThrottle = <T>(value: T, limit: number): T => {
 };
 
 // Optimized dashboard stats hook
-export const useOptimizedDashboardStats = (filters?: any) => {
+export const useOptimizedDashboardStats = (filters?: unknown) => {
   const { state, actions } = useDashboard();
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -127,7 +127,7 @@ export const useOptimizedDashboardStats = (filters?: any) => {
 };
 
 // Optimized chart data hook
-export const useOptimizedChartData = (filters?: any) => {
+export const useOptimizedChartData = (filters?: unknown) => {
   const { state, actions } = useDashboard();
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -177,7 +177,7 @@ export const useOptimizedChartData = (filters?: any) => {
 export const useOptimizedPatientsData = (params?: { 
   limit?: number; 
   offset?: number; 
-  filters?: any;
+  filters?: unknown;
   search?: string;
 }) => {
   const { state, actions } = useDashboard();

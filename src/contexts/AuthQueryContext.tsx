@@ -101,7 +101,7 @@ export function EnhancedAuthProvider({ children }: EnhancedAuthProviderProps) {
     try {
       const result = await signInMutation.mutateAsync({ email, password })
       return result
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { 
         success: false, 
         error: error.message || '로그인에 실패했습니다.' 
@@ -114,7 +114,7 @@ export function EnhancedAuthProvider({ children }: EnhancedAuthProviderProps) {
     try {
       const result = await signUpMutation.mutateAsync({ email, password, userData })
       return result
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { 
         success: false, 
         error: error.message || '회원가입에 실패했습니다.' 
@@ -132,7 +132,7 @@ export function EnhancedAuthProvider({ children }: EnhancedAuthProviderProps) {
     try {
       const result = await passwordResetMutation.mutateAsync(email)
       return result
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { 
         success: false, 
         error: error.message || '비밀번호 재설정에 실패했습니다.' 
@@ -148,7 +148,7 @@ export function EnhancedAuthProvider({ children }: EnhancedAuthProviderProps) {
         success: true, 
         data: result 
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { 
         success: false, 
         error: error.message || '프로필 업데이트에 실패했습니다.' 

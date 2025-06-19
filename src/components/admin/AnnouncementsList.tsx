@@ -89,7 +89,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
     // 정렬
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: unknown, bValue: unknown;
 
       switch (sort.field) {
         case 'title':

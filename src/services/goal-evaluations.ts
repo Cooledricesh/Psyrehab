@@ -440,7 +440,7 @@ export const EVALUATION_TYPE_LABELS = {
 export const getEvaluationTypeLabel = (type: string) =>
   EVALUATION_TYPE_LABELS[type as keyof typeof EVALUATION_TYPE_LABELS] || type
 
-export const calculateProgressTrend = (evaluations: any[]) => {
+export const calculateProgressTrend = (evaluations: unknown[]) => {
   if (evaluations.length < 2) return 'insufficient_data'
   
   const rates = evaluations

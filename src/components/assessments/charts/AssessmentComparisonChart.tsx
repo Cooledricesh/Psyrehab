@@ -150,7 +150,7 @@ const AssessmentComparisonChart: React.FC<AssessmentComparisonChartProps> = ({
   }, [comparisonData])
 
   // 커스텀 툴팁
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: unknown) => {
     if (active && payload && payload.length) {
       const data = payload[0]?.payload as ComparisonData
       return (
@@ -160,7 +160,7 @@ const AssessmentComparisonChart: React.FC<AssessmentComparisonChartProps> = ({
             평가 데이터: {data.patientCount}개
           </div>
           <div className="space-y-2">
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry: unknown, index: number) => (
               <div key={index} className="flex items-center justify-between gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div 

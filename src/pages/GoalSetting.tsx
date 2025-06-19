@@ -337,7 +337,7 @@ const GoalSetting: React.FC = () => {
       // 환자 목록 새로고침
       refetch();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred");
       
       let errorMessage = MESSAGES.error.default;

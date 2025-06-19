@@ -9,7 +9,7 @@ interface AccessibleIconProps {
   className?: string
   decorative?: boolean
   role?: 'img' | 'button' | 'presentation'
-  [key: string]: any // For additional props to pass to the icon
+  [key: string]: unknown // For additional props to pass to the icon
 }
 
 /**
@@ -106,7 +106,7 @@ interface IconButtonProps {
   size?: number | string
   className?: string
   variant?: 'default' | 'outline' | 'ghost'
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**

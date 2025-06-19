@@ -4,7 +4,7 @@ import { Button, Input, Label, Select, Textarea } from '@/components/ui'
 import type { PatientCreateData } from '@/services/patients'
 
 interface PatientRegistrationFormProps {
-  onSuccess?: (patient: any) => void
+  onSuccess?: (patient: unknown) => void
   onCancel?: () => void
 }
 

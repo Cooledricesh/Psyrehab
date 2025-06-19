@@ -55,8 +55,8 @@ export const BackupsList: React.FC<BackupsListProps> = ({
   // 정렬된 백업 목록
   const sortedBackups = useMemo(() => {
     return [...filteredBackups].sort((a, b) => {
-      let aValue: any = a[sortBy]
-      let bValue: any = b[sortBy]
+      let aValue: unknown = a[sortBy]
+      let bValue: unknown = b[sortBy]
       
       if (sortBy === 'createdAt') {
         aValue = new Date(aValue).getTime()

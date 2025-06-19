@@ -187,7 +187,7 @@ const DashboardContent: React.FC = () => {
   ]
 
   // Filter handlers
-  const handleFilterChange = (filterId: string, value: any) => {
+  const handleFilterChange = (filterId: string, value: unknown) => {
     setFilterValues(prev => ({ ...prev, [filterId]: value }))
   }
 

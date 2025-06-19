@@ -34,8 +34,8 @@ export interface CreatePatientData {
   date_of_birth?: string
   gender?: string
   primary_diagnosis?: string
-  contact_info?: any
-  additional_info?: any
+  contact_info?: unknown
+  additional_info?: unknown
   status?: string
 }
 
@@ -72,9 +72,9 @@ export const getPatients = async (): Promise<Patient[]> => {
     console.log('🔍 원본 환자 데이터 (첫 번째 환자):', data?.[0])
     console.log('🔍 모든 환자 데이터:', data)
 
-    return data?.map((patient: any) => {
+    return data?.map((patient: unknown) => {
       // 활성 6개월 목표가 있는지 확인
-      const hasActiveGoal = patient.rehabilitation_goals?.some((goal: any) => 
+      const hasActiveGoal = patient.rehabilitation_goals?.some((goal: unknown) => 
         goal.goal_type === 'six_month' && 
         goal.plan_status === 'active' && 
         goal.status === 'active'
@@ -201,7 +201,7 @@ const generatePatientIdentifier = async (): Promise<string> => {
 }
 
 // 성별 매핑 함수 - 다양한 형태의 성별 값을 표준화
-const mapGender = (gender: any): string => {
+const mapGender = (gender: unknown): string => {
   if (!gender) {
     console.log('🚫 성별 정보 없음 (null/undefined)')
     return '정보 없음'
@@ -233,7 +233,7 @@ const mapGender = (gender: any): string => {
 }
 
 // 진단 정보 추출 함수 - 여러 소스에서 진단 정보 찾기
-const extractDiagnosis = (patient: any): string => {
+const extractDiagnosis = (patient: unknown): string => {
   console.log(`🔍 진단 정보 추출 시도 - 환자: ${patient.full_name}`)
   
   // 1. 직접 컬럼들 확인
@@ -278,7 +278,7 @@ const extractDiagnosis = (patient: any): string => {
   
   // 3. 재활 목표에서 유추하기
   if (patient.rehabilitation_goals && patient.rehabilitation_goals.length > 0) {
-    const goalTitles = patient.rehabilitation_goals.map((g: any) => g.title).join(', ')
+    const goalTitles = patient.rehabilitation_goals.map((g: unknown) => g.title).join(', ')
     console.log(`🎯 재활 목표에서 유추: ${goalTitles}`)
     
     // 일반적인 정신건강 진단명 패턴 찾기
@@ -450,7 +450,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
     console.log('🔄 환자 정보 수정 시작:', patientId, patientData)
 
     // 업데이트할 데이터 준비 (status 제외 - 별도 관리)
-    const updateData: any = {}
+    const updateData: unknown = {}
     
     if (patientData.full_name) updateData.full_name = patientData.full_name
     if (patientData.date_of_birth !== undefined) updateData.date_of_birth = patientData.date_of_birth

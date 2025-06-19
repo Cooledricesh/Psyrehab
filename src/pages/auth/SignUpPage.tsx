@@ -160,7 +160,7 @@ export default function SignUpPage() {
         }
       })
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error occurred")
       if (err.message?.includes('already registered')) {
         setError('이미 등록된 이메일입니다.')

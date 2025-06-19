@@ -43,7 +43,7 @@ export default function PatientDetailModal({
       } else {
         setError('환자 정보를 찾을 수 없습니다.')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ 환자 상세 정보 로드 실패:', err)
       setError(err.message || '환자 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {

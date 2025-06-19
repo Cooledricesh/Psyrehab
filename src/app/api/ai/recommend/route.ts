@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://baclava.uk/webhook/09b18ab5-1bdb-4e04-88e4-63babb1f4b46'
 
 // 평가 데이터를 AI 분석용으로 변환하는 유틸리티 함수 (GoalSetting.tsx 구조에 맞게 수정)
-function transformAssessmentForAI(assessment: any) {
+function transformAssessmentForAI(assessment: unknown) {
   // focus_time을 분 단위 duration으로 변환
   const getDurationFromFocusTime = (focusTime: string): number => {
     switch (focusTime) {

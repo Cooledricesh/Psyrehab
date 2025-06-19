@@ -380,7 +380,7 @@ export async function createGoalsFromAIRecommendation(
 
   // Filter plans if specific ones are selected
   const plansToCreate = selectedPlanNumbers 
-    ? allPlans.filter((plan: any) => selectedPlanNumbers.includes(plan.plan_number))
+    ? allPlans.filter((plan: unknown) => selectedPlanNumbers.includes(plan.plan_number))
     : allPlans
 
   const createdGoals = []
@@ -455,7 +455,7 @@ export async function createGoalsFromAIRecommendation(
         createdGoals.push(createdMonthlyGoal)
 
         // Create weekly sub-goals for this month
-        const relevantWeeklyPlans = plan.weeklyPlans?.filter((weekPlan: any) => 
+        const relevantWeeklyPlans = plan.weeklyPlans?.filter((weekPlan: unknown) => 
           weekPlan.month === monthlyGoal.month
         ) || []
 

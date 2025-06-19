@@ -339,8 +339,8 @@ export async function getGoalChangeTimeline(goalId: string) {
 export async function trackGoalChange(
   goalId: string,
   changeType: string,
-  previousValues: any,
-  newValues: any,
+  previousValues: unknown,
+  newValues: unknown,
   changedBy: string,
   changeReason?: string
 ) {
@@ -395,7 +395,7 @@ export const getChangeTypeLabel = (type: string) =>
 export const getChangeTypeColor = (type: string) =>
   CHANGE_TYPE_COLORS[type as keyof typeof CHANGE_TYPE_COLORS] || '#6B7280'
 
-export const formatChangeValues = (previousValues: any, newValues: any) => {
+export const formatChangeValues = (previousValues: unknown, newValues: unknown) => {
   const changes = []
   
   if (previousValues && newValues) {

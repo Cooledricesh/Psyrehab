@@ -40,7 +40,7 @@ export type ViewMode = 'overview' | 'detailed' | 'charts' | 'summary'
 interface ComparisonManagerProps {
   assessments: AssessmentData[]
   patients?: Array<{ id: string; name: string }>
-  onDataChange?: (data: any) => void
+  onDataChange?: (data: unknown) => void
   defaultMode?: ComparisonMode
   className?: string
 }
@@ -84,7 +84,7 @@ export const ComparisonManager: React.FC<ComparisonManagerProps> = ({
     timeComparison?: TimeComparison
     patientComparison?: PatientComparison[]
     progressAnalysis?: ProgressAnalysis[]
-    summaryData?: any[]
+    summaryData?: unknown[]
   }>({})
 
   // 데이터 처리 및 비교 실행

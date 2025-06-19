@@ -313,7 +313,7 @@ class ErrorLogger {
     return undefined
   }
 
-  private extractStackTrace(error: any): string | undefined {
+  private extractStackTrace(error: unknown): string | undefined {
     if (error.details?.stack) {
       return error.details.stack
     }
@@ -323,7 +323,7 @@ class ErrorLogger {
     return undefined
   }
 
-  private sanitizeDetails(details: any): any {
+  private sanitizeDetails(details: unknown): unknown {
     if (!details) return undefined
     
     // 민감한 정보 제거
@@ -332,14 +332,14 @@ class ErrorLogger {
     // 비밀번호, 토큰 등 제거
     const sensitiveKeys = ['password', 'token', 'secret', 'key', 'auth']
     
-    function removeSensitiveData(obj: any) {
+    function removeSensitiveData(obj: unknown) {
       if (typeof obj !== 'object' || obj === null) return obj
       
       if (Array.isArray(obj)) {
         return obj.map(item => removeSensitiveData(item))
       }
       
-      const cleaned: any = {}
+      const cleaned: unknown = {}
       for (const [key, value] of Object.entries(obj)) {
         const lowerKey = key.toLowerCase()
         if (sensitiveKeys.some(sensitive => lowerKey.includes(sensitive))) {
@@ -480,11 +480,11 @@ export function logUserAction(
 /**
  * 함수 실행 시간 측정 데코레이터
  */
-export function measurePerformance<T extends (...args: any[]) => any>(
+export function measurePerformance<T extends (...args: unknown[]) => any>(
   fn: T,
   context: string
 ): T {
-  return ((...args: any[]) => {
+  return ((...args: unknown[]) => {
     const start = performance.now()
     
     try {
@@ -493,12 +493,12 @@ export function measurePerformance<T extends (...args: any[]) => any>(
       // Promise인 경우
       if (result && typeof result.then === 'function') {
         return result
-          .then((value: any) => {
+          .then((value: unknown) => {
             const duration = performance.now() - start
             logPerformance(context, duration, { args, success: true })
             return value
           })
-          .catch((error: any) => {
+          .catch((error: unknown) => {
             const duration = performance.now() - start
             logPerformance(context, duration, { args, success: false, error })
             throw error

@@ -135,7 +135,7 @@ export function ProfileManager({
       } else {
         setFieldError('submit', result.error || '프로필 업데이트에 실패했습니다.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || '프로필 업데이트 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
@@ -529,7 +529,7 @@ function PasswordChangeModal({ onClose, onSuccess }: PasswordChangeModalProps) {
       } else {
         setError(result.error || '비밀번호 변경에 실패했습니다.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(error.message || '비밀번호 변경 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)

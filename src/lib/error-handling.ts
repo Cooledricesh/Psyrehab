@@ -14,7 +14,7 @@ export type ErrorType =
 export interface AppError {
   type: ErrorType
   message: string
-  details?: any
+  details?: unknown
   field?: string
   code?: string
 }
@@ -71,7 +71,7 @@ export function formatZodError(error: ZodError): AppError[] {
 }
 
 // 일반 에러를 AppError로 변환
-export function parseError(error: any): AppError {
+export function parseError(error: unknown): AppError {
   // Zod 검증 에러
   if (error instanceof ZodError) {
     const firstError = error.errors[0]
@@ -259,7 +259,7 @@ export function getUserFriendlyMessage(error: AppError): string {
 
 // React Query 에러 핸들러
 export function createQueryErrorHandler(context: string) {
-  return (error: any) => {
+  return (error: unknown) => {
     const appError = parseError(error)
     logError(appError, context)
     return appError
@@ -267,7 +267,7 @@ export function createQueryErrorHandler(context: string) {
 }
 
 // 폼 에러 핸들러
-export function handleFormError(error: any, setError: (field: string, error: any) => void) {
+export function handleFormError(error: unknown, setError: (field: string, error: unknown) => void) {
   const appError = parseError(error)
   
   if (appError.type === 'VALIDATION_ERROR' && appError.field) {

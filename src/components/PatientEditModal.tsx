@@ -66,7 +66,7 @@ export default function PatientEditModal({
       } else {
         setError('환자 정보를 찾을 수 없습니다.')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ 환자 정보 로드 실패:', err)
       setError(err.message || '환자 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {
@@ -115,7 +115,7 @@ export default function PatientEditModal({
         setError('환자 정보 수정에 실패했습니다.')
       }
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ 환자 정보 수정 실패:', err)
       setError(err.message || '환자 정보 수정 중 오류가 발생했습니다.')
     } finally {

@@ -62,7 +62,7 @@ export const PieChart: React.FC<PieChartProps> = ({
             size: 12,
             family: 'Inter, system-ui, sans-serif',
           },
-          generateLabels: (chart: any) => {
+          generateLabels: (chart: unknown) => {
             const data = chart.data;
             if (data.labels.length && data.datasets.length) {
               return data.labels.map((label: string, i: number) => {
@@ -102,7 +102,7 @@ export const PieChart: React.FC<PieChartProps> = ({
           size: 12,
         },
         callbacks: {
-          label: (context: any) => {
+          label: (context: unknown) => {
             const label = context.label || '';
             const value = context.parsed;
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);

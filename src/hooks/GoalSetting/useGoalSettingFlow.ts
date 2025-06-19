@@ -8,7 +8,7 @@ interface UseGoalSettingFlowReturn {
   currentAssessmentId: string | null;
   recommendationId: string | null;
   selectedGoal: string;
-  detailedGoals: any;
+  detailedGoals: unknown;
   viewMode: 'monthly' | 'weekly';
   formData: AssessmentFormData;
   
@@ -18,7 +18,7 @@ interface UseGoalSettingFlowReturn {
   setCurrentAssessmentId: (id: string | null) => void;
   setRecommendationId: (id: string | null) => void;
   setSelectedGoal: (goal: string) => void;
-  setDetailedGoals: (goals: any) => void;
+  setDetailedGoals: (goals: unknown) => void;
   setViewMode: (mode: 'monthly' | 'weekly') => void;
   updateFormData: (updates: Partial<AssessmentFormData>) => void;
   resetFlow: () => void;

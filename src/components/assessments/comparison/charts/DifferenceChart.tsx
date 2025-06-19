@@ -53,7 +53,7 @@ export const DifferenceChart: React.FC<DifferenceChartProps> = ({
   }
 
   // 커스텀 툴팁
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: unknown) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       const changeIndicator = formatChangeIndicator(data.changeRate)

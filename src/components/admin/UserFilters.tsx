@@ -51,7 +51,7 @@ export default function UserFilters({
   totalUsers,
   filteredUsers
 }: UserFiltersProps) {
-  const updateFilter = (key: keyof UserFilters, value: any) => {
+  const updateFilter = (key: keyof UserFilters, value: unknown) => {
     onFiltersChange({
       ...filters,
       [key]: value

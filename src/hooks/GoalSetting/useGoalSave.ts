@@ -3,11 +3,11 @@ import { supabase } from '@/lib/supabase';
 
 interface SaveGoalsParams {
   selectedPatient: string | null;
-  detailedGoals: any;
+  detailedGoals: unknown;
   currentAssessmentId: string | null;
   recommendationId: string | null;
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
 }
 
 export const useGoalSave = () => {
@@ -205,7 +205,7 @@ export const useGoalSave = () => {
         onSuccess();
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error occurred");
       
       // 구체적인 오류 메시지 표시

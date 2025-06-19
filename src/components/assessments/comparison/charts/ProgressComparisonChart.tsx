@@ -62,7 +62,7 @@ export const ProgressComparisonChart: React.FC<ProgressComparisonChartProps> = (
     if (existingDate) {
       existingDate[`${item.patientId}_${dimension}`] = item[dimension]
     } else {
-      const newEntry: any = { date: item.date }
+      const newEntry: unknown = { date: item.date }
       newEntry[`${item.patientId}_${dimension}`] = item[dimension]
       acc.push(newEntry)
     }
@@ -90,7 +90,7 @@ export const ProgressComparisonChart: React.FC<ProgressComparisonChartProps> = (
   const progressSummary = getLatestProgress()
 
   // 커스텀 툴팁
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: unknown) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
@@ -98,7 +98,7 @@ export const ProgressComparisonChart: React.FC<ProgressComparisonChartProps> = (
             {format(new Date(label), 'yyyy년 MM월 dd일', { locale: ko })}
           </p>
           <div className="space-y-1 text-sm">
-            {payload.map((entry: any, index: number) => {
+            {payload.map((entry: unknown, index: number) => {
               const patientId = entry.dataKey.split('_')[0]
               const patient = patients.find(p => p.id === patientId)
               if (!patient) return null

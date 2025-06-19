@@ -20,9 +20,9 @@ export interface GoalData {
 
 export interface DetailedGoals {
   selectedIndex: number;
-  sixMonthGoal: any;
-  monthlyGoals: any[];
-  weeklyGoals: any[];
+  sixMonthGoal: unknown;
+  monthlyGoals: unknown[];
+  weeklyGoals: unknown[];
 }
 
 export class GoalService {

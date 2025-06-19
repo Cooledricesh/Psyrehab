@@ -131,7 +131,7 @@ export const getPatientProgress = async (): Promise<PatientProgress[]> => {
       return []
     }
 
-    return data?.map((goal: any) => {
+    return data?.map((goal: unknown) => {
       // 진행률 기반 추세 계산 (실제로는 이전 기록과 비교해야 함)
       let trend: 'up' | 'down' | 'stable' = 'stable'
       const progress = goal.actual_completion_rate || 0
@@ -191,7 +191,7 @@ export const getWeeklyActivities = async (): Promise<WeeklyActivity[]> => {
     // 날짜별로 그룹화
     const activitiesByDate: { [key: string]: WeeklyActivity } = {}
     
-    data?.forEach((record: any) => {
+    data?.forEach((record: unknown) => {
       const date = new Date(record.service_date_time).toLocaleDateString('ko-KR', {
         weekday: 'long'
       })
@@ -247,7 +247,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     
     // 중복 제거를 위해 Map 사용
     const goalsNeedingEvaluation = new Map()
-    recentEvaluations?.forEach((evaluation: any) => {
+    recentEvaluations?.forEach((evaluation: unknown) => {
       if (!goalsNeedingEvaluation.has(evaluation.goal_id)) {
         const daysSinceEvaluation = Math.ceil((new Date().getTime() - new Date(evaluation.evaluation_date).getTime()) / (1000 * 60 * 60 * 24))
         goalsNeedingEvaluation.set(evaluation.goal_id, {
@@ -282,7 +282,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
       .lt('actual_completion_rate', 30)
       .eq('status', 'active')
     
-    lowProgressGoals?.forEach((goal: any) => {
+    lowProgressGoals?.forEach((goal: unknown) => {
       alerts.push({
         id: `low-progress-${goal.id}`,
         type: 'warning',
@@ -306,7 +306,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
       .gte('actual_completion_rate', 80)
       .eq('status', 'active')
     
-    highProgressGoals?.forEach((goal: any) => {
+    highProgressGoals?.forEach((goal: unknown) => {
       alerts.push({
         id: `high-progress-${goal.id}`,
         type: 'success',

@@ -11,11 +11,11 @@ import { cn } from '@/lib/utils'
 
 interface DynamicFieldProps {
   field: AssessmentFieldConfig
-  value: any
-  stepData: any
+  value: unknown
+  stepData: unknown
   formData: Partial<AssessmentData>
   currentStepKey: AssessmentStep
-  onChange: (value: any) => void
+  onChange: (value: unknown) => void
   error?: string
   disabled?: boolean
 }

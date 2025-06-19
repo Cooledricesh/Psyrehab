@@ -13,7 +13,7 @@ interface ComparisonSettingsProps {
     showTrends: boolean
     confidenceLevel: number
   }
-  onSettingsChange: (settings: any) => void
+  onSettingsChange: (settings: unknown) => void
   patients: Array<{ id: string; name: string }>
   comparisonMode: ComparisonMode
 }

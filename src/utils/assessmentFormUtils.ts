@@ -196,13 +196,13 @@ function getFieldValue(
   formData: Partial<AssessmentData>, 
   step: AssessmentStep, 
   fieldId: string
-): any {
+): unknown {
   const stepData = formData[step] as any
   return stepData?.[fieldId]
 }
 
 // 필드가 채워졌는지 확인
-function isFieldFilled(field: AssessmentFieldConfig, value: any): boolean {
+function isFieldFilled(field: AssessmentFieldConfig, value: unknown): boolean {
   if (value === null || value === undefined) return false
   
   switch (field.type) {
@@ -257,7 +257,7 @@ function shouldShowField(
 }
 
 // 필드 값 범위 검사
-function validateFieldRange(field: AssessmentFieldConfig, value: any): string | null {
+function validateFieldRange(field: AssessmentFieldConfig, value: unknown): string | null {
   switch (field.type) {
     case 'number':
     case 'scale':
@@ -304,7 +304,7 @@ function validateFieldRange(field: AssessmentFieldConfig, value: any): string | 
 // 필드 품질 검사 (경고)
 function checkFieldQuality(
   field: AssessmentFieldConfig, 
-  value: any, 
+  value: unknown, 
   step: AssessmentStep
 ): ValidationWarning | null {
   // 텍스트 필드 품질 검사

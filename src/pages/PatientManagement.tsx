@@ -46,7 +46,7 @@ export default function PatientManagement() {
       setPatients(patientsResult)
       setStats(statsResult)
       setError(null)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ 환자 데이터 로드 실패:', err)
       setError(err.message || '환자 데이터를 불러오는 중 오류가 발생했습니다.')
     } finally {

@@ -136,9 +136,9 @@ export async function getAIRecommendationByAssessment(
     // recommendations 배열은 이미 구조화된 데이터이므로 그대로 사용
     // 호환성을 위해 legacy 필드들도 포함 (deprecated)
     six_month_goals: recommendations,
-    monthly_plans: recommendations.flatMap((rec: any) => rec.monthlyGoals || []),
-    weekly_plans: recommendations.flatMap((rec: any) => rec.weeklyPlans || []),
-    parsed_recommendations: recommendations.map((rec: any) => ({
+    monthly_plans: recommendations.flatMap((rec: unknown) => rec.monthlyGoals || []),
+    weekly_plans: recommendations.flatMap((rec: unknown) => rec.weeklyPlans || []),
+    parsed_recommendations: recommendations.map((rec: unknown) => ({
       plan_number: rec.plan_number,
       title: rec.title,
       purpose: rec.purpose,

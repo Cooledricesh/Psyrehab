@@ -167,11 +167,11 @@ export function usePatientWeeklyOverview(patientId: string) {
 
 // Hook for check-in filtering and sorting
 export function useCheckInFilters() {
-  const getCheckInsByWeek = (checkIns: any[], weekNumber: number) => {
+  const getCheckInsByWeek = (checkIns: unknown[], weekNumber: number) => {
     return checkIns?.filter(checkIn => checkIn.week_number === weekNumber) || []
   }
   
-  const getCheckInsByDateRange = (checkIns: any[], startDate: string, endDate: string) => {
+  const getCheckInsByDateRange = (checkIns: unknown[], startDate: string, endDate: string) => {
     return checkIns?.filter(checkIn => {
       const checkDate = new Date(checkIn.check_in_date)
       const start = new Date(startDate)
@@ -180,24 +180,24 @@ export function useCheckInFilters() {
     }) || []
   }
   
-  const getCompletedCheckIns = (checkIns: any[]) => {
+  const getCompletedCheckIns = (checkIns: unknown[]) => {
     return checkIns?.filter(checkIn => checkIn.is_completed) || []
   }
   
-  const getCheckInsByMoodRange = (checkIns: any[], min: number, max: number) => {
+  const getCheckInsByMoodRange = (checkIns: unknown[], min: number, max: number) => {
     return checkIns?.filter(checkIn => {
       const mood = checkIn.mood_rating
       return mood !== null && mood >= min && mood <= max
     }) || []
   }
   
-  const sortCheckInsByWeek = (checkIns: any[], ascending = true) => {
+  const sortCheckInsByWeek = (checkIns: unknown[], ascending = true) => {
     return [...(checkIns || [])].sort((a, b) => {
       return ascending ? a.week_number - b.week_number : b.week_number - a.week_number
     })
   }
   
-  const sortCheckInsByDate = (checkIns: any[], ascending = false) => {
+  const sortCheckInsByDate = (checkIns: unknown[], ascending = false) => {
     return [...(checkIns || [])].sort((a, b) => {
       const dateA = new Date(a.check_in_date).getTime()
       const dateB = new Date(b.check_in_date).getTime()
@@ -205,7 +205,7 @@ export function useCheckInFilters() {
     })
   }
   
-  const sortCheckInsByMood = (checkIns: any[], ascending = true) => {
+  const sortCheckInsByMood = (checkIns: unknown[], ascending = true) => {
     return [...(checkIns || [])].sort((a, b) => {
       const moodA = a.mood_rating || 0
       const moodB = b.mood_rating || 0

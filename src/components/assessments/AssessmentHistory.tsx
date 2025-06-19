@@ -107,7 +107,7 @@ export function AssessmentHistory({
     }
   }
 
-  const formatCompletionChange = (changes: any) => {
+  const formatCompletionChange = (changes: unknown) => {
     if (changes.completion_change) {
       const { from, to } = changes.completion_change
       const difference = to - from
@@ -130,7 +130,7 @@ export function AssessmentHistory({
     return null
   }
 
-  const formatStatusChange = (changes: any) => {
+  const formatStatusChange = (changes: unknown) => {
     if (changes.status_change) {
       const { from, to } = changes.status_change
       const statusLabels = {

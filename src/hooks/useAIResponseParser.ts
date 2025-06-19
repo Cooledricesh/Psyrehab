@@ -5,15 +5,15 @@ interface AIGoal {
   description: string;
   purpose?: string;
   sixMonthTarget?: string;
-  monthlyPlans?: any[];
-  weeklyPlans?: any[];
+  monthlyPlans?: unknown[];
+  weeklyPlans?: unknown[];
 }
 
 interface AIResponse {
-  goals?: any;
-  recommendations?: any; // 새로운 구조화된 데이터
-  response?: any;
-  content?: any;
+  goals?: unknown;
+  recommendations?: unknown; // 새로운 구조화된 데이터
+  response?: unknown;
+  content?: unknown;
   reasoning?: string;
 }
 
@@ -25,7 +25,7 @@ interface ParsedAIResponse {
 const useAIResponseParser = () => {
   
   // 구조화된 추천 데이터를 목표 형식으로 변환
-  const normalizeRecommendationsData = (recommendations: any[]): AIGoal[] => {
+  const normalizeRecommendationsData = (recommendations: unknown[]): AIGoal[] => {
     if (!Array.isArray(recommendations)) return [];
     
     return recommendations.map((plan, index) => ({
@@ -40,7 +40,7 @@ const useAIResponseParser = () => {
   };
 
   // 데이터 구조 정규화 (이전 버전과의 호환성을 위해 유지)
-  const normalizeGoalsData = (data: any): any[] => {
+  const normalizeGoalsData = (data: unknown): unknown[] => {
     console.warn('normalizeGoalsData is deprecated. Use structured recommendations array instead.');
     
     if (Array.isArray(data)) return data;

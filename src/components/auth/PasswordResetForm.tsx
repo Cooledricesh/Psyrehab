@@ -70,7 +70,7 @@ export function PasswordResetForm({
       } else {
         setFieldError('submit', result.error || '비밀번호 재설정 요청에 실패했습니다.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || '비밀번호 재설정 요청 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
@@ -88,7 +88,7 @@ export function PasswordResetForm({
       if (!result.success) {
         setFieldError('submit', result.error || '재전송에 실패했습니다.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || '재전송 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
@@ -311,7 +311,7 @@ export function NewPasswordForm({
       
       resetForm()
       onSuccess?.()
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || '비밀번호 재설정에 실패했습니다.')
     } finally {
       setIsSubmitting(false)

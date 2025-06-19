@@ -3,9 +3,9 @@ import { Download, FileText, Image, Table, Loader, CheckCircle, AlertCircle } fr
 import { ComparisonMode } from './ComparisonManager'
 
 interface ComparisonExportProps {
-  data: any
+  data: unknown
   comparisonMode: ComparisonMode
-  settings: any
+  settings: unknown
 }
 
 type ExportFormat = 'csv' | 'excel' | 'pdf' | 'png' | 'json'
@@ -113,7 +113,7 @@ export const ComparisonExport: React.FC<ComparisonExportProps> = ({
       case 'patient':
         if (data.patientComparison && data.patientComparison.length > 0) {
           csvContent = '환자ID,환자명,집중력,동기,성공경험,제약요인,사회성,전체평균,순위\n'
-          data.patientComparison.forEach((patient: any) => {
+          data.patientComparison.forEach((patient: unknown) => {
             csvContent += `${patient.patientId},${patient.patientName},${patient.averageScores.concentration},${patient.averageScores.motivation},${patient.averageScores.success},${patient.averageScores.constraints},${patient.averageScores.social},${patient.averageScores.overall},${patient.rank}\n`
           })
         }
@@ -122,7 +122,7 @@ export const ComparisonExport: React.FC<ComparisonExportProps> = ({
       case 'progress':
         if (data.progressAnalysis && data.progressAnalysis.length > 0) {
           csvContent = '환자ID,기울기,R제곱,예측값,개선률\n'
-          data.progressAnalysis.forEach((analysis: any) => {
+          data.progressAnalysis.forEach((analysis: unknown) => {
             csvContent += `${analysis.patientId},${analysis.trend.slope},${analysis.trend.rSquared},${analysis.prediction},${analysis.improvementRate}\n`
           })
         }

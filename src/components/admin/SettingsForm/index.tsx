@@ -24,7 +24,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ section, data, onChange }) 
     }
     acc[category].push({ key, field });
     return acc;
-  }, {} as Record<string, Array<{ key: string; field: any }>>);
+  }, {} as Record<string, Array<{ key: string; field: unknown }>>);
 
   return (
     <div className="space-y-6">

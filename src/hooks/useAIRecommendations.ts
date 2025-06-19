@@ -23,9 +23,9 @@ export interface AIRecommendation {
       plan: string
     }>
   }>
-  patient_analysis?: any
-  success_indicators?: any
-  execution_strategy?: any
+  patient_analysis?: unknown
+  success_indicators?: unknown
+  execution_strategy?: unknown
   is_active: boolean
   applied_at: string | null
   applied_by: string | null
@@ -181,7 +181,7 @@ export function useUpdateAIRecommendationStatus() {
       isActive: boolean
       appliedBy?: string
     }) => {
-      const updateData: any = {
+      const updateData: unknown = {
         is_active: isActive,
         updated_at: new Date().toISOString()
       }
@@ -228,7 +228,7 @@ export function useUpdateAIRecommendationStatus() {
 
 // 마크다운 형식의 목표를 파싱하여 구조화된 데이터로 변환하는 함수
 // 파싱 함수들은 더 이상 필요하지 않음 (n8n이 구조화된 데이터를 직접 저장)
-export function parseAIRecommendationGoals(data: any): ParsedGoal[] {
+export function parseAIRecommendationGoals(data: unknown): ParsedGoal[] {
   console.warn('parseAIRecommendationGoals is deprecated. Data is now structured by n8n.')
   
   // 기존 코드와의 호환성을 위해 빈 배열 반환
@@ -276,11 +276,11 @@ export function useGenerateGoalsFromRecommendation() {
 
       // 구조화된 recommendations 배열에서 선택된 계획들만 필터링
       const selectedGoals = recommendation.recommendations.filter(
-        (plan: any) => selectedPlanNumbers.includes(plan.plan_number)
+        (plan: unknown) => selectedPlanNumbers.includes(plan.plan_number)
       )
       
       // 각 목표를 개별 재활 목표로 변환
-      const goals = selectedGoals.map((plan: any) => ({
+      const goals = selectedGoals.map((plan: unknown) => ({
         patient_id: patientId,
         title: plan.title,
         description: plan.purpose,

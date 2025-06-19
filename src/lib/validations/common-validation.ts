@@ -219,7 +219,7 @@ export const conditionalValidation = {
   // 다른 필드 값에 따른 조건부 검증
   dependentValidation: <T>(
     dependentField: string,
-    dependentValue: any,
+    dependentValue: unknown,
     schema: z.ZodType<T>,
     fallback?: z.ZodType<T>
   ) => z.any().refine((data) => {

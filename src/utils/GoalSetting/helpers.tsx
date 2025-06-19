@@ -35,7 +35,7 @@ export const formatText = (text: string) => {
   }).filter(Boolean);
 };
 
-export const formatAssessmentData = (formData: any) => {
+export const formatAssessmentData = (formData: unknown) => {
   const pastSuccessesList = [
     ...formData.pastSuccesses,
     ...(formData.pastSuccessesOther ? [formData.pastSuccessesOther] : [])

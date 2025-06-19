@@ -21,8 +21,8 @@ export interface Patient {
   diagnosis_date: string;
   initial_diagnosis_date: string;
   phone_number?: string;
-  emergency_contact?: any;
-  address?: any;
+  emergency_contact?: unknown;
+  address?: unknown;
   primary_social_worker_id: string;
   status: string;
   additional_info?: {

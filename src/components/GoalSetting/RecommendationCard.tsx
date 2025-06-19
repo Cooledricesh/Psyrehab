@@ -2,7 +2,7 @@ import React from 'react';
 import { Brain, Check } from 'lucide-react';
 
 interface RecommendationCardProps {
-  plan: any;
+  plan: unknown;
   index: number;
   isSelected: boolean;
   onSelect: () => void;
@@ -47,7 +47,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
       <div className="mb-4">
         <h4 className="text-sm font-medium text-gray-700 mb-2">6개월 목표</h4>
         <div className="space-y-2">
-          {parsedPlan.sixMonthGoals?.map((goal: any, idx: number) => (
+          {parsedPlan.sixMonthGoals?.map((goal: unknown, idx: number) => (
             <div key={idx} className="flex items-start">
               <span className="text-gray-400 mr-2">•</span>
               <span className="text-sm text-gray-600">{goal.goal}</span>
@@ -68,7 +68,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
       <div>
         <h4 className="text-sm font-medium text-gray-700 mb-2">월간 계획 미리보기</h4>
         <div className="space-y-1">
-          {parsedPlan.monthlyPlans?.slice(0, 3).map((month: any, idx: number) => (
+          {parsedPlan.monthlyPlans?.slice(0, 3).map((month: unknown, idx: number) => (
             <div key={idx} className="text-sm text-gray-600">
               <span className="font-medium">{idx + 1}개월차:</span> {month.goal}
             </div>

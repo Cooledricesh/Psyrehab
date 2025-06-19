@@ -134,8 +134,8 @@ export function useTrackGoalChange() {
     }: {
       goalId: string
       changeType: string
-      previousValues: any
-      newValues: any
+      previousValues: unknown
+      newValues: unknown
       changedBy: string
       changeReason?: string
     }) => trackGoalChange(goalId, changeType, previousValues, newValues, changedBy, changeReason),
@@ -256,11 +256,11 @@ export function usePatientHistoryOverview(patientId: string) {
 
 // Hook for history filtering and analysis
 export function useHistoryFilters() {
-  const getHistoryByChangeType = (history: any[], changeType: string) => {
+  const getHistoryByChangeType = (history: unknown[], changeType: string) => {
     return history?.filter(entry => entry.change_type === changeType) || []
   }
   
-  const getHistoryByDateRange = (history: any[], startDate: string, endDate: string) => {
+  const getHistoryByDateRange = (history: unknown[], startDate: string, endDate: string) => {
     return history?.filter(entry => {
       const entryDate = new Date(entry.created_at)
       const start = new Date(startDate)
@@ -269,11 +269,11 @@ export function useHistoryFilters() {
     }) || []
   }
   
-  const getHistoryByChanger = (history: any[], changerId: string) => {
+  const getHistoryByChanger = (history: unknown[], changerId: string) => {
     return history?.filter(entry => entry.changed_by === changerId) || []
   }
   
-  const sortHistoryByDate = (history: any[], ascending = false) => {
+  const sortHistoryByDate = (history: unknown[], ascending = false) => {
     return [...(history || [])].sort((a, b) => {
       const dateA = new Date(a.created_at).getTime()
       const dateB = new Date(b.created_at).getTime()
@@ -281,7 +281,7 @@ export function useHistoryFilters() {
     })
   }
   
-  const groupHistoryByMonth = (history: any[]) => {
+  const groupHistoryByMonth = (history: unknown[]) => {
     return history?.reduce((acc, entry) => {
       const month = entry.created_at.substring(0, 7) // YYYY-MM
       if (!acc[month]) acc[month] = []
@@ -290,7 +290,7 @@ export function useHistoryFilters() {
     }, {} as Record<string, any[]>) || {}
   }
   
-  const groupHistoryByChangeType = (history: any[]) => {
+  const groupHistoryByChangeType = (history: unknown[]) => {
     return history?.reduce((acc, entry) => {
       const type = entry.change_type
       if (!acc[type]) acc[type] = []

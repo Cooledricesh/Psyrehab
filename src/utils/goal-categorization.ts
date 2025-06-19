@@ -254,7 +254,7 @@ export class GoalCategorizationUtils {
     // 정렬
     if (filters.sortBy) {
       filteredGoals.sort((a, b) => {
-        let aValue: any, bValue: any
+        let aValue: unknown, bValue: unknown
 
         switch (filters.sortBy) {
           case 'created_at':

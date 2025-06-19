@@ -301,11 +301,11 @@ export function usePatientEvaluationOverview(patientId: string) {
 
 // Hook for evaluation filtering and sorting
 export function useEvaluationFilters() {
-  const getEvaluationsByType = (evaluations: any[], type: string) => {
+  const getEvaluationsByType = (evaluations: unknown[], type: string) => {
     return evaluations?.filter(evaluation => evaluation.evaluation_type === type) || []
   }
   
-  const getEvaluationsByDateRange = (evaluations: any[], startDate: string, endDate: string) => {
+  const getEvaluationsByDateRange = (evaluations: unknown[], startDate: string, endDate: string) => {
     return evaluations?.filter(evaluation => {
       const evalDate = new Date(evaluation.evaluation_date)
       const start = new Date(startDate)
@@ -314,14 +314,14 @@ export function useEvaluationFilters() {
     }) || []
   }
   
-  const getEvaluationsByCompletionRate = (evaluations: any[], min: number, max: number) => {
+  const getEvaluationsByCompletionRate = (evaluations: unknown[], min: number, max: number) => {
     return evaluations?.filter(evaluation => {
       const rate = evaluation.completion_rate
       return rate !== null && rate >= min && rate <= max
     }) || []
   }
   
-  const sortEvaluationsByDate = (evaluations: any[], ascending = false) => {
+  const sortEvaluationsByDate = (evaluations: unknown[], ascending = false) => {
     return [...(evaluations || [])].sort((a, b) => {
       const dateA = new Date(a.evaluation_date).getTime()
       const dateB = new Date(b.evaluation_date).getTime()
@@ -329,7 +329,7 @@ export function useEvaluationFilters() {
     })
   }
   
-  const sortEvaluationsByCompletionRate = (evaluations: any[], ascending = true) => {
+  const sortEvaluationsByCompletionRate = (evaluations: unknown[], ascending = true) => {
     return [...(evaluations || [])].sort((a, b) => {
       const rateA = a.completion_rate || 0
       const rateB = b.completion_rate || 0

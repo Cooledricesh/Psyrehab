@@ -91,7 +91,7 @@ export function SignInForm({
       } else {
         setFieldError('submit', result.error || '로그인에 실패했습니다.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || '로그인 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
@@ -107,7 +107,7 @@ export function SignInForm({
         setFieldError('submit', result.error || `${provider} 로그인에 실패했습니다.`)
       }
       // OAuth success is handled by redirect
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFieldError('submit', error.message || `${provider} 로그인 중 오류가 발생했습니다.`)
     } finally {
       setIsSubmitting(false)
@@ -396,7 +396,7 @@ export function InlineSignInForm({
       // This would typically redirect to full sign in form
       // or handle magic link authentication
       onSuccess?.()
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(error.message || '오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)

@@ -21,7 +21,7 @@ export const formatText = (text: string): string => {
 /**
  * 평가 데이터를 API 요청 형식으로 변환
  */
-export const formatAssessmentData = (formData: any, patient: any) => {
+export const formatAssessmentData = (formData: unknown, patient: unknown) => {
   return {
     patientInfo: {
       name: patient.full_name,

@@ -124,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         return { success: false, error: result.error }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { success: false, error: error.message || '로그인 중 오류가 발생했습니다.' }
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -132,7 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [])
 
   // Sign up
-  const signUp = useCallback(async (email: string, password: string, userData: any) => {
+  const signUp = useCallback(async (email: string, password: string, userData: unknown) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
 
@@ -160,7 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       return { success: false, error: result.error }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { success: false, error: error.message || '회원가입 중 오류가 발생했습니다.' }
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const result = await AuthService.resetPassword(email)
       return result
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { success: false, error: error.message || '비밀번호 재설정 중 오류가 발생했습니다.' }
     }
   }, [])
@@ -210,7 +210,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       return { success: false, error: result.error }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { success: false, error: error.message || '프로필 업데이트 중 오류가 발생했습니다.' }
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -222,7 +222,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const result = await AuthService.updatePassword(currentPassword, newPassword)
       return result
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { success: false, error: error.message || '비밀번호 변경 중 오류가 발생했습니다.' }
     }
   }, [])

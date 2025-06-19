@@ -289,7 +289,7 @@ export function sanitizePatientId(patientId: string): string {
  */
 export function sanitizeObject<T extends Record<string, any>>(
   obj: T,
-  fieldRules: Record<keyof T, (value: any) => any> = {}
+  fieldRules: Record<keyof T, (value: unknown) => any> = {}
 ): T {
   if (!obj || typeof obj !== 'object') return obj
 
@@ -325,7 +325,7 @@ export function sanitizeObject<T extends Record<string, any>>(
 /**
  * 환자 데이터 정화
  */
-export function sanitizePatientData(data: any) {
+export function sanitizePatientData(data: unknown) {
   return sanitizeObject(data, {
     name: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 100 }),
     email: sanitizeEmail,
@@ -351,7 +351,7 @@ export function sanitizePatientData(data: any) {
 /**
  * 서비스 기록 데이터 정화
  */
-export function sanitizeServiceData(data: any) {
+export function sanitizeServiceData(data: unknown) {
   return sanitizeObject(data, {
     service_title: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 200 }),
     service_description: (value: string) => sanitizeHtml(value, { 
@@ -369,7 +369,7 @@ export function sanitizeServiceData(data: any) {
 /**
  * 목표 데이터 정화
  */
-export function sanitizeGoalData(data: any) {
+export function sanitizeGoalData(data: unknown) {
   return sanitizeObject(data, {
     title: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 200 }),
     description: (value: string) => sanitizeHtml(value, { 
@@ -394,22 +394,22 @@ export function sanitizeGoalData(data: any) {
 /**
  * 정화된 데이터가 원본과 다른지 확인
  */
-export function hasDataChanged(original: any, sanitized: any): boolean {
+export function hasDataChanged(original: unknown, sanitized: unknown): boolean {
   return JSON.stringify(original) !== JSON.stringify(sanitized)
 }
 
 /**
  * 정화 결과 보고서 생성
  */
-export function generateSanitizationReport(original: any, sanitized: any) {
+export function generateSanitizationReport(original: unknown, sanitized: unknown) {
   const changes: Array<{
     field: string
-    original: any
-    sanitized: any
+    original: unknown
+    sanitized: unknown
     changed: boolean
   }> = []
 
-  function compareObjects(orig: any, san: any, path: string = '') {
+  function compareObjects(orig: unknown, san: unknown, path: string = '') {
     if (typeof orig !== typeof san) {
       changes.push({
         field: path,

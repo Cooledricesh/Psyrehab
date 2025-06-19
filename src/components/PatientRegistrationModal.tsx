@@ -89,7 +89,7 @@ export default function PatientRegistrationModal({
           status: 'inactive'  // 기본값을 inactive로 변경
         })
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ 환자 등록 실패:', err)
       setError(err.message || '환자 등록 중 오류가 발생했습니다.')
     } finally {

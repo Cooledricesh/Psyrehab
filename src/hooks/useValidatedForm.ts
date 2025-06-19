@@ -19,7 +19,7 @@ export interface UseValidatedFormReturn<T extends FieldValues> extends UseFormRe
   isSubmitting: boolean
   submitError: AppError | null
   clearSubmitError: () => void
-  validateField: (field: Path<T>, value: any) => Promise<boolean>
+  validateField: (field: Path<T>, value: unknown) => Promise<boolean>
   validateAllFields: () => Promise<boolean>
   hasValidationErrors: boolean
   fieldErrors: Record<string, string>
@@ -71,7 +71,7 @@ export function useValidatedForm<T extends FieldValues>({
   }, [])
 
   // 단일 필드 검증
-  const validateField = useCallback(async (field: Path<T>, value: any): Promise<boolean> => {
+  const validateField = useCallback(async (field: Path<T>, value: unknown): Promise<boolean> => {
     try {
       // 전체 폼 데이터를 가져와서 해당 필드만 업데이트하여 검증
       const currentData = form.getValues()
@@ -191,12 +191,12 @@ export function useValidatedForm<T extends FieldValues>({
  * 디바운스된 필드 검증 훅
  */
 export function useDebouncedValidation<T extends FieldValues>(
-  validateFn: (field: Path<T>, value: any) => Promise<boolean>,
+  validateFn: (field: Path<T>, value: unknown) => Promise<boolean>,
   delay: number = 300
 ) {
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
 
-  const debouncedValidate = useCallback((field: Path<T>, value: any) => {
+  const debouncedValidate = useCallback((field: Path<T>, value: unknown) => {
     if (timeoutId) {
       clearTimeout(timeoutId)
     }

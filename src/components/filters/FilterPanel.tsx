@@ -12,7 +12,7 @@ export interface FilterGroup {
   label: string;
   type: 'checkbox' | 'radio' | 'select' | 'date' | 'range';
   options?: FilterOption[];
-  value?: any;
+  value?: unknown;
   placeholder?: string;
   min?: number;
   max?: number;
@@ -22,7 +22,7 @@ export interface FilterPanelProps {
   title?: string;
   groups: FilterGroup[];
   values: Record<string, any>;
-  onChange: (filterId: string, value: any) => void;
+  onChange: (filterId: string, value: unknown) => void;
   onReset: () => void;
   className?: string;
   collapsible?: boolean;

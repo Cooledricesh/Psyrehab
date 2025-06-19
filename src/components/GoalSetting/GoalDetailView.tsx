@@ -2,7 +2,7 @@ import React from 'react';
 import { Target, Loader2 } from 'lucide-react';
 
 interface GoalDetailViewProps {
-  detailedGoals: any;
+  detailedGoals: unknown;
   viewMode: 'monthly' | 'weekly';
   onViewModeChange: (mode: 'monthly' | 'weekly') => void;
   onBack: () => void;
@@ -81,7 +81,7 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
           {/* 월간 목표 뷰 */}
           {(!viewMode || viewMode === 'monthly') && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {detailedGoals.monthlyGoals.map((goal: any, index: number) => (
+              {detailedGoals.monthlyGoals.map((goal: unknown, index: number) => (
                 <div key={goal.month || index} className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <h5 className="font-semibold text-green-900 text-sm">{goal.month || index + 1}개월차</h5>
@@ -102,8 +102,8 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
                   </h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                     {detailedGoals.weeklyGoals
-                      .filter((goal: any) => goal.month === month)
-                      .map((goal: any, index: number) => (
+                      .filter((goal: unknown) => goal.month === month)
+                      .map((goal: unknown, index: number) => (
                         <div key={goal.week || index} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
                           <div className="flex items-center justify-between mb-1">
                             <h6 className="font-medium text-orange-900 text-xs">{goal.week}주차</h6>

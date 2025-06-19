@@ -90,7 +90,7 @@ vi.mock('@/hooks/useAssessments', () => ({
 
 // Mock the visualization components to avoid canvas/chart rendering issues
 vi.mock('@/components/assessments/visualization/AssessmentDashboard', () => ({
-  AssessmentDashboard: ({ assessments, patients, className }: any) => (
+  AssessmentDashboard: ({ assessments, patients, className }: unknown) => (
     <div className={className} data-testid="assessment-dashboard">
       <h2>Assessment Dashboard</h2>
       <p>Assessments: {assessments.length}</p>
@@ -100,7 +100,7 @@ vi.mock('@/components/assessments/visualization/AssessmentDashboard', () => ({
 }))
 
 vi.mock('@/components/assessments/comparison/ComparisonManager', () => ({
-  ComparisonManager: ({ assessments, patients, className }: any) => (
+  ComparisonManager: ({ assessments, patients, className }: unknown) => (
     <div className={className} data-testid="comparison-manager">
       <h2>Comparison Manager</h2>
       <p>Assessments: {assessments.length}</p>
@@ -110,7 +110,7 @@ vi.mock('@/components/assessments/comparison/ComparisonManager', () => ({
 }))
 
 vi.mock('@/components/assessments/AssessmentForm', () => ({
-  AssessmentForm: ({ onAssessmentComplete, className }: any) => (
+  AssessmentForm: ({ onAssessmentComplete, className }: unknown) => (
     <div className={className} data-testid="assessment-form">
       <h2>Assessment Form</h2>
       <button 
@@ -124,7 +124,7 @@ vi.mock('@/components/assessments/AssessmentForm', () => ({
 }))
 
 vi.mock('@/components/assessments/AssessmentResults', () => ({
-  AssessmentResults: ({ assessmentId, onNavigateToHistory, className }: any) => (
+  AssessmentResults: ({ assessmentId, onNavigateToHistory, className }: unknown) => (
     <div className={className} data-testid="assessment-results">
       <h2>Assessment Results</h2>
       <p>Assessment ID: {assessmentId}</p>
@@ -139,7 +139,7 @@ vi.mock('@/components/assessments/AssessmentResults', () => ({
 }))
 
 vi.mock('@/components/assessments/AssessmentHistory', () => ({
-  AssessmentHistory: ({ onAssessmentSelect, className }: any) => (
+  AssessmentHistory: ({ onAssessmentSelect, className }: unknown) => (
     <div className={className} data-testid="assessment-history">
       <h2>Assessment History</h2>
       {mockAssessments.map(assessment => (

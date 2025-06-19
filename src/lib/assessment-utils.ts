@@ -5,7 +5,7 @@ import type { AssessmentFieldConfig, AssessmentData, AssessmentStep } from '@/ty
  */
 export function shouldRenderField(
   field: AssessmentFieldConfig,
-  stepData: any,
+  stepData: unknown,
   formData: Partial<AssessmentData>
 ): boolean {
   if (!field.condition) return true
@@ -49,7 +49,7 @@ export function shouldRenderField(
  */
 export function getFieldOptions(
   field: AssessmentFieldConfig,
-  stepData: any,
+  stepData: unknown,
   formData: Partial<AssessmentData>
 ): Array<{ value: string; label: string; description?: string }> {
   if (!field.dependencies) return field.options || []
@@ -73,8 +73,8 @@ export function getFieldOptions(
  */
 export function validateField(
   field: AssessmentFieldConfig,
-  value: any,
-  stepData: any,
+  value: unknown,
+  stepData: unknown,
   formData: Partial<AssessmentData>
 ): string | null {
   // 기본 필수 필드 검사
@@ -114,7 +114,7 @@ export function validateField(
  */
 export function validateStep(
   fields: AssessmentFieldConfig[],
-  stepData: any,
+  stepData: unknown,
   formData: Partial<AssessmentData>
 ): Record<string, string> {
   const errors: Record<string, string> = {}
