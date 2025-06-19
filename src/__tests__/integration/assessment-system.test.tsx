@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -68,12 +68,6 @@ const mockAssessments: AssessmentData[] = [
   }
 ]
 
-const mockPatients = [
-  { id: 'patient1', name: '김영수' },
-  { id: 'patient2', name: '이미영' },
-  { id: 'patient3', name: '박준호' },
-  { id: 'patient4', name: '최서연' }
-]
 
 // Mock the hooks
 vi.mock('@/hooks/useAssessments', () => ({

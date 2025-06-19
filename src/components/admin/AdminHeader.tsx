@@ -9,9 +9,6 @@ import {
   User as UserIcon, 
   LogOut,
   ChevronDown,
-  Globe,
-  Moon,
-  Sun,
   Maximize,
   Minimize
 } from 'lucide-react';

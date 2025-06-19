@@ -302,7 +302,7 @@ export function recordAttempt(type: 'signin' | 'signup' | 'reset', identifier: s
   const stored = localStorage.getItem(key)
   const now = Date.now()
   
-  let data = stored ? JSON.parse(stored) : { attempts: 0, firstAttempt: now }
+  const data = stored ? JSON.parse(stored) : { attempts: 0, firstAttempt: now }
   
   data.attempts += 1
   data.lastAttempt = now

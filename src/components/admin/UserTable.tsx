@@ -117,7 +117,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
   // 정렬된 사용자 목록
   const sortedUsers = React.useMemo(() => {
-    let sortableUsers = [...users];
+    const sortableUsers = [...users];
     if (sortConfig.key) {
       sortableUsers.sort((a, b) => {
         const aValue = a[sortConfig.key!];

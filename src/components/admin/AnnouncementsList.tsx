@@ -46,7 +46,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
   // 필터링 및 정렬된 공지사항
   const filteredAndSortedAnnouncements = useMemo(() => {
-    let filtered = announcements.filter(announcement => {
+    const filtered = announcements.filter(announcement => {
       // 검색어 필터
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();

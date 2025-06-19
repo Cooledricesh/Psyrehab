@@ -335,7 +335,7 @@ export function useGenerateGoalsFromRecommendation() {
 // 타임라인 문자열을 목표 날짜로 변환하는 유틸리티 함수
 function calculateTargetDate(timeline: string): string {
   const today = new Date()
-  let targetDate = new Date(today)
+  const targetDate = new Date(today)
 
   // 타임라인 파싱 (예: "2주", "1개월", "3개월", "6개월" 등)
   const timelineMatch = timeline.match(/(\d+)([주월년])/g)

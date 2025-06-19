@@ -152,7 +152,7 @@ export function sanitizeFilename(
     preserveExtension = true
   } = options
 
-  let sanitized = filename.trim()
+  const sanitized = filename.trim()
 
   // 확장자 분리
   let name = sanitized

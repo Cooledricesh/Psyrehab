@@ -144,3 +144,51 @@ import { useAuthQueries } from '@/hooks/auth'
 4. Build components in appropriate `@/components/` subdirectory
 5. Add pages in `@/pages/` if needed
 6. Write tests alongside components
+
+## CRITICAL WARNINGS - READ BEFORE ANY CODE CHANGES
+
+### Development Server Management
+- **npm run dev runs as a continuous process** - It will timeout after 2 minutes in tool calls
+- **NEVER wait for npm run dev to complete** - Use background execution: `nohup npm run dev > /dev/null 2>&1 &`
+- **Vite uses HMR (Hot Module Replacement)** - Large code changes can crash the server
+
+### Code Modification Safety Rules
+1. **Small changes only**: Modify one file at a time, max 5-10 lines per change
+2. **Check server after EVERY change**: Server can crash from seemingly safe changes
+3. **Never delete large code blocks**: Comment out first, then delete in next session
+4. **Track exact error counts**: Run `npm run lint 2>&1 | grep -E "error|warning" | wc -l` before starting
+5. **Monitor for side effects**: Removing unused imports can create new unused variable errors
+
+### Common Pitfalls to Avoid
+- **DO NOT assume server is running** based on timeout messages
+- **DO NOT make assumptions about database data** - Always verify with actual queries
+- **DO NOT use mock/hardcoded data** when database connection issues occur
+- **DO NOT proceed with bulk changes** without testing one change first
+- **DO NOT trust "defined but never used" errors** without checking actual usage
+
+### Server Troubleshooting
+```bash
+# Kill stuck processes
+lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+
+# Start server properly in background
+nohup npm run dev > /dev/null 2>&1 &
+
+# Verify server is responding
+sleep 3 && curl -s http://localhost:5173 > /dev/null && echo "Server running"
+```
+
+### Lint Error Management
+- **Current baseline**: ~995 errors (as of 2025-01-19)
+- **Categories**: unused variables (~280), any types (~500), hooks deps (~100), const/let (~50)
+- **Safe fixes**: Single unused imports, obvious typos
+- **Risky fixes**: Large function removals, multiple file changes, hook dependencies
+
+### Emergency Rollback
+If system becomes unstable:
+```bash
+git stash  # Save current changes
+git checkout -- .  # Revert all changes
+# OR
+git checkout <last-stable-commit>  # Full rollback
+```

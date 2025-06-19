@@ -7,7 +7,6 @@ import {
   ChevronDown, 
   ChevronRight, 
   Target, 
-  TrendingUp, 
   BarChart3,
   Filter,
   ExpandIcon,
@@ -21,8 +20,7 @@ import {
   GoalType,
   GoalStatus,
   GoalCategory,
-  buildGoalTree, 
-  calculateGoalProgress 
+  buildGoalTree
 } from '@/types/goals'
 import { cn } from '@/lib/utils'
 
@@ -97,7 +95,7 @@ const getConnectorStyle = (goalType: GoalType) => {
 }
 
 // 통계 표시 컴포넌트
-const StatsDisplay: React.FC<StatsDisplayProps> = ({ hierarchy, categories }) => {
+const StatsDisplay: React.FC<StatsDisplayProps> = ({ hierarchy }) => {
   const stats = useMemo(() => {
     const allGoals = [
       hierarchy.sixMonthGoal,

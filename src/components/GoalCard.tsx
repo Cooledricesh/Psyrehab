@@ -12,8 +12,7 @@ import {
   CheckCircle2,
   PlayCircle,
   PauseCircle,
-  XCircle,
-  Pause
+  XCircle
 } from 'lucide-react'
 import { BaseGoal, GoalType, GoalStatus, GoalPriority, GoalCategory } from '@/types/goals'
 import { cn } from '@/lib/utils'
