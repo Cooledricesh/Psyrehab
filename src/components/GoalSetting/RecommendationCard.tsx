@@ -6,7 +6,7 @@ interface RecommendationCardProps {
   index: number;
   isSelected: boolean;
   onSelect: () => void;
-  parseAIResponse: (response: string) => any;
+  parseAIResponse: (response: string) => unknown;
 }
 
 const RecommendationCard: React.FC<RecommendationCardProps> = ({

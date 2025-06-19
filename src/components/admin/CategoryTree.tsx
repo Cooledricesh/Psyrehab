@@ -244,7 +244,6 @@ function CategoryNode({
 
 export default function CategoryTree({ categories, searchTerm, onAction }: CategoryTreeProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   // 검색어가 있을 때 자동으로 모든 노드 펼치기
   const shouldAutoExpand = searchTerm.length > 0;
@@ -282,22 +281,6 @@ export default function CategoryTree({ categories, searchTerm, onAction }: Categ
 
   const filteredCategories = useMemo(() => filterCategories(categories), [categories, searchTerm]);
 
-  // 드래그 앤 드롭 핸들러들
-  const handleDragStart = (categoryId: string) => {
-    setDraggedItem(categoryId);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (targetCategoryId: string) => {
-    if (draggedItem && draggedItem !== targetCategoryId) {
-      console.log('Moving category', draggedItem, 'to', targetCategoryId);
-      // TODO: 실제 이동 로직
-    }
-    setDraggedItem(null);
-  };
 
   // 모두 펼치기/접기
   const handleExpandAll = () => {

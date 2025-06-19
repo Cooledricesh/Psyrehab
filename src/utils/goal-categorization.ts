@@ -6,9 +6,7 @@ import {
   GoalPriority 
 } from '@/types/goals'
 import { 
-  GOAL_TAG_CATEGORIES,
   getTagById,
-  getTagsByCategory,
   GOAL_STATUS_COLORS,
   GOAL_PRIORITY_COLORS,
   GOAL_TYPE_COLORS

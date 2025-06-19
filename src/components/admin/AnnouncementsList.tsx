@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import type { 
   Announcement, 
   AnnouncementFilter, 
-  AnnouncementSort,
   AnnouncementType,
   AnnouncementStatus,
   AnnouncementPriority,
@@ -35,10 +34,6 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 }) => {
   // 필터 및 정렬 상태
   const [filter, setFilter] = useState<AnnouncementFilter>({});
-  const [sort, setSort] = useState<AnnouncementSort>({
-    field: 'createdAt',
-    direction: 'desc'
-  });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);

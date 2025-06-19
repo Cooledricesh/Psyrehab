@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { renderWithAuth, mockSupabaseClient, mockEnvVars } from '../../../test/testUtils'
+import { renderWithAuth, mockEnvVars } from '../../../test/testUtils'
 import { SignInForm } from '../SignInForm'
 
 // Mock the auth service

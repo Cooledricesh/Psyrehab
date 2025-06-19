@@ -1,11 +1,6 @@
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import type { Database } from './supabase'
 
-// Database table types
-type SocialWorker = Database['public']['Tables']['social_workers']['Row']
-type Administrator = Database['public']['Tables']['administrators']['Row']
-type Patient = Database['public']['Tables']['patients']['Row']
-type Role = Database['public']['Tables']['roles']['Row']
 
 // User roles
 export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest'

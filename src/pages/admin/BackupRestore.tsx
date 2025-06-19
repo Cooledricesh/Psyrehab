@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import type { BackupItem, BackupStats } from '@/types/backup'
 import { BackupStatsPanel } from '@/components/admin/BackupStatsPanel'
 import { BackupsList } from '@/components/admin/BackupsList'

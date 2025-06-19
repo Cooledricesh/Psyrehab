@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Filter, X, RotateCcw, Calendar, TrendingUp, Users, Clock } from 'lucide-react'
 import { GoalStatus, GoalPriority, GoalType } from '@/types/goals'
 import { AdvancedGoalFilters } from '@/utils/goal-categorization'

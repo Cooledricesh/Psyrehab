@@ -48,7 +48,6 @@ export const UserTable: React.FC<UserTableProps> = ({
 }) => {
   const { checkPermission } = useAdminAuth();
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
-  const [showBulkActions, setShowBulkActions] = useState(false);
 
   // 역할별 아이콘 및 색상
   const getRoleConfig = (role: UserRole) => {

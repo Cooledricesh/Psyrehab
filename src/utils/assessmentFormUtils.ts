@@ -1,8 +1,7 @@
 import { 
   AssessmentStep, 
   AssessmentData, 
-  AssessmentFieldConfig,
-  AssessmentFormConfig
+  AssessmentFieldConfig
 } from '@/types/assessment'
 import { 
   ASSESSMENT_FORM_CONFIGS, 
