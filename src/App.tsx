@@ -18,6 +18,7 @@ import { BackupRestore } from '@/pages/admin/BackupRestore'
 import AnnouncementsManagement from '@/pages/admin/AnnouncementsManagement'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import UserManagement from '@/pages/admin/UserManagement'
+import PatientAssignment from '@/pages/admin/PatientAssignment'
 
 // 인증 페이지 컴포넌트
 import LoginPage from '@/pages/auth/LoginPage'
@@ -63,6 +64,7 @@ function App() {
                       <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
                       <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
                       <Route path="/admin/users" element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
+                      <Route path="/admin/patient-assignment" element={<AdminProtectedRoute><PatientAssignment /></AdminProtectedRoute>} />
                       <Route path="/admin/logs" element={<AdminProtectedRoute><SystemLogs /></AdminProtectedRoute>} />
                       <Route path="/admin/backup-restore" element={<AdminProtectedRoute><BackupRestore /></AdminProtectedRoute>} />
                       <Route path="/admin/announcements" element={<AdminProtectedRoute><AnnouncementsManagement /></AdminProtectedRoute>} />
