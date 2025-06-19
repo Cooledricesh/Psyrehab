@@ -118,7 +118,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
 
   // 주요 인사이트 생성
   const generateInsights = () => {
-    const insights = []
+    const insights: string[] = []
 
     // 성과 분석
     const excellentCount = data.filter(item => item.scores.overall >= 4.0).length

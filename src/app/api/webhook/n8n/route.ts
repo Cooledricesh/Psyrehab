@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { supabase } from '@/lib/supabase'
 
 // n8n에서 받을 완료 신호 데이터 타입
 interface WebhookCompletionData {
