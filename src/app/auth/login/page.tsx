@@ -35,7 +35,7 @@ export default function LoginPage() {
         // 로그인 성공 시 메인 페이지로 리다이렉트
         navigate('/dashboard')
       }
-    } catch (err) {
+    } catch {
       setError('로그인 중 오류가 발생했습니다.')
       console.error("Error occurred")
     } finally {

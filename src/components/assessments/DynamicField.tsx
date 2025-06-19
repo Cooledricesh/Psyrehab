@@ -25,7 +25,6 @@ const DynamicField: React.FC<DynamicFieldProps> = ({
   value,
   stepData,
   formData,
-  currentStepKey,
   onChange,
   error,
   disabled = false

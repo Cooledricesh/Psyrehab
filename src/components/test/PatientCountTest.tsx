@@ -14,7 +14,7 @@ export function PatientCountTest() {
         const realCount = await getPatientCount()
         setCount(realCount)
         setError(null)
-      } catch (err) {
+      } catch {
         setError('데이터 로드 실패')
         console.error("Error occurred")
       } finally {

@@ -12,7 +12,7 @@ export default function DevStatus() {
       try {
         const isConnected = await testSupabaseConnection()
         setSupabaseStatus(isConnected ? 'connected' : 'error')
-      } catch (err) {
+      } catch {
         console.error("Error occurred")
         setSupabaseStatus('error')
       }

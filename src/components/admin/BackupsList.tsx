@@ -76,14 +76,6 @@ export const BackupsList: React.FC<BackupsListProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedBackups = sortedBackups.slice(startIndex, startIndex + itemsPerPage)
 
-  const handleSort = (field: typeof sortBy) => {
-    if (field === sortBy) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortBy(field)
-      setSortOrder('desc')
-    }
-  }
 
   const getStatusColor = (status: BackupStatus) => {
     const colorMap = {

@@ -138,32 +138,6 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
     currentPage * itemsPerPage
   );
 
-  // 일괄 선택/해제
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedItems(new Set(paginatedAnnouncements.map(a => a.id)));
-    } else {
-      setSelectedItems(new Set());
-    }
-  };
-
-  const handleSelectItem = (id: string, checked: boolean) => {
-    const newSelected = new Set(selectedItems);
-    if (checked) {
-      newSelected.add(id);
-    } else {
-      newSelected.delete(id);
-    }
-    setSelectedItems(newSelected);
-  };
-
-  // 정렬 변경
-  const handleSort = (field: AnnouncementSort['field']) => {
-    setSort(prev => ({
-      field,
-      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
 
   // 로딩 상태
   if (isLoading) {

@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Internal server error', 
-        message: ""instanceOf Error ? "Error" : 'Unknown error'
+        message: 'Unknown error'
       },
       { status: 500 }
     )
@@ -247,7 +247,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Internal server error', 
-        message: ""instanceOf Error ? "Error" : 'Unknown error'
+        message: 'Unknown error'
       },
       { status: 500 }
     )
