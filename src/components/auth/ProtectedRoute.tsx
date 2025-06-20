@@ -63,30 +63,30 @@ export function ProtectedRoute({
   notAuthenticatedComponent: NotAuthenticatedComponent = NotAuthenticated,
   emailVerificationComponent: EmailVerificationComponent = EmailVerificationRequired,
   checkProfile = true,
-  allowIncompleteProfile = false,
+  allowIncompleteProfile: _allowIncompleteProfile = false,
   showLoadingOnInit = true
 }: ProtectedRouteProps) {
   const {
     isAuthenticated,
     isInitialized,
     isLoading,
-    hasUser,
+    hasUser: _hasUser,
     hasProfile,
-    isEmailVerified,
+    isEmailVerified: _isEmailVerified,
     needsEmailVerification,
-    userRole
+    userRole: _userRole
   } = useAuthState()
   
   const { 
-    hasPermission, 
+    hasPermission: _hasPermission, 
     hasAnyPermission, 
     hasAllPermissions, 
-    isRole, 
+    isRole: _isRole, 
     isAnyRole 
   } = usePermissions()
   
-  const { getRedirectPath } = useAuthRedirect()
-  const navigate = useNavigate()
+  const { getRedirectPath: _getRedirectPath } = useAuthRedirect()
+  const _navigate = useNavigate()
 
   // Handle redirects
   useEffect(() => {
@@ -298,7 +298,7 @@ export function PublicRoute({
   redirectOnAuth,
   ...props 
 }: Omit<ProtectedRouteProps, 'requireAuth'>) {
-  const { isAuthenticated, userRole } = useAuthState()
+  const { isAuthenticated: _isAuthenticated, userRole } = useAuthState()
   const { getRedirectPath } = useAuthRedirect()
 
   const defaultRedirect = redirectOnAuth || getRedirectPath(userRole)

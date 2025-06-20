@@ -99,7 +99,7 @@ const GoalSetting: React.FC = () => {
   }, []);
 
   // 환자 데이터 가져오기 - inactive 상태의 환자만
-  const { data: patientsResponse, isLoading: patientsLoading, error, refetch } = useQuery({
+  const { data: patientsResponse, isLoading: patientsLoading, refetch } = useQuery({
     queryKey: ['patients', 'inactive'],
     queryFn: () => PatientService.getPatients({
       filters: { status: 'inactive' }

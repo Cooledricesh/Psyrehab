@@ -95,7 +95,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   // 전체 선택/해제
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const selectableUsers = users.filter(_user => 
+      const selectableUsers = users.filter(() => 
         checkPermission(Permission.USER_UPDATE) || checkPermission(Permission.USER_DELETE)
       );
       onSelectionChange(selectableUsers.map(user => user.id));

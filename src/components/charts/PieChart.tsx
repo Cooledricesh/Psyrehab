@@ -123,7 +123,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   // Apply default styling to datasets if not provided
   const styledData = {
     ...data,
-    datasets: data.datasets.map((dataset, datasetIndex) => ({
+    datasets: data.datasets.map((dataset, _datasetIndex) => ({
       ...dataset,
       backgroundColor: dataset.backgroundColor || generateDefaultColors(data.labels.length),
       borderColor: dataset.borderColor || '#fff',

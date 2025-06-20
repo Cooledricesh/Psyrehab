@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { Filter, X, RotateCcw, Calendar, TrendingUp, Users, Clock } from 'lucide-react'
+import { Filter, X, RotateCcw, /* Calendar, */ TrendingUp, /* Users, */ Clock } from 'lucide-react'
 import { GoalStatus, GoalPriority, GoalType } from '@/types/goals'
 import { AdvancedGoalFilters } from '@/utils/goal-categorization'
 import { useGoalCategories } from '@/hooks/goal-categories/useGoalCategories'
 import { 
   ALL_GOAL_TAGS,
-  getTagById,
+  // getTagById,
   getCategoryIcon,
   GOAL_STATUS_COLORS,
   GOAL_PRIORITY_COLORS,
@@ -50,7 +50,7 @@ export function GoalFilters({
   }
 
   // 활성 필터 개수 계산
-  const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
+  const activeFiltersCount = Object.entries(filters).filter(([_key, value]) => {
     if (Array.isArray(value)) return value.length > 0
     if (typeof value === 'object' && value !== null) return true
     return value !== undefined && value !== ''

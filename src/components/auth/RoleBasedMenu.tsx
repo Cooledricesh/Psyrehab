@@ -36,7 +36,7 @@ export function RoleBasedMenu({
   vertical = false,
   showBadges = true
 }: RoleBasedMenuProps) {
-  const { hasPermission, hasAnyPermission, hasAllPermissions, isAnyRole } = usePermissions()
+  const { hasPermission: _hasPermission, hasAnyPermission, hasAllPermissions, isAnyRole } = usePermissions()
 
   // Filter menu items based on user permissions
   const filterMenuItems = (menuItems: MenuItem[]): MenuItem[] => {

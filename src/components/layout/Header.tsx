@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Bell, User, ChevronDown } from 'lucide-react'
+import { Search, Bell, /* User, */ ChevronDown } from 'lucide-react'
 import { supabase, getCurrentUser } from '@/lib/supabase'
 
 export const Header = () => {

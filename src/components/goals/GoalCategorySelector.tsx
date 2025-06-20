@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { Check, ChevronDown, Search, Grid3X3, List, Sparkles } from 'lucide-react'
-import { BaseGoal, GoalCategory } from '@/types/goals'
+import { BaseGoal /*, GoalCategory*/ } from '@/types/goals'
 import { useGoalCategories } from '@/hooks/goal-categories/useGoalCategories'
 import { SmartCategorizationSystem } from '@/utils/goal-categorization'
 import { getCategoryIcon } from '@/constants/goal-categories'

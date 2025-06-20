@@ -18,7 +18,7 @@ export function SessionTimeoutWarning({
   onLogout,
   className = ''
 }: SessionTimeoutWarningProps) {
-  const { user, signOut, refreshSession } = useAuth()
+  const { user, signOut, refreshSession: _refreshSession } = useAuth()
   const { sessionExpiresAt, isSessionValid, refreshSessionToken } = useSession()
   
   const [showWarning, setShowWarning] = useState(false)

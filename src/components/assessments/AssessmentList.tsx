@@ -67,14 +67,14 @@ export function AssessmentList({
     }
   }
 
-  const handleStatusChange = async (id: string, status: 'draft' | 'completed' | 'reviewed') => {
-    try {
-      await updateStatusMutation.mutateAsync({ id, status })
-      toast.success('평가 상태가 변경되었습니다')
-    } catch {
-      toast.error('상태 변경에 실패했습니다')
-    }
-  }
+  // const handleStatusChange = async (id: string, status: 'draft' | 'completed' | 'reviewed') => {
+  //   try {
+  //     await updateStatusMutation.mutateAsync({ id, status })
+  //     toast.success('평가 상태가 변경되었습니다')
+  //   } catch {
+  //     toast.error('상태 변경에 실패했습니다')
+  //   }
+  // }
 
   const handleSort = (field: 'assessment_date' | 'status') => {
     if (field === sortBy) {

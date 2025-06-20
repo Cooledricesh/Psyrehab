@@ -16,7 +16,7 @@ export default function AssessmentsPage() {
   const [showAssessmentForm, setShowAssessmentForm] = useState(false)
 
   // 환자 목록 가져오기
-  const { data: patientsData, isLoading: patientsLoading, error: patientsError } = usePatients({
+  const { data: _patientsData, isLoading: patientsLoading, error: patientsError } = usePatients({
     page: 1,
     limit: 100,
     sort_by: 'full_name',

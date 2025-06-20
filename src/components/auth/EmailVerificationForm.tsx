@@ -83,7 +83,7 @@ export function EmailVerificationForm({
     try {
       // Force refresh user session to check verification status
       window.location.reload()
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       setFieldError('submit', '확인 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)

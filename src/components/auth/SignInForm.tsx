@@ -376,7 +376,7 @@ export function InlineSignInForm({
   placeholder = '이메일로 로그인',
   className = ''
 }: InlineSignInFormProps) {
-  const { signIn } = useAuth()
+  const { signIn: _signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')

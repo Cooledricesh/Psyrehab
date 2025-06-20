@@ -71,7 +71,7 @@ export function SimpleProtectedRoute({ children }: SimpleProtectedRouteProps) {
   // 별도로 auth state 변화 감지
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event, _session) => {
         console.log('Auth state changed:', event)
         
         if (event === 'SIGNED_OUT') {

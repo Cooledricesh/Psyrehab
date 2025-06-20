@@ -37,14 +37,14 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
 import { 
   BaseGoal, 
   GoalType, 
   GoalStatus, 
   GoalPriority,
-  CreateGoalRequest,
-  UpdateGoalRequest
+  // CreateGoalRequest,
+  // UpdateGoalRequest
 } from '@/types/goals';
 import { useGoals, useCreateGoal, useUpdateGoal, useGoalCategories } from '@/hooks/useGoals';
 

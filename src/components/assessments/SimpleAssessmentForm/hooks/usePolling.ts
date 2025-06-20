@@ -34,7 +34,7 @@ export function usePolling({
       try {
         console.log(`AI 응답 폴링... (attempt ${attempts + 1}/${maxAttempts})`)
 
-        const { data: aiResponse, error } = await supabase
+        const { data: aiResponse } = await supabase
           .from('ai_goal_recommendations')
           .select('*')
           .eq('patient_id', patientId)

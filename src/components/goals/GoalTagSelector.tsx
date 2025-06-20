@@ -6,7 +6,7 @@ import {
   ALL_GOAL_TAGS,
   GOAL_TAG_CATEGORIES,
   getTagById,
-  getTagsByCategory
+  // getTagsByCategory
 } from '@/constants/goal-categories'
 import { cn } from '@/lib/utils'
 

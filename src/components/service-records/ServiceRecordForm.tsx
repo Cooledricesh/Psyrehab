@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { 
   Calendar, 
   Clock, 
-  User, 
+  /* User, */ 
   Users, 
   MapPin, 
   FileText, 

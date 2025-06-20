@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+// import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -29,10 +29,10 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { 
-  BaseGoal, 
+  // BaseGoal, 
   SixMonthGoal, 
   MonthlyGoal,
-  CreateGoalRequest
+  // CreateGoalRequest
 } from '@/types/goals';
 import GoalBreakdownService, { 
   BreakdownConfig, 
