@@ -8,16 +8,16 @@ export interface AIRecommendationRequest {
 export interface AIRecommendationResponse {
   success: boolean;
   message: string;
-  data?: unknown;
+  data?: any;
 }
 
 export interface AIGoalRecommendation {
   id: string;
   assessment_id: string;
   patient_id: string;
-  recommendations: unknown[];
+  recommendations: any[];
   n8n_processing_status: string;
-  patient_analysis?: unknown;
+  patient_analysis?: any;
   created_at: string;
 }
 
@@ -45,7 +45,7 @@ export class AIRecommendationService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Error occurred");
+      console.error('❌ AI API Error Response:', errorText);
       throw new Error(`AI 추천 요청 실패: ${response.status} - ${errorText}`);
     }
 
@@ -71,7 +71,7 @@ export class AIRecommendationService {
       .maybeSingle();
 
     if (error) {
-      console.error("Error occurred");
+      console.error('❌ AI 추천 상태 조회 실패:', error);
       throw error;
     }
 
@@ -97,7 +97,7 @@ export class AIRecommendationService {
       .eq('id', recommendationId);
 
     if (error) {
-      console.error("Error occurred");
+      console.error('AI 추천 상태 업데이트 실패:', error);
       // 실패해도 계속 진행하도록 에러를 throw하지 않음
     }
   }
@@ -117,7 +117,7 @@ export class AIRecommendationService {
       .maybeSingle();
       
     if (error) {
-      console.error("Error occurred");
+      console.error('AI 추천 ID 조회 실패:', error);
       return null;
     }
     

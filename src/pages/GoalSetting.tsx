@@ -51,7 +51,7 @@ const GoalSetting: React.FC = () => {
 
   // 추가 상태 (훅으로 옮기지 않은 것들)
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [aiRecommendations, setAiRecommendations] = useState<unknown>(null);
+  const [aiRecommendations, setAiRecommendations] = useState<any>(null);
   
   // AI 응답 파싱 훅
   const { parseAIResponse } = useAIResponseParser();
@@ -78,8 +78,8 @@ const GoalSetting: React.FC = () => {
         } else {
           console.log(MESSAGES.info.alreadyLoggedIn, session.user?.email);
         }
-      } catch {
-        console.error("Error occurred");
+      } catch (error) {
+        console.error('자동 로그인 중 오류:', error);
         // 오류가 발생해도 강제로 로그인 시도
         try {
           const { error: forceError } = await supabase.auth.signInWithPassword({
@@ -139,7 +139,7 @@ const GoalSetting: React.FC = () => {
       setIsProcessing(false);
     },
     onError: (error) => {
-      console.error("Error occurred");
+      console.error('❌ AI 폴링 에러 콜백:', error);
       alert(error);
       setCurrentStep(2);
       setIsProcessing(false);
@@ -191,7 +191,7 @@ const GoalSetting: React.FC = () => {
       setCurrentAssessmentId(data.id);
     },
     onError: (error) => {
-      console.error("Error occurred");
+      console.error('❌ 평가 데이터 저장 실패:', error);
       alert(error.message);
     }
   });
@@ -224,8 +224,8 @@ const GoalSetting: React.FC = () => {
       
       // 폴링은 useAIPolling 훅에서 자동으로 시작됨
       
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      console.error('AI 추천 처리 중 오류:', error);
       alert(MESSAGES.error.aiRequestFailed);
       setCurrentStep(2); // 평가 단계로 되돌리기
       setIsProcessing(false);
@@ -337,8 +337,8 @@ const GoalSetting: React.FC = () => {
       // 환자 목록 새로고침
       refetch();
 
-    } catch (error: unknown) {
-      console.error("Error occurred");
+    } catch (error: any) {
+      console.error('목표 저장 중 오류:', error);
       
       let errorMessage = MESSAGES.error.default;
       if (error.message) {
