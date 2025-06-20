@@ -26,19 +26,22 @@ export default function AssessmentsPage() {
     }
   })
 
-
+  const handlePatientSelect = (patientId: string) => {
     setSelectedPatientId(patientId)
   }
 
+  const handleStartAssessment = () => {
     if (selectedPatientId) {
       setShowAssessmentForm(true)
     }
   }
 
+  const handleCancelAssessment = () => {
     setShowAssessmentForm(false)
     setSelectedPatientId(null)
   }
 
+  const handleAssessmentComplete = (assessmentId: string) => {
     console.log('Assessment completed:', assessmentId)
     // 평가 완료 후 처리 로직
     setShowAssessmentForm(false)
