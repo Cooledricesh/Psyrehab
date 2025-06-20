@@ -187,7 +187,7 @@ export const PerformanceMatrix: React.FC<PerformanceMatrixProps> = ({
           </div>
 
           {/* 데이터 행들 */}
-          {data.map((patient, index) => (
+          {data.map((patient) => (
             <div key={patient.patientId} className="flex border-t border-gray-200">
               {/* 환자명 */}
               <div 

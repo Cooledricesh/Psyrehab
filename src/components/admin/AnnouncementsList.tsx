@@ -103,16 +103,18 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
           aValue = a.metadata.readCount;
           bValue = b.metadata.readCount;
           break;
-        case 'priority':
+        case 'priority': {
           const priorityOrder = ['low', 'medium', 'high', 'urgent'];
           aValue = priorityOrder.indexOf(a.priority);
           bValue = priorityOrder.indexOf(b.priority);
           break;
-        case 'status':
+        }
+        case 'status': {
           const statusOrder = ['draft', 'scheduled', 'published', 'expired', 'cancelled'];
           aValue = statusOrder.indexOf(a.status);
           bValue = statusOrder.indexOf(b.status);
           break;
+        }
         default:
           aValue = a.createdAt;
           bValue = b.createdAt;

@@ -115,7 +115,7 @@ const AssessmentTrendChart: React.FC<AssessmentTrendChartProps> = ({
   }, [trendData])
 
   // 커스텀 툴팁
-  const CustomTooltip = ({ active, payload, label }: unknown) => {
+  const CustomTooltip = ({ active, payload }: unknown) => {
     if (active && payload && payload.length) {
       const data = payload[0]?.payload as TrendData
       return (

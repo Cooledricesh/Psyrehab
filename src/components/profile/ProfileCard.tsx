@@ -371,7 +371,7 @@ function getRoleDisplayName(role: string): string {
 
 function renderRoleSpecificInfo(profile: AnyUserProfile): React.ReactNode {
   switch (profile.role) {
-    case 'social_worker':
+    case 'social_worker': {
       const swProfile = profile as SocialWorkerProfile
       return (
         <div className="mt-2 text-xs text-gray-600">
@@ -379,8 +379,9 @@ function renderRoleSpecificInfo(profile: AnyUserProfile): React.ReactNode {
           {swProfile.department && <p>부서: {swProfile.department}</p>}
         </div>
       )
+    }
 
-    case 'patient':
+    case 'patient': {
       const patientProfile = profile as PatientProfile
       return (
         <div className="mt-2 text-xs text-gray-600">
@@ -396,14 +397,16 @@ function renderRoleSpecificInfo(profile: AnyUserProfile): React.ReactNode {
           )}
         </div>
       )
+    }
 
-    case 'administrator':
+    case 'administrator': {
       const adminProfile = profile as AdministratorProfile
       return (
         <div className="mt-2 text-xs text-gray-600">
           <p>관리자 레벨: {adminProfile.admin_level || 0}</p>
         </div>
       )
+    }
 
     default:
       return null
@@ -412,7 +415,7 @@ function renderRoleSpecificInfo(profile: AnyUserProfile): React.ReactNode {
 
 function renderRoleSpecificSummary(profile: AnyUserProfile): React.ReactNode {
   switch (profile.role) {
-    case 'social_worker':
+    case 'social_worker': {
       const swProfile = profile as SocialWorkerProfile
       return (
         <div className="space-y-1">
@@ -421,8 +424,9 @@ function renderRoleSpecificSummary(profile: AnyUserProfile): React.ReactNode {
           {swProfile.contact_number && <p>연락처: {swProfile.contact_number}</p>}
         </div>
       )
+    }
 
-    case 'patient':
+    case 'patient': {
       const patientProfile = profile as PatientProfile
       return (
         <div className="space-y-1">
@@ -434,14 +438,16 @@ function renderRoleSpecificSummary(profile: AnyUserProfile): React.ReactNode {
           )}
         </div>
       )
+    }
 
-    case 'administrator':
+    case 'administrator': {
       const adminProfile = profile as AdministratorProfile
       return (
         <div className="space-y-1">
           <p>관리자 레벨: {adminProfile.admin_level || 0}</p>
         </div>
       )
+    }
 
     default:
       return null

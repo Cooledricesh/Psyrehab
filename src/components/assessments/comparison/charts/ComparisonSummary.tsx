@@ -216,7 +216,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
 
     // 영역별 권장사항
     const weakDimensions = Object.entries(dimensionAverages)
-      .filter(([key, value]) => value < 2.5)
+      .filter(([, value]) => value < 2.5)
       .map(([key, value]) => ({ key, value, name: (dimensionNames as unknown)[key] }))
 
     if (weakDimensions.length > 0) {

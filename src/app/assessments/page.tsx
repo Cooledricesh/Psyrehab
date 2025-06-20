@@ -36,10 +36,10 @@ export default function AssessmentsPage() {
     }
   }
 
-  const handleCancelAssessment = () => {
-    setShowAssessmentForm(false)
-    setSelectedPatientId(null)
-  }
+  // const handleCancelAssessment = () => {
+  //   setShowAssessmentForm(false)
+  //   setSelectedPatientId(null)
+  // }
 
   const handleAssessmentComplete = (assessmentId: string) => {
     console.log('Assessment completed:', assessmentId)

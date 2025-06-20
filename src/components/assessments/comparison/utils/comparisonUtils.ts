@@ -68,7 +68,7 @@ export const createTimeRanges = (period: ComparisonPeriod, referenceDate: Date =
       }
       break
 
-    case 'quarter':
+    case 'quarter': {
       const quarterStart = new Date(referenceDate.getFullYear(), Math.floor(referenceDate.getMonth() / 3) * 3, 1)
       const quarterEnd = new Date(quarterStart.getFullYear(), quarterStart.getMonth() + 3, 0)
       
@@ -87,6 +87,7 @@ export const createTimeRanges = (period: ComparisonPeriod, referenceDate: Date =
         label: '지난 분기'
       }
       break
+    }
 
     case 'year':
       current = {
@@ -182,18 +183,20 @@ export const groupAssessments = (
         groupName = format(new Date(assessment.created_at), 'yyyy-MM', { locale: ko })
         break
 
-      case 'week':
+      case 'week': {
         const weekStart = startOfWeek(new Date(assessment.created_at), { weekStartsOn: 1 })
         groupName = format(weekStart, 'yyyy-MM-dd', { locale: ko }) + ' 주'
         break
+      }
 
-      case 'score_range':
+      case 'score_range': {
         const score = calculateOverallScore(assessment)
         if (score >= 4.0) groupName = '우수 (4.0-5.0)'
         else if (score >= 3.0) groupName = '좋음 (3.0-3.9)'
         else if (score >= 2.0) groupName = '보통 (2.0-2.9)'
         else groupName = '개선필요 (1.0-1.9)'
         break
+      }
 
       case 'custom':
         if (!options.customGroups) {

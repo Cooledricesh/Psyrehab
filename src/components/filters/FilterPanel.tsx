@@ -145,7 +145,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           </select>
         );
 
-      case 'date':
+      case 'date': {
         const dateValue = groupValue || {};
         return (
           <div className="space-y-3">
@@ -175,8 +175,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'range':
+      case 'range': {
         const rangeValue = groupValue || {};
         return (
           <div className="space-y-3">
@@ -206,6 +207,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             </div>
           </div>
         );
+      }
 
       default:
         return null;

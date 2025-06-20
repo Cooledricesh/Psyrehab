@@ -98,7 +98,7 @@ export const ComparisonExport: React.FC<ComparisonExportProps> = ({
     return `평가비교_${modeLabel}_${selectedScope}_${dateStr}_${timeStr}`
   }
 
-  const prepareCsvData = (scope: ExportScope): string => {
+  const prepareCsvData = (): string => {
     let csvContent = ''
     
     switch (comparisonMode) {
