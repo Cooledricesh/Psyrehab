@@ -50,18 +50,62 @@ export interface ParsedGoal {
   }>
 }
 
-// AI 추천 요청 훅 (기존 API 엔드포인트 사용)
+// AI 추천 요청 훅 (n8n webhook 직접 호출)
 export function useRequestAIRecommendation() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (assessmentId: string) => {
-      const response = await fetch(`${ENV.API_URL}/api/ai/recommend`, {
+      if (!ENV.N8N_WEBHOOK_URL) {
+        throw new Error('N8N webhook URL이 설정되지 않았습니다')
+      }
+
+      // 평가 데이터 조회
+      const { data: assessment, error: fetchError } = await supabase
+        .from('assessments')
+        .select(`
+          *,
+          patient:patients!inner(
+            id,
+            full_name,
+            date_of_birth,
+            gender,
+            additional_info
+          )
+        `)
+        .eq('id', assessmentId)
+        .single();
+
+      if (fetchError || !assessment) {
+        throw new Error('Assessment를 찾을 수 없습니다');
+      }
+
+      // n8n으로 전송할 데이터 구성
+      const aiPayload = {
+        assessmentId: assessment.id,
+        patientId: assessment.patient_id,
+        patientInfo: {
+          age: assessment.patient.date_of_birth ? 
+            Math.floor((new Date().getTime() - new Date(assessment.patient.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null,
+          gender: assessment.patient.gender || null,
+          diagnosis: assessment.patient.additional_info?.diagnosis || null
+        },
+        assessmentData: {
+          focusTime: assessment.focus_time,
+          motivationLevel: assessment.motivation_level,
+          pastSuccesses: assessment.past_successes || [],
+          constraints: assessment.constraints || [],
+          socialPreference: assessment.social_preference
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch(ENV.N8N_WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ assessmentId }),
+        body: JSON.stringify(aiPayload),
       })
 
       if (!response.ok) {

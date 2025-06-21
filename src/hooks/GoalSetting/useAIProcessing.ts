@@ -57,32 +57,41 @@ export const useAIProcessing = ({
       console.log('평가 저장 완료:', assessmentData);
       setCurrentAssessmentId(assessmentData.id);
 
-      // 2. AI 추천 요청
+      // 2. AI 추천 요청 (n8n webhook 직접 호출)
       console.log('🌐 AI 추천 요청 시작');
-      console.log('서버 URL:', ENV.apiUrl + '/api/ai/recommend');
       
-      const response = await fetch(`${ENV.apiUrl}/api/ai/recommend`, {
+      if (!ENV.N8N_WEBHOOK_URL) {
+        throw new Error('N8N webhook URL이 설정되지 않았습니다');
+      }
+      
+      console.log('n8n webhook URL:', ENV.N8N_WEBHOOK_URL);
+
+      // n8n으로 전송할 데이터 구성
+      const aiPayload = {
+        assessmentId: assessmentData.id,
+        patientId: selectedPatient,
+        assessmentData: formattedData,
+        timestamp: new Date().toISOString()
+      };
+      
+      const response = await fetch(ENV.N8N_WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          patientId: selectedPatient,
-          assessmentId: assessmentData.id,
-          assessmentData: formattedData,
-        }),
+        body: JSON.stringify(aiPayload),
       });
 
-      console.log('서버 응답 상태:', response.status);
+      console.log('n8n webhook 응답 상태:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Error occurred");
-        throw new Error(`서버 오류: ${response.status} - ${errorText}`);
+        console.error("n8n webhook 오류:", errorText);
+        throw new Error(`n8n webhook 오류: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('서버 응답 데이터:', result);
+      console.log('n8n webhook 응답 데이터:', result);
 
       return { assessmentId: assessmentData.id };
     },
