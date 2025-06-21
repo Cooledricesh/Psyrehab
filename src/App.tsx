@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { SimpleDashboard } from '@/components/dashboard/SimpleDashboard'
+import Dashboard from '@/pages/Dashboard'
 import { SimpleProtectedRoute } from '@/components/auth/SimpleProtectedRoute'
 import { AdminProtectedRoute } from '@/components/auth/AdminProtectedRoute'
 
@@ -53,7 +53,7 @@ function App() {
                   <main className="flex-1 p-6 bg-gray-50 overflow-auto">
                     <Routes>
                       <Route path="/" element={<Home />} />
-                      <Route path="/dashboard" element={<SimpleDashboard />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/patient-management" element={<PatientManagement />} />
                       <Route path="/goal-setting" element={<GoalSetting />} />
                       <Route path="/progress-tracking" element={<ProgressTracking />} />
