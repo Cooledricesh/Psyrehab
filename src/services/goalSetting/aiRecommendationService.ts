@@ -8,16 +8,16 @@ export interface AIRecommendationRequest {
 export interface AIRecommendationResponse {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export interface AIGoalRecommendation {
   id: string;
   assessment_id: string;
   patient_id: string;
-  recommendations: any[];
+  recommendations: Record<string, unknown>[];
   n8n_processing_status: string;
-  patient_analysis?: any;
+  patient_analysis?: Record<string, unknown>;
   created_at: string;
 }
 

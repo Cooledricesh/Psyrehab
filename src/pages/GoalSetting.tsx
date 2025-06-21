@@ -51,7 +51,7 @@ const GoalSetting: React.FC = () => {
 
   // 추가 상태 (훅으로 옮기지 않은 것들)
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [aiRecommendations, setAiRecommendations] = useState<any>(null);
+  const [aiRecommendations, setAiRecommendations] = useState<Record<string, unknown> | null>(null);
   
   // AI 응답 파싱 훅
   const { parseAIResponse } = useAIResponseParser();
@@ -337,11 +337,11 @@ const GoalSetting: React.FC = () => {
       // 환자 목록 새로고침
       refetch();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('목표 저장 중 오류:', error);
       
       let errorMessage = MESSAGES.error.default;
-      if (error.message) {
+      if (error instanceof Error && error.message) {
         errorMessage = MESSAGES.error.goalSaveFailed(error.message);
       }
       

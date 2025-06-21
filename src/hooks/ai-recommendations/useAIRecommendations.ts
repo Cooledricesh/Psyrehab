@@ -16,20 +16,20 @@ import {
 } from '@/services/ai-recommendations'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
-type TablesUpdate<T extends string> = any
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 
 // Query keys
 export const aiRecommendationKeys = {
   all: ['ai-recommendations'] as const,
   lists: () => [...aiRecommendationKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...aiRecommendationKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...aiRecommendationKeys.lists(), filters] as const,
   patient: (patientId: string) => [...aiRecommendationKeys.all, 'patient', patientId] as const,
   activePatient: (patientId: string) => [...aiRecommendationKeys.all, 'active-patient', patientId] as const,
   details: () => [...aiRecommendationKeys.all, 'detail'] as const,
   detail: (id: string) => [...aiRecommendationKeys.details(), id] as const,
   statistics: () => [...aiRecommendationKeys.all, 'statistics'] as const,
-  stats: (filters?: Record<string, any>) => [...aiRecommendationKeys.statistics(), filters] as const,
+  stats: (filters?: Record<string, unknown>) => [...aiRecommendationKeys.statistics(), filters] as const,
   recent: (limit?: number) => [...aiRecommendationKeys.all, 'recent', limit] as const,
 }
 
@@ -109,7 +109,7 @@ export function useCreateAIRecommendation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (recommendation: TablesInsert<'ai_goal_recommendations'>) => 
+    mutationFn: (recommendation: TablesInsert) => 
       createAIRecommendation(recommendation),
     onSuccess: (data) => {
       // Invalidate and refetch related queries
@@ -126,7 +126,7 @@ export function useUpdateAIRecommendation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'ai_goal_recommendations'> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate }) =>
       updateAIRecommendation(id, updates),
     onSuccess: (data) => {
       // Update the specific recommendation in cache

@@ -196,7 +196,7 @@ function getFieldValue(
   step: AssessmentStep, 
   fieldId: string
 ): unknown {
-  const stepData = formData[step] as any
+  const stepData = formData[step] as Record<string, unknown>
   return stepData?.[fieldId]
 }
 
@@ -467,7 +467,7 @@ export function sanitizeFormDataForStorage(formData: Partial<AssessmentData>): P
   
   // 빈 문자열을 null로 변환
   ASSESSMENT_STEP_ORDER.forEach(step => {
-    const stepData = sanitized[step] as any
+    const stepData = sanitized[step] as Record<string, unknown>
     if (stepData) {
       Object.keys(stepData).forEach(key => {
         if (stepData[key] === '') {

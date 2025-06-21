@@ -1,8 +1,20 @@
 import React from 'react';
 import { ChevronRight, Target } from 'lucide-react';
 
+interface AIGoal {
+  title?: string;
+  purpose?: string;
+  sixMonthGoal?: string;
+  [key: string]: unknown;
+}
+
+interface AIRecommendations {
+  goals?: AIGoal[];
+  [key: string]: unknown;
+}
+
 interface AIRecommendationSelectionProps {
-  aiRecommendations: any;
+  aiRecommendations: AIRecommendations;
   selectedGoal: string;
   onSelectGoal: (goalIndex: string) => void;
   onBack: () => void;
@@ -70,7 +82,7 @@ const AIRecommendationSelection: React.FC<AIRecommendationSelectionProps> = ({
         </div>
 
         <div className="space-y-3">
-          {(aiRecommendations.goals || []).map((goal: any, index: number) => (
+          {(aiRecommendations.goals || []).map((goal: AIGoal, index: number) => (
             <div
               key={index}
               className={`border rounded-lg p-4 cursor-pointer transition-all ${

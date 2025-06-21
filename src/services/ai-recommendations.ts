@@ -2,9 +2,9 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
-type TablesUpdate<T extends string> = any
-type AIGoalRecommendationWithDetails = any
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
+type AIGoalRecommendationWithDetails = Record<string, unknown>
 
 // Get AI recommendations for a patient
 export async function getPatientAIRecommendations(patientId: string) {
