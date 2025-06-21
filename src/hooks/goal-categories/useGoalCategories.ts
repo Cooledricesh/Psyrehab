@@ -16,8 +16,8 @@ import {
 } from '@/services/goal-categories'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
-type TablesUpdate<T extends string> = any
+type TablesInsert<T extends string> = Record<string, unknown>
+type TablesUpdate<T extends string> = Record<string, unknown>
 
 // Query keys
 export const goalCategoryKeys = {

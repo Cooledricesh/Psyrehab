@@ -3,8 +3,8 @@ import { supabase } from '@/lib/supabase'
 import type { ServiceRecordWithDetails } from '@/types/database'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
-type TablesUpdate<T extends string> = any
+type TablesInsert<T extends string> = Record<string, unknown>
+type TablesUpdate<T extends string> = Record<string, unknown>
 
 // Get service records for a patient
 export async function getPatientServiceRecords(patientId: string) {

@@ -2,9 +2,9 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
-type TablesUpdate<T extends string> = any
-type WeeklyCheckInWithDetails = any
+type TablesInsert<T extends string> = Record<string, unknown>
+type TablesUpdate<T extends string> = Record<string, unknown>
+type WeeklyCheckInWithDetails = Record<string, unknown>
 
 // Get weekly check-ins for a specific goal
 export async function getGoalWeeklyCheckIns(goalId: string) {

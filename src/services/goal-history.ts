@@ -2,9 +2,9 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
-type TablesUpdate<T extends string> = any
-type GoalHistoryWithDetails = any
+type TablesInsert<T extends string> = Record<string, unknown>
+type TablesUpdate<T extends string> = Record<string, unknown>
+type GoalHistoryWithDetails = Record<string, unknown>
 
 // Get goal history for a specific goal
 export async function getGoalHistory(goalId: string) {

@@ -41,7 +41,7 @@ export function AssessmentList({
     sort_order: sortOrder,
     filters: {
       ...(patientId && { patient_id: patientId }),
-      ...(statusFilter && { status: statusFilter as any }),
+      ...(statusFilter && { status: statusFilter as 'draft' | 'completed' | 'reviewed' }),
       ...(searchQuery && { search: searchQuery })
     }
   }

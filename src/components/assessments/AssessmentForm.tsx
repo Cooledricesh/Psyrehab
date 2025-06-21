@@ -138,7 +138,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
   // 필드 렌더링
   const renderField = (field: AssessmentFieldConfig) => {
-    const stepData = formData[currentStepKey] as any
+    const stepData = formData[currentStepKey] as Record<string, unknown>
     
     // 조건부 렌더링 확인
     if (!shouldRenderField(field, stepData, formData)) {
@@ -313,7 +313,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
   // 유효성 검사
   const validateCurrentStep = (): boolean => {
-    const stepData = formData[currentStepKey] as any
+    const stepData = formData[currentStepKey] as Record<string, unknown>
     const stepErrors = validateStep(currentConfig.fields, stepData, formData)
     
     // 에러 키에 스텝 접두사 추가

@@ -12,7 +12,7 @@ import {
 } from '@/services/goal-history'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
+type TablesInsert<T extends string> = Record<string, unknown>
 
 // Query keys
 export const goalHistoryKeys = {

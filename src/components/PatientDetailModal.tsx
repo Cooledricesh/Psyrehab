@@ -45,7 +45,7 @@ export default function PatientDetailModal({
       }
     } catch (err: unknown) {
       console.error('❌ 환자 상세 정보 로드 실패:', err)
-      setError(err.message || '환자 정보를 불러오는 중 오류가 발생했습니다.')
+      setError(err instanceof Error ? err.message : '환자 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }

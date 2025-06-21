@@ -2,9 +2,9 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = any
-type TablesUpdate<T extends string> = any
-type GoalEvaluationWithDetails = any
+type TablesInsert<T extends string> = Record<string, unknown>
+type TablesUpdate<T extends string> = Record<string, unknown>
+type GoalEvaluationWithDetails = Record<string, unknown>
 
 // Get goal evaluations for a specific goal
 export async function getGoalEvaluations(goalId: string) {
