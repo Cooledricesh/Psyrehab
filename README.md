@@ -21,12 +21,12 @@
 - **Charts**: Chart.js + Recharts
 - **Forms**: React Hook Form + 커스텀 컴포넌트
 
-### Backend
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth (JWT 기반)
-- **Real-time**: Supabase Realtime
-- **AI Integration**: N8N Workflow Webhook
-- **Security**: Row Level Security (RLS)
+### Backend (Serverless Architecture)
+- **Database**: Supabase (PostgreSQL + Real-time subscriptions)
+- **Authentication**: Supabase Auth (PKCE flow)
+- **AI Processing**: Direct N8N Webhook Integration
+- **Security**: Supabase Row Level Security (RLS)
+- **Architecture**: Single frontend deployment (no separate backend server)
 
 ### Development Tools
 - **Testing**: Vitest + React Testing Library

@@ -2,13 +2,32 @@
 
 This document outlines the deployment process for the PsyRehab application.
 
+**🎉 Architecture Update**: This application has been simplified to a **single frontend-only** structure by removing the Express backend and connecting directly to n8n webhooks.
+
 ## Table of Contents
+- [Architecture Overview](#architecture-overview)
 - [Environment Setup](#environment-setup)
 - [Build Process](#build-process)
 - [Deployment Options](#deployment-options)
 - [Environment Variables](#environment-variables)
 - [Testing Deployment](#testing-deployment)
 - [Production Checklist](#production-checklist)
+
+## Architecture Overview
+
+### Current Architecture (Simplified)
+- **Frontend**: Vite + React + TypeScript (Single Page Application)
+- **Database**: Supabase (PostgreSQL with real-time subscriptions)
+- **AI Processing**: Direct n8n webhook integration
+- **Authentication**: Supabase Auth with PKCE flow
+
+### Benefits of Simplified Architecture
+- ✅ **Single deployment target** (Vercel/Netlify)
+- ✅ **Reduced infrastructure complexity**
+- ✅ **Lower hosting costs**
+- ✅ **Simplified CI/CD pipeline**
+- ✅ **Better performance** (fewer network hops)
+- ✅ **Easier maintenance**
 
 ## Environment Setup
 
@@ -136,18 +155,25 @@ This will generate a build and open a bundle analyzer to visualize chunk sizes.
 Create a `.env` file based on the template and configure:
 
 ```bash
-# Supabase Configuration
+# Supabase Configuration (Required)
 VITE_SUPABASE_URL=https://jsilzrsiieswiskzcriy.supabase.co
 VITE_SUPABASE_ANON_KEY=your-actual-supabase-anon-key
 
-# n8n Webhook (Optional)
+# n8n Webhook Configuration (Required for AI features)
 VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url
 
-# Application Settings
+# Application Settings (Optional)
 VITE_APP_ENV=production
 VITE_APP_NAME=PsyRehab
 VITE_APP_VERSION=1.0.0
 ```
+
+### Vercel Environment Variables
+
+In your Vercel dashboard, add these environment variables:
+- `VITE_SUPABASE_URL` = `https://jsilzrsiieswiskzcriy.supabase.co`
+- `VITE_SUPABASE_ANON_KEY` = Your Supabase anonymous key
+- `VITE_N8N_WEBHOOK_URL` = Your n8n webhook URL for AI processing
 
 ### Environment-Specific Settings
 
