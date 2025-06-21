@@ -12,7 +12,7 @@ import {
 } from '@/services/goal-history'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
 
 // Query keys
 export const goalHistoryKeys = {
@@ -106,7 +106,7 @@ export function useCreateGoalHistoryEntry() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (history: TablesInsert<'goal_history'>) => 
+    mutationFn: (history: TablesInsert) => 
       createGoalHistoryEntry(history),
     onSuccess: (data) => {
       // Invalidate related queries

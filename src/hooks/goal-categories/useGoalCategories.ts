@@ -16,8 +16,8 @@ import {
 } from '@/services/goal-categories'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 
 // Query keys
 export const goalCategoryKeys = {
@@ -94,7 +94,7 @@ export function useCreateGoalCategory() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (category: TablesInsert<'goal_categories'>) => 
+    mutationFn: (category: TablesInsert) => 
       createGoalCategory(category),
     onSuccess: (data) => {
       // Add the new category to the cache
@@ -113,7 +113,7 @@ export function useUpdateGoalCategory() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'goal_categories'> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate }) =>
       updateGoalCategory(id, updates),
     onSuccess: (data) => {
       // Update the specific category in cache

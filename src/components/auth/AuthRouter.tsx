@@ -57,7 +57,6 @@ export function AuthRouter({
   redirectOnDenied,
   loadingComponent: LoadingComponent = PermissionLoading,
   accessDeniedComponent: AccessDeniedComponent = AccessDenied,
-  notAuthenticatedComponent: _NotAuthenticatedComponent = NotAuthenticated,
   checkProfile = true,
   preserveLocation = true
 }: AuthRouterProps) {
@@ -67,8 +66,7 @@ export function AuthRouter({
     isInitialized,
     isLoading,
     hasProfile,
-    needsEmailVerification,
-    userRole
+    needsEmailVerification
   } = useAuthState()
   
   const { 
@@ -88,19 +86,6 @@ export function AuthRouter({
     return `${baseUrl}?redirect=${encodeURIComponent(location.pathname + location.search)}`
   }
 
-  // Get role-based default redirect
-  // const getRoleBasedRedirect = () => {
-  //   switch (userRole) {
-  //     case 'administrator':
-  //       return '/admin/dashboard'
-  //     case 'social_worker':
-  //       return '/social-worker/dashboard'
-  //     case 'patient':
-  //       return '/patient/dashboard'
-  //     default:
-  //       return '/dashboard'
-  //   }
-  // }
 
   // Check authentication requirement
   if (requireAuth && !isAuthenticated) {

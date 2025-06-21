@@ -245,7 +245,6 @@ export function PermissionLoading() {
  * Component for when user is not authenticated
  */
 export function NotAuthenticated() {
-  const { signOut: _signOut } = useAuth()
 
   const handleSignIn = () => {
     window.location.href = '/auth/signin'

@@ -2,8 +2,8 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 type WeeklyCheckInWithDetails = Record<string, unknown>
 
 // Get weekly check-ins for a specific goal
@@ -83,7 +83,7 @@ export async function getWeeklyCheckInWithDetails(checkInId: string): Promise<We
 }
 
 // Create a new weekly check-in
-export async function createWeeklyCheckIn(checkIn: TablesInsert<'weekly_check_ins'>) {
+export async function createWeeklyCheckIn(checkIn: TablesInsert) {
   const { data, error } = await supabase
     .from('weekly_check_ins')
     .insert(checkIn)
@@ -106,7 +106,7 @@ export async function createWeeklyCheckIn(checkIn: TablesInsert<'weekly_check_in
 }
 
 // Update a weekly check-in
-export async function updateWeeklyCheckIn(id: string, updates: TablesUpdate<'weekly_check_ins'>) {
+export async function updateWeeklyCheckIn(id: string, updates: TablesUpdate) {
   const { data, error } = await supabase
     .from('weekly_check_ins')
     .update(updates)
@@ -421,7 +421,7 @@ export async function getGoalWeeklyProgress(goalId: string) {
 }
 
 // Bulk create weekly check-ins
-export async function bulkCreateWeeklyCheckIns(checkIns: TablesInsert<'weekly_check_ins'>[]) {
+export async function bulkCreateWeeklyCheckIns(checkIns: TablesInsert[]) {
   const { data, error } = await supabase
     .from('weekly_check_ins')
     .insert(checkIns)

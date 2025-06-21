@@ -9,8 +9,8 @@ import {
 } from '@/services/weekly-check-ins'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 
 // Query keys
 export const weeklyCheckInKeys = {
@@ -63,7 +63,7 @@ export function useCreateWeeklyCheckIn() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (checkIn: TablesInsert<'weekly_check_ins'>) => 
+    mutationFn: (checkIn: TablesInsert) => 
       createWeeklyCheckIn(checkIn),
     onSuccess: (data) => {
       // Invalidate related queries
@@ -82,7 +82,7 @@ export function useUpdateWeeklyCheckIn() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'weekly_check_ins'> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate }) =>
       updateWeeklyCheckIn(id, updates),
     onSuccess: (data) => {
       // Invalidate related queries

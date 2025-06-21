@@ -21,20 +21,6 @@ const chartData = [
   { month: '12월', completed: 118, active: 232, total: 350 }
 ]
 
-const chartConfig = {
-  completed: {
-    label: '완료된 목표',
-    color: 'hsl(var(--chart-1))',
-  },
-  active: {
-    label: '진행중인 목표',
-    color: 'hsl(var(--chart-2))',
-  },
-  total: {
-    label: '전체 목표',
-    color: 'hsl(var(--chart-3))',
-  },
-}
 
 export function ProgressChart() {
   const [timeRange, setTimeRange] = useState('12개월')

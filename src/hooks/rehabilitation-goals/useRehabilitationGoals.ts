@@ -11,8 +11,8 @@ import {
 } from '@/services/rehabilitation-goals'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 
 // Query keys
 export const rehabilitationGoalKeys = {
@@ -72,7 +72,7 @@ export function useCreateRehabilitationGoal() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (goal: TablesInsert<'rehabilitation_goals'>) => 
+    mutationFn: (goal: TablesInsert) => 
       createRehabilitationGoal(goal),
     onSuccess: (data) => {
       // Invalidate and refetch related queries
@@ -88,7 +88,7 @@ export function useUpdateRehabilitationGoal() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'rehabilitation_goals'> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate }) =>
       updateRehabilitationGoal(id, updates),
     onSuccess: (data) => {
       // Update the specific goal in cache

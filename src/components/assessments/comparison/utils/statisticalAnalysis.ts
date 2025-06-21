@@ -301,7 +301,6 @@ const calculateFPValueApproximation = (f: number, df1: number, df2: number): num
   // Beta 함수를 이용한 근사
   const x = df2 / (df2 + df1 * f)
   const alpha = df2 / 2
-  const _beta = df1 / 2
   
   // 불완전 베타함수의 간단한 근사
   return Math.max(0.001, Math.min(0.999, Math.pow(x, alpha)))
@@ -320,7 +319,7 @@ const normalCDF = (x: number): number => {
 }
 
 // t-분포 임계값 근사
-const getTCriticalValue = (df: number, _alpha: number): number => {
+const getTCriticalValue = (df: number): number => {
   // 간단한 t-분포 임계값 근사 (95% 신뢰구간용)
   if (df >= 30) return 1.96 // 정규분포 근사
   

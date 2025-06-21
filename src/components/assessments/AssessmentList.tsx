@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import type { AssessmentListParams } from '@/types/assessment'
 import { formatDate } from '@/utils/date'
-import { useAssessments, useDeleteAssessment, useUpdateAssessmentStatus } from '@/hooks/assessments/useAssessments'
+import { useAssessments, useDeleteAssessment } from '@/hooks/assessments/useAssessments'
 import { toast } from 'react-hot-toast'
 
 interface AssessmentListProps {
@@ -54,7 +54,6 @@ export function AssessmentList({
   } = useAssessments(queryParams)
 
   const deleteAssessmentMutation = useDeleteAssessment()
-  const updateStatusMutation = useUpdateAssessmentStatus()
 
   const handleDelete = async (id: string) => {
     if (window.confirm('이 평가를 삭제하시겠습니까?')) {

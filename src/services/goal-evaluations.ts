@@ -2,8 +2,8 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 type GoalEvaluationWithDetails = Record<string, unknown>
 
 // Get goal evaluations for a specific goal
@@ -77,7 +77,7 @@ export async function getGoalEvaluationWithDetails(evaluationId: string): Promis
 }
 
 // Create a new goal evaluation
-export async function createGoalEvaluation(evaluation: TablesInsert<'goal_evaluations'>) {
+export async function createGoalEvaluation(evaluation: TablesInsert) {
   const { data, error } = await supabase
     .from('goal_evaluations')
     .insert(evaluation)
@@ -100,7 +100,7 @@ export async function createGoalEvaluation(evaluation: TablesInsert<'goal_evalua
 }
 
 // Update a goal evaluation
-export async function updateGoalEvaluation(id: string, updates: TablesUpdate<'goal_evaluations'>) {
+export async function updateGoalEvaluation(id: string, updates: TablesUpdate) {
   const { data, error } = await supabase
     .from('goal_evaluations')
     .update(updates)
@@ -396,7 +396,7 @@ export async function getGoalEvaluationProgress(goalId: string) {
 }
 
 // Bulk create evaluations
-export async function bulkCreateEvaluations(evaluations: TablesInsert<'goal_evaluations'>[]) {
+export async function bulkCreateEvaluations(evaluations: TablesInsert[]) {
   const { data, error } = await supabase
     .from('goal_evaluations')
     .insert(evaluations)

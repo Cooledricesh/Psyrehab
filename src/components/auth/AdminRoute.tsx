@@ -22,7 +22,6 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({
     isAdmin, 
     isLoading, 
     user,
-    checkPermission: _checkPermission,
     checkAnyPermission,
     checkAllPermissions 
   } = useAdminAuth();

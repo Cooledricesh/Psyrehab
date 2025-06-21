@@ -2,8 +2,7 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
 type GoalHistoryWithDetails = Record<string, unknown>
 
 // Get goal history for a specific goal
@@ -81,7 +80,7 @@ export async function getGoalHistoryWithDetails(historyId: string): Promise<Goal
 }
 
 // Create a new goal history entry
-export async function createGoalHistoryEntry(history: TablesInsert<'goal_history'>) {
+export async function createGoalHistoryEntry(history: TablesInsert) {
   const { data, error } = await supabase
     .from('goal_history')
     .insert(history)

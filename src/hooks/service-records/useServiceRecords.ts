@@ -14,8 +14,8 @@ import {
 } from '@/services/service-records'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 
 // Query keys
 export const serviceRecordKeys = {
@@ -113,7 +113,7 @@ export function useCreateServiceRecord() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (serviceRecord: TablesInsert<'service_records'>) => createServiceRecord(serviceRecord),
+    mutationFn: (serviceRecord: TablesInsert) => createServiceRecord(serviceRecord),
     onSuccess: (data) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({ queryKey: serviceRecordKeys.patient(data.patient_id) })
@@ -131,7 +131,7 @@ export function useUpdateServiceRecord() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'service_records'> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate }) =>
       updateServiceRecord(id, updates),
     onSuccess: (data) => {
       // Update the specific service record in cache
@@ -169,7 +169,7 @@ export function useBulkServiceRecords() {
   const queryClient = useQueryClient()
 
   const bulkCreate = useMutation({
-    mutationFn: async (serviceRecords: TablesInsert<'service_records'>[]) => {
+    mutationFn: async (serviceRecords: TablesInsert[]) => {
       const results = await Promise.all(
         serviceRecords.map(record => createServiceRecord(record))
       )
@@ -182,7 +182,7 @@ export function useBulkServiceRecords() {
   })
 
   const bulkUpdate = useMutation({
-    mutationFn: async (updates: { id: string; updates: TablesUpdate<'service_records'> }[]) => {
+    mutationFn: async (updates: { id: string; updates: TablesUpdate }[]) => {
       const results = await Promise.all(
         updates.map(({ id, updates: updateData }) => updateServiceRecord(id, updateData))
       )

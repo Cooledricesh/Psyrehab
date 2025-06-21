@@ -3,8 +3,8 @@ import { supabase } from '@/lib/supabase'
 import type { ServiceRecordWithDetails } from '@/types/database'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 
 // Get service records for a patient
 export async function getPatientServiceRecords(patientId: string) {
@@ -148,7 +148,7 @@ export async function getServiceRecordWithDetails(serviceRecordId: string): Prom
 }
 
 // Create a new service record
-export async function createServiceRecord(serviceRecord: TablesInsert<'service_records'>) {
+export async function createServiceRecord(serviceRecord: TablesInsert) {
   const { data, error } = await supabase
     .from('service_records')
     .insert(serviceRecord)
@@ -172,7 +172,7 @@ export async function createServiceRecord(serviceRecord: TablesInsert<'service_r
 }
 
 // Update a service record
-export async function updateServiceRecord(id: string, updates: TablesUpdate<'service_records'>) {
+export async function updateServiceRecord(id: string, updates: TablesUpdate) {
   const { data, error } = await supabase
     .from('service_records')
     .update(updates)

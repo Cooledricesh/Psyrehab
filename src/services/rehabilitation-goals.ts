@@ -2,8 +2,8 @@
 import { supabase } from '@/lib/supabase'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 type RehabilitationGoalWithDetails = Record<string, unknown>
 
 // Get rehabilitation goals for a patient
@@ -84,7 +84,7 @@ export async function getRehabilitationGoalWithDetails(goalId: string): Promise<
 }
 
 // Create a new rehabilitation goal
-export async function createRehabilitationGoal(goal: TablesInsert<'rehabilitation_goals'>) {
+export async function createRehabilitationGoal(goal: TablesInsert) {
   const { data, error } = await supabase
     .from('rehabilitation_goals')
     .insert(goal)
@@ -107,7 +107,7 @@ export async function createRehabilitationGoal(goal: TablesInsert<'rehabilitatio
 }
 
 // Update a rehabilitation goal
-export async function updateRehabilitationGoal(id: string, updates: TablesUpdate<'rehabilitation_goals'>) {
+export async function updateRehabilitationGoal(id: string, updates: TablesUpdate) {
   const { data, error } = await supabase
     .from('rehabilitation_goals')
     .update(updates)
@@ -307,7 +307,7 @@ export async function getGoalsByTimeFrame(
 
 // Update goal completion rate
 export async function updateGoalCompletion(goalId: string, completionRate: number, notes?: string) {
-  const updates: TablesUpdate<'rehabilitation_goals'> = {
+  const updates: TablesUpdate = {
     actual_completion_rate: completionRate,
   }
 

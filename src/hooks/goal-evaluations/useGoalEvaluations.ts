@@ -14,8 +14,8 @@ import {
 } from '@/services/goal-evaluations'
 
 // Temporary types until Supabase types are properly generated
-type TablesInsert<T extends string> = Record<string, unknown>
-type TablesUpdate<T extends string> = Record<string, unknown>
+type TablesInsert = Record<string, unknown>
+type TablesUpdate = Record<string, unknown>
 
 // Query keys
 export const goalEvaluationKeys = {
@@ -111,7 +111,7 @@ export function useCreateGoalEvaluation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (evaluation: TablesInsert<'goal_evaluations'>) => 
+    mutationFn: (evaluation: TablesInsert) => 
       createGoalEvaluation(evaluation),
     onSuccess: (data) => {
       // Add the new evaluation to the cache
@@ -135,7 +135,7 @@ export function useUpdateGoalEvaluation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'goal_evaluations'> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate }) =>
       updateGoalEvaluation(id, updates),
     onSuccess: (data) => {
       // Update the specific evaluation in cache
