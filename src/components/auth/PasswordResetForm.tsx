@@ -245,7 +245,6 @@ interface NewPasswordFormProps {
 
 export function NewPasswordForm({
   onSuccess,
-  token: _token,
   className = ''
 }: NewPasswordFormProps) {
   const {

@@ -1,10 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { 
-  safeValidatePatientData,
-  customValidations
+  safeValidatePatientData
 } from '@/lib/validations/patient-validation'
 import { parseError, logError } from '@/lib/error-handling'
-import type { Patient, TablesInsert, TablesUpdate } from '@/types/database'
+import type { TablesInsert, TablesUpdate } from '@/types/database'
 
 export interface PatientCreateData {
   full_name: string

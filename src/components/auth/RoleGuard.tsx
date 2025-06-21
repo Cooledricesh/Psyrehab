@@ -28,7 +28,7 @@ export function RoleGuard({
   deniedRoles,
   showFallback = true
 }: RoleGuardProps) {
-  const { hasPermission: _hasPermission, hasAnyPermission, hasAllPermissions, isRole: _isRole, isAnyRole } = usePermissions()
+  const { hasAnyPermission, hasAllPermissions, isAnyRole } = usePermissions()
   const { isAuthenticated, isInitialized } = useAuthState()
 
   // Don't render anything while auth is initializing

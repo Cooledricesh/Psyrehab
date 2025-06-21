@@ -1,4 +1,3 @@
-import { ENV } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
 
 export interface AIRecommendationRequest {

@@ -61,7 +61,7 @@ export class GoalTagRecommendationSystem {
   // 목표 내용을 기반으로 태그 추천
   static recommendTags(goal: Partial<BaseGoal>): GoalTag[] {
     const recommendations: GoalTag[] = []
-    const { title, description, goal_type, priority } = goal
+    const { title, description, goal_type } = goal
 
     const content = `${title || ''} ${description || ''}`.toLowerCase()
 

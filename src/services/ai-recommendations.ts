@@ -320,8 +320,7 @@ export async function getAIRecommendations(filters: {
 // Generate AI recommendation based on assessment
 export async function generateAIRecommendationFromAssessment(
   patientId: string,
-  assessmentId: string,
-  socialWorkerId?: string
+  assessmentId: string
 ) {
   // This function would integrate with an AI service to generate recommendations
   // For now, we'll create a placeholder structure that can be enhanced with actual AI integration
@@ -335,14 +334,7 @@ export async function generateAIRecommendationFromAssessment(
 
   if (assessmentError) throw assessmentError
 
-  // Get patient information
-  const { data: patient, error: patientError } = await supabase
-    .from('patients')
-    .select('*')
-    .eq('id', patientId)
-    .single()
-
-  if (patientError) throw patientError
+  // Patient information is available via patientId parameter
 
   // Placeholder AI-generated recommendation structure
   // In a real implementation, this would call an AI service like OpenAI GPT, Claude, etc.

@@ -25,7 +25,7 @@ export function usePolling({
 
     let attempts = 0
     const maxAttempts = POLLING_CONFIG.maxAttempts
-    let intervalId: number
+    let intervalId: NodeJS.Timeout
     let isMounted = true
 
     console.log(`Starting polling for patient ${patientId}...`)

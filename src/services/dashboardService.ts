@@ -438,7 +438,7 @@ export default DashboardService;
 // 간단한 Supabase 연결 테스트 함수
 export const testSupabaseConnection = async () => {
   try {
-    const { data, error } = await supabase.from('patients').select('count').limit(1);
+    const { error } = await supabase.from('patients').select('count').limit(1);
     return !error;
   } catch {
     return false;

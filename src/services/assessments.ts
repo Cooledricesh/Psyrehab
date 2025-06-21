@@ -1,14 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import type { 
   AssessmentData, 
-  AssessmentSummary, 
   AssessmentCreateRequest,
   AssessmentUpdateRequest,
   AssessmentListParams,
-  AssessmentFilters,
-  AssessmentStats,
-  AssessmentComparison,
-  AssessmentVisualizationData,
   AssessmentHistory,
   AssessmentHistoryParams,
   AssessmentVersionInfo,

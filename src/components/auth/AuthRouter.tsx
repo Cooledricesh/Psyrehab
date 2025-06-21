@@ -4,7 +4,6 @@ import { useAuthState } from '@/hooks/useAuthState'
 import { usePermissions } from '@/hooks/usePermissions'
 import { 
   AccessDenied, 
-  NotAuthenticated, 
   EmailVerificationRequired,
   PermissionLoading 
 } from './AccessDenied'

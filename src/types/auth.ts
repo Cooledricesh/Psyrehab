@@ -1,5 +1,4 @@
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
-import type { Database } from './supabase'
 
 
 export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest'

@@ -182,7 +182,7 @@ export const formatFileSize = (bytes: number): string => {
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
 }
 
-export const formatDuration = (seconds: number): string => {
+export const formatDuration = (): string => {
   
   if (hours > 0) {
     return `${hours}시간 ${minutes}분 ${secs}초`

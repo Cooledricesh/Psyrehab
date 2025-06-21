@@ -60,7 +60,7 @@ export const getProgressStats = async (): Promise<ProgressStats> => {
 
     const totalGoals = allGoals?.length || 0
     const completedGoals = allGoals?.filter(goal => goal.status === 'completed').length || 0
-    const inProgressGoals = allGoals?.filter(goal => goal.status === 'active' || goal.status === 'pending').length || 0
+    // const inProgressGoals = allGoals?.filter(goal => goal.status === 'active' || goal.status === 'pending').length || 0
     
     // 평균 진행률 계산
     const totalProgress = allGoals?.reduce((sum, goal) => sum + (goal.actual_completion_rate || 0), 0) || 0
@@ -74,7 +74,7 @@ export const getProgressStats = async (): Promise<ProgressStats> => {
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1) // 월요일
     startOfWeek.setHours(0, 0, 0, 0)
     
-    const { data: weeklySessionsData, error: sessionsError } = await supabase
+    const { data: weeklySessionsData } = await supabase
       .from('service_records')
       .select('id, service_date_time')
       .gte('service_date_time', startOfWeek.toISOString())
@@ -230,7 +230,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
     
-    const { data: recentEvaluations, error: evaluationError } = await supabase
+    const { data: recentEvaluations } = await supabase
       .from('goal_evaluations')
       .select(`
         goal_id,
@@ -269,7 +269,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     })
     
     // 2. 진행률이 낮은 목표 확인
-    const { data: lowProgressGoals, error: progressError } = await supabase
+    const { data: lowProgressGoals } = await supabase
       .from('rehabilitation_goals')
       .select(`
         id,
@@ -293,7 +293,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     })
     
     // 3. 높은 진행률 목표 격려
-    const { data: highProgressGoals, error: highProgressError } = await supabase
+    const { data: highProgressGoals } = await supabase
       .from('rehabilitation_goals')
       .select(`
         id,
