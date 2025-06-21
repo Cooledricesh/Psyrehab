@@ -13,7 +13,7 @@ import { useUser } from '@/hooks/auth/useUser'
 import type { ServiceRecordWithDetails } from '@/types/database'
 
 export default function ServiceRecordsPage() {
-  const { user } = useUser()
+  const { } = useUser()
   const [showForm, setShowForm] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<ServiceRecordWithDetails | null>(null)
   const [editingRecord, setEditingRecord] = useState<ServiceRecordWithDetails | null>(null)

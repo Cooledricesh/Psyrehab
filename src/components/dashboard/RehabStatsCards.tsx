@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Users, Target, Calendar, Award } from 'lucide-react'
+import { TrendingUp, Users, Target, Calendar, Award } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { getDashboardStats } from '@/services/dashboard-stats'

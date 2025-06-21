@@ -4,7 +4,6 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { EnhancedAuthProvider, useEnhancedAuth } from '@/contexts/AuthQueryContext'
 import { 
   SignInForm, 
-  EmailVerificationForm, 
   SessionTimeoutWarning
 } from '@/components/auth'
 import {

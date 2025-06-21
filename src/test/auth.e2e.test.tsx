@@ -41,7 +41,7 @@ const AdminComponent = () => (
 
 describe('Authentication E2E Tests', () => {
   const user = userEvent.setup()
-  let localStorage: ReturnType<typeof mockLocalStorage>
+  // let localStorage: ReturnType<typeof mockLocalStorage>
   let timers: ReturnType<typeof mockTimers>
 
   beforeAll(() => {
@@ -180,7 +180,7 @@ describe('Authentication E2E Tests', () => {
       expect(screen.getByText('접근 권한이 없습니다')).toBeInTheDocument()
       expect(screen.queryByText('관리자 전용')).not.toBeInTheDocument()
 
-      const { rerender } = renderWithAuth(
+      renderWithAuth(
         <ProtectedRoute requiredRole="admin">
           <AdminComponent />
         </ProtectedRoute>,

@@ -9,9 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase'
-import { Search, UserPlus, Edit2, Trash2, Shield, AlertCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
+import { Search, UserPlus, Edit2, Trash2, AlertCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
 interface User {
@@ -159,7 +158,7 @@ export default function UserManagement() {
 
       setUsers(uniqueUsers)
 
-    } catch (error: unknown) {
+    } catch {
       console.error("Error occurred")
       toast({
         title: '오류',
@@ -209,7 +208,7 @@ export default function UserManagement() {
       setShowEditDialog(false)
       loadUsers()
 
-    } catch (error: unknown) {
+    } catch {
       console.error("Error occurred")
       toast({
         title: '오류',
