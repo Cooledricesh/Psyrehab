@@ -1,0 +1,478 @@
+globalThis.__RSC_MANIFEST = globalThis.__RSC_MANIFEST || {}
+globalThis.__RSC_MANIFEST['/auth/login/page'] = {
+  moduleLoading: { prefix: '', crossOrigin: null },
+  clientModules: {
+    '[project]/node_modules/next/dist/esm/client/components/layout-router.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/layout-router.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/layout-router.js': {
+      id: '[project]/node_modules/next/dist/client/components/layout-router.js [app-client] (ecmascript)',
+      name: '*',
+      chunks: [
+        '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+        '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+      ],
+      async: false,
+    },
+    '[project]/node_modules/next/dist/esm/client/components/render-from-template-context.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/render-from-template-context.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/render-from-template-context.js':
+      {
+        id: '[project]/node_modules/next/dist/client/components/render-from-template-context.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/client-page.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/client-page.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/client-page.js': {
+      id: '[project]/node_modules/next/dist/client/components/client-page.js [app-client] (ecmascript)',
+      name: '*',
+      chunks: [
+        '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+        '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+      ],
+      async: false,
+    },
+    '[project]/node_modules/next/dist/esm/client/components/client-segment.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/client-segment.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/client-segment.js':
+      {
+        id: '[project]/node_modules/next/dist/client/components/client-segment.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/http-access-fallback/error-boundary.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/http-access-fallback/error-boundary.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/http-access-fallback/error-boundary.js':
+      {
+        id: '[project]/node_modules/next/dist/client/components/http-access-fallback/error-boundary.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/metadata/async-metadata.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/metadata/async-metadata.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/metadata/async-metadata.js':
+      {
+        id: '[project]/node_modules/next/dist/client/components/metadata/async-metadata.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/error-boundary.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/error-boundary.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/error-boundary.js':
+      {
+        id: '[project]/node_modules/next/dist/client/components/error-boundary.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/metadata/metadata-boundary.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/metadata/metadata-boundary.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/esm/client/components/metadata/metadata-boundary.js':
+      {
+        id: '[project]/node_modules/next/dist/client/components/metadata/metadata-boundary.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/client/components/error-boundary.js <module evaluation>':
+      {
+        id: '[project]/node_modules/next/dist/client/components/error-boundary.js [app-client] (ecmascript)',
+        name: '*',
+        chunks: [
+          '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+          '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+        ],
+        async: false,
+      },
+    '[project]/node_modules/next/dist/client/components/error-boundary.js': {
+      id: '[project]/node_modules/next/dist/client/components/error-boundary.js [app-client] (ecmascript)',
+      name: '*',
+      chunks: [
+        '/_next/static/chunks/node_modules_next_dist_1a6ee436._.js',
+        '/_next/static/chunks/app_favicon_ico_mjs_659ce808._.js',
+      ],
+      async: false,
+    },
+    '[project]/node_modules/next-themes/dist/index.mjs <module evaluation>': {
+      id: '[project]/node_modules/next-themes/dist/index.mjs [app-client] (ecmascript)',
+      name: '*',
+      chunks: [
+        '/_next/static/chunks/node_modules_next-themes_dist_index_mjs_2d467b86._.js',
+        '/_next/static/chunks/app_layout_tsx_c0237562._.js',
+      ],
+      async: false,
+    },
+    '[project]/node_modules/next-themes/dist/index.mjs': {
+      id: '[project]/node_modules/next-themes/dist/index.mjs [app-client] (ecmascript)',
+      name: '*',
+      chunks: [
+        '/_next/static/chunks/node_modules_next-themes_dist_index_mjs_2d467b86._.js',
+        '/_next/static/chunks/app_layout_tsx_c0237562._.js',
+      ],
+      async: false,
+    },
+    '[project]/components/login-form.tsx <module evaluation>': {
+      id: '[project]/components/login-form.tsx [app-client] (ecmascript)',
+      name: '*',
+      chunks: [
+        '/_next/static/chunks/node_modules_next-themes_dist_index_mjs_2d467b86._.js',
+        '/_next/static/chunks/app_layout_tsx_c0237562._.js',
+        '/_next/static/chunks/node_modules_%40supabase_node-fetch_browser_9c7d8ff3.js',
+        '/_next/static/chunks/node_modules_83718cf4._.js',
+        '/_next/static/chunks/_96865ef0._.js',
+        '/_next/static/chunks/app_auth_login_page_tsx_7cafd8b6._.js',
+      ],
+      async: false,
+    },
+    '[project]/components/login-form.tsx': {
+      id: '[project]/components/login-form.tsx [app-client] (ecmascript)',
+      name: '*',
+      chunks: [
+        '/_next/static/chunks/node_modules_next-themes_dist_index_mjs_2d467b86._.js',
+        '/_next/static/chunks/app_layout_tsx_c0237562._.js',
+        '/_next/static/chunks/node_modules_%40supabase_node-fetch_browser_9c7d8ff3.js',
+        '/_next/static/chunks/node_modules_83718cf4._.js',
+        '/_next/static/chunks/_96865ef0._.js',
+        '/_next/static/chunks/app_auth_login_page_tsx_7cafd8b6._.js',
+      ],
+      async: false,
+    },
+  },
+  ssrModuleMapping: {
+    '[project]/node_modules/next/dist/client/components/layout-router.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/layout-router.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/render-from-template-context.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/render-from-template-context.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/client-page.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/client-page.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/client-segment.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/client-segment.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/http-access-fallback/error-boundary.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/http-access-fallback/error-boundary.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/metadata/async-metadata.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/metadata/async-metadata.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/error-boundary.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/client/components/error-boundary.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/metadata/metadata-boundary.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/metadata/metadata-boundary.js [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: [
+            'server/chunks/ssr/node_modules_84bfc1e5._.js',
+            'server/chunks/ssr/[root-of-the-server]__0a46983d._.js',
+          ],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next-themes/dist/index.mjs [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next-themes/dist/index.mjs [app-ssr] (ecmascript)',
+          name: '*',
+          chunks: ['server/chunks/ssr/[root-of-the-server]__95710b67._.js'],
+          async: false,
+        },
+      },
+    '[project]/components/login-form.tsx [app-client] (ecmascript)': {
+      '*': {
+        id: '[project]/components/login-form.tsx [app-ssr] (ecmascript)',
+        name: '*',
+        chunks: [
+          'server/chunks/ssr/[root-of-the-server]__95710b67._.js',
+          'server/chunks/ssr/[root-of-the-server]__aa8dcf3f._.js',
+          'server/chunks/ssr/node_modules_next_1b7cfa84._.js',
+          'server/chunks/ssr/node_modules_tailwind-merge_dist_bundle-mjs_mjs_6c53872a._.js',
+          'server/chunks/ssr/node_modules_tr46_3d1b2cf9._.js',
+          'server/chunks/ssr/node_modules_ws_59f71f6a._.js',
+          'server/chunks/ssr/node_modules_@supabase_auth-js_dist_module_5c23cb0d._.js',
+          'server/chunks/ssr/node_modules_f0667fb2._.js',
+          'server/chunks/ssr/[root-of-the-server]__64700637._.js',
+        ],
+        async: false,
+      },
+    },
+  },
+  edgeSSRModuleMapping: {},
+  rscModuleMapping: {
+    '[project]/node_modules/next/dist/client/components/layout-router.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/layout-router.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/render-from-template-context.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/render-from-template-context.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/client-page.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/client-page.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/client-segment.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/client-segment.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/http-access-fallback/error-boundary.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/http-access-fallback/error-boundary.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/metadata/async-metadata.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/metadata/async-metadata.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/error-boundary.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/client/components/error-boundary.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next/dist/client/components/metadata/metadata-boundary.js [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next/dist/esm/client/components/metadata/metadata-boundary.js (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/node_modules/next-themes/dist/index.mjs [app-client] (ecmascript)':
+      {
+        '*': {
+          id: '[project]/node_modules/next-themes/dist/index.mjs (client reference/proxy)',
+          name: '*',
+          chunks: ['server/app/auth/login/page.js'],
+          async: false,
+        },
+      },
+    '[project]/components/login-form.tsx [app-client] (ecmascript)': {
+      '*': {
+        id: '[project]/components/login-form.tsx (client reference/proxy)',
+        name: '*',
+        chunks: ['server/app/auth/login/page.js'],
+        async: false,
+      },
+    },
+  },
+  edgeRscModuleMapping: {},
+  entryCSSFiles: {
+    '[project]/app/favicon.ico': [],
+    '[project]/app/layout': [
+      {
+        path: 'static/chunks/[root-of-the-server]__4349a9b2._.css',
+        inlined: false,
+      },
+    ],
+    '[project]/app/auth/login/page': [
+      {
+        path: 'static/chunks/[root-of-the-server]__4349a9b2._.css',
+        inlined: false,
+      },
+    ],
+  },
+  entryJSFiles: {
+    '[project]/app/favicon.ico': [
+      'static/chunks/node_modules_next_dist_1a6ee436._.js',
+      'static/chunks/app_favicon_ico_mjs_659ce808._.js',
+    ],
+    '[project]/app/layout': [
+      'static/chunks/node_modules_next-themes_dist_index_mjs_2d467b86._.js',
+      'static/chunks/app_layout_tsx_c0237562._.js',
+    ],
+    '[project]/app/auth/login/page': [
+      'static/chunks/node_modules_next-themes_dist_index_mjs_2d467b86._.js',
+      'static/chunks/app_layout_tsx_c0237562._.js',
+      'static/chunks/node_modules_@supabase_node-fetch_browser_9c7d8ff3.js',
+      'static/chunks/node_modules_83718cf4._.js',
+      'static/chunks/_96865ef0._.js',
+      'static/chunks/app_auth_login_page_tsx_7cafd8b6._.js',
+    ],
+  },
+}
