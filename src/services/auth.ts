@@ -82,6 +82,25 @@ export class AuthService {
         }
       }
 
+      // Check admin approval status
+      const { data: signupRequest, error: requestError } = await supabase
+        .from('signup_requests')
+        .select('status')
+        .eq('user_id', data.user.id)
+        .maybeSingle()
+
+      if (requestError) {
+        console.error('승인 상태 확인 실패:', requestError)
+      }
+
+      // Not approved yet
+      if (!signupRequest || signupRequest.status !== 'approved') {
+        return {
+          success: false,
+          error: '관리자 승인 대기 중입니다. 승인 후 로그인이 가능합니다.'
+        }
+      }
+
       // Get user profile
       const profile = await getUserProfile(data.user.id)
 

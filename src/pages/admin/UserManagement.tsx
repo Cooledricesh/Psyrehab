@@ -97,7 +97,7 @@ export default function UserManagement() {
 
       // 승인 대기 사용자 변환
       const pendingUsers: User[] = (pendingRequests || []).map(request => ({
-        id: request.user_id,
+        id: request.id, // signup_requests의 id를 사용
         email: request.email,
         fullName: request.full_name,
         role: 'pending' as const,
@@ -345,11 +345,11 @@ export default function UserManagement() {
     if (!user.requestedRole) return
     
     try {
-      // 1. signup_requests에서 신청 정보 가져오기
+      // 1. signup_requests에서 신청 정보 가져오기 (email로 조회)
       const { data: request, error: fetchError } = await supabase
         .from('signup_requests')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('email', user.email)
         .eq('status', 'pending')
         .single()
 
@@ -357,43 +357,74 @@ export default function UserManagement() {
         throw new Error('신청 정보를 찾을 수 없습니다.')
       }
 
+      // 2. user_id가 없으면 수동으로 연결 (트리거가 실행되지 않은 경우의 백업)
+      let userId = request.user_id
+      
+      if (!userId) {
+        // 이메일이 확인된 사용자 ID를 직접 조회 (서버 함수 사용)
+        const { data, error } = await supabase.rpc('get_user_id_by_email', {
+          user_email: request.email
+        })
+
+        if (error || !data) {
+          throw new Error('사용자가 이메일 확인을 완료하지 않았습니다. 사용자에게 이메일 확인을 요청해주세요.')
+        }
+
+        userId = data
+
+        // signup_requests에 user_id 업데이트
+        const { error: updateUserIdError } = await supabase
+          .from('signup_requests')
+          .update({ user_id: userId })
+          .eq('id', request.id)
+
+        if (updateUserIdError) {
+          console.error('user_id 업데이트 실패:', updateUserIdError)
+        }
+      }
+
       const roleMap = {
         'social_worker': '6a5037f6-5553-47f9-824f-bf1e767bda95',
         'administrator': 'd7fcf425-85bc-42b4-8806-917ef6939a40'
       }
 
-      // 2. user_roles에 역할 할당
+      // 3. user_roles에 역할 할당
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
-          user_id: user.id,
-          role_id: roleMap[user.requestedRole]
+          user_id: userId,
+          role_id: roleMap[user.requestedRole as keyof typeof roleMap]
         })
 
-      if (roleError) throw roleError
+      if (roleError && !roleError.message.includes('duplicate')) {
+        throw roleError
+      }
 
-      // 3. 프로필 생성
+      // 4. 프로필 생성
       const table = user.requestedRole === 'social_worker' ? 'social_workers' : 'administrators'
       const { error: profileError } = await supabase
         .from(table)
         .insert({
-          user_id: user.id,
+          user_id: userId,
           full_name: request.full_name,
-          employee_id: request.employee_id,
-          department: request.department,
-          contact_number: request.contact_number,
+          employee_id: request.employee_id || null,
+          department: request.department || null,
+          contact_number: request.contact_number || null,
           is_active: true
         })
 
-      if (profileError) throw profileError
+      if (profileError && !profileError.message.includes('duplicate')) {
+        throw profileError
+      }
 
-      // 4. signup_requests 상태 업데이트
+      // 5. signup_requests 상태 업데이트
       const { error: updateError } = await supabase
         .from('signup_requests')
         .update({
           status: 'approved',
           reviewed_at: new Date().toISOString(),
-          reviewed_by: (await supabase.auth.getUser()).data.user?.id
+          reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+          review_notes: '승인 완료'
         })
         .eq('id', request.id)
 
@@ -407,7 +438,7 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error: unknown) {
-      console.error("Error occurred")
+      console.error("Error occurred:", error)
       toast({
         title: '오류',
         description: error.message || '사용자 승인 중 오류가 발생했습니다.',

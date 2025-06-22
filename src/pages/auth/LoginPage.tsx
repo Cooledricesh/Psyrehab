@@ -160,8 +160,8 @@ export default function LoginPage() {
               {/* 테스트 계정 안내 */}
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-sm text-blue-700 font-medium mb-1">테스트 계정:</p>
-                <p className="text-xs text-blue-600">이메일: test@psyrehab.com</p>
-                <p className="text-xs text-blue-600">비밀번호: test123456</p>
+                <p className="text-xs text-blue-600">이메일: psyrehabtest@gmail.com</p>
+                <p className="text-xs text-blue-600">비밀번호: 123456</p>
               </div>
 
               {/* 추가 링크 */}
@@ -201,7 +201,7 @@ export default function LoginPage() {
         {/* 푸터 */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            © 2024 PsyRehab. 정신건강 전문가를 위한 재활 계획 수립 시스템
+            © 2025 PsyRehab. 정신건강 전문가를 위한 재활 계획 수립 시스템
           </p>
         </div>
       </div>

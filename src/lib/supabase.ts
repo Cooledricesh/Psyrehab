@@ -112,6 +112,65 @@ export async function getCurrentSession() {
   }
 }
 
+// Helper function to create user role and profile for approved signup requests
+async function createUserRoleAndProfile(userId: string, signupRequest: any) {
+  try {
+    const roleMap = {
+      'social_worker': '6a5037f6-5553-47f9-824f-bf1e767bda95',
+      'administrator': 'd7fcf425-85bc-42b4-8806-917ef6939a40'
+    }
+
+    // 1. user_roles에 역할 할당
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        role_id: roleMap[signupRequest.requested_role as keyof typeof roleMap]
+      })
+
+    if (roleError && !roleError.message.includes('duplicate')) {
+      console.error('역할 할당 실패:', roleError)
+      return false
+    }
+
+    // 2. 프로필 생성
+    const table = signupRequest.requested_role === 'social_worker' ? 'social_workers' : 'administrators'
+    const { error: profileError } = await supabase
+      .from(table)
+      .insert({
+        user_id: userId,
+        full_name: signupRequest.full_name,
+        employee_id: signupRequest.employee_id || null,
+        department: signupRequest.department || null,
+        contact_number: signupRequest.contact_number || null,
+        is_active: true
+      })
+
+    if (profileError && !profileError.message.includes('duplicate')) {
+      console.error('프로필 생성 실패:', profileError)
+      return false
+    }
+
+    // 3. signup_requests 업데이트
+    const { error: updateError } = await supabase
+      .from('signup_requests')
+      .update({
+        user_id: userId,
+        status: 'completed'
+      })
+      .eq('id', signupRequest.id)
+
+    if (updateError) {
+      console.error('신청서 업데이트 실패:', updateError)
+    }
+
+    return true
+  } catch (error) {
+    console.error('사용자 역할 및 프로필 생성 중 오류:', error)
+    return false
+  }
+}
+
 // User role helper functions
 export async function getUserRole(userId: string): Promise<string | null> {
   try {

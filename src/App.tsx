@@ -23,6 +23,9 @@ import PatientAssignment from '@/pages/admin/PatientAssignment'
 // 인증 페이지 컴포넌트
 import LoginPage from '@/pages/auth/LoginPage'
 import SignUpPage from '@/pages/auth/SignUpPage'
+import SignUpSuccessPage from '@/pages/auth/SignUpSuccessPage'
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
+import ApprovedSignUpPage from '@/pages/auth/ApprovedSignUpPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +45,9 @@ function App() {
           {/* 인증 관련 라우트 (레이아웃 없음) */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/sign-up" element={<SignUpPage />} />
+          <Route path="/auth/signup-success" element={<SignUpSuccessPage />} />
+          <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/approved-signup" element={<ApprovedSignUpPage />} />
           
           {/* 메인 애플리케이션 라우트 (레이아웃 포함 + 인증 보호) */}
           <Route path="/*" element={

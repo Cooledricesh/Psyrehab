@@ -78,94 +78,76 @@ export default function SignUpPage() {
     }
 
     try {
-      // 1. Supabase Auth에 사용자 생성
+      // 1. 먼저 signup_requests에 저장 (user_id 없이)
+      const { data: existingRequest } = await supabase
+        .from('signup_requests')
+        .select('id')
+        .eq('email', formData.email)
+        .maybeSingle()
+
+      if (existingRequest) {
+        setError('이미 가입 신청한 이메일입니다.')
+        setIsLoading(false)
+        return
+      }
+
+      const { error: requestError } = await supabase
+        .from('signup_requests')
+        .insert({
+          email: formData.email,
+          full_name: formData.fullName,
+          requested_role: formData.role,
+          employee_id: formData.employeeId || null,
+          department: formData.department || null,
+          contact_number: formData.contactNumber || null,
+          status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (requestError) {
+        console.error('신청서 저장 실패:', requestError)
+        throw requestError
+      }
+
+      // 2. Supabase Auth에 사용자 생성
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.fullName,
-            role: formData.role
-          }
+            requested_role: formData.role,
+            employee_id: formData.employeeId,
+            department: formData.department,
+            contact_number: formData.contactNumber
+          },
+          emailRedirectTo: `${window.location.origin}/auth/email-confirmed`
         }
       })
 
       if (authError) {
+        console.error('Auth 에러:', authError)
+        // Auth 에러 시 signup_requests 삭제
+        await supabase.from('signup_requests').delete().eq('email', formData.email)
         throw authError
       }
 
-      if (!authData.user) {
-        throw new Error('사용자 생성에 실패했습니다.')
-      }
-
-      // 2. 역할에 따른 프로필 생성
-      const userId = authData.user.id
-
-      // 역할 ID 가져오기
-      const roleMap = {
-        'social_worker': '6a5037f6-5553-47f9-824f-bf1e767bda95',
-        'administrator': 'd7fcf425-85bc-42b4-8806-917ef6939a40',
-        'patient': 'b3ec265d-07cc-45a3-9f3e-5bdd0f529890'
-      }
-
-      // user_roles 테이블에 역할 할당
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role_id: roleMap[formData.role]
-        })
-
-      if (roleError) {
-        throw roleError
-      }
-
-      // 역할별 프로필 생성
-      if (formData.role === 'social_worker') {
-        const { error: profileError } = await supabase
-          .from('social_workers')
-          .insert({
-            user_id: userId,
-            full_name: formData.fullName,
-            employee_id: formData.employeeId,
-            department: formData.department || null,
-            contact_number: formData.contactNumber || null,
-            is_active: true
-          })
-
-        if (profileError) {
-          throw profileError
-        }
-      } else if (formData.role === 'administrator') {
-        const { error: profileError } = await supabase
-          .from('administrators')
-          .insert({
-            user_id: userId,
-            full_name: formData.fullName,
-            employee_id: formData.employeeId,
-            department: formData.department || null,
-            contact_number: formData.contactNumber || null,
-            is_active: true
-          })
-
-        if (profileError) {
-          throw profileError
-        }
-      }
-
-      // 회원가입 성공 후 로그인 페이지로 이동
-      navigate('/auth/login', {
+      // 3. 성공 페이지로 이동 (이메일 확인 안내)
+      navigate('/auth/signup-success', {
         state: { 
-          message: '회원가입이 완료되었습니다. 이메일을 확인해주세요.'
+          email: formData.email,
+          role: formData.role,
+          message: '가입 신청이 완료되었습니다. 이메일을 확인해주시고, 관리자 승인을 기다려주세요.'
         }
       })
 
     } catch (err: unknown) {
-      console.error("Error occurred")
-      if (err.message?.includes('already registered')) {
+      console.error("Error occurred:", err)
+      if (err.message?.includes('already registered') || err.message?.includes('duplicate')) {
         setError('이미 등록된 이메일입니다.')
       } else {
-        setError(err.message || '회원가입 중 오류가 발생했습니다.')
+        setError(err.message || '가입 신청 중 오류가 발생했습니다.')
       }
     } finally {
       setIsLoading(false)
