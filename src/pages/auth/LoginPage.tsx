@@ -157,13 +157,6 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              {/* 테스트 계정 안내 */}
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-sm text-blue-700 font-medium mb-1">테스트 계정:</p>
-                <p className="text-xs text-blue-600">이메일: psyrehabtest@gmail.com</p>
-                <p className="text-xs text-blue-600">비밀번호: 123456</p>
-              </div>
-
               {/* 추가 링크 */}
               <div className="space-y-3 pt-4">
                 <div className="text-center">
