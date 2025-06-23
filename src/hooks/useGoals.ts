@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as goalService from '@/services/rehabilitation-goals';
 import * as categoryService from '@/services/goal-categories';
-import { 
+import type { 
   BaseGoal, 
   GoalCategory,
   CreateGoalRequest,
@@ -82,10 +82,6 @@ export const useCreateGoal = () => {
     onSuccess: (newGoal, variables) => {
       const patientId = variables.patient_id;
       
-      // 관련 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.hierarchy(patientId) });
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.statistics(patientId) });
 
       // 새 목표를 상세 쿼리 캐시에 추가
       queryClient.setQueryData(GOAL_QUERY_KEYS.detail(newGoal.id), newGoal);
@@ -113,14 +109,6 @@ export const useUpdateGoal = () => {
       // 상세 쿼리 캐시 업데이트
       queryClient.setQueryData(GOAL_QUERY_KEYS.detail(goalId), updatedGoal);
       
-      // 관련 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ 
-        queryKey: GOAL_QUERY_KEYS.hierarchy(updatedGoal.patient_id) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: GOAL_QUERY_KEYS.statistics(updatedGoal.patient_id) 
-      });
 
       toast.success('목표가 성공적으로 수정되었습니다');
     },
@@ -142,9 +130,6 @@ export const useDeleteGoal = () => {
       // 상세 쿼리 캐시에서 제거
       queryClient.removeQueries({ queryKey: GOAL_QUERY_KEYS.detail(goalId) });
       
-      // 관련 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.all });
 
       toast.success('목표가 성공적으로 삭제되었습니다');
     },
@@ -169,14 +154,6 @@ export const useUpdateGoalStatus = () => {
       // 상세 쿼리 캐시 업데이트
       queryClient.setQueryData(GOAL_QUERY_KEYS.detail(goalId), updatedGoal);
       
-      // 관련 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ 
-        queryKey: GOAL_QUERY_KEYS.hierarchy(updatedGoal.patient_id) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: GOAL_QUERY_KEYS.statistics(updatedGoal.patient_id) 
-      });
 
       toast.success('목표 상태가 변경되었습니다');
     },

@@ -79,6 +79,7 @@ export function useUpdatePatient() {
       // 환자 목록 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.lists() })
       
+      
       // 업데이트된 환자 정보를 캐시에 설정
       queryClient.setQueryData(
         patientQueryKeys.detail(id),
@@ -144,6 +145,7 @@ export function useUpdatePatientStatus() {
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.lists() })
       // 통계 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.stats() })
+      
     },
     onError: (error: Error) => {
       console.error("Error occurred")

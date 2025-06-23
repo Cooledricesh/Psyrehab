@@ -104,6 +104,9 @@ const GoalSetting: React.FC = () => {
     queryFn: () => PatientService.getPatients({
       filters: { status: 'inactive' }
     }),
+    staleTime: 0, // 항상 최신 데이터를 가져오도록
+    refetchOnWindowFocus: true, // 탭 포커스시 리패치
+    refetchOnMount: true, // 마운트시 리패치
   });
 
   // 환자 상태 변경 이벤트 리스너
