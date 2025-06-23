@@ -244,86 +244,126 @@ export default function UserManagement() {
       if (selectedUser.role === 'social_worker' && selectedUser.patientCount && selectedUser.patientCount > 0) {
         toast({
           title: '삭제 불가',
-          description: '담당 환자가 있는 사회복지사는 삭제할 수 없습니다.',
+          description: `담당 환자가 ${selectedUser.patientCount}명 있는 사회복지사는 삭제할 수 없습니다. 먼저 환자를 다른 사회복지사에게 이관해주세요.`,
           variant: 'destructive'
         })
+        setShowDeleteDialog(false)
         return
       }
 
       console.log('삭제 시작:', selectedUser.id, selectedUser.fullName, selectedUser.role)
 
-      // 1. 프로필 먼저 삭제 (외래키 제약 때문에)
-      if (selectedUser.role !== 'pending') {
-        const table = selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators'
-        
-        // 먼저 데이터 존재 여부 확인
-        const { data: existingProfile, error: checkError } = await supabase
-          .from(table)
-          .select('user_id')
-          .eq('user_id', selectedUser.id)
-          .single()
-        
-        console.log(`${table} 테이블에서 ${selectedUser.id} 확인:`, existingProfile, checkError)
-        
-        if (existingProfile) {
-          console.log(`${table}에서 삭제 시도 중...`)
-          const { error: profileError } = await supabase
-            .from(table)
-            .delete()
-            .eq('user_id', selectedUser.id)
+      // 삭제 순서: 
+      // 1. signup_requests (있을 경우)
+      // 2. 프로필 (social_workers 또는 administrators)
+      // 3. user_roles
 
-          if (profileError) {
-            console.error("Error occurred")
-            // RLS 정책 문제인 경우 더 명확한 에러 메시지
-            if (profileError.message.includes('policy')) {
-              throw new Error('관리자 권한이 부족합니다. RLS 정책을 확인하세요.')
-            }
-            throw new Error(`프로필 삭제 실패: ${profileError.message}`)
-          }
-          console.log(`${table} 프로필 삭제 성공`)
-        } else {
-          console.log(`${table}에 프로필이 없음`)
+      // 1. signup_requests에서 삭제 (승인 대기 중인 경우)
+      if (selectedUser.role === 'pending') {
+        const { error: requestError } = await supabase
+          .from('signup_requests')
+          .delete()
+          .eq('id', selectedUser.id)  // pending 사용자는 signup_requests의 id를 사용
+
+        if (requestError) {
+          console.error("signup_requests 삭제 오류:", requestError)
+          throw new Error(`신청서 삭제 실패: ${requestError.message}`)
+        }
+        console.log('signup_requests 삭제 성공')
+      } else {
+        // 승인된 사용자의 경우 signup_requests에서도 삭제 시도 (있을 수 있음)
+        const { error: requestError } = await supabase
+          .from('signup_requests')
+          .delete()
+          .eq('user_id', selectedUser.id)
+
+        if (requestError && !requestError.message.includes('No rows')) {
+          console.error("signup_requests 삭제 오류:", requestError)
         }
       }
 
-      // 2. 역할 삭제
+      // 2. 프로필 삭제
+      if (selectedUser.role !== 'pending') {
+        const table = selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators'
+        
+        // 프로필 삭제
+        const { error: profileError } = await supabase
+          .from(table)
+          .delete()
+          .eq('user_id', selectedUser.id)
+
+        if (profileError) {
+          console.error(`${table} 삭제 오류:`, profileError)
+          
+          // 409 에러 처리
+          if (profileError.code === '23503' || profileError.message.includes('violates foreign key constraint')) {
+            // 관련 데이터 확인
+            if (selectedUser.role === 'social_worker') {
+              const relatedData = []
+              
+              // 평가 기록 확인
+              const { count: assessmentCount } = await supabase
+                .from('assessments')
+                .select('*', { count: 'exact', head: true })
+                .eq('assessed_by', selectedUser.id)
+              
+              if (assessmentCount && assessmentCount > 0) {
+                relatedData.push(`${assessmentCount}개의 평가 기록`)
+              }
+              
+              // 재활 목표 확인
+              const { count: goalCount } = await supabase
+                .from('rehabilitation_goals')
+                .select('*', { count: 'exact', head: true })
+                .eq('created_by_social_worker_id', selectedUser.id)
+              
+              if (goalCount && goalCount > 0) {
+                relatedData.push(`${goalCount}개의 재활 목표`)
+              }
+              
+              throw new Error(`이 사회복지사와 연결된 데이터가 있어 삭제할 수 없습니다: ${relatedData.join(', ')}`)
+            } else if (selectedUser.role === 'administrator') {
+              // 공지사항 확인
+              const { count: announcementCount } = await supabase
+                .from('announcements')
+                .select('*', { count: 'exact', head: true })
+                .eq('created_by', selectedUser.id)
+              
+              if (announcementCount && announcementCount > 0) {
+                throw new Error(`이 관리자가 작성한 ${announcementCount}개의 공지사항이 있어 삭제할 수 없습니다.`)
+              }
+            }
+            
+            throw new Error('연결된 데이터로 인해 삭제할 수 없습니다.')
+          }
+          
+          // RLS 정책 문제인 경우
+          if (profileError.message.includes('policy')) {
+            throw new Error('관리자 권한이 부족합니다. RLS 정책을 확인하세요.')
+          }
+          
+          throw new Error(`프로필 삭제 실패: ${profileError.message}`)
+        }
+        console.log(`${table} 프로필 삭제 성공`)
+      }
+
+      // 3. 역할 삭제
       const { error: roleError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', selectedUser.id)
 
-      if (roleError) {
-        console.error("Error occurred")
-        // "No rows" 에러가 아닌 경우에만 실제 에러로 처리
-        if (!roleError.message.includes('No rows') && !roleError.message.includes('0 rows')) {
-          throw new Error(`역할 삭제 실패: ${roleError.message}`)
-        }
+      if (roleError && !roleError.message.includes('No rows')) {
+        console.error("user_roles 삭제 오류:", roleError)
+        throw new Error(`역할 삭제 실패: ${roleError.message}`)
       }
-      console.log('user_roles 삭제 성공 또는 없음')
-
-      // 3. signup_requests에서도 삭제
-      const { error: requestError } = await supabase
-        .from('signup_requests')
-        .delete()
-        .eq('user_id', selectedUser.id)
-
-      if (requestError) {
-        console.error("Error occurred")
-        // "No rows" 에러가 아닌 경우에만 실제 에러로 처리
-        if (!requestError.message.includes('No rows') && !requestError.message.includes('0 rows')) {
-          throw new Error(`신청서 삭제 실패: ${requestError.message}`)
-        }
-      }
-      console.log('signup_requests 삭제 성공 또는 없음')
-
-      // 4. Auth 사용자는 클라이언트에서 삭제 불가
-      // Supabase Dashboard에서 수동으로 삭제해야 함
+      console.log('user_roles 삭제 성공')
 
       console.log('사용자 삭제 완료:', selectedUser.fullName)
 
       toast({
         title: '삭제 성공',
-        description: `${selectedUser.fullName}님의 프로필이 삭제되었습니다. Auth 계정은 Supabase Dashboard에서 삭제해주세요.`,
+        description: `${selectedUser.fullName}님의 프로필이 삭제되었습니다.${selectedUser.role !== 'pending' ? ' Auth 계정은 Supabase Dashboard에서 삭제해주세요.' : ''}`,
         duration: 5000
       })
 
@@ -331,10 +371,13 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error: unknown) {
-      console.error("Error occurred")
+      console.error("삭제 중 오류 발생:", error)
+      
+      const errorMessage = error instanceof Error ? error.message : '사용자 삭제 중 오류가 발생했습니다.'
+      
       toast({
         title: '삭제 실패',
-        description: error.message || '사용자 삭제 중 오류가 발생했습니다.',
+        description: errorMessage,
         variant: 'destructive',
         duration: 5000
       })
