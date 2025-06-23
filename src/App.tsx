@@ -25,6 +25,7 @@ import LoginPage from '@/pages/auth/LoginPage'
 import SignUpPage from '@/pages/auth/SignUpPage'
 import SignUpSuccessPage from '@/pages/auth/SignUpSuccessPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ApprovedSignUpPage from '@/pages/auth/ApprovedSignUpPage'
 import PendingApprovalPage from '@/pages/auth/PendingApprovalPage'
 
@@ -48,6 +49,7 @@ function App() {
           <Route path="/auth/sign-up" element={<SignUpPage />} />
           <Route path="/auth/signup-success" element={<SignUpSuccessPage />} />
           <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/auth/approved-signup" element={<ApprovedSignUpPage />} />
           <Route path="/auth/email-confirmed" element={<PendingApprovalPage />} />
           <Route path="/auth/pending-approval" element={<PendingApprovalPage />} />

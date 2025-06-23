@@ -199,6 +199,8 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
                 value={formData.date_of_birth}
                 onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
                 className={errors.date_of_birth ? 'border-red-500' : ''}
+                min="1900-01-01"
+                max={new Date().toISOString().split('T')[0]}
               />
               {errors.date_of_birth && (
                 <p className="text-red-500 text-sm mt-1">{errors.date_of_birth}</p>

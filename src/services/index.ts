@@ -5,7 +5,7 @@
 export * from './progress-tracking'
 
 // Authentication services
-// export * from './auth'
+export * from './auth'
 
 // Assessment services
 export * from './assessment'
@@ -69,13 +69,13 @@ export type {
 } from './auth'
 
 // Goal Services
-export { RehabilitationGoalService } from './rehabilitation-goals'
-export { GoalCategoryService } from './goal-categories'
-export { GoalEvaluationService } from './goal-evaluations'
-export { GoalHistoryService } from './goal-history'
+// export { RehabilitationGoalService } from './rehabilitation-goals'
+// export { GoalCategoryService } from './goal-categories'
+// export { GoalEvaluationService } from './goal-evaluations'
+// export { GoalHistoryService } from './goal-history'
 
 // Check-in Services
-export { WeeklyCheckInService } from './weekly-check-ins'
+// export { WeeklyCheckInService } from './weekly-check-ins'
 
 // AI Services
-export { AIRecommendationService } from './ai-recommendations' 
+// export { AIRecommendationService } from './ai-recommendations' 

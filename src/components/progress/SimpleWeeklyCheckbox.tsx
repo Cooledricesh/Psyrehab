@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RadioGroup } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, XCircle, Circle } from 'lucide-react';
+import { CheckCircle2, XCircle, Circle, Target } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -210,6 +210,13 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
     
     if (pendingGoalType === 'monthly') {
       toast.success('월간 목표를 완료했습니다!');
+      
+      // 월간 목표 완료 이벤트 발생 (드롭다운 닫기 위해)
+      eventBus.emit(EVENTS.MONTHLY_GOAL_COMPLETED, {
+        goalId: pendingGoalId,
+        patientId: patientId
+      });
+      
       // 캐시 새로고침
       await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
       await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
@@ -338,24 +345,53 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
 
       {/* 목표 완료 확인 대화상자 */}
       <AlertDialog open={showConfirmComplete} onOpenChange={setShowConfirmComplete}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {pendingGoalType === 'monthly' ? '월간 목표' : '6개월 목표'} 달성 확인
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              모든 하위 목표를 완료하셨습니다!<br />
-              {pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표를 달성한 것으로 처리하시겠습니까?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelGoalComplete}>
-              아니요, 아직입니다
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmGoalComplete}>
-              네, 달성했습니다
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="sm:max-w-md bg-white border-0 shadow-2xl">
+          <div className="text-center space-y-6 p-2">
+            {/* 아이콘 */}
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200">
+              <Target className="h-8 w-8 text-amber-600" />
+            </div>
+            
+            {/* 제목 */}
+            <div className="space-y-2">
+              <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+                {pendingGoalType === 'monthly' ? '월간 목표' : '6개월 목표'} 완료 확인
+              </AlertDialogTitle>
+              <div className="text-sm text-gray-500">
+                모든 하위 목표 완료
+              </div>
+            </div>
+
+            {/* 메시지 */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <span className="font-medium text-green-800">훌륭합니다!</span>
+              </div>
+              <AlertDialogDescription className="text-sm text-green-700 leading-relaxed">
+                모든 하위 목표를 성공적으로 완료하셨습니다.<br />
+                <span className="font-medium">{pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표</span>를 
+                달성한 것으로 처리하시겠습니까?
+              </AlertDialogDescription>
+            </div>
+
+            {/* 버튼들 */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <AlertDialogCancel 
+                onClick={handleCancelGoalComplete}
+                className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+              >
+                아니요, 아직입니다
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleConfirmGoalComplete}
+                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                네, 달성했습니다
+              </AlertDialogAction>
+            </div>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
 

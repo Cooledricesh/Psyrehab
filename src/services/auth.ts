@@ -475,9 +475,9 @@ export class AuthService {
         }
       }
 
-      const role = await getUserRole(userId)
+      const userRole = await getUserRole(userId)
       
-      if (!role) {
+      if (!userRole) {
         return {
           success: false,
           error: '사용자 역할을 찾을 수 없습니다.'
@@ -487,7 +487,7 @@ export class AuthService {
       let result
       const { role, ...profileUpdates } = updates
 
-      switch (role) {
+      switch (userRole) {
         case 'social_worker':
           // Validate social worker specific fields
           if (updates.employee_id) {

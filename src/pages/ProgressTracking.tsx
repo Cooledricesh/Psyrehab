@@ -74,6 +74,24 @@ export default function ProgressTracking() {
     };
   }, [queryClient]);
 
+  // 월간 목표 완료 이벤트 리스너 (드롭다운 자동 닫기)
+  useEffect(() => {
+    const handleMonthlyGoalCompleted = (data: { goalId: string; patientId: string }) => {
+      console.log('진행 추적: 월간 목표 완료 감지:', data);
+      // 해당 목표의 드롭다운 닫기
+      setExpandedGoals(prev => ({
+        ...prev,
+        [data.goalId]: false
+      }));
+    };
+
+    eventBus.on(EVENTS.MONTHLY_GOAL_COMPLETED, handleMonthlyGoalCompleted);
+
+    return () => {
+      eventBus.off(EVENTS.MONTHLY_GOAL_COMPLETED, handleMonthlyGoalCompleted);
+    };
+  }, []);
+
   // 첫 번째 환자 자동 선택
   useEffect(() => {
     if (patients && patients.length > 0 && !selectedPatient) {

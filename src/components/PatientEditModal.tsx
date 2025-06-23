@@ -193,6 +193,8 @@ export default function PatientEditModal({
                   onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={isSubmitting}
+                  min="1900-01-01"
+                  max={new Date().toISOString().split('T')[0]}
                 />
               </div>
 

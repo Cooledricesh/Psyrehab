@@ -25,4 +25,5 @@ export const eventBus = new EventBus();
 // 이벤트 타입
 export const EVENTS = {
   PATIENT_STATUS_CHANGED: 'patient:status:changed',
+  MONTHLY_GOAL_COMPLETED: 'goal:monthly:completed',
 } as const;
