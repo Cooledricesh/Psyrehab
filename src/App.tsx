@@ -26,6 +26,7 @@ import SignUpPage from '@/pages/auth/SignUpPage'
 import SignUpSuccessPage from '@/pages/auth/SignUpSuccessPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import ApprovedSignUpPage from '@/pages/auth/ApprovedSignUpPage'
+import PendingApprovalPage from '@/pages/auth/PendingApprovalPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +49,8 @@ function App() {
           <Route path="/auth/signup-success" element={<SignUpSuccessPage />} />
           <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/approved-signup" element={<ApprovedSignUpPage />} />
+          <Route path="/auth/email-confirmed" element={<PendingApprovalPage />} />
+          <Route path="/auth/pending-approval" element={<PendingApprovalPage />} />
           
           {/* 메인 애플리케이션 라우트 (레이아웃 포함 + 인증 보호) */}
           <Route path="/*" element={

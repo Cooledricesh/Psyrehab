@@ -16,7 +16,6 @@ interface SignUpFormData {
   passwordConfirm: string
   role: 'social_worker' | 'administrator' | 'patient'
   fullName: string
-  employeeId?: string
   department?: string
   contactNumber?: string
 }
@@ -28,7 +27,6 @@ export default function SignUpPage() {
     passwordConfirm: '',
     role: 'social_worker',
     fullName: '',
-    employeeId: '',
     department: '',
     contactNumber: ''
   })
@@ -41,6 +39,16 @@ export default function SignUpPage() {
 
   const handleInputChange = (field: keyof SignUpFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const generateEmployeeId = (): string => {
+    // 현재 날짜를 기반으로 한 직원번호 생성 (YYYYMMDD + 4자리 랜덤)
+    const now = new Date()
+    const dateStr = now.getFullYear().toString() + 
+                   (now.getMonth() + 1).toString().padStart(2, '0') + 
+                   now.getDate().toString().padStart(2, '0')
+    const randomStr = Math.floor(Math.random() * 9999).toString().padStart(4, '0')
+    return `EMP${dateStr}${randomStr}`
   }
 
   const validateForm = (): boolean => {
@@ -59,10 +67,6 @@ export default function SignUpPage() {
       return false
     }
 
-    if (formData.role === 'social_worker' && !formData.employeeId?.trim()) {
-      setError('직원번호를 입력해주세요.')
-      return false
-    }
 
     return true
   }
@@ -78,6 +82,9 @@ export default function SignUpPage() {
     }
 
     try {
+      // 자동으로 직원번호 생성
+      const generatedEmployeeId = generateEmployeeId()
+      
       // 1. 먼저 signup_requests에 저장 (user_id 없이)
       const { data: existingRequest } = await supabase
         .from('signup_requests')
@@ -97,7 +104,7 @@ export default function SignUpPage() {
           email: formData.email,
           full_name: formData.fullName,
           requested_role: formData.role,
-          employee_id: formData.employeeId || null,
+          employee_id: generatedEmployeeId,
           department: formData.department || null,
           contact_number: formData.contactNumber || null,
           status: 'pending'
@@ -118,11 +125,11 @@ export default function SignUpPage() {
           data: {
             full_name: formData.fullName,
             requested_role: formData.role,
-            employee_id: formData.employeeId,
+            employee_id: generatedEmployeeId,
             department: formData.department,
             contact_number: formData.contactNumber
           },
-          emailRedirectTo: `${window.location.origin}/auth/email-confirmed`
+          emailRedirectTo: `${window.location.origin}/auth/pending-approval`
         }
       })
 
@@ -295,21 +302,6 @@ export default function SignUpPage() {
               {(formData.role === 'social_worker' || formData.role === 'administrator') && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="employeeId" className="text-sm font-medium text-gray-700">
-                      직원번호 <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="employeeId"
-                      type="text"
-                      placeholder="직원번호를 입력하세요"
-                      required
-                      value={formData.employeeId}
-                      onChange={e => handleInputChange('employeeId', e.target.value)}
-                      className="h-11"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="department" className="text-sm font-medium text-gray-700">
                       부서
                     </Label>
@@ -323,7 +315,7 @@ export default function SignUpPage() {
                     />
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
                     <Label htmlFor="contactNumber" className="text-sm font-medium text-gray-700">
                       연락처
                     </Label>

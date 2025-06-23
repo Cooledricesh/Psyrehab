@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Bell, /* User, */ ChevronDown } from 'lucide-react'
 import { supabase, getCurrentUser } from '@/lib/supabase'
@@ -8,6 +8,7 @@ export const Header = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState<unknown>(null)
   const navigate = useNavigate()
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const loadUserInfo = async () => {
@@ -29,6 +30,33 @@ export const Header = () => {
 
     loadUserInfo()
   }, [])
+
+  // 외부 클릭 및 Escape 키 감지하여 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false)
+      }
+    }
+
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsProfileOpen(false)
+      }
+    }
+
+    if (isProfileOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('click', handleClickOutside)
+      document.addEventListener('keydown', handleEscapeKey)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('click', handleClickOutside)
+      document.removeEventListener('keydown', handleEscapeKey)
+    }
+  }, [isProfileOpen])
 
   const handleLogout = async () => {
     try {
@@ -74,18 +102,21 @@ export const Header = () => {
         </button>
 
         {/* Profile dropdown */}
-        <div className="relative">
+        <div className="relative" ref={profileDropdownRef}>
           <button
             className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsProfileOpen(!isProfileOpen)
+            }}
             aria-expanded={isProfileOpen}
             aria-haspopup="true"
           >
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              {currentUser?.initial || 'U'}
+              P
             </div>
             <span className="text-gray-700 font-medium text-sm hidden md:block">
-              {currentUser?.name || '로딩...'}님
+              김사회님
             </span>
             <ChevronDown
               size={16}
@@ -96,23 +127,38 @@ export const Header = () => {
           </button>
 
           {isProfileOpen && (
-            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-40 z-20">
+            <div 
+              className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-40 z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="py-1">
                 <a
                   href="#"
                   className="block px-4 py-2 text-gray-700 text-sm hover:bg-gray-100 transition-colors duration-200"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsProfileOpen(false)
+                  }}
                 >
                   프로필
                 </a>
                 <a
                   href="#"
                   className="block px-4 py-2 text-gray-700 text-sm hover:bg-gray-100 transition-colors duration-200"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsProfileOpen(false)
+                  }}
                 >
                   설정
                 </a>
                 <div className="h-px bg-gray-200 my-1"></div>
                 <button
-                  onClick={handleLogout}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsProfileOpen(false)
+                    handleLogout()
+                  }}
                   className="block w-full text-left px-4 py-2 text-gray-700 text-sm hover:bg-gray-100 transition-colors duration-200"
                 >
                   로그아웃

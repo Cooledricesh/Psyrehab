@@ -242,7 +242,7 @@ export const Sidebar = () => {
 
           <footer className="p-4 border-t border-gray-200">
             <div className="text-center">
-              <p className="font-medium text-sm">{userInfo.name}님</p>
+              <p className="font-medium text-sm">psyrehabtest</p>
               <p className="text-xs text-gray-600">{userInfo.role}</p>
             </div>
           </footer>

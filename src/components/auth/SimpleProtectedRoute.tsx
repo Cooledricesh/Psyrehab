@@ -46,8 +46,8 @@ export function SimpleProtectedRoute({ children }: SimpleProtectedRouteProps) {
         setHasRole(!!userRole && userRole.length > 0)
         setIsLoading(false)
 
-        // 역할이 없고 승인 대기 페이지가 아니면 리다이렉트
-        if ((!userRole || userRole.length === 0) && location.pathname !== '/auth/pending-approval') {
+        // 역할이 없고 인증 관련 페이지가 아니면 리다이렉트
+        if ((!userRole || userRole.length === 0) && !location.pathname.startsWith('/auth/')) {
           console.log('No role, redirecting to pending approval')
           navigate('/auth/pending-approval')
         }
@@ -98,8 +98,8 @@ export function SimpleProtectedRoute({ children }: SimpleProtectedRouteProps) {
     return null
   }
 
-  // 역할이 없고 승인 대기 페이지가 아니면 null 반환 (리다이렉트 중)
-  if (!hasRole && location.pathname !== '/auth/pending-approval') {
+  // 역할이 없고 인증 관련 페이지가 아니면 null 반환 (리다이렉트 중)
+  if (!hasRole && !location.pathname.startsWith('/auth/')) {
     return null
   }
 
