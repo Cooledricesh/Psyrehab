@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { getPatientById, updatePatient } from '@/services/patient-management'
+import { getPatientById, updatePatient, deletePatient, checkPatientRelatedData } from '@/services/patient-management'
 import type { Patient, CreatePatientData } from '@/services/patient-management'
 import { canEditPatient } from '@/lib/auth-utils'
-import { MoreVertical, Edit, Trash2 } from 'lucide-react'
+import { MoreVertical, Edit, Trash2, AlertTriangle } from 'lucide-react'
 
 interface PatientUnifiedModalProps {
   isOpen: boolean
@@ -25,6 +25,10 @@ export default function PatientUnifiedModal({
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showContextMenu, setShowContextMenu] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [relatedData, setRelatedData] = useState<any[]>([])
+  const [forceDelete, setForceDelete] = useState(false)
   
   const [formData, setFormData] = useState<CreatePatientData>({
     full_name: '',
@@ -160,10 +164,65 @@ export default function PatientUnifiedModal({
     }
   }
 
+  const handleDeleteMode = async () => {
+    setShowContextMenu(false)
+    
+    try {
+      // 연관 데이터 확인
+      const related = await checkPatientRelatedData(patient?.id || '')
+      setRelatedData(related)
+      setForceDelete(false)
+      setShowDeleteConfirm(true)
+    } catch (err) {
+      console.error('연관 데이터 확인 실패:', err)
+      setError('연관 데이터 확인 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!patient) return
+
+    try {
+      setIsDeleting(true)
+      setError(null)
+
+      console.log('🗑️ 환자 삭제 시도:', { patientId: patient.id, forceDelete })
+      
+      await deletePatient(patient.id, forceDelete)
+      
+      console.log('✅ 환자 삭제 성공')
+      onSuccess() // 목록 새로고침
+      handleClose() // 모달 닫기
+      
+    } catch (err: unknown) {
+      console.error('❌ 환자 삭제 실패:', err)
+      setError(err instanceof Error ? err.message : '환자 삭제 중 오류가 발생했습니다.')
+      
+      // 연관 데이터 때문에 실패한 경우 강제 삭제 옵션 제공
+      if (err instanceof Error && err.message.includes('연결된 데이터가 있어')) {
+        // 모달은 열어두고 강제 삭제 옵션만 활성화
+      } else {
+        setShowDeleteConfirm(false) // 다른 오류인 경우 모달 닫기
+      }
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false)
+    setError(null)
+    setRelatedData([])
+    setForceDelete(false)
+  }
+
   const handleClose = () => {
     setIsEditing(false)
     setError(null)
     setShowContextMenu(false)
+    setShowDeleteConfirm(false)
+    setRelatedData([])
+    setForceDelete(false)
     onClose()
   }
 
@@ -235,11 +294,7 @@ export default function PatientUnifiedModal({
                       편집
                     </button>
                     <button
-                      onClick={() => {
-                        setShowContextMenu(false)
-                        // TODO: 삭제 기능 구현
-                        alert('삭제 기능은 추후 구현될 예정입니다.')
-                      }}
+                      onClick={handleDeleteMode}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -503,6 +558,79 @@ export default function PatientUnifiedModal({
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">환자 정보를 찾을 수 없습니다.</p>
+          </div>
+        )}
+
+        {/* 삭제 확인 모달 */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="w-6 h-6 text-red-500" />
+                <h3 className="text-lg font-semibold text-gray-900">환자 삭제</h3>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700">
+                  정말로 <strong>{patient?.name}</strong> 환자를 삭제하시겠습니까?
+                </p>
+                
+                {relatedData.length > 0 && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-800 font-medium mb-2">
+                      ⚠️ 다음 연관 데이터가 발견되었습니다:
+                    </p>
+                    <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                      {relatedData.map((item, index) => (
+                        <li key={index}>{item.count}개의 {item.name}</li>
+                      ))}
+                    </ul>
+                    
+                    <div className="mt-3 flex items-center">
+                      <input
+                        type="checkbox"
+                        id="forceDelete"
+                        checked={forceDelete}
+                        onChange={(e) => setForceDelete(e.target.checked)}
+                        className="mr-2"
+                      />
+                      <label htmlFor="forceDelete" className="text-sm text-yellow-800">
+                        연관 데이터와 함께 완전히 삭제 (되돌릴 수 없음)
+                      </label>
+                    </div>
+                  </div>
+                )}
+                
+                <p className="text-sm text-red-600 mt-2">
+                  이 작업은 되돌릴 수 없습니다.
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                  <p className="text-red-800 text-sm">{error}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={handleDeleteCancel}
+                  disabled={isDeleting}
+                >
+                  취소
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleting || (relatedData.length > 0 && !forceDelete)}
+                >
+                  {isDeleting ? '삭제 중...' : 
+                   relatedData.length > 0 && !forceDelete ? '강제 삭제 체크 필요' : 
+                   forceDelete ? '완전 삭제' : '삭제'}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

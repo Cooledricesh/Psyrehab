@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
-import { Users, Activity, Database, Shield, BarChart3, Calendar, AlertCircle, CheckCircle } from 'lucide-react'
+import { Users, Activity, Database, Shield, BarChart3, Calendar, AlertCircle, CheckCircle, Archive } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface SystemStats {
@@ -145,6 +145,13 @@ export default function AdminDashboard() {
       icon: Shield,
       color: 'bg-orange-500',
       href: '/admin/permissions'
+    },
+    {
+      title: 'AI 추천 아카이빙',
+      description: '선택되지 않은 AI 목표 추천 데이터 분석',
+      icon: Archive,
+      color: 'bg-indigo-500',
+      href: '/admin/ai-archive'
     }
   ]
 

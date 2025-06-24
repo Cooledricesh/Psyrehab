@@ -566,3 +566,132 @@ export const updatePatientStatus = async (
     throw error
   }
 }
+
+// 환자와 연관된 모든 데이터 확인
+export const checkPatientRelatedData = async (patientId: string) => {
+  try {
+    console.log('🔍 환자 연관 데이터 확인 시작:', patientId)
+
+    const relatedTables = [
+      { table: 'ai_goal_recommendations', name: 'AI 목표 추천' },
+      { table: 'assessment_milestones', name: '평가 마일스톤' },
+      { table: 'assessments', name: '평가 기록' },
+      { table: 'detailed_assessments', name: '상세 평가' },
+      { table: 'patient_transfer_log', name: '환자 이관 로그' },
+      { table: 'progress_insights', name: '진행 인사이트' },
+      { table: 'rehabilitation_goals', name: '재활 목표' },
+      { table: 'service_records', name: '서비스 기록' }
+    ]
+
+    const relatedData = []
+    
+    for (const { table, name } of relatedTables) {
+      const { count, error } = await supabase
+        .from(table)
+        .select('*', { count: 'exact', head: true })
+        .eq('patient_id', patientId)
+
+      if (error) {
+        console.error(`${table} 조회 실패:`, error)
+        continue
+      }
+
+      if (count && count > 0) {
+        relatedData.push({ table, name, count })
+      }
+    }
+
+    // AI 추천 아카이빙 데이터도 확인 (간접 연관)
+    const { count: archiveCount, error: archiveError } = await supabase
+      .from('ai_recommendation_archive')
+      .select('*', { count: 'exact', head: true })
+      .eq('original_assessment_id', patientId) // assessment_id로 연결된 아카이빙 데이터
+
+    if (!archiveError && archiveCount && archiveCount > 0) {
+      relatedData.push({ 
+        table: 'ai_recommendation_archive', 
+        name: 'AI 추천 아카이빙', 
+        count: archiveCount 
+      })
+    }
+
+    console.log('📊 연관 데이터 결과:', relatedData)
+    return relatedData
+
+  } catch (error) {
+    console.error('❌ 연관 데이터 확인 실패:', error)
+    throw error
+  }
+}
+
+// 환자 삭제 (연관 데이터 포함)
+export const deletePatient = async (patientId: string, forceDelete: boolean = false): Promise<void> => {
+  try {
+    console.log('🗑️ 환자 삭제 시작:', { patientId, forceDelete })
+
+    // 1. 연관된 데이터 확인
+    const relatedData = await checkPatientRelatedData(patientId)
+
+    // 2. 연관된 데이터가 있고 강제 삭제가 아닌 경우 에러
+    if (relatedData.length > 0 && !forceDelete) {
+      const dataList = relatedData.map(item => `${item.count}개의 ${item.name}`).join(', ')
+      throw new Error(`이 환자와 연결된 데이터가 있어 삭제할 수 없습니다: ${dataList}`)
+    }
+
+    // 3. 강제 삭제인 경우 연관 데이터부터 삭제
+    if (forceDelete && relatedData.length > 0) {
+      console.log('🧹 연관 데이터 삭제 시작...')
+      
+      for (const { table } of relatedData) {
+        if (table === 'ai_recommendation_archive') {
+          // AI 추천 아카이빙은 assessment_id로 연결됨
+          const { error } = await supabase
+            .from(table)
+            .delete()
+            .eq('original_assessment_id', patientId)
+
+          if (error) {
+            console.error(`${table} 삭제 실패:`, error)
+            throw new Error(`연관 데이터 삭제 실패: ${table}`)
+          }
+        } else {
+          // 다른 테이블들은 patient_id로 연결됨
+          const { error } = await supabase
+            .from(table)
+            .delete()
+            .eq('patient_id', patientId)
+
+          if (error) {
+            console.error(`${table} 삭제 실패:`, error)
+            throw new Error(`연관 데이터 삭제 실패: ${table}`)
+          }
+        }
+        
+        console.log(`✅ ${table} 데이터 삭제 완료`)
+      }
+    }
+
+    // 4. 환자 삭제
+    const { error: deleteError } = await supabase
+      .from('patients')
+      .delete()
+      .eq('id', patientId)
+
+    if (deleteError) {
+      console.error('환자 삭제 실패:', deleteError)
+      
+      // 외래키 제약 조건 오류 처리
+      if (deleteError.code === '23503' || deleteError.message.includes('violates foreign key constraint')) {
+        throw new Error('연결된 데이터로 인해 환자를 삭제할 수 없습니다. 먼저 관련 데이터를 정리해주세요.')
+      }
+      
+      throw new Error(deleteError.message)
+    }
+
+    console.log('✅ 환자 삭제 성공:', patientId)
+
+  } catch (error) {
+    console.error('❌ 환자 삭제 실패:', error)
+    throw error
+  }
+}

@@ -19,6 +19,7 @@ import AnnouncementsManagement from '@/pages/admin/AnnouncementsManagement'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import UserManagement from '@/pages/admin/UserManagement'
 import PatientAssignment from '@/pages/admin/PatientAssignment'
+import AIArchivePage from '@/pages/admin/AIArchivePage'
 
 // 인증 페이지 컴포넌트
 import LoginPage from '@/pages/auth/LoginPage'
@@ -79,6 +80,7 @@ function App() {
                       <Route path="/admin/logs" element={<AdminProtectedRoute><SystemLogs /></AdminProtectedRoute>} />
                       <Route path="/admin/backup-restore" element={<AdminProtectedRoute><BackupRestore /></AdminProtectedRoute>} />
                       <Route path="/admin/announcements" element={<AdminProtectedRoute><AnnouncementsManagement /></AdminProtectedRoute>} />
+                      <Route path="/admin/ai-archive" element={<AdminProtectedRoute><AIArchivePage /></AdminProtectedRoute>} />
                     </Routes>
                   </main>
                 </div>

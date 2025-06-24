@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
 
 interface SaveGoalsParams {
   selectedPatient: string | null;
@@ -198,6 +199,61 @@ export const useGoalSave = () => {
         throw patientError;
       }
 
+      // 6. 선택되지 않은 AI 목표들 아카이빙 (비동기로 실행하여 메인 플로우 차단 방지)
+      if (aiRecommendationId && detailedGoals.allRecommendations && detailedGoals.selectedIndex !== undefined) {
+        try {
+          console.log('🗄️ 선택되지 않은 목표들 아카이빙 시작');
+          
+          // 환자 정보 조회 (익명화를 위해)
+          const { data: patientData } = await supabase
+            .from('patients')
+            .select('birth_date, gender, diagnosis')
+            .eq('id', selectedPatient)
+            .single();
+
+          // 선택되지 않은 목표들 필터링
+          const unselectedGoals = detailedGoals.allRecommendations
+            .filter((_, index) => index !== detailedGoals.selectedIndex)
+            .map((goal, originalIndex) => ({
+              plan_number: originalIndex + 1,
+              title: goal.title || `목표 ${originalIndex + 1}`,
+              purpose: goal.purpose || '',
+              sixMonthGoal: goal.sixMonthGoal || '',
+              monthlyGoals: goal.monthlyGoals || [],
+              weeklyPlans: goal.weeklyPlans || []
+            }));
+
+          if (unselectedGoals.length > 0) {
+            // 환자 나이 계산
+            const patientAge = patientData?.birth_date 
+              ? new Date().getFullYear() - new Date(patientData.birth_date).getFullYear()
+              : undefined;
+
+            // 진단 카테고리 간소화
+            const diagnosisCategory = patientData?.diagnosis 
+              ? simplifyDiagnosis(patientData.diagnosis)
+              : undefined;
+
+            // 아카이빙 실행 (백그라운드에서)
+            AIRecommendationArchiveService.archiveUnselectedGoals({
+              originalRecommendationId: aiRecommendationId,
+              originalAssessmentId: currentAssessmentId,
+              unselectedGoals,
+              patientAge,
+              patientGender: patientData?.gender,
+              diagnosisCategory,
+              archivedReason: 'goal_not_selected'
+            }).catch(archiveError => {
+              // 아카이빙 실패는 메인 플로우에 영향을 주지 않음
+              console.warn('⚠️ 목표 아카이빙 실패 (메인 플로우는 계속):', archiveError);
+            });
+          }
+        } catch (archiveError) {
+          // 아카이빙 관련 오류는 메인 플로우에 영향을 주지 않음
+          console.warn('⚠️ 아카이빙 프로세스 오류 (메인 플로우는 계속):', archiveError);
+        }
+      }
+
       // 성공 메시지
       alert('목표가 성공적으로 저장되었습니다!');
       
@@ -234,3 +290,33 @@ export const useGoalSave = () => {
     isProcessing
   };
 };
+
+/**
+ * 진단명을 간소화된 카테고리로 변환
+ */
+function simplifyDiagnosis(diagnosis: string): string {
+  const lowerDiagnosis = diagnosis.toLowerCase();
+  
+  // 키워드 기반 카테고리 매핑
+  const categoryMap = {
+    'cognitive_disorder': ['치매', '인지', '기억', '알츠하이머', 'dementia', 'cognitive'],
+    'mood_disorder': ['우울', '조울', '기분', 'depression', 'bipolar', 'mood'],
+    'anxiety_disorder': ['불안', '공황', 'anxiety', 'panic'],
+    'psychotic_disorder': ['조현병', '정신분열', 'schizophrenia', 'psychotic'],
+    'substance_disorder': ['중독', '알코올', '약물', 'addiction', 'substance'],
+    'developmental_disorder': ['자폐', '발달', 'autism', 'developmental'],
+    'neurological_disorder': ['뇌졸중', '파킨슨', '뇌손상', 'stroke', 'parkinson', 'neurological'],
+    'personality_disorder': ['성격', '인격', 'personality'],
+    'eating_disorder': ['섭식', '식이', 'eating'],
+    'trauma_disorder': ['외상', '트라우마', 'trauma', 'ptsd']
+  };
+
+  // 매칭되는 카테고리 찾기
+  for (const [category, keywords] of Object.entries(categoryMap)) {
+    if (keywords.some(keyword => lowerDiagnosis.includes(keyword))) {
+      return category;
+    }
+  }
+
+  return 'other_disorder';
+}

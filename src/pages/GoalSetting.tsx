@@ -330,6 +330,63 @@ const GoalSetting: React.FC = () => {
       
       await GoalService.saveGoals(goalsToInsert);
 
+      // 4.5. 선택되지 않은 AI 목표들 아카이빙
+      if (aiRecommendations && aiRecommendationId && detailedGoals.selectedIndex !== undefined) {
+        try {
+          console.log('🗄️ 선택되지 않은 목표들 아카이빙 시작');
+          
+          // 환자 정보 조회 (익명화를 위해)
+          const { data: patientData } = await supabase.from('patients')
+            .select('birth_date, gender, diagnosis')
+            .eq('id', selectedPatient)
+            .single();
+
+          // 선택되지 않은 목표들 필터링
+          const unselectedGoals = aiRecommendations.goals
+            .filter((_, index) => index !== detailedGoals.selectedIndex)
+            .map((goal, originalIndex) => ({
+              plan_number: originalIndex + 1,
+              title: goal.title || `목표 ${originalIndex + 1}`,
+              purpose: goal.purpose || '',
+              sixMonthGoal: goal.sixMonthGoal || '',
+              monthlyGoals: goal.monthlyGoals || [],
+              weeklyPlans: goal.weeklyPlans || []
+            }));
+
+          if (unselectedGoals.length > 0) {
+            // 환자 나이 계산
+            const patientAge = patientData?.birth_date 
+              ? new Date().getFullYear() - new Date(patientData.birth_date).getFullYear()
+              : undefined;
+
+            // 진단 카테고리 간소화
+            const diagnosisCategory = patientData?.diagnosis 
+              ? simplifyDiagnosis(patientData.diagnosis)
+              : undefined;
+
+            // 아카이빙 실행
+            const { error: archiveError } = await supabase.from('ai_recommendation_archive').insert({
+              original_recommendation_id: aiRecommendationId,
+              original_assessment_id: currentAssessmentId,
+              archived_goal_data: unselectedGoals,
+              patient_age_range: patientAge ? getAgeRange(patientAge) : null,
+              patient_gender: patientData?.gender || null,
+              diagnosis_category: diagnosisCategory,
+              archived_reason: 'goal_not_selected',
+              archived_at: new Date().toISOString()
+            });
+
+            if (archiveError) {
+              console.warn('⚠️ 목표 아카이빙 실패 (메인 플로우는 계속):', archiveError);
+            } else {
+              console.log('✅ 목표 아카이빙 성공:', unselectedGoals.length, '개 목표');
+            }
+          }
+        } catch (archiveError) {
+          console.warn('⚠️ 아카이빙 프로세스 오류 (메인 플로우는 계속):', archiveError);
+        }
+      }
+
       // 5. 환자 상태를 active로 변경
       await GoalService.activatePatient(selectedPatient);
 
@@ -518,5 +575,42 @@ const GoalSetting: React.FC = () => {
     </div>
   );
 };
+
+// 진단명을 간소화된 카테고리로 변환
+function simplifyDiagnosis(diagnosis: string): string {
+  const lowerDiagnosis = diagnosis.toLowerCase();
+  
+  const categoryMap = {
+    'cognitive_disorder': ['치매', '인지', '기억', '알츠하이머', 'dementia', 'cognitive'],
+    'mood_disorder': ['우울', '조울', '기분', 'depression', 'bipolar', 'mood'],
+    'anxiety_disorder': ['불안', '공황', 'anxiety', 'panic'],
+    'psychotic_disorder': ['조현병', '정신분열', 'schizophrenia', 'psychotic'],
+    'substance_disorder': ['중독', '알코올', '약물', 'addiction', 'substance'],
+    'developmental_disorder': ['자폐', '발달', 'autism', 'developmental'],
+    'neurological_disorder': ['뇌졸중', '파킨슨', '뇌손상', 'stroke', 'parkinson', 'neurological'],
+    'personality_disorder': ['성격', '인격', 'personality'],
+    'eating_disorder': ['섭식', '식이', 'eating'],
+    'trauma_disorder': ['외상', '트라우마', 'trauma', 'ptsd']
+  };
+
+  for (const [category, keywords] of Object.entries(categoryMap)) {
+    if (keywords.some(keyword => lowerDiagnosis.includes(keyword))) {
+      return category;
+    }
+  }
+
+  return 'other_disorder';
+}
+
+// 나이를 연령대로 변환
+function getAgeRange(age: number): string {
+  if (age < 20) return '0-19';
+  if (age < 30) return '20-29';
+  if (age < 40) return '30-39';
+  if (age < 50) return '40-49';
+  if (age < 60) return '50-59';
+  if (age < 70) return '60-69';
+  return '70+';
+}
 
 export default GoalSetting;
