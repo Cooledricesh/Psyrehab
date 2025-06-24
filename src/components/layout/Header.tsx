@@ -15,12 +15,43 @@ export const Header = () => {
       try {
         const user = await getCurrentUser()
         if (user) {
+          // 관리자 정보 확인
+          const { data: adminInfo } = await supabase
+            .from('administrators')
+            .select('full_name')
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+          // 사회복지사 정보 확인
+          const { data: swInfo } = await supabase
+            .from('social_workers')
+            .select('full_name')
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+          let displayName = '사용자'
+          let role = '사용자'
+          let initial = 'U'
+
+          if (adminInfo) {
+            displayName = adminInfo.full_name
+            role = '관리자'
+            initial = adminInfo.full_name.charAt(0)
+          } else if (swInfo) {
+            displayName = swInfo.full_name
+            role = '사회복지사'
+            initial = swInfo.full_name.charAt(0)
+          } else {
+            displayName = user.email?.split('@')[0] || '사용자'
+            initial = user.email?.charAt(0).toUpperCase() || 'U'
+          }
+
           setCurrentUser({
             id: user.id,
             email: user.email,
-            name: user.email?.split('@')[0] || '사용자',
-            role: '관리자',
-            initial: user.email?.charAt(0).toUpperCase() || 'U'
+            name: displayName,
+            role: role,
+            initial: initial
           })
         }
       } catch {
@@ -113,10 +144,10 @@ export const Header = () => {
             aria-haspopup="true"
           >
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              P
+              {(currentUser as any)?.initial || 'U'}
             </div>
             <span className="text-gray-700 font-medium text-sm hidden md:block">
-              김사회님
+              {(currentUser as any)?.name || '로딩...'}님
             </span>
             <ChevronDown
               size={16}

@@ -171,7 +171,7 @@ export class AuthService {
             full_name: formData.full_name,
             role: formData.role
           },
-          emailRedirectTo: `${window.location.origin}${AUTH_FLOW_CONFIG.EMAIL_CONFIRMATION_REDIRECT_URL}`
+          emailRedirectTo: `${import.meta.env.VITE_APP_URL || window.location.origin}${AUTH_FLOW_CONFIG.EMAIL_CONFIRMATION_REDIRECT_URL}`
         }
       })
 
@@ -278,8 +278,11 @@ export class AuthService {
         }
       }
 
+      // 프로덕션 환경에서는 환경 변수 사용, 없으면 window.location.origin 사용
+      const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}${AUTH_FLOW_CONFIG.PASSWORD_RESET_REDIRECT_URL}`
+        redirectTo: `${baseUrl}${AUTH_FLOW_CONFIG.PASSWORD_RESET_REDIRECT_URL}`
       })
 
       // Record attempt
@@ -369,7 +372,7 @@ export class AuthService {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}${AUTH_FLOW_CONFIG.SIGNIN_REDIRECT_URL}`
+          redirectTo: `${import.meta.env.VITE_APP_URL || window.location.origin}${AUTH_FLOW_CONFIG.SIGNIN_REDIRECT_URL}`
         }
       })
 
@@ -403,7 +406,7 @@ export class AuthService {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}${AUTH_FLOW_CONFIG.EMAIL_CONFIRMATION_REDIRECT_URL}`
+          emailRedirectTo: `${import.meta.env.VITE_APP_URL || window.location.origin}${AUTH_FLOW_CONFIG.EMAIL_CONFIRMATION_REDIRECT_URL}`
         }
       })
 

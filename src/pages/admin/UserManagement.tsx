@@ -359,13 +359,46 @@ export default function UserManagement() {
       }
       console.log('user_roles 삭제 성공')
 
-      console.log('사용자 삭제 완료:', selectedUser.fullName)
+      // 4. Supabase Auth 계정 삭제 (승인된 사용자의 경우)
+      if (selectedUser.role !== 'pending') {
+        try {
+          const { error: authDeleteError } = await supabase.auth.admin.deleteUser(selectedUser.id)
+          
+          if (authDeleteError) {
+            console.error("Auth 계정 삭제 오류:", authDeleteError)
+            // Auth 삭제 실패해도 다른 삭제는 성공했으므로 경고 메시지로 처리
+            toast({
+              title: '부분 삭제 완료',
+              description: `${selectedUser.fullName}님의 프로필은 삭제되었지만, Auth 계정 삭제에 실패했습니다. Supabase Dashboard에서 수동으로 삭제해주세요.`,
+              variant: 'destructive',
+              duration: 8000
+            })
+          } else {
+            console.log('Auth 계정 삭제 성공')
+            toast({
+              title: '삭제 완료',
+              description: `${selectedUser.fullName}님의 모든 계정 정보가 완전히 삭제되었습니다.`,
+              duration: 5000
+            })
+          }
+        } catch (authError) {
+          console.error("Auth 삭제 중 예외:", authError)
+          toast({
+            title: '부분 삭제 완료', 
+            description: `${selectedUser.fullName}님의 프로필은 삭제되었지만, Auth 계정 삭제 중 오류가 발생했습니다.`,
+            variant: 'destructive',
+            duration: 8000
+          })
+        }
+      } else {
+        toast({
+          title: '삭제 완료',
+          description: `${selectedUser.fullName}님의 가입 신청이 삭제되었습니다.`,
+          duration: 5000
+        })
+      }
 
-      toast({
-        title: '삭제 성공',
-        description: `${selectedUser.fullName}님의 프로필이 삭제되었습니다.${selectedUser.role !== 'pending' ? ' Auth 계정은 Supabase Dashboard에서 삭제해주세요.' : ''}`,
-        duration: 5000
-      })
+      console.log('사용자 삭제 완료:', selectedUser.fullName)
 
       setShowDeleteDialog(false)
       loadUsers()
