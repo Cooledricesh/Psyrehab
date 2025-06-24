@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,21 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Archive, 
   Download, 
   RefreshCw, 
-  TrendingUp, 
-  Users, 
-  Target,
-  Calendar,
-  Filter,
-  BarChart3,
-  PieChart
+  Filter
 } from 'lucide-react';
 import { 
   useArchivedRecommendations, 
-  useArchiveStatistics, 
-  useArchiveInsights,
   useRefreshArchiveData,
   useExportArchiveData
 } from '@/hooks/useAIRecommendationArchive';
@@ -35,7 +25,6 @@ interface FilterState {
 }
 
 const AIRecommendationArchiveViewer: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('overview');
   const [currentPage, setCurrentPage] = useState(0);
   const [filters, setFilters] = useState<FilterState>({
     diagnosisCategory: '',
@@ -56,12 +45,6 @@ const AIRecommendationArchiveViewer: React.FC = () => {
     diagnosisCategory: filters.diagnosisCategory || undefined,
     ageRange: filters.ageRange || undefined
   });
-
-  const { 
-    data: insights, 
-    rawStats, 
-    isLoading: isLoadingStats 
-  } = useArchiveInsights();
 
   // 액션 훅들
   const refreshData = useRefreshArchiveData();
@@ -94,7 +77,7 @@ const AIRecommendationArchiveViewer: React.FC = () => {
   };
 
   // 로딩 상태
-  if (isLoadingArchived || isLoadingStats) {
+  if (isLoadingArchived) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -156,264 +139,115 @@ const AIRecommendationArchiveViewer: React.FC = () => {
         </div>
       </div>
 
-      {/* 탭 네비게이션 */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">개요</TabsTrigger>
-          <TabsTrigger value="archived">아카이빙된 목표</TabsTrigger>
-          <TabsTrigger value="analytics">분석</TabsTrigger>
-        </TabsList>
-
-        {/* 개요 탭 */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">총 아카이빙 수</CardTitle>
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{rawStats?.totalArchived || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  누적 아카이빙된 목표 수
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">최근 7일 평균</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{insights?.recentAverage || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  일평균 아카이빙 수
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">주요 진단 카테고리</CardTitle>
-                <Target className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {insights?.topDiagnosisCategory || '-'}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  가장 많이 아카이빙된 진단 카테고리
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">주요 연령대</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{insights?.topAgeRange || '-'}</div>
-                <p className="text-xs text-muted-foreground">
-                  가장 많이 아카이빙된 연령대
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* 진단 카테고리 분포 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5" />
-                진단 카테고리별 분포
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {insights?.diagnosisDistribution?.map(({ diagnosis, count, percentage }) => (
-                  <div key={diagnosis} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{diagnosis}</div>
-                      <div className="text-sm text-muted-foreground">{count}개 목표</div>
-                    </div>
-                    <Badge variant="secondary">{percentage}%</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 아카이빙된 목표 탭 */}
-        <TabsContent value="archived" className="space-y-6">
-          {/* 필터 섹션 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                필터
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="diagnosis-category">진단 카테고리</Label>
-                  <Select
-                    value={filters.diagnosisCategory || 'all'}
-                    onValueChange={(value) => handleFilterChange('diagnosisCategory', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="전체" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
-                      <SelectItem value="cognitive_disorder">인지 장애</SelectItem>
-                      <SelectItem value="mood_disorder">기분 장애</SelectItem>
-                      <SelectItem value="anxiety_disorder">불안 장애</SelectItem>
-                      <SelectItem value="psychotic_disorder">정신증적 장애</SelectItem>
-                      <SelectItem value="substance_disorder">물질 사용 장애</SelectItem>
-                      <SelectItem value="developmental_disorder">발달 장애</SelectItem>
-                      <SelectItem value="neurological_disorder">신경학적 장애</SelectItem>
-                      <SelectItem value="personality_disorder">성격 장애</SelectItem>
-                      <SelectItem value="eating_disorder">섭식 장애</SelectItem>
-                      <SelectItem value="trauma_disorder">외상 관련 장애</SelectItem>
-                      <SelectItem value="other_disorder">기타</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="age-range">연령대</Label>
-                  <Select
-                    value={filters.ageRange || 'all'}
-                    onValueChange={(value) => handleFilterChange('ageRange', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="전체" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
-                      <SelectItem value="0-19">0-19세</SelectItem>
-                      <SelectItem value="20-29">20-29세</SelectItem>
-                      <SelectItem value="30-39">30-39세</SelectItem>
-                      <SelectItem value="40-49">40-49세</SelectItem>
-                      <SelectItem value="50-59">50-59세</SelectItem>
-                      <SelectItem value="60-69">60-69세</SelectItem>
-                      <SelectItem value="70+">70세 이상</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="search">검색</Label>
-                  <Input
-                    id="search"
-                    placeholder="목표 제목이나 내용 검색"
-                    value={filters.searchTerm}
-                    onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 mt-4">
-                <Button variant="outline" size="sm" onClick={clearFilters}>
-                  필터 초기화
-                </Button>
-                <div className="text-sm text-muted-foreground">
-                  총 {archivedData?.count || 0}개의 아카이빙된 목표
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 아카이빙된 목표 목록 */}
-          <div className="space-y-4">
-            {archivedData?.data?.map((item) => (
-              <ArchivedGoalCard key={item.id} item={item} />
-            ))}
-          </div>
-
-          {/* 페이지네이션 */}
-          {archivedData && archivedData.count > pageSize && (
-            <div className="flex items-center justify-center gap-2">
-              <Button
-                variant="outline"
-                disabled={currentPage === 0}
-                onClick={() => setCurrentPage(prev => prev - 1)}
+      {/* 필터 섹션 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            필터
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="diagnosis-category">진단 카테고리</Label>
+              <Select
+                value={filters.diagnosisCategory || 'all'}
+                onValueChange={(value) => handleFilterChange('diagnosisCategory', value)}
               >
-                이전
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {currentPage + 1} / {Math.ceil(archivedData.count / pageSize)}
-              </span>
-              <Button
-                variant="outline"
-                disabled={(currentPage + 1) * pageSize >= archivedData.count}
-                onClick={() => setCurrentPage(prev => prev + 1)}
-              >
-                다음
-              </Button>
+                <SelectTrigger>
+                  <SelectValue placeholder="전체" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  <SelectItem value="cognitive_disorder">인지 장애</SelectItem>
+                  <SelectItem value="mood_disorder">기분 장애</SelectItem>
+                  <SelectItem value="anxiety_disorder">불안 장애</SelectItem>
+                  <SelectItem value="psychotic_disorder">정신증적 장애</SelectItem>
+                  <SelectItem value="substance_disorder">물질 사용 장애</SelectItem>
+                  <SelectItem value="developmental_disorder">발달 장애</SelectItem>
+                  <SelectItem value="neurological_disorder">신경학적 장애</SelectItem>
+                  <SelectItem value="personality_disorder">성격 장애</SelectItem>
+                  <SelectItem value="eating_disorder">섭식 장애</SelectItem>
+                  <SelectItem value="trauma_disorder">외상 관련 장애</SelectItem>
+                  <SelectItem value="other_disorder">기타</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          )}
-        </TabsContent>
 
-        {/* 분석 탭 */}
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 연령대별 분포 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  연령대별 분포
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {insights?.ageDistribution?.map(({ ageRange, count, percentage }) => (
-                    <div key={ageRange} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-12 text-sm">{ageRange}</div>
-                        <div className="flex-1 bg-secondary rounded-full h-2">
-                          <div
-                            className="bg-primary rounded-full h-2 transition-all"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium w-16 text-right">
-                        {count}개 ({percentage}%)
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2">
+              <Label htmlFor="age-range">연령대</Label>
+              <Select
+                value={filters.ageRange || 'all'}
+                onValueChange={(value) => handleFilterChange('ageRange', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="전체" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  <SelectItem value="0-19">0-19세</SelectItem>
+                  <SelectItem value="20-29">20-29세</SelectItem>
+                  <SelectItem value="30-39">30-39세</SelectItem>
+                  <SelectItem value="40-49">40-49세</SelectItem>
+                  <SelectItem value="50-59">50-59세</SelectItem>
+                  <SelectItem value="60-69">60-69세</SelectItem>
+                  <SelectItem value="70+">70세 이상</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            {/* 최근 트렌드 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  최근 7일 트렌드
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {rawStats?.recentTrends?.map(({ date, count }) => (
-                    <div key={date} className="flex items-center justify-between text-sm">
-                      <div>{new Date(date).toLocaleDateString('ko-KR')}</div>
-                      <Badge variant="outline">{count}개</Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2">
+              <Label htmlFor="search">검색</Label>
+              <Input
+                id="search"
+                placeholder="목표 제목이나 내용 검색"
+                value={filters.searchTerm}
+                onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+              />
+            </div>
           </div>
-        </TabsContent>
-      </Tabs>
+
+          <div className="flex items-center gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              필터 초기화
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              총 {archivedData?.count || 0}개의 아카이빙된 목표
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 아카이빙된 목표 목록 */}
+      <div className="space-y-4">
+        {archivedData?.data?.map((item) => (
+          <ArchivedGoalCard key={item.id} item={item} />
+        ))}
+      </div>
+
+      {/* 페이지네이션 */}
+      {archivedData && archivedData.count > pageSize && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            disabled={currentPage === 0}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+          >
+            이전
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {currentPage + 1} / {Math.ceil(archivedData.count / pageSize)}
+          </span>
+          <Button
+            variant="outline"
+            disabled={(currentPage + 1) * pageSize >= archivedData.count}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
+            다음
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
@@ -545,4 +379,4 @@ const ArchivedGoalCard: React.FC<{ item: ArchivedRecommendation }> = ({ item }) 
 };
 
 
-export default AIRecommendationArchiveViewer; 
+export default AIRecommendationArchiveViewer;
