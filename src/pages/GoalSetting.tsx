@@ -331,6 +331,12 @@ const GoalSetting: React.FC = () => {
       // 5. 환자 상태를 active로 변경
       await GoalService.activatePatient(selectedPatient);
 
+      // 환자 상태 변경 이벤트 발생
+      eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, {
+        patientId: selectedPatient,
+        newStatus: 'active'
+      });
+
       // 성공 메시지
       alert(MESSAGES.success.goalsSaved);
       
