@@ -25,6 +25,7 @@ export default function PatientEditModal({
     date_of_birth: '',
     gender: '',
     primary_diagnosis: '',
+    doctor: '',
     contact_info: {},
     additional_info: {}
     // status와 admission_date는 편집에서 제외
@@ -59,6 +60,7 @@ export default function PatientEditModal({
           date_of_birth: patientData.birth_date || '',
           gender: patientData.gender || '',
           primary_diagnosis: patientData.diagnosis || '',
+          doctor: patientData.doctor || '',
           contact_info: patientData.contact_info || {},
           additional_info: {}
           // status와 admission_date는 편집에서 제외
@@ -247,6 +249,21 @@ export default function PatientEditModal({
               />
             </div>
 
+            {/* 주치의 정보 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                주치의
+              </label>
+              <input
+                type="text"
+                value={formData.doctor || ''}
+                onChange={(e) => handleInputChange('doctor', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="예: 김철수 교수, 이영희 원장 등"
+                disabled={isSubmitting}
+              />
+            </div>
+
             {/* 연락처 정보 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -259,20 +276,6 @@ export default function PatientEditModal({
                   onChange={(e) => handleContactInfoChange('phone', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="010-1234-5678"
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  이메일
-                </label>
-                <input
-                  type="email"
-                  value={(formData.contact_info as unknown)?.email || ''}
-                  onChange={(e) => handleContactInfoChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="patient@example.com"
                   disabled={isSubmitting}
                 />
               </div>

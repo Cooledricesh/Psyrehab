@@ -20,9 +20,10 @@ export default function PatientRegistrationModal({
     date_of_birth: '',
     gender: '',
     primary_diagnosis: '',
+    doctor: '',
     contact_info: {},
     additional_info: {},
-    status: 'inactive'  // 기본값을 inactive로 변경
+    status: 'inactive'  // 기본값을 inactive로 고정
   })
   
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -83,10 +84,11 @@ export default function PatientRegistrationModal({
           patient_identifier: '',
           date_of_birth: '',
           gender: '',
-                  primary_diagnosis: '',
-        contact_info: {},
-        additional_info: {},
-          status: 'inactive'  // 기본값을 inactive로 변경
+          primary_diagnosis: '',
+          doctor: '',
+          contact_info: {},
+          additional_info: {},
+          status: 'inactive'  // 기본값을 inactive로 고정
         })
       }
     } catch (err: unknown) {
@@ -183,24 +185,6 @@ export default function PatientRegistrationModal({
                 <option value="other">기타</option>
               </select>
             </div>
-
-            
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                상태
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isSubmitting}
-              >
-                <option value="active">활성</option>
-                <option value="inactive">비활성</option>
-                <option value="completed">완료</option>
-              </select>
-            </div>
           </div>
 
           {/* 의료 정보 */}
@@ -218,35 +202,34 @@ export default function PatientRegistrationModal({
             />
           </div>
 
-          {/* 연락처 정보 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                전화번호
-              </label>
-              <input
-                type="tel"
-                value={(formData.contact_info as unknown)?.phone || ''}
-                onChange={(e) => handleContactInfoChange('phone', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="010-1234-5678"
-                disabled={isSubmitting}
-              />
-            </div>
+          {/* 주치의 정보 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              주치의
+            </label>
+            <input
+              type="text"
+              value={formData.doctor || ''}
+              onChange={(e) => handleInputChange('doctor', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="예: 김철수 교수, 이영희 원장 등"
+              disabled={isSubmitting}
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                이메일
-              </label>
-              <input
-                type="email"
-                value={(formData.contact_info as unknown)?.email || ''}
-                onChange={(e) => handleContactInfoChange('email', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="patient@example.com"
-                disabled={isSubmitting}
-              />
-            </div>
+          {/* 연락처 정보 - 이메일 제거 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              전화번호
+            </label>
+            <input
+              type="tel"
+              value={(formData.contact_info as unknown)?.phone || ''}
+              onChange={(e) => handleContactInfoChange('phone', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="010-1234-5678"
+              disabled={isSubmitting}
+            />
           </div>
 
           {/* 에러 메시지 */}

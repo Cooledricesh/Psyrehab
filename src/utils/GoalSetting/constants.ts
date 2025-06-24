@@ -77,7 +77,7 @@ export const MESSAGES = {
     noPatient: '환자를 선택해주세요.',
     saveGoal: '목표 저장 중 오류가 발생했습니다:',
     aiRecommendationFailed: 'AI 추천 처리 중 오류가 발생했습니다.',
-    aiRecommendationTimeout: 'AI 추천 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+    aiRecommendationTimeout: 'AI 추천 처리가 예상보다 오래 걸리고 있습니다. n8n에서 여러 번 재시도했지만 적절한 결과를 얻지 못했습니다. 잠시 후 다시 시도해주세요.',
     aiRequestFailed: 'AI 추천 요청에 실패했습니다. 다시 시도해주세요.',
     missingData: '필요한 데이터가 없습니다.',
     deleteGoalsFailed: '기존 목표 삭제 중 오류',

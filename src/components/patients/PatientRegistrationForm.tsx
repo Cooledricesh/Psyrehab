@@ -13,8 +13,8 @@ interface FormData {
   patient_identifier: string
   date_of_birth: string
   gender: string
+  doctor: string
   phone: string
-  email: string
   address: string
   emergency_contact_name: string
   emergency_contact_relationship: string
@@ -32,8 +32,8 @@ const initialFormData: FormData = {
   patient_identifier: '',
   date_of_birth: '',
   gender: '',
+  doctor: '',
   phone: '',
-  email: '',
   address: '',
   emergency_contact_name: '',
   emergency_contact_relationship: '',
@@ -89,10 +89,6 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
       newErrors.phone = '올바른 전화번호 형식을 입력해주세요.'
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '올바른 이메일 형식을 입력해주세요.'
-    }
-
     // 응급연락처 검증 (이름이 있으면 전화번호도 필수)
     if (formData.emergency_contact_name && !formData.emergency_contact_phone) {
       newErrors.emergency_contact_phone = '응급연락처 전화번호를 입력해주세요.'
@@ -119,9 +115,9 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
         patient_identifier: formData.patient_identifier.trim(),
         date_of_birth: formData.date_of_birth || undefined,
         gender: formData.gender || undefined,
+        doctor: formData.doctor || undefined,
         contact_info: {
           phone: formData.phone || undefined,
-          email: formData.email || undefined,
           address: formData.address || undefined,
           emergency_contact: formData.emergency_contact_name ? {
             name: formData.emergency_contact_name,
@@ -137,7 +133,7 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
           notes: formData.notes || undefined,
         },
         admission_date: formData.admission_date || undefined,
-        status: 'active',
+        status: 'inactive', // 자동으로 inactive로 설정
       }
 
       const result = await createPatientMutation.mutateAsync(patientData)
@@ -226,6 +222,17 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
             </div>
 
             <div>
+              <Label htmlFor="doctor">주치의</Label>
+              <Input
+                id="doctor"
+                type="text"
+                value={formData.doctor}
+                onChange={(e) => handleInputChange('doctor', e.target.value)}
+                placeholder="예: 김철수 교수, 이영희 원장 등"
+              />
+            </div>
+
+            <div>
               <Label htmlFor="admission_date">입원일 *</Label>
               <Input
                 id="admission_date"
@@ -241,7 +248,7 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
           </div>
         </div>
 
-        {/* 연락처 정보 섹션 */}
+        {/* 연락처 정보 섹션 - 이메일 제거 */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">연락처 정보</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -257,21 +264,6 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
               />
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="email">이메일</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="patient@example.com"
-                className={errors.email ? 'border-red-500' : ''}
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
               )}
             </div>
 

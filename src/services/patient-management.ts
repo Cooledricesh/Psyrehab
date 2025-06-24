@@ -8,6 +8,7 @@ export interface Patient {
   birth_date?: string
   gender?: string
   diagnosis: string
+  doctor?: string
   registration_date: string // 환자 등록일 (시스템 등록 시점)
   status: 'active' | 'inactive' | 'completed'
   contact_info?: string
@@ -34,6 +35,7 @@ export interface CreatePatientData {
   date_of_birth?: string
   gender?: string
   primary_diagnosis?: string
+  doctor?: string
   contact_info?: unknown
   additional_info?: unknown
   status?: string
@@ -97,6 +99,7 @@ export const getPatients = async (): Promise<Patient[]> => {
         birth_date: patient.date_of_birth,
         gender: mapGender(patient.gender),
         diagnosis: extractDiagnosis(patient),
+        doctor: patient.doctor,
         registration_date: patient.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
         status: mapPatientStatus(patient.status),
         contact_info: patient.contact_info,
@@ -127,6 +130,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
         patient_identifier: patientData.patient_identifier,
         date_of_birth: patientData.date_of_birth || null,
         gender: patientData.gender || null,
+        doctor: patientData.doctor || null,
         contact_info: patientData.contact_info || null,
         additional_info: {
           ...patientData.additional_info,
@@ -159,6 +163,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
       birth_date: data.date_of_birth,
       gender: mapGender(data.gender),
       diagnosis: extractDiagnosis(data),
+      doctor: data.doctor,
       registration_date: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       status: mapPatientStatus(data.status),
       contact_info: data.contact_info,
@@ -401,6 +406,7 @@ export const getPatientById = async (patientId: string): Promise<Patient | null>
       birth_date: data.date_of_birth,
       gender: mapGender(data.gender),
       diagnosis: extractDiagnosis(data),
+      doctor: data.doctor,
       registration_date: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       status: mapPatientStatus(data.status),
       contact_info: data.contact_info,
@@ -455,6 +461,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
     if (patientData.full_name) updateData.full_name = patientData.full_name
     if (patientData.date_of_birth !== undefined) updateData.date_of_birth = patientData.date_of_birth
     if (patientData.gender !== undefined) updateData.gender = patientData.gender
+    if (patientData.doctor !== undefined) updateData.doctor = patientData.doctor
     if (patientData.contact_info !== undefined) updateData.contact_info = patientData.contact_info
     // status는 check constraint 문제로 인해 업데이트에서 제외
     // if (patientData.status !== undefined) updateData.status = patientData.status
@@ -499,6 +506,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
       birth_date: data.date_of_birth,
       gender: mapGender(data.gender),
       diagnosis: extractDiagnosis(data),
+      doctor: data.doctor,
       registration_date: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       status: mapPatientStatus(data.status),
       contact_info: data.contact_info,
@@ -547,6 +555,7 @@ export const updatePatientStatus = async (
       birth_date: data.date_of_birth,
       gender: mapGender(data.gender),
       diagnosis: extractDiagnosis(data),
+      doctor: data.doctor,
       registration_date: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       status: mapPatientStatus(data.status),
       contact_info: data.contact_info,

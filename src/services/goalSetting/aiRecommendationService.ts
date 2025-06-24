@@ -36,6 +36,7 @@ export class AIRecommendationService {
     }
     
     console.log('📍 n8n webhook URL:', ENV.N8N_WEBHOOK_URL);
+    console.log('🔍 전달받은 assessmentId:', assessmentId, 'typeof:', typeof assessmentId);
     
     // 평가 데이터 조회
     const { data: assessment, error: fetchError } = await supabase
@@ -58,6 +59,15 @@ export class AIRecommendationService {
       throw new Error('Assessment를 찾을 수 없습니다');
     }
 
+    // UUID 유효성 검사 및 로깅
+    console.log('🔍 assessment 데이터 확인:', {
+      assessmentId: assessment.id,
+      assessmentIdType: typeof assessment.id,
+      patientId: assessment.patient_id,
+      patientIdType: typeof assessment.patient_id,
+      patientData: assessment.patient
+    });
+
     // n8n으로 전송할 데이터 구성
     const aiPayload = {
       assessmentId: assessment.id,
@@ -77,6 +87,8 @@ export class AIRecommendationService {
       },
       timestamp: new Date().toISOString()
     };
+    
+    console.log('📦 n8n으로 전송할 최종 데이터:', JSON.stringify(aiPayload, null, 2));
     
     const response = await fetch(ENV.N8N_WEBHOOK_URL, {
       method: 'POST',

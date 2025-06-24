@@ -125,7 +125,7 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
           onClick={onBack}
           className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
         >
-          목표 다시 선택
+          환자 다시 선택
         </button>
         <div className="space-x-3">
           <button

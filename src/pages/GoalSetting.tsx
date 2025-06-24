@@ -133,7 +133,7 @@ const GoalSetting: React.FC = () => {
   );
 
   // AI 폴링 훅 사용
-  const { isPolling, pollingStatus } = useAIPolling({
+  const { isPolling, pollingStatus, isExtendedPolling } = useAIPolling({
     currentStep,
     currentAssessmentId,
     onSuccess: () => {
@@ -381,7 +381,17 @@ const GoalSetting: React.FC = () => {
       {/* Header */}
       <PageHeader 
         title="맞춤형 목표 설정"
-        onBack={() => window.history.back()}
+        onBack={currentStep === 1 ? undefined : () => {
+          if (currentStep === 2) {
+            setCurrentStep(1);
+          } else if (currentStep === 3) {
+            setCurrentStep(2);
+          } else if (currentStep === 4) {
+            setCurrentStep(1); // 4단계에서는 1단계(환자 선택)로
+          } else if (currentStep === 5) {
+            setCurrentStep(1); // 5단계에서는 1단계(환자 선택)로
+          }
+        }}
       />
 
       {/* Progress Steps */}
@@ -415,10 +425,26 @@ const GoalSetting: React.FC = () => {
         )}
 
         {currentStep === 3 && (
-          <ProcessingModal
-            isOpen={isProcessing || isPolling}
-            message="AI가 최적의 재활 목표를 분석하고 있습니다..."
-          />
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <Loader2 className={`animate-spin h-12 w-12 mx-auto mb-4 ${
+              isExtendedPolling ? 'text-amber-600' : 'text-blue-600'
+            }`} />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {isExtendedPolling ? 'AI 분석 연장 중' : 'AI 분석 진행 중'}
+            </h3>
+            <p className="text-gray-600">
+              {isExtendedPolling 
+                ? '최적의 목표를 찾기 위해 추가 분석을 수행하고 있습니다...'
+                : 'AI가 최적의 재활 목표를 분석하고 있습니다...'
+              }
+            </p>
+            <div className="mt-6 text-sm text-gray-500">
+              {isExtendedPolling
+                ? 'n8n에서 여러 가지 목표 옵션을 검토 중입니다. 조금 더 기다려주세요.'
+                : '평가 데이터를 분석하여 개인맞춤형 목표를 생성하고 있습니다.'
+              }
+            </div>
+          </div>
         )}
 
         {currentStep === 4 && aiRecommendations && (
@@ -427,7 +453,7 @@ const GoalSetting: React.FC = () => {
             selectedGoal={selectedGoal}
             onSelectGoal={setSelectedGoal}
             onBack={() => {
-              setCurrentStep(2);
+              setCurrentStep(1); // 1단계(환자 선택)로 이동
               setAiRecommendations(null);
               setSelectedGoal('');
             }}
@@ -466,7 +492,7 @@ const GoalSetting: React.FC = () => {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             onBack={() => {
-              setCurrentStep(4);
+              setCurrentStep(1); // 1단계(환자 선택)로 이동
               setDetailedGoals(null);
             }}
             onSave={handleSaveGoals}
