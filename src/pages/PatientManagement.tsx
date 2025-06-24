@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button'
 import { getPatients, getPatientStats, updatePatientStatus } from '@/services/patient-management'
 import type { Patient, PatientStats } from '@/services/patient-management'
 import PatientRegistrationModal from '@/components/PatientRegistrationModal'
-import PatientDetailModal from '@/components/PatientDetailModal'
-import PatientEditModal from '@/components/PatientEditModal'
+import PatientUnifiedModal from '@/components/PatientUnifiedModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
 import { GoalService } from '@/services/goalSetting';
 
@@ -21,8 +20,7 @@ export default function PatientManagement() {
   
   // 모달 상태 관리
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isUnifiedModalOpen, setIsUnifiedModalOpen] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -57,18 +55,9 @@ export default function PatientManagement() {
   // 모달 핸들러들
   const handleViewDetail = (patientId: string) => {
     setSelectedPatientId(patientId)
-    setIsDetailModalOpen(true)
+    setIsUnifiedModalOpen(true)
   }
 
-  const handleEditPatient = (patientId: string) => {
-    setSelectedPatientId(patientId)
-    setIsEditModalOpen(true)
-  }
-
-  const handleEditFromDetail = () => {
-    setIsDetailModalOpen(false)
-    setIsEditModalOpen(true)
-  }
 
   const handleStatusChange = async (patientId: string, newStatus: string) => {
     try {
@@ -98,8 +87,7 @@ export default function PatientManagement() {
 
   const handleCloseModals = () => {
     setIsRegistrationModalOpen(false)
-    setIsDetailModalOpen(false)
-    setIsEditModalOpen(false)
+    setIsUnifiedModalOpen(false)
     setSelectedPatientId(null)
   }
 
@@ -351,12 +339,6 @@ export default function PatientManagement() {
                         >
                           상세
                         </button>
-                        <button
-                          onClick={() => handleEditPatient(patient.id)}
-                          className="text-gray-600 hover:text-gray-900"
-                        >
-                          편집
-                        </button>
                         {patient.status !== 'completed' && (
                           <button
                             onClick={() => handleStatusChange(patient.id, 'discharged')}
@@ -391,21 +373,12 @@ export default function PatientManagement() {
       />
 
       {selectedPatientId && (
-        <>
-          <PatientDetailModal
-            isOpen={isDetailModalOpen}
-            onClose={handleCloseModals}
-            patientId={selectedPatientId}
-            onEdit={handleEditFromDetail}
-          />
-
-          <PatientEditModal
-            isOpen={isEditModalOpen}
-            onClose={handleCloseModals}
-            patientId={selectedPatientId}
-            onSuccess={handleRefreshData}
-          />
-        </>
+        <PatientUnifiedModal
+          isOpen={isUnifiedModalOpen}
+          onClose={handleCloseModals}
+          patientId={selectedPatientId}
+          onSuccess={handleRefreshData}
+        />
       )}
     </div>
   )
