@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, ChevronRight, Target, Loader2 } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PatientService } from '@/services/patients';
 import { supabase } from '@/lib/supabase';
 import useAIResponseParser from '@/hooks/useAIResponseParser';
@@ -28,6 +28,8 @@ import { AssessmentService, AIRecommendationService, GoalService } from '@/servi
 import { MESSAGES } from '@/utils/GoalSetting/constants';
 
 const GoalSetting: React.FC = () => {
+  const queryClient = useQueryClient();
+  
   // 전체 플로우 상태 관리 훅
   const {
     selectedPatient,
@@ -330,6 +332,11 @@ const GoalSetting: React.FC = () => {
 
       // 5. 환자 상태를 active로 변경
       await GoalService.activatePatient(selectedPatient);
+
+      // Progress Tracking 쿼리 즉시 무효화
+      queryClient.invalidateQueries({ queryKey: ['activePatients'] });
+      queryClient.invalidateQueries({ queryKey: ['patientGoals'] });
+      queryClient.invalidateQueries({ queryKey: ['progressStats'] });
 
       // 환자 상태 변경 이벤트 발생
       eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, {
