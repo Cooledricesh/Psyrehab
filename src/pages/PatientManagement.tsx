@@ -137,11 +137,11 @@ export default function PatientManagement() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active':
-        return '활성'
+        return '목표 진행 중'
       case 'inactive':
-        return '비활성'
+        return '목표 설정 대기'
       case 'completed':
-        return '완료'
+        return '입원 중'
       default:
         return '알 수 없음'
     }
@@ -152,7 +152,7 @@ export default function PatientManagement() {
       case 'active':
         return 'bg-green-100 text-green-800'
       case 'inactive':
-        return 'bg-red-100 text-red-800'
+        return 'bg-yellow-100 text-yellow-800'
       case 'completed':
         return 'bg-blue-100 text-blue-800'
       default:
@@ -237,10 +237,10 @@ export default function PatientManagement() {
           <div className="flex items-center">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600">목표 설정 대기</p>
-              <p className="text-2xl font-bold text-red-600">{stats.inactivePatients}</p>
+              <p className="text-2xl font-bold text-yellow-600">{stats.inactivePatients}</p>
             </div>
-            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>

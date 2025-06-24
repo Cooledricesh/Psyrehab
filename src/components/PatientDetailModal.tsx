@@ -79,11 +79,11 @@ export default function PatientDetailModal({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active':
-        return '활성'
+        return '목표 진행 중'
       case 'inactive':
-        return '비활성'
+        return '목표 설정 대기'
       case 'completed':
-        return '완료'
+        return '입원 중'
       default:
         return '알 수 없음'
     }
@@ -94,7 +94,7 @@ export default function PatientDetailModal({
       case 'active':
         return 'bg-green-100 text-green-800'
       case 'inactive':
-        return 'bg-red-100 text-red-800'
+        return 'bg-yellow-100 text-yellow-800'
       case 'completed':
         return 'bg-blue-100 text-blue-800'
       default:
@@ -191,15 +191,15 @@ export default function PatientDetailModal({
                     <label className="block text-sm font-medium text-gray-500">환자 연락처</label>
                     <p className="text-gray-900">
                       {patient.contact_info && typeof patient.contact_info === 'object' && 'phone' in patient.contact_info 
-                        ? (patient.contact_info as unknown).phone || '정보 없음'
+                        ? (patient.contact_info as { phone?: string }).phone || '정보 없음'
                         : typeof patient.contact_info === 'string' 
                         ? patient.contact_info 
                         : '정보 없음'}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-500">응급 연락처</label>
-                    <p className="text-gray-900">{patient.emergency_contact || '정보 없음'}</p>
+                    <label className="block text-sm font-medium text-gray-500">주치의</label>
+                    <p className="text-gray-900">{patient.doctor || '정보 없음'}</p>
                   </div>
                 </div>
               </div>

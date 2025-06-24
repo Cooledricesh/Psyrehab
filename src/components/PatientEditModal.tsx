@@ -225,7 +225,7 @@ export default function PatientEditModal({
                 </label>
                 <input
                   type="text"
-                  value={patient?.status === 'active' ? '활성' : patient?.status === 'inactive' ? '비활성' : '완료'}
+                  value={patient?.status === 'active' ? '목표 진행 중' : patient?.status === 'inactive' ? '목표 설정 대기' : '입원 중'}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
                   disabled={true}
                   readOnly
@@ -235,33 +235,34 @@ export default function PatientEditModal({
             </div>
 
             {/* 의료 정보 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                주요 진단명
-              </label>
-              <input
-                type="text"
-                value={formData.primary_diagnosis}
-                onChange={(e) => handleInputChange('primary_diagnosis', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="예: 우울증, 조현병, 불안장애 등"
-                disabled={isSubmitting}
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  주요 진단명
+                </label>
+                <input
+                  type="text"
+                  value={formData.primary_diagnosis}
+                  onChange={(e) => handleInputChange('primary_diagnosis', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: 우울증, 조현병, 불안장애 등"
+                  disabled={isSubmitting}
+                />
+              </div>
 
-            {/* 주치의 정보 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                주치의
-              </label>
-              <input
-                type="text"
-                value={formData.doctor || ''}
-                onChange={(e) => handleInputChange('doctor', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="예: 김철수 교수, 이영희 원장 등"
-                disabled={isSubmitting}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  주치의
+                </label>
+                <input
+                  type="text"
+                  value={formData.doctor || ''}
+                  onChange={(e) => handleInputChange('doctor', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: 김철수 교수, 이영희 원장 등"
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
             {/* 연락처 정보 */}
