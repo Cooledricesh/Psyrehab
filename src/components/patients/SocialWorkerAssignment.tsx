@@ -83,7 +83,9 @@ export function SocialWorkerAssignment({ patient, onAssignmentChange }: SocialWo
                 </div>
                 <div>
                   <p className="font-medium text-green-800">{currentSocialWorker.full_name}</p>
-                  <p className="text-sm text-green-600">{currentSocialWorker.email}</p>
+                  {currentSocialWorker.department && (
+                    <p className="text-sm text-green-600">{currentSocialWorker.department}</p>
+                  )}
                   {currentSocialWorker.specializations && currentSocialWorker.specializations.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {currentSocialWorker.specializations.map((spec) => (

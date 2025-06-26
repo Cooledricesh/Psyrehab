@@ -206,33 +206,11 @@ export function PatientDetail({ patientId, onEdit, onDelete, onBack }: PatientDe
           <h2 className="text-lg font-semibold text-gray-900 mb-4">담당 사회복지사</h2>
           <div className="bg-gray-50 p-4 rounded-lg">
             {patient.primary_social_worker ? (
-              <div className="flex justify-between items-center">
-                <p className="font-medium text-gray-900">{patient.primary_social_worker.full_name}</p>
-                {onEdit && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={onEdit}
-                  >
-                    변경
-                  </Button>
-                )}
-              </div>
+              <p className="font-medium text-gray-900">{patient.primary_social_worker.full_name}</p>
             ) : patient.primary_social_worker_id ? (
               <p className="text-gray-500">담당 사회복지사 정보를 불러올 수 없습니다.</p>
             ) : (
-              <div className="flex justify-between items-center">
-                <p className="text-gray-500">담당 사회복지사가 배정되지 않았습니다.</p>
-                {onEdit && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={onEdit}
-                  >
-                    배정
-                  </Button>
-                )}
-              </div>
+              <p className="text-gray-500">담당 사회복지사가 배정되지 않았습니다.</p>
             )}
           </div>
         </section>

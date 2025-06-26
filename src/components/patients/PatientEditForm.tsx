@@ -26,20 +26,21 @@ import { useUpdatePatient } from '@/hooks/usePatients'
 const patientEditSchema = z.object({
   full_name: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
   patient_identifier: z.string().min(1, '환자 식별번호는 필수입니다'),
-  phone: z.string().optional(),
-  email: z.string().email('올바른 이메일 형식이 아닙니다').optional().or(z.literal('')),
-  address: z.string().optional(),
+  date_of_birth: z.string().optional(),
+  gender: z.string().optional(),
   
-  // 응급연락처
+  // 연락처 정보 (contact_info JSONB)
+  phone: z.string().optional(),
+  address: z.string().optional(),
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
   emergency_contact_relationship: z.string().optional(),
   
-  // 의료 정보
+  // 추가 정보 (additional_info JSONB)
   medical_history: z.string().optional(),
   allergies: z.array(z.string()).optional(),
   medications: z.array(z.string()).optional(),
-  special_requirements: z.string().optional(),
+  special_needs: z.string().optional(),
   notes: z.string().optional(),
 })
 
@@ -62,27 +63,28 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
     defaultValues: {
       full_name: patient.full_name || '',
       patient_identifier: patient.patient_identifier || '',
-      phone: patient.phone || '',
-      email: patient.email || '',
-      address: patient.address || '',
-      emergency_contact_name: patient.emergency_contact_name || '',
-      emergency_contact_phone: patient.emergency_contact_phone || '',
-      emergency_contact_relationship: patient.emergency_contact_relationship || '',
-      medical_history: patient.medical_history || '',
-      allergies: patient.allergies || [],
-      medications: patient.medications || [],
-      special_requirements: patient.special_requirements || '',
-      notes: patient.notes || '',
+      date_of_birth: patient.date_of_birth || '',
+      gender: patient.gender || '',
+      phone: patient.contact_info?.phone || '',
+      address: patient.contact_info?.address || '',
+      emergency_contact_name: patient.contact_info?.emergency_contact?.name || '',
+      emergency_contact_phone: patient.contact_info?.emergency_contact?.phone || '',
+      emergency_contact_relationship: patient.contact_info?.emergency_contact?.relationship || '',
+      medical_history: patient.additional_info?.medical_history || '',
+      allergies: patient.additional_info?.allergies || [],
+      medications: patient.additional_info?.medications || [],
+      special_needs: patient.additional_info?.special_needs || '',
+      notes: patient.additional_info?.notes || '',
     }
   })
 
   // 알레르기와 약물 목록을 문자열로 초기화
   useEffect(() => {
-    if (patient.allergies) {
-      setAllergiesInput(patient.allergies.join(', '))
+    if (patient.additional_info?.allergies) {
+      setAllergiesInput(patient.additional_info.allergies.join(', '))
     }
-    if (patient.medications) {
-      setMedicationsInput(patient.medications.join(', '))
+    if (patient.additional_info?.medications) {
+      setMedicationsInput(patient.additional_info.medications.join(', '))
     }
   }, [patient])
 
@@ -100,11 +102,26 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
         .filter(item => item.length > 0)
 
       const updateData = {
-        ...data,
-        allergies: allergiesArray,
-        medications: medicationsArray,
-        email: data.email || null, // 빈 문자열을 null로 변환
-        updated_at: new Date().toISOString()
+        full_name: data.full_name,
+        patient_identifier: data.patient_identifier,
+        date_of_birth: data.date_of_birth || null,
+        gender: data.gender || null,
+        contact_info: {
+          phone: data.phone || null,
+          address: data.address || null,
+          emergency_contact: (data.emergency_contact_name || data.emergency_contact_phone) ? {
+            name: data.emergency_contact_name || '',
+            phone: data.emergency_contact_phone || '',
+            relationship: data.emergency_contact_relationship || ''
+          } : null
+        },
+        additional_info: {
+          medical_history: data.medical_history || null,
+          allergies: allergiesArray,
+          medications: medicationsArray,
+          special_needs: data.special_needs || null,
+          notes: data.notes || null
+        }
       }
 
       await updatePatientMutation.mutateAsync({
@@ -175,6 +192,32 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
                   </p>
                 )}
               </div>
+
+              <div>
+                <Label htmlFor="date_of_birth">생년월일</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  {...form.register('date_of_birth')}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="gender">성별</Label>
+                <Select
+                  value={form.watch('gender') || ''}
+                  onValueChange={(value) => form.setValue('gender', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="성별 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">남성</SelectItem>
+                    <SelectItem value="female">여성</SelectItem>
+                    <SelectItem value="other">기타</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -197,21 +240,6 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
               </div>
 
               <div>
-                <Label htmlFor="email">이메일</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...form.register('email')}
-                  placeholder="example@email.com"
-                />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
                 <Label htmlFor="address">주소</Label>
                 <Input
                   id="address"
@@ -312,10 +340,10 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
               </div>
 
               <div>
-                <Label htmlFor="special_requirements">특별 요구사항</Label>
+                <Label htmlFor="special_needs">특별 요구사항</Label>
                 <Textarea
-                  id="special_requirements"
-                  {...form.register('special_requirements')}
+                  id="special_needs"
+                  {...form.register('special_needs')}
                   placeholder="특별한 요구사항이나 주의사항을 입력하세요"
                   rows={2}
                 />
