@@ -304,6 +304,18 @@ const GoalSetting: React.FC = () => {
       // 아카이빙된 목표를 DetailedGoals 형식으로 변환
       const convertedGoals = GoalService.convertArchivedToDetailedGoals(archivedGoalData);
       
+      // 아카이빙된 목표를 사용할 때도 평가 데이터 저장
+      if (selectedPatient && formData) {
+        try {
+          const savedAssessment = await saveAssessmentMutation.mutateAsync({ formData });
+          setCurrentAssessmentId(savedAssessment.id);
+          console.log('✅ 아카이빙 목표용 평가 저장 완료:', savedAssessment.id);
+        } catch (error) {
+          console.error('평가 저장 실패:', error);
+          // 평가 저장이 실패해도 계속 진행 (아카이빙된 목표는 평가 없이도 사용 가능)
+        }
+      }
+      
       setSelectedArchivedGoal(archivedGoal);
       setDetailedGoals(convertedGoals);
       setShowArchivedSelection(false);
@@ -328,8 +340,14 @@ const GoalSetting: React.FC = () => {
     console.log('현재 평가 ID:', currentAssessmentId);
     console.log('AI 추천 ID:', recommendationId);
     
-    if (!selectedPatient || !detailedGoals || !currentAssessmentId) {
+    if (!selectedPatient || !detailedGoals) {
       alert(MESSAGES.error.missingData);
+      return;
+    }
+    
+    // AI 생성 목표일 때만 currentAssessmentId 필요
+    if (!selectedArchivedGoal && !currentAssessmentId) {
+      alert('AI 생성 목표에는 평가 ID가 필요합니다.');
       return;
     }
 
