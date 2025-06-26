@@ -17,12 +17,14 @@ import GoalDetailDisplay from '@/components/GoalSetting/GoalDetailDisplay';
 import PageHeader from '@/components/GoalSetting/PageHeader';
 import AIRecommendationSelection from '@/components/GoalSetting/AIRecommendationSelection';
 import GoalDetailView from '@/components/GoalSetting/GoalDetailView';
+import { ArchivedGoalSelection } from '@/components/GoalSetting/ArchivedGoalSelection';
 
 // Custom Hooks
 import { useGoalSettingFlow, useAIPolling, useAssessmentSave } from '@/hooks/GoalSetting';
 
 // Services
 import { AssessmentService, AIRecommendationService, GoalService } from '@/services/goalSetting';
+import { AIRecommendationArchiveService, type ArchivedRecommendation } from '@/services/ai-recommendation-archive';
 
 // Utils and Constants
 import { MESSAGES } from '@/utils/GoalSetting/constants';
@@ -54,6 +56,8 @@ const GoalSetting: React.FC = () => {
   // 추가 상태 (훅으로 옮기지 않은 것들)
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [aiRecommendations, setAiRecommendations] = useState<Record<string, unknown> | null>(null);
+  const [showArchivedSelection, setShowArchivedSelection] = useState<boolean>(false);
+  const [selectedArchivedGoal, setSelectedArchivedGoal] = useState<ArchivedRecommendation | null>(null);
   
   // AI 응답 파싱 훅
   const { parseAIResponse } = useAIResponseParser();
@@ -279,8 +283,29 @@ const GoalSetting: React.FC = () => {
 
   const handleAssessmentSubmit = () => {
     if (isFormValid()) {
-      handleGetAIRecommendation();
+      // 평가 완료 후 아카이빙된 목표 선택 화면으로
+      setShowArchivedSelection(true);
     }
+  };
+
+  // 아카이빙된 목표 선택 핸들러
+  const handleSelectArchivedGoal = async (archivedGoal: ArchivedRecommendation) => {
+    console.log('📦 아카이빙된 목표 선택:', archivedGoal);
+    setSelectedArchivedGoal(archivedGoal);
+    
+    // 아카이빙된 목표를 DetailedGoals 형식으로 변환
+    const archivedGoalData = archivedGoal.archived_goal_data[0];
+    const convertedGoals = GoalService.convertArchivedToDetailedGoals(archivedGoalData);
+    
+    setDetailedGoals(convertedGoals);
+    setShowArchivedSelection(false);
+    setCurrentStep(5); // 완료 단계로 이동
+  };
+
+  // AI 생성 선택 핸들러
+  const handleGenerateNewGoals = () => {
+    setShowArchivedSelection(false);
+    handleGetAIRecommendation();
   };
 
   // 목표 저장 함수
@@ -304,34 +329,47 @@ const GoalSetting: React.FC = () => {
       // 1. 기존 active 계획을 inactive로 변경
       await GoalService.deactivateExistingGoals(selectedPatient);
 
-      // 2. AI 추천 ID 가져오기
-      let aiRecommendationId = recommendationId;
-      if (!aiRecommendationId && currentAssessmentId) {
-        aiRecommendationId = await AIRecommendationService.getRecommendationIdByAssessment(currentAssessmentId);
+      // 아카이빙된 목표 vs AI 생성 목표 처리
+      if (selectedArchivedGoal) {
+        // 아카이빙된 목표 사용
+        console.log('📦 아카이빙된 목표로 저장');
+        await GoalService.createGoalsFromArchived(
+          selectedArchivedGoal.archived_goal_data[0],
+          selectedPatient,
+          currentUserId,
+          selectedArchivedGoal.id
+        );
+      } else {
+        // AI 생성 목표 사용
+        // 2. AI 추천 ID 가져오기
+        let aiRecommendationId = recommendationId;
+        if (!aiRecommendationId && currentAssessmentId) {
+          aiRecommendationId = await AIRecommendationService.getRecommendationIdByAssessment(currentAssessmentId);
+        }
+
+        // 3. AI 추천 상태 업데이트
+        if (aiRecommendationId) {
+          await AIRecommendationService.updateRecommendationStatus(aiRecommendationId, {
+            is_active: true,
+            applied_at: new Date().toISOString(),
+            applied_by: currentUserId,
+            selected_plan_number: detailedGoals.selectedIndex + 1
+          });
+        }
+
+        // 4. 계층적 목표 생성 및 저장
+        const goalsToInsert = GoalService.createHierarchicalGoals(
+          detailedGoals,
+          selectedPatient,
+          aiRecommendationId,
+          currentUserId
+        );
+        
+        await GoalService.saveGoals(goalsToInsert);
       }
 
-      // 3. AI 추천 상태 업데이트
-      if (aiRecommendationId) {
-        await AIRecommendationService.updateRecommendationStatus(aiRecommendationId, {
-          is_active: true,
-          applied_at: new Date().toISOString(),
-          applied_by: currentUserId,
-          selected_plan_number: detailedGoals.selectedIndex + 1
-        });
-      }
-
-      // 4. 계층적 목표 생성 및 저장
-      const goalsToInsert = GoalService.createHierarchicalGoals(
-        detailedGoals,
-        selectedPatient,
-        aiRecommendationId,
-        currentUserId
-      );
-      
-      await GoalService.saveGoals(goalsToInsert);
-
-      // 4.5. 선택되지 않은 AI 목표들 아카이빙
-      if (aiRecommendations && aiRecommendationId && detailedGoals.selectedIndex !== undefined) {
+      // 4.5. 선택되지 않은 AI 목표들 아카이빙 (AI 생성 목표인 경우만)
+      if (aiRecommendations && recommendationId && detailedGoals.selectedIndex !== undefined && !selectedArchivedGoal) {
         try {
           console.log('🗄️ 선택되지 않은 목표들 아카이빙 시작');
           
@@ -366,7 +404,7 @@ const GoalSetting: React.FC = () => {
 
             // 아카이빙 실행
             const { error: archiveError } = await supabase.from('ai_recommendation_archive').insert({
-              original_recommendation_id: aiRecommendationId,
+              original_recommendation_id: recommendationId,
               original_assessment_id: currentAssessmentId,
               archived_goal_data: unselectedGoals,
               patient_age_range: patientAge ? getAgeRange(patientAge) : null,
@@ -406,6 +444,8 @@ const GoalSetting: React.FC = () => {
       
       // 초기 상태로 리셋
       resetFlow();
+      setShowArchivedSelection(false);
+      setSelectedArchivedGoal(null);
       
       // 환자 목록 새로고침
       refetch();
@@ -477,7 +517,7 @@ const GoalSetting: React.FC = () => {
           />
         )}
 
-        {currentStep === 2 && (
+        {currentStep === 2 && !showArchivedSelection && (
           <AssessmentStep
             formData={formData}
             selectedPatient={selectedPatient}
@@ -491,6 +531,24 @@ const GoalSetting: React.FC = () => {
             onNext={handleAssessmentSubmit}
             onBack={() => setCurrentStep(1)}
             isProcessing={isProcessing}
+          />
+        )}
+
+        {currentStep === 2 && showArchivedSelection && selectedPatient && (
+          <ArchivedGoalSelection
+            patientAge={(() => {
+              const patient = patients.find(p => p.id === selectedPatient);
+              if (!patient?.birth_date) return undefined;
+              return new Date().getFullYear() - new Date(patient.birth_date).getFullYear();
+            })()}
+            patientGender={patients.find(p => p.id === selectedPatient)?.gender}
+            diagnosisCategory={(() => {
+              const patient = patients.find(p => p.id === selectedPatient);
+              return patient?.diagnosis ? simplifyDiagnosis(patient.diagnosis) : undefined;
+            })()}
+            onSelectArchived={handleSelectArchivedGoal}
+            onGenerateNew={handleGenerateNewGoals}
+            onBack={() => setShowArchivedSelection(false)}
           />
         )}
 

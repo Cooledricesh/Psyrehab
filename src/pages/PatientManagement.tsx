@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { getPatients, getPatientStats, updatePatientStatus } from '@/services/patient-management'
 import type { Patient, PatientStats } from '@/services/patient-management'
 import PatientRegistrationModal from '@/components/PatientRegistrationModal'
-import PatientUnifiedModal from '@/components/PatientUnifiedModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
 import { GoalService } from '@/services/goalSetting';
 
 export default function PatientManagement() {
+  const navigate = useNavigate()
   const [patients, setPatients] = useState<Patient[]>([])
   const [stats, setStats] = useState<PatientStats>({
     totalPatients: 0,
@@ -20,8 +21,6 @@ export default function PatientManagement() {
   
   // 모달 상태 관리
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
-  const [isUnifiedModalOpen, setIsUnifiedModalOpen] = useState(false)
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -52,10 +51,9 @@ export default function PatientManagement() {
     }
   }
 
-  // 모달 핸들러들
+  // 상세 페이지로 이동
   const handleViewDetail = (patientId: string) => {
-    setSelectedPatientId(patientId)
-    setIsUnifiedModalOpen(true)
+    navigate(`/patients/${patientId}`)
   }
 
 
@@ -87,12 +85,7 @@ export default function PatientManagement() {
 
   const handleCloseModals = () => {
     setIsRegistrationModalOpen(false)
-    setIsUnifiedModalOpen(false)
-    setSelectedPatientId(null)
-  }
-
-  const handleRefreshData = () => {
-    fetchData()
+    fetchData() // 데이터 새로고침
   }
 
   const getGenderText = (gender: string) => {
@@ -337,7 +330,7 @@ export default function PatientManagement() {
                           onClick={() => handleViewDetail(patient.id)}
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          상세
+                          상세보기
                         </button>
                         {patient.status !== 'completed' && (
                           <button
@@ -365,21 +358,12 @@ export default function PatientManagement() {
         )}
       </div>
 
-      {/* 모달들 */}
+      {/* 환자 등록 모달 */}
       <PatientRegistrationModal
         isOpen={isRegistrationModalOpen}
         onClose={handleCloseModals}
-        onSuccess={handleRefreshData}
+        onSuccess={handleCloseModals}
       />
-
-      {selectedPatientId && (
-        <PatientUnifiedModal
-          isOpen={isUnifiedModalOpen}
-          onClose={handleCloseModals}
-          patientId={selectedPatientId}
-          onSuccess={handleRefreshData}
-        />
-      )}
     </div>
   )
 } 

@@ -78,4 +78,8 @@ export type {
 // export { WeeklyCheckInService } from './weekly-check-ins'
 
 // AI Services
-// export { AIRecommendationService } from './ai-recommendations' 
+// export { AIRecommendationService } from './ai-recommendations'
+
+// AI Recommendation Archive Service
+export { AIRecommendationArchiveService } from './ai-recommendation-archive'
+export type { ArchivedRecommendation, ArchivedGoalData, ArchiveRecommendationParams } from './ai-recommendation-archive' 

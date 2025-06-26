@@ -118,40 +118,31 @@ export class PatientService {
 
   // 환자 상세 조회
   static async getPatient(id: string) {
-    const { data, error } = await supabase
+    // 먼저 환자 정보만 가져오기
+    const { data: patientData, error: patientError } = await supabase
       .from('patients')
-      .select(`
-        *,
-        primary_social_worker:social_workers!primary_social_worker_id(
-          id,
-          full_name,
-          employee_id,
-          department,
-          contact_number
-        ),
-        assessments(
-          id,
-          assessment_date,
-          motivation_level,
-          focus_time,
-          social_preference
-        ),
-        rehabilitation_goals(
-          id,
-          title,
-          goal_type,
-          status,
-          created_at
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single()
 
-    if (error) {
-      throw new Error(`환자 정보를 가져오는 중 오류가 발생했습니다: ${error.message}`)
+    if (patientError) {
+      throw new Error(`환자 정보를 가져오는 중 오류가 발생했습니다: ${patientError.message}`)
     }
 
-    return data
+    // 담당 사회복지사 정보가 있으면 별도로 조회
+    if (patientData?.primary_social_worker_id) {
+      const { data: socialWorkerData, error: socialWorkerError } = await supabase
+        .from('social_workers')
+        .select('user_id, full_name, employee_id, department, contact_number, email')
+        .eq('user_id', patientData.primary_social_worker_id)
+        .single()
+
+      if (!socialWorkerError && socialWorkerData) {
+        patientData.primary_social_worker = socialWorkerData
+      }
+    }
+
+    return patientData
   }
 
   // 환자 등록

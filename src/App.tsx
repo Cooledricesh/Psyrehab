@@ -20,6 +20,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard'
 import UserManagement from '@/pages/admin/UserManagement'
 import PatientAssignment from '@/pages/admin/PatientAssignment'
 import AIArchivePage from '@/pages/admin/AIArchivePage'
+import { PatientDetailPage } from '@/pages/PatientDetailPage'
 
 // 인증 페이지 컴포넌트
 import LoginPage from '@/pages/auth/LoginPage'
@@ -67,6 +68,7 @@ function App() {
                       <Route path="/" element={<Home />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/patient-management" element={<PatientManagement />} />
+                      <Route path="/patients/:id" element={<PatientDetailPage />} />
                       <Route path="/goal-setting" element={<GoalSetting />} />
                       <Route path="/progress-tracking" element={<ProgressTracking />} />
                       <Route path="/reports" element={<Reports />} />

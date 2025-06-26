@@ -3,10 +3,20 @@ import { Input } from './input'
 import { cn } from '@/lib/utils'
 import { 
   useMaskedInput, 
-  MaskType, 
-  FormatOptions,
-  calculateCursorPosition 
+  calculateCursorPosition,
+  MASK_PATTERNS
 } from '@/lib/formatting/input-masking'
+
+// Type definitions
+type MaskType = keyof typeof MASK_PATTERNS
+interface FormatOptions {
+  mask?: string
+  placeholder?: string
+  allowEmpty?: boolean
+  transform?: 'uppercase' | 'lowercase' | 'capitalize'
+  maxLength?: number
+  minLength?: number
+}
 
 // =============================================================================
 // MASKED INPUT COMPONENT

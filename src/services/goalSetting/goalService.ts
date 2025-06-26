@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import type { ArchivedGoalData } from '@/services/ai-recommendation-archive';
 
 export interface GoalData {
   id: string;
@@ -177,5 +178,65 @@ export class GoalService {
       console.error("Error occurred");
       throw error;
     }
+  }
+
+  /**
+   * 아카이빙된 목표를 DetailedGoals 형식으로 변환
+   */
+  static convertArchivedToDetailedGoals(archivedGoal: ArchivedGoalData): DetailedGoals {
+    return {
+      selectedIndex: 0,
+      sixMonthGoal: {
+        goal: archivedGoal.sixMonthGoal,
+        title: archivedGoal.title,
+        details: archivedGoal.purpose
+      },
+      monthlyGoals: archivedGoal.monthlyGoals.map(mg => ({
+        goal: mg.goal,
+        title: `${mg.month}개월차 목표`,
+        activities: [],
+        month: mg.month
+      })),
+      weeklyGoals: archivedGoal.weeklyPlans.map(wp => ({
+        plan: wp.plan,
+        title: `${wp.week}주차 계획`,
+        week: wp.week,
+        month: wp.month
+      }))
+    };
+  }
+
+  /**
+   * 아카이빙된 목표를 활성 목표로 생성
+   */
+  static async createGoalsFromArchived(
+    archivedGoal: ArchivedGoalData,
+    patientId: string,
+    userId: string,
+    originalArchiveId: string
+  ): Promise<void> {
+    console.log('🔄 아카이빙된 목표를 활성 목표로 변환:', archivedGoal.title);
+
+    // 1. 기존 활성 목표 비활성화
+    await this.deactivateExistingGoals(patientId);
+
+    // 2. 아카이빙된 목표를 DetailedGoals 형식으로 변환
+    const detailedGoals = this.convertArchivedToDetailedGoals(archivedGoal);
+
+    // 3. 계층적 목표 데이터 생성 (source_recommendation_id에 archive ID 저장)
+    const goalsToInsert = this.createHierarchicalGoals(
+      detailedGoals,
+      patientId,
+      originalArchiveId, // 아카이브 ID를 source로 사용
+      userId
+    );
+
+    // 4. 목표 저장
+    await this.saveGoals(goalsToInsert);
+
+    // 5. 환자 상태 활성화
+    await this.activatePatient(patientId);
+
+    console.log('✅ 아카이빙된 목표에서 활성 목표 생성 완료');
   }
 }

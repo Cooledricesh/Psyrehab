@@ -1,6 +1,7 @@
 import React from 'react'
 import { usePatient } from '@/hooks/usePatients'
 import { Button } from '@/components/ui'
+import { CompletedGoalsSection } from './CompletedGoalsSection'
 
 interface PatientDetailProps {
   patientId: string
@@ -295,6 +296,9 @@ export function PatientDetail({ patientId, onEdit, onDelete, onBack }: PatientDe
             </div>
           </section>
         )}
+
+        {/* 완료된 목표 섹션 */}
+        <CompletedGoalsSection patientId={patientId} />
       </div>
     </div>
   )

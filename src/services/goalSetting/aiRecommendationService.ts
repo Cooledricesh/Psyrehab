@@ -76,7 +76,9 @@ export class AIRecommendationService {
         age: assessment.patient.date_of_birth ? 
           Math.floor((new Date().getTime() - new Date(assessment.patient.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null,
         gender: assessment.patient.gender || null,
-        diagnosis: assessment.patient.additional_info?.diagnosis || null
+        diagnosis: assessment.patient.additional_info?.primary_diagnosis || 
+                   assessment.patient.additional_info?.diagnosis || 
+                   null
       },
       assessmentData: {
         focusTime: assessment.focus_time,

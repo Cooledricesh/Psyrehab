@@ -170,6 +170,52 @@ export class AIRecommendationArchiveService {
   }
 
   /**
+   * 환자 프로필과 유사한 아카이빙된 목표 검색
+   */
+  static async searchArchivedGoalsByProfile({
+    ageRange,
+    diagnosisCategory,
+    gender,
+    limit = 10
+  }: {
+    ageRange?: string;
+    diagnosisCategory?: string;
+    gender?: string;
+    limit?: number;
+  }): Promise<ArchivedRecommendation[]> {
+    console.log('🔍 아카이빙된 목표 검색:', { ageRange, diagnosisCategory, gender });
+
+    let query = supabase
+      .from('ai_recommendation_archive')
+      .select('*')
+      .eq('archived_reason', 'goal_not_selected'); // 선택되지 않은 목표만 조회
+
+    // 필터 적용
+    if (ageRange) {
+      query = query.eq('patient_age_range', ageRange);
+    }
+    if (diagnosisCategory) {
+      query = query.eq('diagnosis_category', diagnosisCategory);
+    }
+    if (gender) {
+      query = query.eq('patient_gender', gender);
+    }
+
+    // 최신 항목부터 조회
+    const { data, error } = await query
+      .order('archived_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('❌ 아카이빙된 목표 검색 실패:', error);
+      throw error;
+    }
+
+    console.log(`✅ ${data?.length || 0}개의 아카이빙된 목표 검색 완료`);
+    return data || [];
+  }
+
+  /**
    * 아카이빙 통계 조회
    */
   static async getArchiveStatistics(): Promise<{
@@ -207,9 +253,9 @@ export class AIRecommendationArchiveService {
 
       return {
         totalArchived: totalArchived || 0,
-        byDiagnosis: this.groupByField(diagnosisStats, 'diagnosis_category'),
-        byAgeRange: this.groupByField(ageStats, 'patient_age_range'),
-        recentTrends: this.calculateDailyTrends(recentData)
+        byDiagnosis: this.groupByField(diagnosisStats || [], 'diagnosis_category'),
+        byAgeRange: this.groupByField(ageStats || [], 'patient_age_range'),
+        recentTrends: this.calculateDailyTrends(recentData || [])
       };
 
     } catch (error) {
@@ -237,8 +283,8 @@ export class AIRecommendationArchiveService {
     ];
 
     for (const [min, max, range] of ranges) {
-      if (age >= min && age <= max) {
-        return range;
+      if (age >= Number(min) && age <= Number(max)) {
+        return range as string;
       }
     }
     
@@ -277,7 +323,4 @@ export class AIRecommendationArchiveService {
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }
-}
-
-// 타입 재내보내기 (모듈 캐시 문제 해결용)
-export type { ArchivedRecommendation, ArchivedGoalData, ArchiveRecommendationParams }; 
+} 
