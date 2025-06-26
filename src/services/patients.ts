@@ -133,7 +133,7 @@ export class PatientService {
     if (patientData?.primary_social_worker_id) {
       const { data: socialWorkerData, error: socialWorkerError } = await supabase
         .from('social_workers')
-        .select('user_id, full_name, employee_id, department, contact_number, email')
+        .select('user_id, full_name, employee_id, department, contact_number')
         .eq('user_id', patientData.primary_social_worker_id)
         .single()
 

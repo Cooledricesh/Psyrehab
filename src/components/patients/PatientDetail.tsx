@@ -12,6 +12,7 @@ interface PatientDetailProps {
 
 export function PatientDetail({ patientId, onEdit, onDelete, onBack }: PatientDetailProps) {
   const { data: patient, isLoading, error, refetch } = usePatient(patientId)
+  
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -167,15 +168,8 @@ export function PatientDetail({ patientId, onEdit, onDelete, onBack }: PatientDe
                 </p>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">이메일</label>
-                <p className="text-gray-900">
-                  {patient.contact_info.email || '미지정'}
-                </p>
-              </div>
-              
               {patient.contact_info.address && (
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">주소</label>
                   <p className="text-gray-900">{patient.contact_info.address}</p>
                 </div>
@@ -212,14 +206,33 @@ export function PatientDetail({ patientId, onEdit, onDelete, onBack }: PatientDe
           <h2 className="text-lg font-semibold text-gray-900 mb-4">담당 사회복지사</h2>
           <div className="bg-gray-50 p-4 rounded-lg">
             {patient.primary_social_worker ? (
-              <div className="flex items-center space-x-4">
-                <div>
-                  <p className="font-medium text-gray-900">{patient.primary_social_worker.full_name}</p>
-                  <p className="text-sm text-gray-600">{patient.primary_social_worker.email}</p>
-                </div>
+              <div className="flex justify-between items-center">
+                <p className="font-medium text-gray-900">{patient.primary_social_worker.full_name}</p>
+                {onEdit && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onEdit}
+                  >
+                    변경
+                  </Button>
+                )}
               </div>
+            ) : patient.primary_social_worker_id ? (
+              <p className="text-gray-500">담당 사회복지사 정보를 불러올 수 없습니다.</p>
             ) : (
-              <p className="text-gray-500">담당 사회복지사가 배정되지 않았습니다.</p>
+              <div className="flex justify-between items-center">
+                <p className="text-gray-500">담당 사회복지사가 배정되지 않았습니다.</p>
+                {onEdit && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onEdit}
+                  >
+                    배정
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </section>

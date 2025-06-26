@@ -31,20 +31,22 @@ export async function getPatientRehabilitationGoals(patientId: string) {
   return data
 }
 
-// Get completed rehabilitation goals for a patient
+// Get completed rehabilitation goals for a patient (6-month goals only)
 export async function getPatientCompletedGoals(patientId: string) {
   const { data, error } = await supabase
     .from('rehabilitation_goals')
     .select('*')
     .eq('patient_id', patientId)
     .eq('status', 'completed')
+    .eq('goal_type', 'six_month')
     .order('completion_date', { ascending: false })
 
   if (error) throw error
   
-  // 각 목표에 대해 생성자 정보 추가
+  // 각 목표에 대해 생성자 정보 추가 및 실제 달성률 계산
   if (data && data.length > 0) {
     for (const goal of data) {
+      // 생성자 정보 추가
       if (goal.created_by_social_worker_id) {
         const { data: socialWorker } = await supabase
           .from('social_workers')
@@ -54,6 +56,43 @@ export async function getPatientCompletedGoals(patientId: string) {
         
         if (socialWorker) {
           goal.created_by = socialWorker
+        }
+      }
+      
+      // 6개월 목표의 하위 주간 목표들을 찾아서 달성률 계산
+      // 먼저 월간 목표들을 찾고, 그 하위의 주간 목표들을 찾아야 함
+      const { data: monthlyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('parent_goal_id', goal.id)
+        .eq('goal_type', 'monthly')
+      
+      if (monthlyGoals && monthlyGoals.length > 0) {
+        let totalWeeklyGoals = 0
+        let completedWeeklyGoals = 0
+        
+        // 각 월간 목표의 주간 목표들 확인
+        for (const monthlyGoal of monthlyGoals) {
+          const { data: weeklyGoals } = await supabase
+            .from('rehabilitation_goals')
+            .select('id, status')
+            .eq('parent_goal_id', monthlyGoal.id)
+            .eq('goal_type', 'weekly')
+          
+          if (weeklyGoals) {
+            totalWeeklyGoals += weeklyGoals.length
+            completedWeeklyGoals += weeklyGoals.filter(g => g.status === 'completed').length
+          }
+        }
+        
+        // 24개 주간 목표를 기준으로 달성률 계산 (없으면 0%)
+        const calculatedRate = totalWeeklyGoals > 0 
+          ? Math.round((completedWeeklyGoals / 24) * 100) 
+          : 0
+        
+        // 저장된 달성률이 0이거나 없으면 계산된 값 사용
+        if (!goal.actual_completion_rate || goal.actual_completion_rate === 0) {
+          goal.actual_completion_rate = calculatedRate
         }
       }
     }

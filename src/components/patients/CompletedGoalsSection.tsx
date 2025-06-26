@@ -1,9 +1,9 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getPatientCompletedGoals, getGoalTypeLabel, getGoalStatusColor } from '@/services/rehabilitation-goals'
+import { getPatientCompletedGoals, getGoalStatusColor } from '@/services/rehabilitation-goals'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CalendarDays, Target, CheckCircle2 } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Trophy } from 'lucide-react'
 
 interface CompletedGoalsSectionProps {
   patientId: string
@@ -15,6 +15,7 @@ export function CompletedGoalsSection({ patientId }: CompletedGoalsSectionProps)
     queryFn: () => getPatientCompletedGoals(patientId),
     enabled: !!patientId
   })
+  
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '날짜 미지정'
@@ -77,8 +78,8 @@ export function CompletedGoalsSection({ patientId }: CompletedGoalsSectionProps)
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
-          완료된 목표
+          <Trophy className="h-5 w-5 text-green-600" />
+          완료된 재활 목표
           {completedGoals && completedGoals.length > 0 && (
             <Badge variant="secondary" className="ml-2">
               {completedGoals.length}개
@@ -96,29 +97,26 @@ export function CompletedGoalsSection({ patientId }: CompletedGoalsSectionProps)
             {completedGoals.map((goal) => (
               <div
                 key={goal.id}
-                className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                className="border rounded-lg p-4 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-all"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{goal.title}</h4>
+                    <h4 className="font-semibold text-gray-900 text-lg">{goal.title}</h4>
                     {goal.description && (
                       <p className="text-sm text-gray-600 mt-1">{goal.description}</p>
                     )}
                   </div>
-                  <Badge 
-                    className="ml-2"
-                    style={{ backgroundColor: getGoalStatusColor('completed') }}
-                  >
-                    완료
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <Badge 
+                      className="bg-green-600 text-white"
+                    >
+                      달성 완료
+                    </Badge>
+                  </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600 mt-3">
-                  <div className="flex items-center gap-1">
-                    <Target className="h-4 w-4" />
-                    <span>{getGoalTypeLabel(goal.goal_type)}</span>
-                  </div>
-                  
                   <div className="flex items-center gap-1">
                     <CalendarDays className="h-4 w-4" />
                     <span>완료일: {formatDate(goal.completion_date)}</span>
@@ -139,18 +137,18 @@ export function CompletedGoalsSection({ patientId }: CompletedGoalsSectionProps)
                   </div>
                 )}
                 
-                {goal.actual_completion_rate !== undefined && (
+                {goal.actual_completion_rate !== undefined && goal.actual_completion_rate !== null && (
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-gray-600">달성률</span>
-                      <span className="font-medium text-green-600">
-                        {goal.actual_completion_rate}%
+                      <span className="text-gray-600 font-medium">최종 달성률</span>
+                      <span className="font-bold text-green-600 text-lg">
+                        {goal.actual_completion_rate || 0}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-3">
                       <div
-                        className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${goal.actual_completion_rate}%` }}
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-300"
+                        style={{ width: `${goal.actual_completion_rate || 0}%` }}
                       />
                     </div>
                   </div>

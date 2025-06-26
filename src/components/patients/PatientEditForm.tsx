@@ -21,7 +21,6 @@ import {
   CheckCircle2
 } from 'lucide-react'
 import { useUpdatePatient } from '@/hooks/usePatients'
-import type { Patient } from '@/types/database'
 
 // 환자 정보 편집을 위한 스키마
 const patientEditSchema = z.object({
@@ -47,7 +46,7 @@ const patientEditSchema = z.object({
 type PatientEditFormData = z.infer<typeof patientEditSchema>
 
 interface PatientEditFormProps {
-  patient: Patient
+  patient: any
   onSuccess?: () => void
   onCancel?: () => void
 }

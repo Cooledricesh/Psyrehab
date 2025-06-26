@@ -27,7 +27,7 @@ export function usePatient(id: string) {
     queryKey: patientQueryKeys.detail(id),
     queryFn: () => PatientService.getPatient(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5분
+    staleTime: 0, // 항상 최신 데이터를 가져오도록 설정
     retry: 2,
   })
 }
@@ -119,8 +119,9 @@ export function useAssignSocialWorker() {
   return useMutation({
     mutationFn: ({ patientId, socialWorkerId }: { patientId: string; socialWorkerId: string }) =>
       PatientService.assignSocialWorker(patientId, socialWorkerId),
-    onSuccess: (_, { patientId }) => {
-      // 해당 환자 상세 쿼리 무효화
+    onSuccess: (updatedPatient, { patientId }) => {
+      // 해당 환자 상세 쿼리 무효화 및 즉시 업데이트
+      queryClient.setQueryData(patientQueryKeys.detail(patientId), updatedPatient)
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.detail(patientId) })
       // 환자 목록 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.lists() })
