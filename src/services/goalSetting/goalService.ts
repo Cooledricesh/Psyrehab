@@ -17,6 +17,8 @@ export interface GoalData {
   source_recommendation_id: string | null;
   is_from_ai_recommendation: boolean;
   created_by_social_worker_id: string;
+  is_from_archived?: boolean;
+  archived_goal_id?: string;
 }
 
 export interface DetailedGoals {
@@ -184,21 +186,30 @@ export class GoalService {
    * 아카이빙된 목표를 DetailedGoals 형식으로 변환
    */
   static convertArchivedToDetailedGoals(archivedGoal: ArchivedGoalData): DetailedGoals {
+    // 필수 데이터 검증
+    if (!archivedGoal || !archivedGoal.sixMonthGoal || !archivedGoal.title) {
+      throw new Error('아카이빙된 목표에 필요한 데이터가 없습니다.');
+    }
+
+    // monthlyGoals와 weeklyPlans가 배열인지 확인
+    const monthlyGoals = Array.isArray(archivedGoal.monthlyGoals) ? archivedGoal.monthlyGoals : [];
+    const weeklyPlans = Array.isArray(archivedGoal.weeklyPlans) ? archivedGoal.weeklyPlans : [];
+
     return {
       selectedIndex: 0,
       sixMonthGoal: {
         goal: archivedGoal.sixMonthGoal,
         title: archivedGoal.title,
-        details: archivedGoal.purpose
+        details: archivedGoal.purpose || ''
       },
-      monthlyGoals: archivedGoal.monthlyGoals.map(mg => ({
-        goal: mg.goal,
+      monthlyGoals: monthlyGoals.map(mg => ({
+        goal: mg.goal || '',
         title: `${mg.month}개월차 목표`,
         activities: [],
         month: mg.month
       })),
-      weeklyGoals: archivedGoal.weeklyPlans.map(wp => ({
-        plan: wp.plan,
+      weeklyGoals: weeklyPlans.map(wp => ({
+        plan: wp.plan || '',
         title: `${wp.week}주차 계획`,
         week: wp.week,
         month: wp.month
@@ -223,13 +234,19 @@ export class GoalService {
     // 2. 아카이빙된 목표를 DetailedGoals 형식으로 변환
     const detailedGoals = this.convertArchivedToDetailedGoals(archivedGoal);
 
-    // 3. 계층적 목표 데이터 생성 (source_recommendation_id에 archive ID 저장)
+    // 3. 계층적 목표 데이터 생성 (source_recommendation_id는 null로 설정)
     const goalsToInsert = this.createHierarchicalGoals(
       detailedGoals,
       patientId,
-      originalArchiveId, // 아카이브 ID를 source로 사용
+      null, // 아카이빙된 목표는 source_recommendation_id를 null로 설정
       userId
     );
+
+    // 아카이빙된 목표임을 표시하기 위해 메타데이터 추가
+    goalsToInsert.forEach(goal => {
+      goal.is_from_archived = true; // 아카이빙된 목표임을 표시
+      goal.archived_goal_id = originalArchiveId; // 원본 아카이브 ID 저장 (메타데이터용)
+    });
 
     // 4. 목표 저장
     await this.saveGoals(goalsToInsert);

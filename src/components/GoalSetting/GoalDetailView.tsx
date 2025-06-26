@@ -8,6 +8,7 @@ interface GoalDetailViewProps {
   onBack: () => void;
   onSave: () => void;
   onReset: () => void;
+  onNewGoal?: () => void;
   isProcessing: boolean;
 }
 
@@ -18,6 +19,7 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
   onBack,
   onSave,
   onReset,
+  onNewGoal,
   isProcessing,
 }) => {
   return (
@@ -143,7 +145,7 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
             )}
           </button>
           <button
-            onClick={onReset}
+            onClick={onNewGoal || onReset}
             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
             새 목표 설정

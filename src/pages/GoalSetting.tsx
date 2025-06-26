@@ -291,15 +291,27 @@ const GoalSetting: React.FC = () => {
   // 아카이빙된 목표 선택 핸들러
   const handleSelectArchivedGoal = async (archivedGoal: ArchivedRecommendation) => {
     console.log('📦 아카이빙된 목표 선택:', archivedGoal);
-    setSelectedArchivedGoal(archivedGoal);
     
-    // 아카이빙된 목표를 DetailedGoals 형식으로 변환
-    const archivedGoalData = archivedGoal.archived_goal_data[0];
-    const convertedGoals = GoalService.convertArchivedToDetailedGoals(archivedGoalData);
-    
-    setDetailedGoals(convertedGoals);
-    setShowArchivedSelection(false);
-    setCurrentStep(5); // 완료 단계로 이동
+    try {
+      // 아카이빙된 목표 데이터 검증
+      if (!archivedGoal.archived_goal_data || archivedGoal.archived_goal_data.length === 0) {
+        alert('선택한 목표에 데이터가 없습니다.');
+        return;
+      }
+      
+      const archivedGoalData = archivedGoal.archived_goal_data[0];
+      
+      // 아카이빙된 목표를 DetailedGoals 형식으로 변환
+      const convertedGoals = GoalService.convertArchivedToDetailedGoals(archivedGoalData);
+      
+      setSelectedArchivedGoal(archivedGoal);
+      setDetailedGoals(convertedGoals);
+      setShowArchivedSelection(false);
+      setCurrentStep(5); // 완료 단계로 이동
+    } catch (error) {
+      console.error('아카이빙된 목표 변환 오류:', error);
+      alert(error instanceof Error ? error.message : '목표 데이터 변환 중 오류가 발생했습니다.');
+    }
   };
 
   // AI 생성 선택 핸들러
@@ -625,6 +637,15 @@ const GoalSetting: React.FC = () => {
             }}
             onSave={handleSaveGoals}
             onReset={resetFlow}
+            onNewGoal={() => {
+              // 목표 선택 화면으로 이동 (환자는 유지)
+              setCurrentStep(2); // 평가 단계로
+              setDetailedGoals(null);
+              setSelectedGoal('');
+              setAiRecommendations(null);
+              setShowArchivedSelection(false);
+              setSelectedArchivedGoal(null);
+            }}
             isProcessing={isProcessing}
           />
         )}
