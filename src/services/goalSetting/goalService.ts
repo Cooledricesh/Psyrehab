@@ -17,8 +17,6 @@ export interface GoalData {
   source_recommendation_id: string | null;
   is_from_ai_recommendation: boolean;
   created_by_social_worker_id: string;
-  is_from_archived?: boolean;
-  archived_goal_id?: string;
 }
 
 export interface DetailedGoals {
@@ -242,10 +240,9 @@ export class GoalService {
       userId
     );
 
-    // 아카이빙된 목표임을 표시하기 위해 메타데이터 추가
+    // 아카이빙된 목표는 is_from_ai_recommendation을 false로 설정
     goalsToInsert.forEach(goal => {
-      goal.is_from_archived = true; // 아카이빙된 목표임을 표시
-      goal.archived_goal_id = originalArchiveId; // 원본 아카이브 ID 저장 (메타데이터용)
+      goal.is_from_ai_recommendation = false; // 아카이빙된 목표는 AI 추천이 아님
     });
 
     // 4. 목표 저장

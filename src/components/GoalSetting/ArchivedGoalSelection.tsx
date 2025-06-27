@@ -125,6 +125,11 @@ export function ArchivedGoalSelection({
                                 {goal.patient_age_range && `연령대: ${goal.patient_age_range}`}
                                 {goal.patient_gender && ` · 성별: ${goal.patient_gender === 'male' ? '남성' : '여성'}`}
                                 {goal.diagnosis_category && ` · 진단: ${goal.diagnosis_category}`}
+                                {goal.archived_reason === 'successfully_completed' && (
+                                  <span className="ml-2 text-green-600 font-medium">
+                                    ✓ 성공적으로 완료 {goal.completion_rate && `(달성률: ${goal.completion_rate}%)`}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>

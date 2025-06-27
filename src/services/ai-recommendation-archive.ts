@@ -39,6 +39,8 @@ export interface ArchivedRecommendation {
   archived_reason: string;
   created_at: string;
   updated_at: string;
+  completion_rate?: number; // 완료된 목표의 달성률
+  completion_date?: string; // 완료 날짜
 }
 
 /**
@@ -188,7 +190,7 @@ export class AIRecommendationArchiveService {
     let query = supabase
       .from('ai_recommendation_archive')
       .select('*')
-      .eq('archived_reason', 'goal_not_selected'); // 선택되지 않은 목표만 조회
+      .in('archived_reason', ['goal_not_selected', 'successfully_completed']); // 선택되지 않은 목표와 성공적으로 완료된 목표 모두 포함
 
     // 필터 적용
     if (ageRange) {
@@ -201,8 +203,10 @@ export class AIRecommendationArchiveService {
       query = query.eq('patient_gender', gender);
     }
 
-    // 최신 항목부터 조회
+    // 성공적으로 완료된 목표를 우선으로, 그 다음 최신 항목 순으로 정렬
     const { data, error } = await query
+      .order('archived_reason', { ascending: false }) // successfully_completed가 먼저 오도록
+      .order('completion_rate', { ascending: false, nullsFirst: false }) // 완료율 높은 순
       .order('archived_at', { ascending: false })
       .limit(limit);
 
@@ -213,6 +217,139 @@ export class AIRecommendationArchiveService {
 
     console.log(`✅ ${data?.length || 0}개의 아카이빙된 목표 검색 완료`);
     return data || [];
+  }
+
+  /**
+   * 완료된 목표를 아카이빙
+   */
+  static async archiveCompletedGoal(goalId: string): Promise<ArchivedRecommendation | null> {
+    console.log('🎯 완료된 목표 아카이빙 시작:', goalId);
+
+    try {
+      // 1. 완료된 6개월 목표와 관련 데이터 조회
+      const { data: sixMonthGoal, error: goalError } = await supabase
+        .from('rehabilitation_goals')
+        .select(`
+          *,
+          patient:patients!patient_id (
+            birth_date,
+            gender,
+            diagnosis
+          )
+        `)
+        .eq('id', goalId)
+        .eq('goal_type', 'six_month')
+        .eq('status', 'completed')
+        .single();
+
+      if (goalError || !sixMonthGoal) {
+        console.error('❌ 목표 조회 실패:', goalError);
+        return null;
+      }
+
+      // 2. 월간 목표들 조회
+      const { data: monthlyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('*')
+        .eq('parent_goal_id', goalId)
+        .eq('goal_type', 'monthly')
+        .order('sequence_number');
+
+      // 3. 주간 목표들 조회
+      const monthlyGoalIds = monthlyGoals?.map(g => g.id) || [];
+      const { data: weeklyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('*')
+        .in('parent_goal_id', monthlyGoalIds)
+        .eq('goal_type', 'weekly')
+        .order('sequence_number');
+
+      // 4. 아카이빙 데이터 구조 생성
+      const archivedGoalData: ArchivedGoalData = {
+        plan_number: 1,
+        title: sixMonthGoal.title,
+        purpose: sixMonthGoal.description || '성공적으로 완료된 재활 목표',
+        sixMonthGoal: sixMonthGoal.title,
+        monthlyGoals: monthlyGoals?.map(mg => ({
+          month: mg.sequence_number,
+          goal: mg.title
+        })) || [],
+        weeklyPlans: weeklyGoals?.map(wg => {
+          // 해당 주간 목표의 월간 목표 찾기
+          const parentMonthly = monthlyGoals?.find(mg => mg.id === wg.parent_goal_id);
+          return {
+            week: wg.sequence_number,
+            month: parentMonthly?.sequence_number || 1,
+            plan: wg.title
+          };
+        }) || []
+      };
+
+      // 5. 환자 정보 처리
+      const patient = sixMonthGoal.patient;
+      const patientAge = patient?.birth_date 
+        ? new Date().getFullYear() - new Date(patient.birth_date).getFullYear()
+        : undefined;
+
+      // 6. 아카이빙 실행
+      const archiveData = {
+        original_recommendation_id: sixMonthGoal.source_recommendation_id,
+        original_assessment_id: sixMonthGoal.source_recommendation_id || crypto.randomUUID(),
+        archived_goal_data: [archivedGoalData],
+        patient_age_range: this.getAgeRange(patientAge),
+        patient_gender: patient?.gender || null,
+        diagnosis_category: patient?.diagnosis ? this.simplifyDiagnosis(patient.diagnosis) : null,
+        archived_reason: 'successfully_completed',
+        completion_rate: sixMonthGoal.actual_completion_rate || 100,
+        completion_date: sixMonthGoal.completion_date
+      };
+
+      const { data: archived, error: archiveError } = await supabase
+        .from('ai_recommendation_archive')
+        .insert(archiveData)
+        .select()
+        .single();
+
+      if (archiveError) {
+        console.error('❌ 아카이빙 실패:', archiveError);
+        throw archiveError;
+      }
+
+      console.log('✅ 완료된 목표 아카이빙 성공:', archived.id);
+      return archived;
+
+    } catch (error) {
+      console.error('❌ 완료된 목표 아카이빙 중 오류:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 진단명 간소화 (헬퍼 메서드)
+   */
+  private static simplifyDiagnosis(diagnosis: string): string {
+    const lowerDiagnosis = diagnosis.toLowerCase();
+    
+    const categoryMap: Record<string, string[]> = {
+      'cognitive_disorder': ['치매', '인지', '기억', '알츠하이머', 'dementia', 'cognitive'],
+      'mood_disorder': ['우울', '조울', '기분', 'depression', 'bipolar', 'mood'],
+      'anxiety_disorder': ['불안', '공황', 'anxiety', 'panic'],
+      'psychotic_disorder': ['조현병', '정신분열', 'schizophrenia', 'psychotic'],
+      'substance_disorder': ['중독', '알코올', '약물', 'addiction', 'substance'],
+      'developmental_disorder': ['자폐', '발달', 'autism', 'developmental'],
+      'neurological_disorder': ['뇌졸중', '파킨슨', '뇌손상', 'stroke', 'parkinson', 'neurological'],
+      'personality_disorder': ['성격', '인격', 'personality'],
+      'eating_disorder': ['섭식', '식이', 'eating'],
+      'trauma_disorder': ['외상', '트라우마', 'trauma', 'ptsd']
+    };
+
+    for (const [category, keywords] of Object.entries(categoryMap)) {
+      if (keywords.some(keyword => lowerDiagnosis.includes(keyword))) {
+        return category;
+      }
+    }
+
+    return 'other_disorder';
   }
 
   /**

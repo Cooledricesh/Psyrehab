@@ -204,6 +204,17 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       return;
     }
     
+    // 6개월 목표가 완료되면 자동으로 아카이빙
+    if (pendingGoalType === 'six_month') {
+      try {
+        const { AIRecommendationArchiveService } = await import('@/services/ai-recommendation-archive');
+        await AIRecommendationArchiveService.archiveCompletedGoal(pendingGoalId);
+        console.log('✅ 완료된 6개월 목표 자동 아카이빙 성공');
+      } catch (error) {
+        console.error('⚠️ 목표 아카이빙 실패 (메인 플로우는 계속):', error);
+      }
+    }
+    
     setShowConfirmComplete(false);
     setPendingGoalId(null);
     setPendingGoalType(null);
