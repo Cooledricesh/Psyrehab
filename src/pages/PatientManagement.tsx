@@ -337,7 +337,7 @@ export default function PatientManagement() {
                             onClick={() => handleStatusChange(patient.id, 'discharged')}
                             className="text-red-600 hover:text-red-900"
                           >
-                            입원
+                            퇴원
                           </button>
                         )}
                         {patient.status === 'completed' && (

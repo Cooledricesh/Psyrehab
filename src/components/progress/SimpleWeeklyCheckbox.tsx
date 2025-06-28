@@ -189,12 +189,49 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
   const handleConfirmGoalComplete = async () => {
     if (!pendingGoalId || !pendingGoalType) return;
     
+    let completionRate = 100; // 기본값
+    
+    // 6개월 목표인 경우 실제 달성률 계산
+    if (pendingGoalType === 'six_month') {
+      // 월간 목표들 조회
+      const { data: monthlyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('parent_goal_id', pendingGoalId)
+        .eq('goal_type', 'monthly');
+      
+      if (monthlyGoals && monthlyGoals.length > 0) {
+        let totalWeeklyGoals = 0;
+        let completedWeeklyGoals = 0;
+        
+        // 각 월간 목표의 주간 목표들 확인
+        for (const monthlyGoal of monthlyGoals) {
+          const { data: weeklyGoals } = await supabase
+            .from('rehabilitation_goals')
+            .select('id, status')
+            .eq('parent_goal_id', monthlyGoal.id)
+            .eq('goal_type', 'weekly');
+          
+          if (weeklyGoals) {
+            totalWeeklyGoals += weeklyGoals.length;
+            completedWeeklyGoals += weeklyGoals.filter(g => g.status === 'completed').length;
+          }
+        }
+        
+        // 24개 주간 목표를 기준으로 달성률 계산
+        completionRate = totalWeeklyGoals > 0 
+          ? Math.round((completedWeeklyGoals / 24) * 100) 
+          : 0;
+      }
+    }
+    
     // 목표 완료 처리
     const { error: updateError } = await supabase
       .from('rehabilitation_goals')
       .update({ 
         status: 'completed',
-        completion_date: new Date().toISOString().split('T')[0]
+        completion_date: new Date().toISOString().split('T')[0],
+        actual_completion_rate: completionRate
       })
       .eq('id', pendingGoalId);
     

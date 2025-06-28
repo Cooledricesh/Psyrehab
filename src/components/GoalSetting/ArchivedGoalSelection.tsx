@@ -127,7 +127,7 @@ export function ArchivedGoalSelection({
                                 {goal.diagnosis_category && ` · 진단: ${goal.diagnosis_category}`}
                                 {goal.archived_reason === 'successfully_completed' && (
                                   <span className="ml-2 text-green-600 font-medium">
-                                    ✓ 성공적으로 완료 {goal.completion_rate && `(달성률: ${goal.completion_rate}%)`}
+                                    ✓ 성공적으로 완료됨 {goal.completion_rate && `(달성률: ${goal.completion_rate}%)`}
                                   </span>
                                 )}
                               </div>

@@ -39,8 +39,8 @@ export interface ArchivedRecommendation {
   archived_reason: string;
   created_at: string;
   updated_at: string;
-  completion_rate?: number; // 완료된 목표의 달성률
-  completion_date?: string; // 완료 날짜
+  completion_rate?: number | null; // 완료된 목표의 달성률
+  completion_date?: string | null; // 완료 날짜
 }
 
 /**
@@ -292,17 +292,23 @@ export class AIRecommendationArchiveService {
         : undefined;
 
       // 6. 아카이빙 실행
-      const archiveData = {
+      const archiveData: any = {
         original_recommendation_id: sixMonthGoal.source_recommendation_id,
         original_assessment_id: sixMonthGoal.source_recommendation_id || crypto.randomUUID(),
         archived_goal_data: [archivedGoalData],
         patient_age_range: this.getAgeRange(patientAge),
         patient_gender: patient?.gender || null,
         diagnosis_category: patient?.diagnosis ? this.simplifyDiagnosis(patient.diagnosis) : null,
-        archived_reason: 'successfully_completed',
-        completion_rate: sixMonthGoal.actual_completion_rate || 100,
-        completion_date: sixMonthGoal.completion_date
+        archived_reason: 'successfully_completed'
       };
+      
+      // 컬럼이 있을 때만 추가 (마이그레이션 실행 후)
+      if (sixMonthGoal.actual_completion_rate !== undefined) {
+        archiveData.completion_rate = sixMonthGoal.actual_completion_rate || 100;
+      }
+      if (sixMonthGoal.completion_date) {
+        archiveData.completion_date = sixMonthGoal.completion_date;
+      }
 
       const { data: archived, error: archiveError } = await supabase
         .from('ai_recommendation_archive')
