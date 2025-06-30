@@ -87,6 +87,15 @@ export class AIRecommendationArchiveService {
           diagnosis_category: diagnosisCategory || null,
           archived_reason: archivedReason
         };
+        
+        console.log('📦 아카이빙할 데이터:', {
+          ...archiveData,
+          archived_goal_data: archiveData.archived_goal_data
+        });
+        
+        // archived_goal_data가 올바른 형식인지 확인
+        console.log('📦 archived_goal_data 타입:', typeof archiveData.archived_goal_data);
+        console.log('📦 archived_goal_data 내용:', JSON.stringify(archiveData.archived_goal_data));
 
         const { data, error } = await supabase
           .from('ai_recommendation_archive')

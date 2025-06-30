@@ -405,17 +405,31 @@ const GoalSetting: React.FC = () => {
       // 선택된 목표를 아카이빙에서 제외하기 위해 archived_reason 업데이트 (옵션)
       if (recommendationId && detailedGoals.selectedIndex !== undefined && !selectedArchivedGoal) {
         try {
-          const { error: updateError } = await supabase
+          // 선택된 목표만 찾아서 업데이트
+          const { data: archiveToUpdate } = await supabase
             .from('ai_recommendation_archive')
-            .update({ archived_reason: 'goal_selected_and_active' })
+            .select('*')
             .eq('original_recommendation_id', recommendationId)
-            .eq('archived_reason', 'initial_generation')
-            .contains('archived_goal_data', [{ plan_number: detailedGoals.selectedIndex + 1 }]);
+            .eq('archived_reason', 'initial_generation');
+          
+          if (archiveToUpdate && archiveToUpdate.length > 0) {
+            // 선택된 목표 찾기
+            const selectedArchive = archiveToUpdate.find(archive => 
+              archive.archived_goal_data?.[0]?.plan_number === detailedGoals.selectedIndex + 1
+            );
             
-          if (updateError) {
-            console.warn('⚠️ 선택된 목표 아카이빙 상태 업데이트 실패:', updateError);
-          } else {
-            console.log('✅ 선택된 목표 아카이빙 상태 업데이트 성공');
+            if (selectedArchive) {
+              const { error: updateError } = await supabase
+                .from('ai_recommendation_archive')
+                .update({ archived_reason: 'goal_selected_and_active' })
+                .eq('id', selectedArchive.id);
+                
+              if (updateError) {
+                console.warn('⚠️ 선택된 목표 아카이빙 상태 업데이트 실패:', updateError);
+              } else {
+                console.log('✅ 선택된 목표 아카이빙 상태 업데이트 성공');
+              }
+            }
           }
         } catch (error) {
           console.warn('⚠️ 아카이빙 상태 업데이트 오류:', error);
