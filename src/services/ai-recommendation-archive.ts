@@ -210,8 +210,14 @@ export class AIRecommendationArchiveService {
         goalTitle,
         sixMonthGoal,
         recommendation_id: archivedItem.original_recommendation_id,
-        archived_at: archivedItem.archived_at
+        archived_at: archivedItem.archived_at,
+        archived_reason: archivedItem.archived_reason
       });
+
+      // 선택되지 않은 목표는 사용 통계가 없음
+      if (archivedItem.archived_reason === 'goal_not_selected') {
+        return { usage_count: 0, completion_count: 0 };
+      }
 
       if (!goalTitle && !sixMonthGoal && !archivedItem.original_recommendation_id) {
         return { usage_count: 0, completion_count: 0 };
@@ -683,6 +689,12 @@ export class AIRecommendationArchiveService {
         archived_goal_data: archivedItem.archived_goal_data
       });
 
+      // 선택되지 않은 목표는 완료 이력이 없음
+      if (archivedItem.archived_reason === 'goal_not_selected') {
+        console.log('ℹ️ 선택되지 않은 목표로 완료 이력이 없습니다');
+        return { patients: [] };
+      }
+
       if (!goalTitle && !sixMonthGoal && !archivedItem.original_recommendation_id) {
         console.log('❌ 조회할 정보가 없습니다');
         return { patients: [] };
@@ -742,12 +754,10 @@ export class AIRecommendationArchiveService {
         console.log('📋 모든 완료된 6개월 목표 조회:', { count: allGoals?.length, error: allError });
         
         if (!allError && allGoals) {
-          // 클라이언트에서 제목 필터링
+          // 클라이언트에서 제목 필터링 - 정확한 매칭만 사용
           const filtered = allGoals.filter(goal => 
             goal.title && (
               goal.title === sixMonthGoal ||
-              goal.title.includes(sixMonthGoal) ||
-              sixMonthGoal.includes(goal.title) ||
               goal.title.replace(/\.$/, '').trim() === sixMonthGoal.replace(/\.$/, '').trim()
             )
           );
