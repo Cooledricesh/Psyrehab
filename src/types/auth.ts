@@ -1,7 +1,7 @@
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 
 
-export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest'
+export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest' | 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director' | 'attending_physician'
 
 export interface UserProfile {
   user_id: string
@@ -238,6 +238,105 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'update_own_profile',
     'view_own_goals',
     'submit_check_ins'
+  ],
+  staff: [
+    'patient:read',
+    'session:read',
+    'announcement:read',
+    'assessment:read'
+  ],
+  assistant_manager: [
+    'patient:read',
+    'patient:update',
+    'session:create',
+    'session:read',
+    'session:update',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'announcement:read'
+  ],
+  section_chief: [
+    'patient:read',
+    'patient:update',
+    'session:create',
+    'session:read',
+    'session:update',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'announcement:read',
+    'report:read'
+  ],
+  manager_level: [
+    'user:read',
+    'patient:read',
+    'patient:update',
+    'session:create',
+    'session:read',
+    'session:update',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'announcement:read',
+    'report:read',
+    'report:export'
+  ],
+  department_head: [
+    'user:read',
+    'user:update',
+    'patient:create',
+    'patient:read',
+    'patient:update',
+    'patient:delete',
+    'session:create',
+    'session:read',
+    'session:update',
+    'session:delete',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'assessment:delete',
+    'announcement:create',
+    'announcement:read',
+    'announcement:update',
+    'report:read',
+    'report:export'
+  ],
+  vice_director: [
+    'user:create',
+    'user:read',
+    'user:update',
+    'patient:create',
+    'patient:read',
+    'patient:update',
+    'patient:delete',
+    'session:create',
+    'session:read',
+    'session:update',
+    'session:delete',
+    'system:config:read',
+    'announcement:create',
+    'announcement:read',
+    'announcement:update',
+    'announcement:delete',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'assessment:delete',
+    'report:read',
+    'report:export'
+  ],
+  director: ALL_PERMISSIONS,
+  attending_physician: [
+    'patient:read',
+    'patient:update',
+    'session:read',
+    'assessment:create',
+    'assessment:read',
+    'assessment:update',
+    'announcement:read',
+    'report:read'
   ]
 }
 
@@ -366,9 +465,30 @@ export interface PasswordResetData {
   password: string;
 }
 
+// 역할 한글명 매핑
+export const ROLE_NAMES: Record<UserRole, string> = {
+  super_admin: '최고 관리자',
+  admin: '관리자',
+  administrator: '관리자',
+  social_worker: '사회복지사',
+  patient: '환자',
+  therapist: '치료사',
+  manager: '매니저',
+  user: '일반 사용자',
+  guest: '게스트',
+  staff: '사원',
+  assistant_manager: '주임',
+  section_chief: '계장',
+  manager_level: '과장',
+  department_head: '부장',
+  vice_director: '부원장',
+  director: '원장',
+  attending_physician: '주치의'
+};
+
 // 관리자 역할 체크
 export const isAdminRole = (role: UserRole): boolean => {
-  return ['super_admin', 'admin'].includes(role);
+  return ['super_admin', 'admin', 'administrator', 'director', 'vice_director'].includes(role);
 };
 
 // 권한 체크 함수

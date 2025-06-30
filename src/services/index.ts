@@ -81,4 +81,8 @@ export type {
 
 // AI Recommendation Archive Service
 export { AIRecommendationArchiveService } from './ai-recommendation-archive'
-export type { ArchivedRecommendation, ArchivedGoalData, ArchiveRecommendationParams } from './ai-recommendation-archive' 
+export type { ArchivedRecommendation, ArchivedGoalData, ArchiveRecommendationParams } from './ai-recommendation-archive'
+
+// User Management Service
+export { UserManagementService } from './userManagement'
+export type { UpdateUserRoleParams } from './userManagement' 

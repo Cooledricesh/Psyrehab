@@ -13,11 +13,14 @@ import { supabase } from '@/lib/supabase'
 import { Search, UserPlus, Edit2, Trash2, AlertCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
+import { UserRole, ROLE_NAMES } from '@/types/auth'
+import { UserManagementService } from '@/services'
+
 interface User {
   id: string
   email: string
   fullName: string
-  role: 'social_worker' | 'administrator' | 'patient' | 'pending'
+  role: UserRole | 'pending'
   roleId: string
   isActive: boolean
   createdAt: string
@@ -26,7 +29,7 @@ interface User {
   contactNumber?: string
   patientCount?: number
   needsApproval?: boolean
-  requestedRole?: 'social_worker' | 'administrator'  // 요청한 역할 추가
+  requestedRole?: UserRole  // 요청한 역할 추가
 }
 
 export default function UserManagement() {
@@ -44,7 +47,8 @@ export default function UserManagement() {
     fullName: '',
     department: '',
     contactNumber: '',
-    isActive: true
+    isActive: true,
+    role: '' as UserRole | ''
   })
 
   useEffect(() => {
@@ -176,7 +180,8 @@ export default function UserManagement() {
       fullName: user.fullName,
       department: user.department || '',
       contactNumber: user.contactNumber || '',
-      isActive: user.isActive
+      isActive: user.isActive,
+      role: user.role === 'pending' ? '' : user.role
     })
     setShowEditDialog(true)
   }
@@ -185,7 +190,27 @@ export default function UserManagement() {
     if (!selectedUser) return
 
     try {
-      const table = selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators'
+      // 역할이 변경되었는지 확인
+      const roleChanged = editFormData.role && editFormData.role !== selectedUser.role
+
+      if (roleChanged) {
+        // 역할 변경 처리
+        const result = await UserManagementService.updateUserRole({
+          userId: selectedUser.id,
+          newRole: editFormData.role as UserRole
+        })
+
+        if (!result.success) {
+          throw new Error(result.error || '역할 변경 실패')
+        }
+      }
+
+      // 기본 정보 업데이트 (역할 변경 후 새로운 테이블에서)
+      const table = roleChanged 
+        ? (editFormData.role === 'administrator' || editFormData.role === 'director' || editFormData.role === 'vice_director' 
+          ? 'administrators' 
+          : 'social_workers')
+        : (selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators')
       
       const { error } = await supabase
         .from(table)
@@ -202,17 +227,19 @@ export default function UserManagement() {
 
       toast({
         title: '성공',
-        description: '사용자 정보가 업데이트되었습니다.'
+        description: roleChanged 
+          ? '사용자 역할 및 정보가 업데이트되었습니다.' 
+          : '사용자 정보가 업데이트되었습니다.'
       })
 
       setShowEditDialog(false)
       loadUsers()
 
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      console.error("사용자 업데이트 오류:", error)
       toast({
         title: '오류',
-        description: '사용자 정보 업데이트 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '사용자 정보 업데이트 중 오류가 발생했습니다.',
         variant: 'destructive'
       })
     }
@@ -534,13 +561,21 @@ export default function UserManagement() {
   })
 
   const getRoleBadge = (role: string) => {
-    const badges = {
+    const badges: Record<string, JSX.Element> = {
       social_worker: <Badge className="bg-blue-100 text-blue-800">사회복지사</Badge>,
       administrator: <Badge className="bg-purple-100 text-purple-800">관리자</Badge>,
       patient: <Badge className="bg-green-100 text-green-800">환자</Badge>,
-      pending: <Badge className="bg-yellow-100 text-yellow-800">승인 대기</Badge>
+      pending: <Badge className="bg-yellow-100 text-yellow-800">승인 대기</Badge>,
+      staff: <Badge className="bg-gray-100 text-gray-800">사원</Badge>,
+      assistant_manager: <Badge className="bg-indigo-100 text-indigo-800">주임</Badge>,
+      section_chief: <Badge className="bg-cyan-100 text-cyan-800">계장</Badge>,
+      manager_level: <Badge className="bg-teal-100 text-teal-800">과장</Badge>,
+      department_head: <Badge className="bg-orange-100 text-orange-800">부장</Badge>,
+      vice_director: <Badge className="bg-pink-100 text-pink-800">부원장</Badge>,
+      director: <Badge className="bg-red-100 text-red-800">원장</Badge>,
+      attending_physician: <Badge className="bg-emerald-100 text-emerald-800">주치의</Badge>
     }
-    return badges[role as keyof typeof badges]
+    return badges[role] || <Badge>{role}</Badge>
   }
 
   const getStatusBadge = (isActive: boolean) => {
@@ -606,8 +641,16 @@ export default function UserManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">전체</SelectItem>
-                <SelectItem value="social_worker">사회복지사</SelectItem>
                 <SelectItem value="administrator">관리자</SelectItem>
+                <SelectItem value="social_worker">사회복지사</SelectItem>
+                <SelectItem value="staff">사원</SelectItem>
+                <SelectItem value="assistant_manager">주임</SelectItem>
+                <SelectItem value="section_chief">계장</SelectItem>
+                <SelectItem value="manager_level">과장</SelectItem>
+                <SelectItem value="department_head">부장</SelectItem>
+                <SelectItem value="vice_director">부원장</SelectItem>
+                <SelectItem value="director">원장</SelectItem>
+                <SelectItem value="attending_physician">주치의</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={loadUsers}>
@@ -709,6 +752,24 @@ export default function UserManagement() {
                 value={editFormData.fullName}
                 onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
               />
+            </div>
+            <div>
+              <Label htmlFor="role">역할</Label>
+              <Select 
+                value={editFormData.role || selectedUser?.role || ''} 
+                onValueChange={(value) => setEditFormData({ ...editFormData, role: value as UserRole })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="역할 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {UserManagementService.getAvailableRoles().map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="department">부서</Label>
