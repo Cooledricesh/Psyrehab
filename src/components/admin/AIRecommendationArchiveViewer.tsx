@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 import { 
   Download, 
   RefreshCw, 
@@ -52,7 +53,7 @@ interface FilterState {
 }
 
 const AIRecommendationArchiveViewer: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<FilterState>({
     diagnosisCategory: '',
     ageRange: '',
@@ -68,7 +69,7 @@ const AIRecommendationArchiveViewer: React.FC = () => {
     error: archivedError 
   } = useArchivedRecommendations({
     limit: pageSize,
-    offset: currentPage * pageSize,
+    offset: (currentPage - 1) * pageSize,
     diagnosisCategory: filters.diagnosisCategory || undefined,
     ageRange: filters.ageRange || undefined
   });
@@ -82,7 +83,7 @@ const AIRecommendationArchiveViewer: React.FC = () => {
     // "all" 값을 빈 문자열로 변환
     const filterValue = value === 'all' ? '' : value;
     setFilters(prev => ({ ...prev, [key]: filterValue }));
-    setCurrentPage(0); // 필터 변경 시 첫 페이지로
+    setCurrentPage(1); // 필터 변경 시 첫 페이지로
   };
 
   const clearFilters = () => {
@@ -91,7 +92,7 @@ const AIRecommendationArchiveViewer: React.FC = () => {
       ageRange: '',
       searchTerm: ''
     });
-    setCurrentPage(0);
+    setCurrentPage(1);
   };
 
   // 데이터 내보내기 핸들러
@@ -284,25 +285,63 @@ const AIRecommendationArchiveViewer: React.FC = () => {
 
       {/* 페이지네이션 */}
       {archivedData && archivedData.count > pageSize && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            disabled={currentPage === 0}
-            onClick={() => setCurrentPage(prev => prev - 1)}
-          >
-            이전
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {currentPage + 1} / {Math.ceil(archivedData.count / pageSize)}
-          </span>
-          <Button
-            variant="outline"
-            disabled={(currentPage + 1) * pageSize >= archivedData.count}
-            onClick={() => setCurrentPage(prev => prev + 1)}
-          >
-            다음
-          </Button>
-        </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) {
+                    setCurrentPage(prev => prev - 1);
+                  }
+                }}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+
+            {/* 페이지 번호들 */}
+            {(() => {
+              const totalPages = Math.ceil(archivedData.count / pageSize);
+              const pages: React.ReactNode[] = [];
+              
+              const startPage = Math.max(1, currentPage - 2);
+              const endPage = Math.min(totalPages, currentPage + 2);
+
+              for (let i = startPage; i <= endPage; i++) {
+                pages.push(
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      href="#"
+                      isActive={currentPage === i}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(i);
+                      }}
+                    >
+                      {i}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              }
+
+              return pages;
+            })()}
+
+            <PaginationItem>
+              <PaginationNext 
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage < Math.ceil(archivedData.count / pageSize)) {
+                    setCurrentPage(prev => prev + 1);
+                  }
+                }}
+                className={currentPage >= Math.ceil(archivedData.count / pageSize) ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );

@@ -219,6 +219,58 @@ export class AIRecommendationArchiveService {
         return { usage_count: 0, completion_count: 0 };
       }
 
+      // successfully_completed된 목표의 경우, rehabilitation_goals 테이블에서 
+      // 제목이 동일한 모든 목표들을 찾아서 통계 계산
+      if (archivedItem.archived_reason === 'successfully_completed' && sixMonthGoal) {
+        const { data: allGoals, error } = await supabase
+          .from('rehabilitation_goals')
+          .select('patient_id, status, actual_completion_rate')
+          .eq('goal_type', 'six_month')
+          .eq('title', sixMonthGoal);
+        
+        if (error) {
+          console.error('❌ 목표 조회 실패:', error);
+          return { usage_count: 0, completion_count: 0 };
+        }
+
+        if (!allGoals || allGoals.length === 0) {
+          return { usage_count: 0, completion_count: 0 };
+        }
+
+        // 고유한 환자 수 계산
+        const uniquePatients = new Set(allGoals.map(g => g.patient_id));
+        const completedGoals = allGoals.filter(g => g.status === 'completed');
+        const completedPatients = new Set(completedGoals.map(g => g.patient_id));
+
+        console.log('📊 제목 기반 통계:', {
+          title: sixMonthGoal,
+          totalGoals: allGoals.length,
+          uniquePatientsCount: uniquePatients.size,
+          completedCount: completedGoals.length,
+          completedPatientsCount: completedPatients.size
+        });
+
+        // 평균 달성률 계산
+        let averageCompletionRate = undefined;
+        if (completedGoals.length > 0) {
+          const validRates = completedGoals
+            .filter(g => g.actual_completion_rate !== null && g.actual_completion_rate !== undefined)
+            .map(g => g.actual_completion_rate);
+          
+          if (validRates.length > 0) {
+            const totalRate = validRates.reduce((sum, rate) => sum + rate, 0);
+            averageCompletionRate = Math.round(totalRate / validRates.length);
+          }
+        }
+
+        return {
+          usage_count: uniquePatients.size,
+          completion_count: completedPatients.size,
+          average_completion_rate: averageCompletionRate
+        };
+      }
+
+      // 그 외의 경우 기존 로직 사용
       if (!goalTitle && !sixMonthGoal && !archivedItem.original_recommendation_id) {
         return { usage_count: 0, completion_count: 0 };
       }
@@ -230,7 +282,7 @@ export class AIRecommendationArchiveService {
       if (archivedItem.original_recommendation_id) {
         const { data, error } = await supabase
           .from('rehabilitation_goals')
-          .select('patient_id, status')
+          .select('patient_id, status, actual_completion_rate')
           .eq('goal_type', 'six_month')
           .eq('source_recommendation_id', archivedItem.original_recommendation_id);
         
@@ -241,10 +293,10 @@ export class AIRecommendationArchiveService {
       }
       
       // 2. source_recommendation_id가 없고 6개월 목표 제목이 있으면 제목으로 조회
-      if (!archivedItem.original_recommendation_id && sixMonthGoal) {
+      if (goals.length === 0 && sixMonthGoal) {
         const { data, error } = await supabase
           .from('rehabilitation_goals')
-          .select('patient_id, status')
+          .select('patient_id, status, actual_completion_rate')
           .eq('goal_type', 'six_month')
           .eq('title', sixMonthGoal);
         
@@ -265,12 +317,10 @@ export class AIRecommendationArchiveService {
       
       const uniqueGoals = Array.from(goalsMap.values());
 
-
       // 모든 환자 포함 (삭제된 환자도 포함)
       const uniquePatients = new Set(uniqueGoals.map(g => g.patient_id));
-      const completedPatients = new Set(
-        uniqueGoals.filter(g => g.status === 'completed').map(g => g.patient_id)
-      );
+      const completedGoals = uniqueGoals.filter(g => g.status === 'completed');
+      const completedPatients = new Set(completedGoals.map(g => g.patient_id));
 
       console.log('📊 목표 사용 통계 디버깅:', {
         archivedItemId: archivedItem.id,
@@ -285,38 +335,14 @@ export class AIRecommendationArchiveService {
 
       // 완료된 목표들의 실제 달성률 계산
       let averageCompletionRate = undefined;
-      if (completedPatients.size > 0) {
-        // 완료된 환자들의 목표 달성률 조회
-        const completionRates = [];
+      if (completedGoals.length > 0) {
+        const validRates = completedGoals
+          .filter(g => g.actual_completion_rate !== null && g.actual_completion_rate !== undefined)
+          .map(g => g.actual_completion_rate);
         
-        // 각 환자별로 해당 목표의 달성률을 개별 조회
-        for (const patientId of completedPatients) {
-          const goalQuery = supabase
-            .from('rehabilitation_goals')
-            .select('actual_completion_rate')
-            .eq('patient_id', patientId)
-            .eq('goal_type', 'six_month')
-            .eq('status', 'completed')
-            .not('actual_completion_rate', 'is', null);
-          
-          // source_recommendation_id가 있으면 우선 사용
-          if (archivedItem.original_recommendation_id) {
-            goalQuery.eq('source_recommendation_id', archivedItem.original_recommendation_id);
-          } else if (sixMonthGoal) {
-            // 그렇지 않으면 제목으로 매칭
-            goalQuery.eq('title', sixMonthGoal);
-          }
-          
-          const { data } = await goalQuery.maybeSingle();
-          if (data?.actual_completion_rate !== null && data?.actual_completion_rate !== undefined) {
-            completionRates.push(data.actual_completion_rate);
-          }
-        }
-        
-        // 평균 계산
-        if (completionRates.length > 0) {
-          const totalRate = completionRates.reduce((sum, rate) => sum + rate, 0);
-          averageCompletionRate = Math.round(totalRate / completionRates.length);
+        if (validRates.length > 0) {
+          const totalRate = validRates.reduce((sum, rate) => sum + rate, 0);
+          averageCompletionRate = Math.round(totalRate / validRates.length);
         }
       }
 
@@ -637,8 +663,46 @@ export class AIRecommendationArchiveService {
       // 완료된 6개월 목표들 조회
       const results = [];
       
-      // 1. source_recommendation_id로 조회 - 정확한 목표 매칭
-      if (archivedItem.original_recommendation_id && sixMonthGoal) {
+      // successfully_completed 목표의 경우 제목으로만 조회
+      if (archivedItem.archived_reason === 'successfully_completed' && sixMonthGoal) {
+        const { data: completedGoals, error } = await supabase
+          .from('rehabilitation_goals')
+          .select('*')
+          .eq('goal_type', 'six_month')
+          .eq('status', 'completed')
+          .eq('title', sixMonthGoal);
+        
+        console.log('📋 제목으로 완료된 목표 조회:', { 
+          title: sixMonthGoal,
+          count: completedGoals?.length, 
+          error 
+        });
+        
+        if (!error && completedGoals) {
+          // 각 목표에 대해 개별적으로 환자와 사회복지사 정보 조회
+          for (const goal of completedGoals) {
+            const { data: patient } = await supabase
+              .from('patients')
+              .select('full_name, status')
+              .eq('id', goal.patient_id)
+              .single();
+              
+            const { data: socialWorker } = await supabase
+              .from('social_workers')
+              .select('full_name')
+              .eq('user_id', goal.created_by_social_worker_id)
+              .single();
+            
+            results.push({
+              ...goal,
+              patients: patient || { full_name: '(삭제된 환자)' },
+              social_workers: socialWorker
+            });
+          }
+        }
+      }
+      // 기존 로직 (source_recommendation_id 기반 조회)
+      else if (archivedItem.original_recommendation_id && sixMonthGoal) {
         const { data: goals, error } = await supabase
           .from('rehabilitation_goals')
           .select('*')
@@ -677,119 +741,41 @@ export class AIRecommendationArchiveService {
           }
         }
       }
-      
-      // 2. source_recommendation_id가 없는 경우에만 제목으로 조회
-      if (!archivedItem.original_recommendation_id && sixMonthGoal) {
-        // 먼저 간단한 쿼리로 목표들만 가져오기
-        const { data: allGoals, error: allError } = await supabase
+      // source_recommendation_id가 없는 경우에만 제목으로 조회
+      else if (!archivedItem.original_recommendation_id && sixMonthGoal) {
+        const { data: completedGoals, error } = await supabase
           .from('rehabilitation_goals')
           .select('*')
           .eq('goal_type', 'six_month')
-          .eq('status', 'completed');
+          .eq('status', 'completed')
+          .eq('title', sixMonthGoal);
           
-        console.log('📋 모든 완료된 6개월 목표 조회:', { count: allGoals?.length, error: allError });
+        console.log('📋 제목으로만 조회:', { 
+          title: sixMonthGoal,
+          count: completedGoals?.length, 
+          error 
+        });
         
-        if (!allError && allGoals) {
-          // 클라이언트에서 제목 필터링 - 정확한 매칭만 사용
-          const filtered = allGoals.filter(goal => 
-            goal.title && (
-              goal.title === sixMonthGoal ||
-              goal.title.replace(/\.$/, '').trim() === sixMonthGoal.replace(/\.$/, '').trim()
-            )
-          );
-          
-          console.log('📋 제목 필터링 결과:', { sixMonthGoal, filtered: filtered.length });
-          
-          // 필터링된 목표들의 추가 정보 조회
-          for (const goal of filtered) {
-            // 환자 정보 조회 (삭제된 환자도 포함)
+        if (!error && completedGoals) {
+          // 각 목표에 대해 개별적으로 환자와 사회복지사 정보 조회
+          for (const goal of completedGoals) {
             const { data: patient } = await supabase
               .from('patients')
               .select('full_name, status')
               .eq('id', goal.patient_id)
               .single();
               
-            // 사회복지사 정보 조회
             const { data: socialWorker } = await supabase
               .from('social_workers')
               .select('full_name')
               .eq('user_id', goal.created_by_social_worker_id)
               .single();
             
-            // 환자 정보가 있을 때만 결과에 추가
-            if (patient) {
-              results.push({
-                ...goal,
-                patients: patient,
-                social_workers: socialWorker
-              });
-            } else {
-              // 환자 정보가 없어도 기본 정보로 추가
-              results.push({
-                ...goal,
-                patients: { full_name: '(삭제된 환자)' },
-                social_workers: socialWorker
-              });
-            }
-          }
-        }
-      }
-      
-      // 3. 주간 목표 제목이 6개월 목표로 저장되었을 가능성 체크
-      if (goalTitle && goalTitle !== sixMonthGoal) {
-        // 이미 2번에서 조회한 데이터가 있으면 재사용
-        if (!sixMonthGoal) {
-          const { data: allGoals, error: allError } = await supabase
-            .from('rehabilitation_goals')
-            .select('*')
-            .eq('goal_type', 'six_month')
-            .eq('status', 'completed');
-          
-          if (!allError && allGoals) {
-            // 클라이언트에서 제목 필터링
-            const filtered = allGoals.filter(goal => 
-              goal.title && (
-                goal.title === goalTitle ||
-                goal.title.includes(goalTitle) ||
-                goalTitle.includes(goal.title) ||
-                goal.title.replace(/\.$/, '').trim() === goalTitle.replace(/\.$/, '').trim()
-              )
-            );
-            
-            console.log('📋 주간 목표 제목으로 6개월 목표 조회 결과:', { goalTitle, filtered: filtered.length });
-            
-            // 필터링된 목표들의 추가 정보 조회
-            for (const goal of filtered) {
-              // 환자 정보 조회 (삭제된 환자도 포함)
-              const { data: patient } = await supabase
-                .from('patients')
-                .select('full_name, status')
-                .eq('id', goal.patient_id)
-                .single();
-                
-              // 사회복지사 정보 조회
-              const { data: socialWorker } = await supabase
-                .from('social_workers')
-                .select('full_name')
-                .eq('user_id', goal.created_by_social_worker_id)
-                .single();
-              
-              // 환자 정보가 있을 때만 결과에 추가
-              if (patient) {
-                results.push({
-                  ...goal,
-                  patients: patient,
-                  social_workers: socialWorker
-                });
-              } else {
-                // 환자 정보가 없어도 기본 정보로 추가
-                results.push({
-                  ...goal,
-                  patients: { full_name: '(삭제된 환자)' },
-                  social_workers: socialWorker
-                });
-              }
-            }
+            results.push({
+              ...goal,
+              patients: patient || { full_name: '(삭제된 환자)' },
+              social_workers: socialWorker
+            });
           }
         }
       }
