@@ -223,107 +223,51 @@ export class AIRecommendationArchiveService {
         return { usage_count: 0, completion_count: 0 };
       }
 
-      // rehabilitation_goals 테이블에서 관련 목표 조회
-      // 쿼리 빌더를 사용하여 안전하게 처리
-      const query = supabase
-        .from('rehabilitation_goals')
-        .select('patient_id, status')
-        .eq('goal_type', 'six_month');
-
-      // OR 조건을 수동으로 구성
-      const orConditions = [];
+      // 목표 조회
+      const goals = [];
       
+      // 1. source_recommendation_id가 있으면 우선 사용
       if (archivedItem.original_recommendation_id) {
-        orConditions.push({ source_recommendation_id: archivedItem.original_recommendation_id });
-      }
-      
-      // 제목으로 매칭하는 별도 쿼리들
-      const titleQueries = [];
-      
-      // 6개월 목표 제목으로 검색 (우선순위)
-      if (sixMonthGoal) {
-        titleQueries.push(
-          supabase
-            .from('rehabilitation_goals')
-            .select('patient_id, status')
-            .eq('goal_type', 'six_month')
-            .eq('title', sixMonthGoal)
-        );
-      }
-      
-      
-      // 주간 목표로도 검색하여 해당 목표의 6개월 부모 목표 찾기
-      if (goalTitle) {
-        titleQueries.push(
-          supabase
-            .from('rehabilitation_goals')
-            .select('patient_id, status, parent_goal_id, goal_type')
-            .eq('goal_type', 'weekly')
-            .eq('title', goalTitle)
-        );
-      }
-
-      // 모든 쿼리 실행
-      const results = [];
-      
-      // source_recommendation_id로 조회
-      if (archivedItem.original_recommendation_id) {
-        const { data, error } = await query.eq('source_recommendation_id', archivedItem.original_recommendation_id);
-        if (!error && data) results.push(...data);
-      }
-      
-      // 제목으로 조회
-      for (const titleQuery of titleQueries) {
-        const { data, error } = await titleQuery;
+        const { data, error } = await supabase
+          .from('rehabilitation_goals')
+          .select('patient_id, status')
+          .eq('goal_type', 'six_month')
+          .eq('source_recommendation_id', archivedItem.original_recommendation_id);
+        
         if (!error && data) {
-          results.push(...data);
+          console.log('📋 source_recommendation_id로 조회:', data.length, '개');
+          goals.push(...data);
         }
       }
       
-      // 주간 목표가 검색된 경우, 해당하는 6개월 목표도 찾기
-      const weeklyGoals = results.filter(g => g.goal_type === 'weekly');
-      if (weeklyGoals.length > 0) {
-        for (const weeklyGoal of weeklyGoals) {
-          if (weeklyGoal.parent_goal_id) {
-            // 월간 목표 찾기
-            const { data: monthlyGoal } = await supabase
-              .from('rehabilitation_goals')
-              .select('parent_goal_id')
-              .eq('id', weeklyGoal.parent_goal_id)
-              .single();
-            
-            if (monthlyGoal?.parent_goal_id) {
-              // 6개월 목표 찾기
-              const { data: sixMonthGoal } = await supabase
-                .from('rehabilitation_goals')
-                .select('patient_id, status')
-                .eq('id', monthlyGoal.parent_goal_id)
-                .single();
-              
-              if (sixMonthGoal) {
-                results.push(sixMonthGoal);
-              }
-            }
-          }
+      // 2. source_recommendation_id가 없고 6개월 목표 제목이 있으면 제목으로 조회
+      if (!archivedItem.original_recommendation_id && sixMonthGoal) {
+        const { data, error } = await supabase
+          .from('rehabilitation_goals')
+          .select('patient_id, status')
+          .eq('goal_type', 'six_month')
+          .eq('title', sixMonthGoal);
+        
+        if (!error && data) {
+          console.log('📋 제목으로 조회:', data.length, '개');
+          goals.push(...data);
         }
       }
-
-      // 6개월 목표만 필터링하고 중복 제거
-      const sixMonthGoals = results.filter(g => !g.goal_type || g.goal_type === 'six_month');
       
+      // 중복 제거
       const goalsMap = new Map();
-      sixMonthGoals.forEach(goal => {
+      goals.forEach(goal => {
         const key = `${goal.patient_id}-${goal.status}`;
         if (!goalsMap.has(key)) {
           goalsMap.set(key, goal);
         }
       });
       
-      const goals = Array.from(goalsMap.values());
+      const uniqueGoals = Array.from(goalsMap.values());
 
 
       // 환자 상태 확인을 위해 환자 정보 조회
-      const patientIds = [...new Set(goals?.map(g => g.patient_id) || [])];
+      const patientIds = [...new Set(uniqueGoals?.map(g => g.patient_id) || [])];
       let activePatientIds = [];
       
       if (patientIds.length > 0) {
@@ -336,17 +280,17 @@ export class AIRecommendationArchiveService {
       }
       
       // 실제로 존재하는 환자만 카운트
-      const validGoals = goals?.filter(g => activePatientIds.includes(g.patient_id)) || [];
+      const validGoals = uniqueGoals?.filter(g => activePatientIds.includes(g.patient_id)) || [];
       const uniquePatients = new Set(validGoals.map(g => g.patient_id));
       const completedPatients = new Set(
         validGoals.filter(g => g.status === 'completed').map(g => g.patient_id)
       );
 
-      console.log('📊 목표 사용 통계:', {
-        totalGoals: goals.length,
+      console.log('📊 목표 사용 통계 디버깅:', {
+        totalGoals: uniqueGoals.length,
         uniquePatientsCount: uniquePatients.size,
         completedPatientsCount: completedPatients.size,
-        goalStatuses: goals.map(g => ({ patient_id: g.patient_id, status: g.status }))
+        goalStatuses: uniqueGoals.map(g => ({ patient_id: g.patient_id, status: g.status }))
       });
 
       // 완료된 목표들의 실제 달성률 계산
@@ -703,19 +647,21 @@ export class AIRecommendationArchiveService {
       // 완료된 6개월 목표들 조회
       const results = [];
       
-      // 1. source_recommendation_id로 조회 - 단순 조회로 변경
-      if (archivedItem.original_recommendation_id) {
+      // 1. source_recommendation_id로 조회 - 정확한 목표 매칭
+      if (archivedItem.original_recommendation_id && sixMonthGoal) {
         const { data: goals, error } = await supabase
           .from('rehabilitation_goals')
           .select('*')
           .eq('goal_type', 'six_month')
           .eq('status', 'completed')
-          .eq('source_recommendation_id', archivedItem.original_recommendation_id);
+          .eq('source_recommendation_id', archivedItem.original_recommendation_id)
+          .eq('title', sixMonthGoal); // 제목도 함께 확인하여 정확한 목표만 조회
         
-        console.log('📋 source_recommendation_id 조회 결과:', { 
+        console.log('📋 source_recommendation_id + title 조회 결과:', { 
           count: goals?.length, 
           error,
-          recommendation_id: archivedItem.original_recommendation_id 
+          recommendation_id: archivedItem.original_recommendation_id,
+          title: sixMonthGoal
         });
         
         if (!error && goals) {
@@ -742,8 +688,8 @@ export class AIRecommendationArchiveService {
         }
       }
       
-      // 2. 6개월 목표 제목으로 조회 - 단순 쿼리
-      if (sixMonthGoal) {
+      // 2. source_recommendation_id가 없는 경우에만 제목으로 조회
+      if (!archivedItem.original_recommendation_id && sixMonthGoal) {
         // 먼저 간단한 쿼리로 목표들만 가져오기
         const { data: allGoals, error: allError } = await supabase
           .from('rehabilitation_goals')
