@@ -50,57 +50,68 @@ export const useAIPolling = ({
         try {
           console.log('🗄️ AI 추천 목표 3개 모두 아카이빙 시작');
           
-          // 환자 정보 조회
-          const { data: assessmentData, error: assessmentError } = await supabase
-            .from('assessments')
-            .select('patient_id')
-            .eq('id', currentAssessmentId)
-            .single();
-            
-          let patient = null;
-          if (assessmentData?.patient_id) {
-            const { data: patientResult } = await supabase
-              .from('patients')
-              .select('date_of_birth, gender, additional_info')
-              .eq('id', assessmentData.patient_id)
+          // 이미 아카이빙된 목표가 있는지 확인
+          const { data: existingArchives } = await supabase
+            .from('ai_recommendation_archive')
+            .select('id')
+            .eq('original_recommendation_id', recommendation.id)
+            .eq('archived_reason', 'initial_generation');
+          
+          if (existingArchives && existingArchives.length > 0) {
+            console.log('⚠️ 이미 아카이빙된 목표가 있어 중복 아카이빙 건너뛰기');
+          } else {
+            // 환자 정보 조회
+            const { data: assessmentData, error: assessmentError } = await supabase
+              .from('assessments')
+              .select('patient_id')
+              .eq('id', currentAssessmentId)
               .single();
-            patient = patientResult;
-          }
-            
-
-          if (recommendation.recommendations && Array.isArray(recommendation.recommendations)) {
-            const allGoals = recommendation.recommendations.map((goal: any, index: number) => {
-              // 목표 제목에서 불필요한 말머리 제거
-              const cleanTitle = goal.title?.replace(/^목표\s*\d+[:\.]?\s*/i, '').trim() || goal.title;
               
-              return {
-                plan_number: index + 1,
-                title: cleanTitle || `목표 ${index + 1}`,
-                purpose: goal.purpose || '',
-                sixMonthGoal: goal.sixMonthGoal || '',
-                monthlyGoals: goal.monthlyGoals || [],
-                weeklyPlans: goal.weeklyPlans || []
-              };
-            });
-
-            // patient 변수는 위에서 이미 정의됨
-            const patientAge = patient?.date_of_birth 
-              ? new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()
-              : undefined;
+            let patient = null;
+            if (assessmentData?.patient_id) {
+              const { data: patientResult } = await supabase
+                .from('patients')
+                .select('date_of_birth, gender, additional_info')
+                .eq('id', assessmentData.patient_id)
+                .single();
+              patient = patientResult;
+            }
               
 
-            // 3개 목표 모두 아카이빙
-            await AIRecommendationArchiveService.archiveUnselectedGoals({
-              originalRecommendationId: recommendation.id,
-              originalAssessmentId: currentAssessmentId,
-              unselectedGoals: allGoals,
-              patientAge,
-              patientGender: patient?.gender,
-              diagnosisCategory: patient?.additional_info?.primary_diagnosis ? simplifyDiagnosis(patient.additional_info.primary_diagnosis) : undefined,
-              archivedReason: 'initial_generation' // 생성 직후 아카이빙
-            });
-            
-            console.log('✅ AI 추천 목표 3개 모두 아카이빙 완료');
+            if (recommendation.recommendations && Array.isArray(recommendation.recommendations)) {
+              const allGoals = recommendation.recommendations.map((goal: any, index: number) => {
+                // 목표 제목에서 불필요한 말머리 제거
+                const cleanTitle = goal.title?.replace(/^목표\s*\d+[:\.]?\s*/i, '').trim() || goal.title;
+                
+                return {
+                  plan_number: index + 1,
+                  title: cleanTitle || `목표 ${index + 1}`,
+                  purpose: goal.purpose || '',
+                  sixMonthGoal: goal.sixMonthGoal || '',
+                  monthlyGoals: goal.monthlyGoals || [],
+                  weeklyPlans: goal.weeklyPlans || []
+                };
+              });
+
+              // patient 변수는 위에서 이미 정의됨
+              const patientAge = patient?.date_of_birth 
+                ? new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()
+                : undefined;
+                
+
+              // 3개 목표 모두 아카이빙
+              await AIRecommendationArchiveService.archiveUnselectedGoals({
+                originalRecommendationId: recommendation.id,
+                originalAssessmentId: currentAssessmentId,
+                unselectedGoals: allGoals,
+                patientAge,
+                patientGender: patient?.gender,
+                diagnosisCategory: patient?.additional_info?.primary_diagnosis ? simplifyDiagnosis(patient.additional_info.primary_diagnosis) : undefined,
+                archivedReason: 'initial_generation' // 생성 직후 아카이빙
+              });
+              
+              console.log('✅ AI 추천 목표 3개 모두 아카이빙 완료');
+            }
           }
         } catch (archiveError) {
           console.warn('⚠️ AI 추천 아카이빙 실패 (메인 플로우는 계속):', archiveError);
