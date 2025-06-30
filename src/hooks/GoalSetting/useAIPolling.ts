@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { AIRecommendationService } from '@/services/goalSetting';
+import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
+import { supabase } from '@/lib/supabase';
 import { POLLING_INTERVAL, MAX_POLLING_ATTEMPTS, MESSAGES } from '@/utils/GoalSetting/constants';
 
 interface UseAIPollingProps {
@@ -43,6 +45,67 @@ export const useAIPolling = ({
 
       if (recommendation && recommendation.n8n_processing_status === 'completed') {
         console.log('✅ AI 처리 완료! 추천 ID:', recommendation.id);
+        
+        // AI 추천 생성 직후 모든 목표 아카이빙
+        try {
+          console.log('🗄️ AI 추천 목표 3개 모두 아카이빙 시작');
+          
+          // 환자 정보 조회
+          const { data: assessmentData, error: assessmentError } = await supabase
+            .from('assessments')
+            .select('patient_id')
+            .eq('id', currentAssessmentId)
+            .single();
+            
+          let patient = null;
+          if (assessmentData?.patient_id) {
+            const { data: patientResult } = await supabase
+              .from('patients')
+              .select('date_of_birth, gender, additional_info')
+              .eq('id', assessmentData.patient_id)
+              .single();
+            patient = patientResult;
+          }
+            
+
+          if (recommendation.recommendations && Array.isArray(recommendation.recommendations)) {
+            const allGoals = recommendation.recommendations.map((goal: any, index: number) => {
+              // 목표 제목에서 불필요한 말머리 제거
+              const cleanTitle = goal.title?.replace(/^목표\s*\d+[:\.]?\s*/i, '').trim() || goal.title;
+              
+              return {
+                plan_number: index + 1,
+                title: cleanTitle || `목표 ${index + 1}`,
+                purpose: goal.purpose || '',
+                sixMonthGoal: goal.sixMonthGoal || '',
+                monthlyGoals: goal.monthlyGoals || [],
+                weeklyPlans: goal.weeklyPlans || []
+              };
+            });
+
+            // patient 변수는 위에서 이미 정의됨
+            const patientAge = patient?.date_of_birth 
+              ? new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()
+              : undefined;
+              
+
+            // 3개 목표 모두 아카이빙
+            await AIRecommendationArchiveService.archiveUnselectedGoals({
+              originalRecommendationId: recommendation.id,
+              originalAssessmentId: currentAssessmentId,
+              unselectedGoals: allGoals,
+              patientAge,
+              patientGender: patient?.gender,
+              diagnosisCategory: patient?.additional_info?.primary_diagnosis ? simplifyDiagnosis(patient.additional_info.primary_diagnosis) : undefined,
+              archivedReason: 'initial_generation' // 생성 직후 아카이빙
+            });
+            
+            console.log('✅ AI 추천 목표 3개 모두 아카이빙 완료');
+          }
+        } catch (archiveError) {
+          console.warn('⚠️ AI 추천 아카이빙 실패 (메인 플로우는 계속):', archiveError);
+        }
+        
         setPollingStatus('success');
         onSuccess();
         stopPolling();
@@ -140,3 +203,31 @@ export const useAIPolling = ({
     isExtendedPolling,
   };
 };
+
+/**
+ * 진단명을 간소화된 카테고리로 변환
+ */
+function simplifyDiagnosis(diagnosis: string): string {
+  const lowerDiagnosis = diagnosis.toLowerCase();
+  
+  const categoryMap: Record<string, string[]> = {
+    'cognitive_disorder': ['치매', '인지', '기억', '알츠하이머', 'dementia', 'cognitive'],
+    'mood_disorder': ['우울', '조울', '기분', 'depression', 'bipolar', 'mood'],
+    'anxiety_disorder': ['불안', '공황', 'anxiety', 'panic'],
+    'psychotic_disorder': ['조현병', '정신분열', 'schizophrenia', 'psychotic'],
+    'substance_disorder': ['중독', '알코올', '약물', 'addiction', 'substance'],
+    'developmental_disorder': ['자폐', '발달', 'autism', 'developmental'],
+    'neurological_disorder': ['뇌졸중', '파킨슨', '뇌손상', 'stroke', 'parkinson', 'neurological'],
+    'personality_disorder': ['성격', '인격', 'personality'],
+    'eating_disorder': ['섭식', '식이', 'eating'],
+    'trauma_disorder': ['외상', '트라우마', 'trauma', 'ptsd']
+  };
+
+  for (const [category, keywords] of Object.entries(categoryMap)) {
+    if (keywords.some(keyword => lowerDiagnosis.includes(keyword))) {
+      return category;
+    }
+  }
+
+  return 'other_disorder';
+}

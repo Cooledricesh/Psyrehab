@@ -398,60 +398,27 @@ const GoalSetting: React.FC = () => {
         await GoalService.saveGoals(goalsToInsert);
       }
 
-      // 4.5. 선택되지 않은 AI 목표들 아카이빙 (AI 생성 목표인 경우만)
-      if (aiRecommendations && recommendationId && detailedGoals.selectedIndex !== undefined && !selectedArchivedGoal) {
+      // 4.5. 이미 생성 시점에 3개 모두 아카이빙되었으므로, 추가 아카이빙은 필요 없음
+      console.log('✅ AI 추천 목표는 이미 생성 시점에 아카이빙 완료');
+      console.log('✅ 선택된 목표만 활성 목표로 저장됨');
+      
+      // 선택된 목표를 아카이빙에서 제외하기 위해 archived_reason 업데이트 (옵션)
+      if (recommendationId && detailedGoals.selectedIndex !== undefined && !selectedArchivedGoal) {
         try {
-          console.log('🗄️ 선택되지 않은 목표들 아카이빙 시작');
-          
-          // 환자 정보 조회 (익명화를 위해)
-          const { data: patientData } = await supabase.from('patients')
-            .select('birth_date, gender, diagnosis')
-            .eq('id', selectedPatient)
-            .single();
-
-          // 선택되지 않은 목표들 필터링
-          const unselectedGoals = aiRecommendations.goals
-            .filter((_, index) => index !== detailedGoals.selectedIndex)
-            .map((goal, originalIndex) => ({
-              plan_number: originalIndex + 1,
-              title: goal.title || `목표 ${originalIndex + 1}`,
-              purpose: goal.purpose || '',
-              sixMonthGoal: goal.sixMonthGoal || '',
-              monthlyGoals: goal.monthlyGoals || [],
-              weeklyPlans: goal.weeklyPlans || []
-            }));
-
-          if (unselectedGoals.length > 0) {
-            // 환자 나이 계산
-            const patientAge = patientData?.birth_date 
-              ? new Date().getFullYear() - new Date(patientData.birth_date).getFullYear()
-              : undefined;
-
-            // 진단 카테고리 간소화
-            const diagnosisCategory = patientData?.diagnosis 
-              ? simplifyDiagnosis(patientData.diagnosis)
-              : undefined;
-
-            // 아카이빙 실행
-            const { error: archiveError } = await supabase.from('ai_recommendation_archive').insert({
-              original_recommendation_id: recommendationId,
-              original_assessment_id: currentAssessmentId,
-              archived_goal_data: unselectedGoals,
-              patient_age_range: patientAge ? getAgeRange(patientAge) : null,
-              patient_gender: patientData?.gender || null,
-              diagnosis_category: diagnosisCategory,
-              archived_reason: 'goal_not_selected',
-              archived_at: new Date().toISOString()
-            });
-
-            if (archiveError) {
-              console.warn('⚠️ 목표 아카이빙 실패 (메인 플로우는 계속):', archiveError);
-            } else {
-              console.log('✅ 목표 아카이빙 성공:', unselectedGoals.length, '개 목표');
-            }
+          const { error: updateError } = await supabase
+            .from('ai_recommendation_archive')
+            .update({ archived_reason: 'goal_selected_and_active' })
+            .eq('original_recommendation_id', recommendationId)
+            .eq('archived_reason', 'initial_generation')
+            .contains('archived_goal_data', [{ plan_number: detailedGoals.selectedIndex + 1 }]);
+            
+          if (updateError) {
+            console.warn('⚠️ 선택된 목표 아카이빙 상태 업데이트 실패:', updateError);
+          } else {
+            console.log('✅ 선택된 목표 아카이빙 상태 업데이트 성공');
           }
-        } catch (archiveError) {
-          console.warn('⚠️ 아카이빙 프로세스 오류 (메인 플로우는 계속):', archiveError);
+        } catch (error) {
+          console.warn('⚠️ 아카이빙 상태 업데이트 오류:', error);
         }
       }
 

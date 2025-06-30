@@ -25,8 +25,7 @@ export * from './ai-recommendations/useAIRecommendations'
 // Rehabilitation Goals hooks
 export * from './rehabilitation-goals/useRehabilitationGoals'
 
-// Goal Categories hooks
-export * from './goal-categories/useGoalCategories'
+// Goal Categories hooks - removed
 
 // Goal Evaluations hooks
 export * from './goal-evaluations/useGoalEvaluations'

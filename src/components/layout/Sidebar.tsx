@@ -233,6 +233,12 @@ export const Sidebar = () => {
                         label="백업/복원"
                         isActive={location.pathname === '/admin/backup-restore'}
                       />
+                      <SidebarLink
+                        to="/admin/ai-archive"
+                        icon={<Database size={16} />}
+                        label="AI 추천 아카이빙"
+                        isActive={location.pathname === '/admin/ai-archive'}
+                      />
                     </ul>
                   )}
                 </>

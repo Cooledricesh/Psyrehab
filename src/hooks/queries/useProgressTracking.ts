@@ -53,14 +53,7 @@ export const usePatientGoals = (patientId: string | null) => {
       // 1. 6개월 목표 조회
       const { data: sixMonthGoals, error: sixMonthError } = await supabase
         .from('rehabilitation_goals')
-        .select(`
-          *,
-          goal_categories(
-            name,
-            icon,
-            color
-          )
-        `)
+        .select('*')
         .eq('patient_id', patientId)
         .eq('goal_type', 'six_month')
         .eq('plan_status', 'active')
@@ -73,14 +66,7 @@ export const usePatientGoals = (patientId: string | null) => {
       // 2. 월간 목표 조회
       const { data: monthlyGoals, error: monthlyError } = await supabase
         .from('rehabilitation_goals')
-        .select(`
-          *,
-          goal_categories(
-            name,
-            icon,
-            color
-          )
-        `)
+        .select('*')
         .eq('parent_goal_id', sixMonthGoals.id)
         .eq('goal_type', 'monthly')
         .eq('plan_status', 'active')
@@ -95,11 +81,6 @@ export const usePatientGoals = (patientId: string | null) => {
             .from('rehabilitation_goals')
             .select(`
               *,
-              goal_categories(
-                name,
-                icon,
-                color
-              ),
               weekly_check_ins(
                 id,
                 week_number,

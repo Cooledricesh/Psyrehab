@@ -7,14 +7,6 @@ export type GoalStatus = 'pending' | 'active' | 'completed' | 'on_hold' | 'cance
 // 목표 우선순위 타입 정의
 export type GoalPriority = 'high' | 'medium' | 'low'
 
-// 목표 카테고리 인터페이스 (문서 스펙에 따라 별도 테이블)
-export interface GoalCategory {
-  id: string
-  name: string
-  description: string
-  icon: string
-  color: string
-}
 
 // 기본 목표 인터페이스 (문서 스펙에 맞춤)
 export interface BaseGoal {
@@ -23,7 +15,6 @@ export interface BaseGoal {
   parent_goal_id?: string
   title: string
   description: string
-  category_id: string // FK to goal_categories
   goal_type: GoalType // 문서 스펙: goal_type
   sequence_number: number // 문서 스펙: 목표 순서
   start_date: string
@@ -189,7 +180,6 @@ export interface CreateGoalRequest {
   parent_goal_id?: string
   title: string
   description: string
-  category_id: string // FK to goal_categories
   goal_type: GoalType
   sequence_number?: number
   end_date: string
@@ -225,7 +215,6 @@ export interface UpdateGoalRequest {
 export interface GoalFilters {
   patient_id?: string
   goal_type?: GoalType
-  category_id?: string
   status?: GoalStatus
   priority?: GoalPriority
   date_range?: {
@@ -243,7 +232,6 @@ export interface GoalStatistics {
   totalGoals: number
   goalsByType: Record<GoalType, number>
   goalsByStatus: Record<GoalStatus, number>
-  goalsByCategory: Record<string, number>
   
   averageProgress: number
   averageActualCompletionRate: number
@@ -267,7 +255,6 @@ export interface GoalStatistics {
 // 유틸리티 타입들
 export type GoalWithChildren = BaseGoal & {
   children?: GoalWithChildren[]
-  category?: GoalCategory
 }
 
 export type GoalTreeNode = {

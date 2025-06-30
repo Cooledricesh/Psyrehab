@@ -19,8 +19,7 @@ export * from './ai-recommendations'
 // Rehabilitation Goals services
 export * from './rehabilitation-goals'
 
-// Goal Categories services
-export * from './goal-categories'
+// Goal Categories services - removed
 
 // Goal Evaluations services
 export * from './goal-evaluations'

@@ -194,4 +194,45 @@ function convertToCSV(data: ArchivedRecommendation[]): string {
   return [headers, ...rows]
     .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
     .join('\n');
-} 
+}
+
+/**
+ * 아카이빙된 목표 삭제 훅
+ */
+export const useDeleteArchivedGoal = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (archiveId: string) => {
+      const result = await AIRecommendationArchiveService.deleteArchivedGoal(archiveId);
+      if (!result.success) {
+        throw new Error(result.error || '삭제에 실패했습니다.');
+      }
+      return result;
+    },
+    onSuccess: () => {
+      // 캐시 무효화
+      queryClient.invalidateQueries({ queryKey: ['archived-recommendations'] });
+      alert('아카이빙된 목표가 삭제되었습니다.');
+    },
+    onError: (error) => {
+      console.error('삭제 실패:', error);
+      alert(error instanceof Error ? error.message : '삭제에 실패했습니다.');
+    }
+  });
+};
+
+/**
+ * 목표 완료 이력 조회 훅
+ */
+export const useGoalCompletionHistory = (archivedItem: ArchivedRecommendation | null) => {
+  return useQuery({
+    queryKey: ['goal-completion-history', archivedItem?.id],
+    queryFn: () => {
+      if (!archivedItem) throw new Error('No archived item');
+      return AIRecommendationArchiveService.getGoalCompletionHistory(archivedItem);
+    },
+    enabled: !!archivedItem,
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+}; 

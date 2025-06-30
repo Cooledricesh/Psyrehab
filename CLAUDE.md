@@ -192,3 +192,15 @@ git checkout -- .  # Revert all changes
 # OR
 git checkout <last-stable-commit>  # Full rollback
 ```
+
+## IMPORTANT: Deprecated Features
+
+### Goal Categories
+- **NEVER restore or recreate GoalCategory functionality**
+- The `goal_categories` table and related code have been permanently removed
+- DO NOT create any files or code related to:
+  - `GoalCategory` types or interfaces
+  - `goal-categories.ts` files
+  - `category_id` fields in goals
+  - Goal category services or hooks
+- This feature has been deprecated and should not be reimplemented

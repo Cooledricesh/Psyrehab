@@ -268,6 +268,9 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       // 캐시 새로고침
       await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
       await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+      // 아카이빙 관련 캐시도 무효화
+      await queryClient.invalidateQueries({ queryKey: ['archived-recommendations'] });
+      await queryClient.invalidateQueries({ queryKey: ['archive-statistics'] });
     } else {
       // 6개월 목표인 경우, 다른 활성 6개월 목표가 있는지 확인
       const { data: remainingGoals } = await supabase
@@ -286,6 +289,9 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
         // 캐시 새로고침
         await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
         await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+        // 아카이빙 관련 캐시도 무효화
+        await queryClient.invalidateQueries({ queryKey: ['archived-recommendations'] });
+        await queryClient.invalidateQueries({ queryKey: ['archive-statistics'] });
       }
     }
   };
