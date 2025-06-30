@@ -266,30 +266,20 @@ export class AIRecommendationArchiveService {
       const uniqueGoals = Array.from(goalsMap.values());
 
 
-      // 환자 상태 확인을 위해 환자 정보 조회
-      const patientIds = [...new Set(uniqueGoals?.map(g => g.patient_id) || [])];
-      let activePatientIds = [];
-      
-      if (patientIds.length > 0) {
-        const { data: patients } = await supabase
-          .from('patients')
-          .select('id')
-          .in('id', patientIds);
-        
-        activePatientIds = patients?.map(p => p.id) || [];
-      }
-      
-      // 실제로 존재하는 환자만 카운트
-      const validGoals = uniqueGoals?.filter(g => activePatientIds.includes(g.patient_id)) || [];
-      const uniquePatients = new Set(validGoals.map(g => g.patient_id));
+      // 모든 환자 포함 (삭제된 환자도 포함)
+      const uniquePatients = new Set(uniqueGoals.map(g => g.patient_id));
       const completedPatients = new Set(
-        validGoals.filter(g => g.status === 'completed').map(g => g.patient_id)
+        uniqueGoals.filter(g => g.status === 'completed').map(g => g.patient_id)
       );
 
       console.log('📊 목표 사용 통계 디버깅:', {
+        archivedItemId: archivedItem.id,
+        sixMonthGoal: sixMonthGoal,
+        original_recommendation_id: archivedItem.original_recommendation_id,
         totalGoals: uniqueGoals.length,
         uniquePatientsCount: uniquePatients.size,
         completedPatientsCount: completedPatients.size,
+        completedPatientIds: Array.from(completedPatients),
         goalStatuses: uniqueGoals.map(g => ({ patient_id: g.patient_id, status: g.status }))
       });
 
