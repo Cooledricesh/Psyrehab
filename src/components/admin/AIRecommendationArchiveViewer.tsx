@@ -253,7 +253,7 @@ const AIRecommendationArchiveViewer: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[150px]">생성 날짜</TableHead>
-                <TableHead>목표 제목</TableHead>
+                <TableHead>6개월 목표</TableHead>
                 <TableHead className="w-[120px]">환자 정보</TableHead>
                 <TableHead className="w-[100px]">진단</TableHead>
                 <TableHead className="w-[100px]">상태</TableHead>
@@ -318,9 +318,9 @@ const ArchivedGoalRow: React.FC<{ item: ArchivedRecommendation }> = ({ item }) =
     return title?.replace(/^목표\s*\d+[:.]?\s*/i, '').trim() || title;
   };
   
-  // 철 번째 목표의 제목 가져오기
+  // 첫 번째 목표의 제목 가져오기 - 6개월 목표를 우선 표시
   const firstGoalTitle = item.archived_goal_data?.[0] ? 
-    cleanTitle(item.archived_goal_data[0].title) || item.archived_goal_data[0].sixMonthGoal || '목표 정보 없음' : 
+    item.archived_goal_data[0].sixMonthGoal || cleanTitle(item.archived_goal_data[0].title) || '목표 정보 없음' : 
     '목표 데이터 없음';
   
   // 상태 배지 스타일 결정

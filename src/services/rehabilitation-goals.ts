@@ -33,9 +33,17 @@ export async function getPatientRehabilitationGoals(patientId: string) {
 
 // Get completed rehabilitation goals for a patient (6-month goals only)
 export async function getPatientCompletedGoals(patientId: string) {
+  // JOIN을 사용하여 한 번에 필요한 데이터 가져오기
   const { data, error } = await supabase
     .from('rehabilitation_goals')
-    .select('*')
+    .select(`
+      *,
+      created_by:social_workers!created_by_social_worker_id(
+        user_id,
+        full_name,
+        employee_id
+      )
+    `)
     .eq('patient_id', patientId)
     .eq('status', 'completed')
     .eq('goal_type', 'six_month')
@@ -43,49 +51,40 @@ export async function getPatientCompletedGoals(patientId: string) {
 
   if (error) throw error
   
-  // 각 목표에 대해 생성자 정보 추가 및 실제 달성률 계산
+  // 모든 하위 목표를 한 번에 조회하여 성능 최적화
   if (data && data.length > 0) {
-    for (const goal of data) {
-      // 생성자 정보 추가
-      if (goal.created_by_social_worker_id) {
-        const { data: socialWorker } = await supabase
-          .from('social_workers')
-          .select('user_id, full_name, employee_id')
-          .eq('user_id', goal.created_by_social_worker_id)
-          .single()
-        
-        if (socialWorker) {
-          goal.created_by = socialWorker
-        }
-      }
+    const goalIds = data.map(g => g.id)
+    
+    // 모든 월간 목표를 한 번에 조회
+    const { data: allMonthlyGoals } = await supabase
+      .from('rehabilitation_goals')
+      .select('id, parent_goal_id')
+      .in('parent_goal_id', goalIds)
+      .eq('goal_type', 'monthly')
+    
+    if (allMonthlyGoals && allMonthlyGoals.length > 0) {
+      const monthlyGoalIds = allMonthlyGoals.map(g => g.id)
       
-      // 6개월 목표의 하위 주간 목표들을 찾아서 달성률 계산
-      // 먼저 월간 목표들을 찾고, 그 하위의 주간 목표들을 찾아야 함
-      const { data: monthlyGoals } = await supabase
+      // 모든 주간 목표를 한 번에 조회
+      const { data: allWeeklyGoals } = await supabase
         .from('rehabilitation_goals')
-        .select('id')
-        .eq('parent_goal_id', goal.id)
-        .eq('goal_type', 'monthly')
+        .select('id, parent_goal_id, status')
+        .in('parent_goal_id', monthlyGoalIds)
+        .eq('goal_type', 'weekly')
       
-      if (monthlyGoals && monthlyGoals.length > 0) {
-        let totalWeeklyGoals = 0
-        let completedWeeklyGoals = 0
+      // 각 6개월 목표별로 달성률 계산
+      for (const goal of data) {
+        // 해당 6개월 목표의 월간 목표 찾기
+        const monthlyGoals = allMonthlyGoals.filter(m => m.parent_goal_id === goal.id)
+        const monthlyIds = monthlyGoals.map(m => m.id)
         
-        // 각 월간 목표의 주간 목표들 확인
-        for (const monthlyGoal of monthlyGoals) {
-          const { data: weeklyGoals } = await supabase
-            .from('rehabilitation_goals')
-            .select('id, status')
-            .eq('parent_goal_id', monthlyGoal.id)
-            .eq('goal_type', 'weekly')
-          
-          if (weeklyGoals) {
-            totalWeeklyGoals += weeklyGoals.length
-            completedWeeklyGoals += weeklyGoals.filter(g => g.status === 'completed').length
-          }
-        }
+        // 해당 월간 목표들의 주간 목표 찾기
+        const weeklyGoals = allWeeklyGoals?.filter(w => monthlyIds.includes(w.parent_goal_id)) || []
         
-        // 24개 주간 목표를 기준으로 달성률 계산 (없으면 0%)
+        const totalWeeklyGoals = weeklyGoals.length
+        const completedWeeklyGoals = weeklyGoals.filter(g => g.status === 'completed').length
+        
+        // 24개 주간 목표를 기준으로 달성률 계산
         const calculatedRate = totalWeeklyGoals > 0 
           ? Math.round((completedWeeklyGoals / 24) * 100) 
           : 0
@@ -440,6 +439,77 @@ export async function getOverdueGoals(socialWorkerId?: string) {
   const { data, error } = await query.order('end_date', { ascending: true })
 
   if (error) throw error
+  return data
+}
+
+// Get patient's active goals with progress information
+export async function getPatientActiveGoals(patientId: string) {
+  // JOIN을 사용하여 한 번에 필요한 데이터 가져오기
+  const { data, error } = await supabase
+    .from('rehabilitation_goals')
+    .select(`
+      *,
+      created_by:social_workers!created_by_social_worker_id(
+        user_id,
+        full_name,
+        employee_id
+      )
+    `)
+    .eq('patient_id', patientId)
+    .in('status', ['active', 'in_progress'])
+    .eq('goal_type', 'six_month')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  
+  // 모든 하위 목표 진행률을 한 번에 계산
+  if (data && data.length > 0) {
+    const goalIds = data.map(g => g.id)
+    
+    // 모든 월간 목표를 한 번에 조회
+    const { data: allMonthlyGoals } = await supabase
+      .from('rehabilitation_goals')
+      .select('id, parent_goal_id, status')
+      .in('parent_goal_id', goalIds)
+      .eq('goal_type', 'monthly')
+    
+    if (allMonthlyGoals && allMonthlyGoals.length > 0) {
+      const monthlyGoalIds = allMonthlyGoals.map(g => g.id)
+      
+      // 모든 주간 목표를 한 번에 조회
+      const { data: allWeeklyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id, parent_goal_id, status')
+        .in('parent_goal_id', monthlyGoalIds)
+        .eq('goal_type', 'weekly')
+      
+      // 각 6개월 목표별로 진행률 계산
+      for (const goal of data) {
+        // 해당 6개월 목표의 월간 목표 찾기
+        const monthlyGoals = allMonthlyGoals.filter(m => m.parent_goal_id === goal.id)
+        const monthlyIds = monthlyGoals.map(m => m.id)
+        
+        // 해당 월간 목표들의 주간 목표 찾기
+        const weeklyGoals = allWeeklyGoals?.filter(w => monthlyIds.includes(w.parent_goal_id)) || []
+        
+        const totalWeeklyGoals = weeklyGoals.length
+        const completedWeeklyGoals = weeklyGoals.filter(g => g.status === 'completed').length
+        
+        // 진행률 계산 (24주 기준)
+        goal.progress = totalWeeklyGoals > 0 
+          ? Math.round((completedWeeklyGoals / 24) * 100) 
+          : 0
+        
+        // 통계 정보 추가
+        goal.stats = {
+          totalMonthly: monthlyGoals.length,
+          totalWeekly: totalWeeklyGoals,
+          completedWeekly: completedWeeklyGoals
+        }
+      }
+    }
+  }
+  
   return data
 }
 

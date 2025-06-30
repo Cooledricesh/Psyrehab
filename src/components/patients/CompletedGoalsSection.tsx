@@ -13,7 +13,10 @@ export function CompletedGoalsSection({ patientId }: CompletedGoalsSectionProps)
   const { data: completedGoals, isLoading, error } = useQuery({
     queryKey: ['patient-completed-goals', patientId],
     queryFn: () => getPatientCompletedGoals(patientId),
-    enabled: !!patientId
+    enabled: !!patientId,
+    staleTime: 5 * 60 * 1000, // 5분간 캐시 유지
+    cacheTime: 30 * 60 * 1000, // 30분간 캐시 보관
+    refetchOnWindowFocus: false // 창 포커스 시 재조회 비활성화
   })
   
 
