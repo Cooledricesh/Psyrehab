@@ -87,8 +87,6 @@ export default function UserManagement() {
 
       if (adminError) throw adminError
 
-      console.log('socialWorkers:', socialWorkers)
-      console.log('administrators:', administrators)
 
       // 모든 사용자의 역할 정보 조회
       const allUserIds = [
@@ -100,14 +98,23 @@ export default function UserManagement() {
         .from('user_roles')
         .select(`
           user_id,
-          role_id,
-          roles (
-            role_name
-          )
+          role_id
         `)
         .in('user_id', allUserIds)
-
+      
       if (rolesError) throw rolesError
+
+      // 모든 역할 정보 조회
+      const { data: allRoles, error: allRolesError } = await supabase
+        .from('roles')
+        .select('id, role_name')
+      
+      if (allRolesError) throw allRolesError
+      
+      // 역할 ID로 역할 이름을 찾을 수 있는 맵 생성
+      const roleIdToName = new Map(
+        (allRoles || []).map(r => [r.id, r.role_name])
+      )
 
       // 역할 정보를 맵으로 변환
       const roleMap = new Map(
@@ -115,21 +122,17 @@ export default function UserManagement() {
           ur.user_id,
           {
             role_id: ur.role_id,
-            role_name: ur.roles?.role_name
+            role_name: roleIdToName.get(ur.role_id) || 'unknown'
           }
         ])
       )
 
       // 승인 대기 중인 신청서 조회
-      console.log('Fetching pending signup requests...')
       const { data: pendingRequests, error: requestError } = await supabase
         .from('signup_requests')
         .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
-
-      console.log('Pending requests:', pendingRequests)
-      console.log('Request error:', requestError)
 
       if (requestError) throw requestError
 
@@ -161,7 +164,6 @@ export default function UserManagement() {
       }
 
       // 데이터 변환
-      console.log('Starting data transformation...')
       const allUsers: User[] = [
         ...(socialWorkers || []).map(sw => ({
           id: sw.user_id,
@@ -195,7 +197,6 @@ export default function UserManagement() {
         new Map([...allUsers, ...pendingUsers].map(user => [user.id, user])).values()
       ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-      console.log('Final uniqueUsers:', uniqueUsers)
       setUsers(uniqueUsers)
 
     } catch (error) {

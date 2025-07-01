@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import Dashboard from '@/pages/Dashboard'
 import { SimpleProtectedRoute } from '@/components/auth/SimpleProtectedRoute'
 import { AdminProtectedRoute } from '@/components/auth/AdminProtectedRoute'
+import { ManagementProtectedRoute } from '@/components/auth/ManagementProtectedRoute'
 
 // 실제 페이지 컴포넌트들
 import Home from '@/pages/Home'
@@ -74,17 +75,19 @@ function App() {
                       <Route path="/patients/:id/edit" element={<PatientEditPage />} />
                       <Route path="/goal-setting" element={<GoalSetting />} />
                       <Route path="/progress-tracking" element={<ProgressTracking />} />
-                      <Route path="/reports" element={<Reports />} />
-                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/reports" element={<AdminProtectedRoute><Reports /></AdminProtectedRoute>} />
+                      <Route path="/settings" element={<AdminProtectedRoute><Settings /></AdminProtectedRoute>} />
                       
-                      {/* 관리자 전용 라우트 */}
-                      <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-                      <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+                      {/* 관리 페이지 (계장 이상 접근 가능) */}
+                      <Route path="/admin" element={<ManagementProtectedRoute><AdminDashboard /></ManagementProtectedRoute>} />
+                      <Route path="/admin/dashboard" element={<ManagementProtectedRoute><AdminDashboard /></ManagementProtectedRoute>} />
+                      <Route path="/admin/patient-assignment" element={<ManagementProtectedRoute><PatientAssignment /></ManagementProtectedRoute>} />
+                      <Route path="/admin/announcements" element={<ManagementProtectedRoute><AnnouncementsManagement /></ManagementProtectedRoute>} />
+                      
+                      {/* 시스템 관리자 전용 라우트 */}
                       <Route path="/admin/users" element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
-                      <Route path="/admin/patient-assignment" element={<AdminProtectedRoute><PatientAssignment /></AdminProtectedRoute>} />
                       <Route path="/admin/logs" element={<AdminProtectedRoute><SystemLogs /></AdminProtectedRoute>} />
                       <Route path="/admin/backup-restore" element={<AdminProtectedRoute><BackupRestore /></AdminProtectedRoute>} />
-                      <Route path="/admin/announcements" element={<AdminProtectedRoute><AnnouncementsManagement /></AdminProtectedRoute>} />
                       <Route path="/admin/ai-archive" element={<AdminProtectedRoute><AIArchivePage /></AdminProtectedRoute>} />
                       <Route path="/admin/permissions" element={<AdminProtectedRoute><PermissionsPage /></AdminProtectedRoute>} />
                     </Routes>

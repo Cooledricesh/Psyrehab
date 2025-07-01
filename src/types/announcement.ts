@@ -23,9 +23,9 @@ export interface Announcement {
   id: string;
   title: string;
   content: string;
-  type: AnnouncementType;
-  priority: Priority;
-  status: Status;
+  type: AnnouncementType | string;
+  priority: Priority | string;
+  status: Status | string;
   start_date: string;
   end_date?: string;
   created_by: string;
@@ -82,35 +82,44 @@ export interface AnnouncementFormData {
   end_date: string;
 }
 
-export const getTypeEmoji = (type: AnnouncementType): string => {
+export const getTypeEmoji = (type: AnnouncementType | string): string => {
   switch (type) {
     case AnnouncementType.GENERAL:
+    case 'general':
       return '📢';
     case AnnouncementType.EMERGENCY:
+    case 'emergency':
       return '🚨';
     case AnnouncementType.EVENT:
+    case 'event':
       return '📅';
     case AnnouncementType.SYSTEM:
+    case 'system':
       return '⚙️';
     case AnnouncementType.TRAINING:
+    case 'training':
       return '📚';
     default:
       return '📢';
   }
 };
 
-export const getPriorityColor = (priority: Priority): string => {
+export const getPriorityColor = (priority: Priority | string): string => {
   switch (priority) {
     case Priority.LOW:
-      return 'text-green-600 bg-green-100';
+    case 'low':
+      return 'green';
     case Priority.MEDIUM:
-      return 'text-yellow-600 bg-yellow-100';
+    case 'medium':
+      return 'yellow';
     case Priority.HIGH:
-      return 'text-orange-600 bg-orange-100';
+    case 'high':
+      return 'orange';
     case Priority.CRITICAL:
-      return 'text-red-600 bg-red-100';
+    case 'critical':
+      return 'red';
     default:
-      return 'text-gray-600 bg-gray-100';
+      return 'gray';
   }
 };
 
@@ -458,11 +467,12 @@ export const getUserGroupLabel = (group: UserGroupType): string => {
 
 export const isAnnouncementActive = (announcement: Announcement): boolean => {
   if (announcement.status !== Status.ACTIVE) return false;
+  const now = new Date();
   if (announcement.end_date && now > new Date(announcement.end_date)) return false;
   return true;
 };
 
-export const getAnnouncementConfirmationRate = (announcement: Announcement): number => {
+export const getAnnouncementConfirmationRate = (announcement: Announcement & { metadata: AnnouncementMetadata }): number => {
   if (announcement.metadata.readCount === 0) return 0;
   return (announcement.metadata.confirmationCount / announcement.metadata.readCount) * 100;
 }; 

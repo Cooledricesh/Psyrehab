@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Eye, EyeOff, Heart, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { getAuthErrorMessage } from '@/utils/auth'
 
 interface SignUpFormData {
   email: string
@@ -154,7 +155,7 @@ export default function SignUpPage() {
       if (err.message?.includes('already registered') || err.message?.includes('duplicate')) {
         setError('이미 등록된 이메일입니다.')
       } else {
-        setError(err.message || '가입 신청 중 오류가 발생했습니다.')
+        setError(getAuthErrorMessage(err) || '가입 신청 중 오류가 발생했습니다.')
       }
     } finally {
       setIsLoading(false)

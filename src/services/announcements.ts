@@ -13,12 +13,7 @@ export const announcementService = {
   async getAnnouncements(filters?: AnnouncementFilters): Promise<Announcement[]> {
     let query = supabase
       .from('announcements')
-      .select(`
-        *,
-        administrators!announcements_created_by_fkey(
-          full_name
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -49,10 +44,7 @@ export const announcementService = {
       throw new Error(`Failed to fetch announcements: ${error.message}`);
     }
 
-    return data.map(announcement => ({
-      ...announcement,
-      createdByName: announcement.administrators?.full_name || 'Unknown'
-    }));
+    return data || [];
   },
 
   /**
@@ -219,12 +211,7 @@ export const announcementService = {
     
     const { data, error } = await supabase
       .from('announcements')
-      .select(`
-        *,
-        administrators!announcements_created_by_fkey(
-          full_name
-        )
-      `)
+      .select('*')
       .eq('status', 'active')
       .lte('start_date', now)
       .or(`end_date.is.null,end_date.gte.${now}`)
@@ -235,9 +222,6 @@ export const announcementService = {
       throw new Error(`Failed to fetch active announcements: ${error.message}`);
     }
 
-    return data.map(announcement => ({
-      ...announcement,
-      createdByName: announcement.administrators?.full_name || 'Unknown'
-    }));
+    return data || [];
   }
 }; 

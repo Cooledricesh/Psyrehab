@@ -27,7 +27,7 @@ export const AUTH_ERROR_CODES = {
 export const AUTH_ERROR_MESSAGES = {
   [AUTH_ERROR_CODES.UNKNOWN_ERROR]: '알 수 없는 오류가 발생했습니다.',
   [AUTH_ERROR_CODES.NETWORK_ERROR]: '네트워크 오류가 발생했습니다.',
-  [AUTH_ERROR_CODES.INVALID_CREDENTIALS]: '이메일 또는 비밀번호가 올바르지 않습니다.',
+  [AUTH_ERROR_CODES.INVALID_CREDENTIALS]: '이메일 주소나 비밀번호를 다시 확인해주세요.',
   [AUTH_ERROR_CODES.USER_NOT_FOUND]: '사용자를 찾을 수 없습니다.',
   [AUTH_ERROR_CODES.WEAK_PASSWORD]: '비밀번호가 너무 약합니다. 8자 이상, 숫자와 특수문자를 포함해주세요.',
   [AUTH_ERROR_CODES.EMAIL_NOT_CONFIRMED]: '이메일 인증이 필요합니다. 이메일을 확인해주세요.',

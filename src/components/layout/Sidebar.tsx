@@ -15,6 +15,7 @@ import {
   Database,
   UserCog,
   UserCheck,
+  Megaphone,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { ROLE_NAMES } from '@/types/auth'
@@ -52,6 +53,7 @@ export const Sidebar = () => {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [canViewManagement, setCanViewManagement] = useState(false)
   const [adminMenuOpen, setAdminMenuOpen] = useState(false)
   const [userInfo, setUserInfo] = useState<{ name: string; role: string }>({ name: '사용자', role: '' })
   const sidebarRef = useRef<HTMLElement>(null)
@@ -67,21 +69,8 @@ export const Sidebar = () => {
 
       console.log('Current user:', user.email)
 
-      // 관리자 역할 확인
-      const { data: adminRole, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role_id')
-        .eq('user_id', user.id)
-        .eq('role_id', 'd7fcf425-85bc-42b4-8806-917ef6939a40')
-        .maybeSingle()
-
-      console.log('Admin role check:', adminRole, roleError)
-      
-      setIsAdmin(!!adminRole)
-
-      // 사용자 역할 및 프로필 정보 가져오기
-      // user_profiles 테이블은 존재하지 않으므로 user_roles와 조인하여 정보 가져오기
-      const { data: userRole } = await supabase
+      // 사용자 역할 확인
+      const { data: userRoleData } = await supabase
         .from('user_roles')
         .select(`
           role_id,
@@ -92,8 +81,21 @@ export const Sidebar = () => {
         .eq('user_id', user.id)
         .maybeSingle()
 
-      if (userRole) {
-        const roleName = (userRole as any).roles?.role_name
+      if (userRoleData) {
+        const roleName = (userRoleData as any).roles?.role_name
+        console.log('User role:', roleName)
+        
+        // 관리자인지 확인
+        setIsAdmin(roleName === 'administrator')
+        
+        // 계장 이상 직급인지 확인 (관리 메뉴 접근 권한)
+        const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
+        setCanViewManagement(managementRoles.includes(roleName))
+      }
+
+      // 프로필 정보 가져오기
+      if (userRoleData) {
+        const roleName = (userRoleData as any).roles?.role_name
         
         // 관리자 테이블에서 정보 찾기
         const { data: adminInfo } = await supabase
@@ -188,21 +190,33 @@ export const Sidebar = () => {
                 label="진행 추적"
                 isActive={location.pathname === '/progress-tracking'}
               />
-              <SidebarLink
-                to="/reports"
-                icon={<FileText size={18} />}
-                label="보고서(미구현)"
-                isActive={location.pathname === '/reports'}
-              />
-              <li className="my-2 h-px bg-gray-200 mx-4"></li>
-              <SidebarLink
-                to="/settings"
-                icon={<Settings size={18} />}
-                label="설정"
-                isActive={location.pathname === '/settings'}
-              />
               
-              {/* 관리자 메뉴 */}
+              {/* 계장 이상 직급 관리 메뉴 */}
+              {canViewManagement && (
+                <>
+                  <li className="my-2 h-px bg-gray-200 mx-4"></li>
+                  <SidebarLink
+                    to="/admin/dashboard"
+                    icon={<Activity size={18} />}
+                    label="관리자 대시보드"
+                    isActive={location.pathname === '/admin/dashboard'}
+                  />
+                  <SidebarLink
+                    to="/admin/patient-assignment"
+                    icon={<UserCheck size={18} />}
+                    label="환자 배정 관리"
+                    isActive={location.pathname === '/admin/patient-assignment'}
+                  />
+                  <SidebarLink
+                    to="/admin/announcements"
+                    icon={<Megaphone size={18} />}
+                    label="공지사항 관리"
+                    isActive={location.pathname === '/admin/announcements'}
+                  />
+                </>
+              )}
+              
+              {/* 관리자 전용 메뉴 */}
               {isAdmin && (
                 <>
                   <li className="my-2 h-px bg-gray-200 mx-4"></li>
@@ -213,7 +227,7 @@ export const Sidebar = () => {
                     >
                       <div className="flex items-center">
                         <Shield size={18} className="mr-3" />
-                        <span>관리자 메뉴</span>
+                        <span>시스템 관리</span>
                       </div>
                       <ChevronDown 
                         size={16} 
@@ -224,22 +238,10 @@ export const Sidebar = () => {
                   {adminMenuOpen && (
                     <ul className="bg-gray-50 py-1">
                       <SidebarLink
-                        to="/admin/dashboard"
-                        icon={<Activity size={16} />}
-                        label="관리자 대시보드"
-                        isActive={location.pathname === '/admin/dashboard'}
-                      />
-                      <SidebarLink
                         to="/admin/users"
                         icon={<UserCog size={16} />}
                         label="사용자 관리"
                         isActive={location.pathname === '/admin/users'}
-                      />
-                      <SidebarLink
-                        to="/admin/patient-assignment"
-                        icon={<UserCheck size={16} />}
-                        label="환자 배정 관리"
-                        isActive={location.pathname === '/admin/patient-assignment'}
                       />
                       <SidebarLink
                         to="/admin/logs"
@@ -264,6 +266,18 @@ export const Sidebar = () => {
                         icon={<Shield size={16} />}
                         label="권한 설정"
                         isActive={location.pathname === '/admin/permissions'}
+                      />
+                      <SidebarLink
+                        to="/reports"
+                        icon={<FileText size={16} />}
+                        label="보고서(미구현)"
+                        isActive={location.pathname === '/reports'}
+                      />
+                      <SidebarLink
+                        to="/settings"
+                        icon={<Settings size={16} />}
+                        label="설정(미구현)"
+                        isActive={location.pathname === '/settings'}
                       />
                     </ul>
                   )}

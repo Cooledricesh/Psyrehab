@@ -204,3 +204,8 @@ git checkout <last-stable-commit>  # Full rollback
   - `category_id` fields in goals
   - Goal category services or hooks
 - This feature has been deprecated and should not be reimplemented
+
+## Role Modifications
+
+### Social Worker Role Deprecation
+- '사회복지사'라는 역할은 이제 사용하지 않는다.
