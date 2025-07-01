@@ -20,6 +20,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard'
 import UserManagement from '@/pages/admin/UserManagement'
 import PatientAssignment from '@/pages/admin/PatientAssignment'
 import AIArchivePage from '@/pages/admin/AIArchivePage'
+import PermissionsPage from '@/pages/admin/PermissionsPage'
 import { PatientDetailPage } from '@/pages/PatientDetailPage'
 import { PatientEditPage } from '@/components/patients/PatientEditPage'
 
@@ -85,6 +86,7 @@ function App() {
                       <Route path="/admin/backup-restore" element={<AdminProtectedRoute><BackupRestore /></AdminProtectedRoute>} />
                       <Route path="/admin/announcements" element={<AdminProtectedRoute><AnnouncementsManagement /></AdminProtectedRoute>} />
                       <Route path="/admin/ai-archive" element={<AdminProtectedRoute><AIArchivePage /></AdminProtectedRoute>} />
+                      <Route path="/admin/permissions" element={<AdminProtectedRoute><PermissionsPage /></AdminProtectedRoute>} />
                     </Routes>
                   </main>
                 </div>

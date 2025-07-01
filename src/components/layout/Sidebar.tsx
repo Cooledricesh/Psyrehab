@@ -239,6 +239,12 @@ export const Sidebar = () => {
                         label="AI 추천 아카이빙"
                         isActive={location.pathname === '/admin/ai-archive'}
                       />
+                      <SidebarLink
+                        to="/admin/permissions"
+                        icon={<Shield size={16} />}
+                        label="권한 설정"
+                        isActive={location.pathname === '/admin/permissions'}
+                      />
                     </ul>
                   )}
                 </>

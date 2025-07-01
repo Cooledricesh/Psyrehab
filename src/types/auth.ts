@@ -1,6 +1,5 @@
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 
-
 export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest' | 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director' | 'attending_physician'
 
 export interface UserProfile {

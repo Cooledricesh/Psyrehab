@@ -13,7 +13,8 @@ import { supabase } from '@/lib/supabase'
 import { Search, UserPlus, Edit2, Trash2, AlertCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
-import { UserRole, ROLE_NAMES } from '@/types/auth'
+import type { UserRole } from '@/types/auth'
+import { ROLE_NAMES } from '@/types/auth'
 import { UserManagementService } from '@/services'
 
 interface User {
