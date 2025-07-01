@@ -85,7 +85,7 @@ export const RATE_LIMITS = {
 export const USER_ROLE_CONFIG = {
   DEFAULT_ROLE: 'patient' as const,
   ADMIN_ROLES: ['administrator'] as const,
-  STAFF_ROLES: ['administrator', 'social_worker', 'staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head'] as const,
+  STAFF_ROLES: ['administrator', 'staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director'] as const,
   CLIENT_ROLES: ['patient'] as const
 } as const
 

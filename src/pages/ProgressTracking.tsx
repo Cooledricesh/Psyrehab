@@ -29,6 +29,7 @@ import { ko } from 'date-fns/locale';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { useQueryClient } from '@tanstack/react-query';
 import SimpleWeeklyCheckbox from '@/components/progress/SimpleWeeklyCheckbox';
+import InlineDateEditor from '@/components/progress/InlineDateEditor';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -163,15 +164,15 @@ export default function ProgressTracking() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: '진행중', variant: 'default' as const },
-      completed: { label: '완료', variant: 'success' as const },
-      pending: { label: '대기중', variant: 'secondary' as const },
-      on_hold: { label: '보류', variant: 'warning' as const },
-      cancelled: { label: '취소', variant: 'destructive' as const },
+      active: { label: '진행중', variant: 'default' as const, className: '' },
+      completed: { label: '완료', variant: 'outline' as const, className: 'border-green-500 text-green-700' },
+      pending: { label: '대기중', variant: 'secondary' as const, className: '' },
+      on_hold: { label: '보류', variant: 'outline' as const, className: 'border-yellow-500 text-yellow-700' },
+      cancelled: { label: '취소', variant: 'destructive' as const, className: '' },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
   };
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
@@ -430,6 +431,13 @@ export default function ProgressTracking() {
                         {patientGoals.sixMonthGoal.description}
                       </p>
                     )}
+                    <InlineDateEditor
+                      goalId={patientGoals.sixMonthGoal.id}
+                      goalType="six_month"
+                      currentStartDate={patientGoals.sixMonthGoal.start_date}
+                      currentEndDate={patientGoals.sixMonthGoal.end_date}
+                      patientId={selectedPatient}
+                    />
                     <Progress 
                       value={patientGoals.sixMonthGoal.progress || 0} 
                       className="h-2"
@@ -494,6 +502,17 @@ export default function ProgressTracking() {
 
                         {expandedGoals[monthlyGoal.id] && (
                           <div className="mt-3 space-y-2">
+                            {/* 날짜 선택 */}
+                            <div className="ml-6">
+                              <InlineDateEditor
+                                goalId={monthlyGoal.id}
+                                goalType="monthly"
+                                currentStartDate={monthlyGoal.start_date}
+                                currentEndDate={monthlyGoal.end_date}
+                                patientId={selectedPatient}
+                              />
+                            </div>
+                            
                             {/* 펼쳤을 때도 완료된 목표는 Progress 바 표시 */}
                             {monthlyGoal.status === 'completed' && (
                               <div className="ml-6">
@@ -507,13 +526,20 @@ export default function ProgressTracking() {
                             
                             {/* 주간 목표들 */}
                             <div className="ml-6 space-y-2">
-                              {monthlyGoal.weeklyGoals?.map((weeklyGoal) => (
+                              {monthlyGoal.weeklyGoals?.map((weeklyGoal: any) => (
                                 <div
                                   key={weeklyGoal.id}
-                                  className="p-2 bg-gray-50 rounded"
+                                  className="p-2 bg-gray-50 rounded space-y-2"
                                 >
                                   <SimpleWeeklyCheckbox
                                     weeklyGoal={weeklyGoal}
+                                    patientId={selectedPatient!}
+                                  />
+                                  <InlineDateEditor
+                                    goalId={weeklyGoal.id}
+                                    goalType="weekly"
+                                    currentStartDate={weeklyGoal.start_date}
+                                    currentEndDate={weeklyGoal.end_date}
                                     patientId={selectedPatient!}
                                   />
                                 </div>

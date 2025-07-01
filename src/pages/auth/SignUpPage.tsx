@@ -305,8 +305,8 @@ export default function SignUpPage() {
                 </div>
               </div>
 
-              {/* 추가 정보 (사회복지사/관리자) */}
-              {(formData.role === 'social_worker' || formData.role === 'administrator') && (
+              {/* 추가 정보 (직원/관리자) */}
+              {(formData.role !== 'patient') && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="department" className="text-sm font-medium text-gray-700">

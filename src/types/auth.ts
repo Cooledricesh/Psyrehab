@@ -1,6 +1,6 @@
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 
-export type UserRole = 'administrator' | 'social_worker' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest' | 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director' | 'attending_physician'
+export type UserRole = 'administrator' | 'patient' | 'super_admin' | 'admin' | 'therapist' | 'manager' | 'user' | 'guest' | 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director' | 'attending_physician'
 
 export interface UserProfile {
   user_id: string
@@ -12,7 +12,7 @@ export interface UserProfile {
 }
 
 export interface SocialWorkerProfile extends UserProfile {
-  role: 'social_worker'
+  role: 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director'
   employee_id?: string
   department?: string
   contact_number?: string
@@ -222,15 +222,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'manage_goals',
     'manage_assessments',
     'manage_services'
-  ],
-  social_worker: [
-    'manage_assigned_patients',
-    'create_goals',
-    'update_goals',
-    'view_patient_data',
-    'create_assessments',
-    'manage_services',
-    'view_own_analytics'
   ],
   patient: [
     'view_own_data',
@@ -453,7 +444,8 @@ export const isAdministrator = (profile: AnyUserProfile | null): profile is Admi
 }
 
 export const isSocialWorker = (profile: AnyUserProfile | null): profile is SocialWorkerProfile => {
-  return profile?.role === 'social_worker'
+  const socialWorkerRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director']
+  return profile ? socialWorkerRoles.includes(profile.role) : false
 }
 
 export const isPatient = (profile: AnyUserProfile | null): profile is PatientProfile => {
@@ -509,7 +501,6 @@ export const ROLE_NAMES: Record<UserRole, string> = {
   super_admin: '최고 관리자',
   admin: '관리자',
   administrator: '관리자',
-  social_worker: '사회복지사',
   patient: '환자',
   therapist: '치료사',
   manager: '매니저',

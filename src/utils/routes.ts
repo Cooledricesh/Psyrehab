@@ -105,20 +105,6 @@ export const ROLE_ROUTES = {
     ROUTE_PATHS.ADMIN.ANALYTICS,
     ROUTE_PATHS.ADMIN.SYSTEM,
   ],
-  social_worker: [
-    ROUTE_PATHS.SOCIAL_WORKER.DASHBOARD,
-    ROUTE_PATHS.SOCIAL_WORKER.PATIENTS,
-    ROUTE_PATHS.SOCIAL_WORKER.PATIENT_DETAIL,
-    ROUTE_PATHS.SOCIAL_WORKER.GOALS,
-    ROUTE_PATHS.SOCIAL_WORKER.GOAL_CREATE,
-    ROUTE_PATHS.SOCIAL_WORKER.GOAL_EDIT,
-    ROUTE_PATHS.SOCIAL_WORKER.ASSESSMENTS,
-    ROUTE_PATHS.SOCIAL_WORKER.ASSESSMENT_CREATE,
-    ROUTE_PATHS.SOCIAL_WORKER.ASSESSMENT_DETAIL,
-    ROUTE_PATHS.SOCIAL_WORKER.SERVICES,
-    ROUTE_PATHS.SOCIAL_WORKER.ANALYTICS,
-    ROUTE_PATHS.SOCIAL_WORKER.PROFILE,
-  ],
   patient: [
     ROUTE_PATHS.PATIENT.DASHBOARD,
     ROUTE_PATHS.PATIENT.GOALS,
@@ -183,7 +169,6 @@ export class RouteUtils {
       case 'manager_level':
       case 'section_chief':
         return ROUTE_PATHS.ADMIN.DASHBOARD
-      case 'social_worker':
       case 'staff':
       case 'assistant_manager':
         return ROUTE_PATHS.SOCIAL_WORKER.DASHBOARD
@@ -201,7 +186,6 @@ export class RouteUtils {
    */
   static getProfileForRole(role: UserRole): string {
     switch (role) {
-      case 'social_worker':
       case 'staff':
       case 'assistant_manager':
       case 'section_chief':
@@ -378,7 +362,6 @@ export class RouteUtils {
           { title: '분석', path: ROUTE_PATHS.ADMIN.ANALYTICS, icon: 'analytics' },
         ]
 
-      case 'social_worker':
       case 'staff':
       case 'assistant_manager':
         return [

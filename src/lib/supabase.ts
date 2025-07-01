@@ -32,7 +32,7 @@ export const supabase = createClient(
         }
       },
       // Debug mode for development
-      debug: import.meta.env.DEV,
+      debug: false,
       // Flow type for authentication
       flowType: 'pkce'
     },
@@ -115,9 +115,16 @@ export async function getCurrentSession() {
 // Helper function to create user role and profile for approved signup requests
 async function createUserRoleAndProfile(userId: string, signupRequest: any) {
   try {
-    const roleMap = {
-      'social_worker': '6a5037f6-5553-47f9-824f-bf1e767bda95',
-      'administrator': 'd7fcf425-85bc-42b4-8806-917ef6939a40'
+    // 데이터베이스에서 직접 역할 ID 조회
+    const { data: roleData, error: roleQueryError } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('role_name', signupRequest.requested_role)
+      .single()
+
+    if (roleQueryError || !roleData) {
+      console.error('역할 조회 실패:', roleQueryError)
+      return false
     }
 
     // 1. user_roles에 역할 할당
@@ -125,7 +132,7 @@ async function createUserRoleAndProfile(userId: string, signupRequest: any) {
       .from('user_roles')
       .insert({
         user_id: userId,
-        role_id: roleMap[signupRequest.requested_role as keyof typeof roleMap]
+        role_id: roleData.id
       })
 
     if (roleError && !roleError.message.includes('duplicate')) {
@@ -133,22 +140,41 @@ async function createUserRoleAndProfile(userId: string, signupRequest: any) {
       return false
     }
 
-    // 2. 프로필 생성
-    const table = signupRequest.requested_role === 'social_worker' ? 'social_workers' : 'administrators'
-    const { error: profileError } = await supabase
-      .from(table)
-      .insert({
-        user_id: userId,
-        full_name: signupRequest.full_name,
-        employee_id: signupRequest.employee_id || null,
-        department: signupRequest.department || null,
-        contact_number: signupRequest.contact_number || null,
-        is_active: true
-      })
+    // 2. 프로필 생성 - 직급별로 social_workers 테이블에 생성
+    const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director']
+    
+    if (jobTitleRoles.includes(signupRequest.requested_role)) {
+      const { error: profileError } = await supabase
+        .from('social_workers')
+        .insert({
+          user_id: userId,
+          full_name: signupRequest.full_name,
+          employee_id: signupRequest.employee_id || null,
+          department: signupRequest.department || null,
+          contact_number: signupRequest.contact_number || null,
+          is_active: true
+        })
 
-    if (profileError && !profileError.message.includes('duplicate')) {
-      console.error('프로필 생성 실패:', profileError)
-      return false
+      if (profileError && !profileError.message.includes('duplicate')) {
+        console.error('프로필 생성 실패:', profileError)
+        return false
+      }
+    } else if (signupRequest.requested_role === 'administrator') {
+      const { error: profileError } = await supabase
+        .from('administrators')
+        .insert({
+          user_id: userId,
+          full_name: signupRequest.full_name,
+          employee_id: signupRequest.employee_id || null,
+          department: signupRequest.department || null,
+          contact_number: signupRequest.contact_number || null,
+          is_active: true
+        })
+
+      if (profileError && !profileError.message.includes('duplicate')) {
+        console.error('프로필 생성 실패:', profileError)
+        return false
+      }
     }
 
     // 3. signup_requests 업데이트
@@ -207,56 +233,52 @@ export async function getUserProfile(userId: string) {
 
     let profile = null
     
+    // 직급별 역할들
+    const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'attending_physician']
+    
     // Fetch profile based on role
-    switch (role) {
-      case 'social_worker':
-        const { data: socialWorker, error: swError } = await supabase
-          .from('social_workers')
-          .select('*')
-          .eq('user_id', userId)
-          .single()
-        
-        if (swError) {
-          console.error('Error fetching social worker profile:', swError.message)
-          return null
-        }
-        
-        profile = { ...socialWorker, role: 'social_worker' }
-        break
-
-      case 'administrator':
-        const { data: admin, error: adminError } = await supabase
-          .from('administrators')
-          .select('*')
-          .eq('user_id', userId)
-          .single()
-        
-        if (adminError) {
-          console.error('Error fetching administrator profile:', adminError.message)
-          return null
-        }
-        
-        profile = { ...admin, role: 'administrator' }
-        break
-
-      case 'patient':
-        const { data: patient, error: patientError } = await supabase
-          .from('patients')
-          .select('*')
-          .eq('user_id', userId)
-          .single()
-        
-        if (patientError) {
-          console.error('Error fetching patient profile:', patientError.message)
-          return null
-        }
-        
-        profile = { ...patient, role: 'patient' }
-        break
-
-      default:
-        console.warn(`Unknown role: ${role}`)
+    if (jobTitleRoles.includes(role)) {
+      const { data: socialWorker, error: swError } = await supabase
+        .from('social_workers')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      
+      if (swError) {
+        console.error('Error fetching social worker profile:', swError.message)
         return null
+      }
+      
+      profile = { ...socialWorker, role }
+    } else if (role === 'administrator') {
+      const { data: admin, error: adminError } = await supabase
+        .from('administrators')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      
+      if (adminError) {
+        console.error('Error fetching administrator profile:', adminError.message)
+        return null
+      }
+      
+      profile = { ...admin, role: 'administrator' }
+    } else if (role === 'patient') {
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      
+      if (patientError) {
+        console.error('Error fetching patient profile:', patientError.message)
+        return null
+      }
+      
+      profile = { ...patient, role: 'patient' }
+    } else {
+      console.warn(`Unknown role: ${role}`)
+      return null
     }
 
     return profile
@@ -288,7 +310,8 @@ export async function hasPermission(userId: string, permission: string): Promise
         'manage_assessments',
         'manage_services'
       ],
-      social_worker: [
+      // 직급별 권한 (사회복지사 권한)
+      staff: [
         'manage_assigned_patients',
         'create_goals',
         'update_goals',
@@ -296,6 +319,70 @@ export async function hasPermission(userId: string, permission: string): Promise
         'create_assessments',
         'manage_services',
         'view_own_analytics'
+      ],
+      assistant_manager: [
+        'manage_assigned_patients',
+        'create_goals',
+        'update_goals',
+        'view_patient_data',
+        'create_assessments',
+        'manage_services',
+        'view_own_analytics'
+      ],
+      section_chief: [
+        'manage_assigned_patients',
+        'create_goals',
+        'update_goals',
+        'view_patient_data',
+        'create_assessments',
+        'manage_services',
+        'view_own_analytics'
+      ],
+      manager_level: [
+        'manage_assigned_patients',
+        'create_goals',
+        'update_goals',
+        'view_patient_data',
+        'create_assessments',
+        'manage_services',
+        'view_own_analytics'
+      ],
+      department_head: [
+        'manage_assigned_patients',
+        'create_goals',
+        'update_goals',
+        'view_patient_data',
+        'create_assessments',
+        'manage_services',
+        'view_own_analytics',
+        'manage_social_workers'
+      ],
+      vice_director: [
+        'manage_users',
+        'manage_social_workers',
+        'manage_patients',
+        'view_all_data',
+        'view_analytics',
+        'manage_goals',
+        'manage_assessments',
+        'manage_services'
+      ],
+      director: [
+        'manage_users',
+        'manage_social_workers',
+        'manage_patients',
+        'view_all_data',
+        'manage_system_settings',
+        'view_analytics',
+        'manage_goals',
+        'manage_assessments',
+        'manage_services'
+      ],
+      attending_physician: [
+        'view_patient_data',
+        'create_assessments',
+        'view_analytics',
+        'manage_goals'
       ],
       patient: [
         'view_own_data',
