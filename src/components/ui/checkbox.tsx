@@ -4,14 +4,22 @@ import { cn } from "@/lib/utils"
 export interface CheckboxProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   onCheckedChange?: (checked: boolean) => void
+  indeterminate?: boolean
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, onCheckedChange, onChange, ...props }, ref) => {
+  ({ className, onCheckedChange, onChange, indeterminate, ...props }, ref) => {
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       onChange?.(event)
       onCheckedChange?.(event.target.checked)
     }
+
+    // indeterminate 속성 처리
+    React.useEffect(() => {
+      if (ref && 'current' in ref && ref.current) {
+        ref.current.indeterminate = indeterminate || false
+      }
+    }, [ref, indeterminate])
 
     return (
       <input

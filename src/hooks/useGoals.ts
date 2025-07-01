@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as goalService from '@/services/rehabilitation-goals';
-import * as categoryService from '@/services/goal-categories';
+// Category system has been deprecated - all category-related imports removed
 import type { 
   BaseGoal, 
-  GoalCategory,
+  // GoalCategory, // Removed - deprecated category system
   CreateGoalRequest,
   UpdateGoalRequest,
   GoalFilters
@@ -20,7 +20,7 @@ export const GOAL_QUERY_KEYS = {
   detail: (id: string) => [...GOAL_QUERY_KEYS.details(), id] as const,
   hierarchy: (patientId: string) => [...GOAL_QUERY_KEYS.all, 'hierarchy', patientId] as const,
   statistics: (patientId: string) => [...GOAL_QUERY_KEYS.all, 'statistics', patientId] as const,
-  categories: ['goal-categories'] as const,
+  // categories: ['goal-categories'] as const, // Removed - deprecated category system
 } as const;
 
 /**
@@ -163,32 +163,6 @@ export const useUpdateGoalStatus = () => {
   });
 };
 
-/**
- * 목표 카테고리 목록 조회
- */
-export const useGoalCategories = () => {
-  return useQuery({
-    queryKey: GOAL_QUERY_KEYS.categories,
-    queryFn: () => categoryService.getGoalCategories(),
-    staleTime: 30 * 60 * 1000, // 30분 (카테고리는 자주 변경되지 않음)
-  });
-};
+// Category system has been deprecated - useGoalCategories hook removed
 
-/**
- * 카테고리 생성
- */
-export const useCreateGoalCategory = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (categoryData: Omit<GoalCategory, 'id' | 'created_at' | 'updated_at'>) => 
-      categoryService.createGoalCategory(categoryData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GOAL_QUERY_KEYS.categories });
-      toast.success('카테고리가 생성되었습니다');
-    },
-    onError: (error: Error) => {
-      toast.error(`카테고리 생성 실패: ${error.message}`);
-    },
-  });
-}; 
+// Category system has been deprecated - useCreateGoalCategory hook removed 

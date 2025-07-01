@@ -87,6 +87,39 @@ export default function UserManagement() {
 
       if (adminError) throw adminError
 
+      console.log('socialWorkers:', socialWorkers)
+      console.log('administrators:', administrators)
+
+      // 모든 사용자의 역할 정보 조회
+      const allUserIds = [
+        ...(socialWorkers || []).map(sw => sw.user_id),
+        ...(administrators || []).map(admin => admin.user_id)
+      ]
+
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select(`
+          user_id,
+          role_id,
+          roles (
+            role_name
+          )
+        `)
+        .in('user_id', allUserIds)
+
+      if (rolesError) throw rolesError
+
+      // 역할 정보를 맵으로 변환
+      const roleMap = new Map(
+        (userRoles || []).map(ur => [
+          ur.user_id,
+          {
+            role_id: ur.role_id,
+            role_name: ur.roles?.role_name
+          }
+        ])
+      )
+
       // 승인 대기 중인 신청서 조회
       console.log('Fetching pending signup requests...')
       const { data: pendingRequests, error: requestError } = await supabase
@@ -128,13 +161,14 @@ export default function UserManagement() {
       }
 
       // 데이터 변환
+      console.log('Starting data transformation...')
       const allUsers: User[] = [
         ...(socialWorkers || []).map(sw => ({
           id: sw.user_id,
           email: '', // email은 나중에 채워질 예정
           fullName: sw.full_name,
-          role: 'social_worker' as const,
-          roleId: '6a5037f6-5553-47f9-824f-bf1e767bda95',
+          role: (roleMap.get(sw.user_id)?.role_name || 'staff') as UserRole,
+          roleId: roleMap.get(sw.user_id)?.role_id || '',
           isActive: sw.is_active,
           createdAt: sw.created_at,
           employeeId: sw.employee_id,
@@ -146,8 +180,8 @@ export default function UserManagement() {
           id: admin.user_id,
           email: '', // email은 나중에 채워질 예정
           fullName: admin.full_name,
-          role: 'administrator' as const,
-          roleId: 'd7fcf425-85bc-42b4-8806-917ef6939a40',
+          role: (roleMap.get(admin.user_id)?.role_name || 'administrator') as UserRole,
+          roleId: roleMap.get(admin.user_id)?.role_id || '',
           isActive: admin.is_active,
           createdAt: admin.created_at,
           employeeId: '',
@@ -161,9 +195,11 @@ export default function UserManagement() {
         new Map([...allUsers, ...pendingUsers].map(user => [user.id, user])).values()
       ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
+      console.log('Final uniqueUsers:', uniqueUsers)
       setUsers(uniqueUsers)
 
-    } catch {
+    } catch (error) {
+      console.error("Error in loadUsers:", error)
       console.error("Error occurred")
       toast({
         title: '오류',
@@ -208,23 +244,28 @@ export default function UserManagement() {
 
       // 기본 정보 업데이트 (역할 변경 후 새로운 테이블에서)
       const table = roleChanged 
-        ? (editFormData.role === 'administrator' || editFormData.role === 'director' || editFormData.role === 'vice_director' 
+        ? (editFormData.role === 'administrator' || editFormData.role === 'director' || editFormData.role === 'vice_director' || editFormData.role === 'department_head' || editFormData.role === 'manager_level' || editFormData.role === 'section_chief'
           ? 'administrators' 
           : 'social_workers')
-        : (selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators')
+        : (selectedUser.role === 'staff' || selectedUser.role === 'assistant_manager' || selectedUser.role === 'social_worker' ? 'social_workers' : 'administrators')
       
+      // 모든 테이블에 동일한 필드가 있으므로 같은 데이터 사용
+      const updateData = {
+        full_name: editFormData.fullName,
+        department: editFormData.department || null,
+        contact_number: editFormData.contactNumber || null,
+        is_active: editFormData.isActive,
+        updated_at: new Date().toISOString()
+      }
+
       const { error } = await supabase
         .from(table)
-        .update({
-          full_name: editFormData.fullName,
-          department: editFormData.department || null,
-          contact_number: editFormData.contactNumber || null,
-          is_active: editFormData.isActive,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('user_id', selectedUser.id)
 
       if (error) throw error
+
+      // user_profiles 테이블 업데이트 제거 - 테이블이 존재하지 않음
 
       toast({
         title: '성공',

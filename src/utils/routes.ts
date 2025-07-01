@@ -177,11 +177,20 @@ export class RouteUtils {
   static getDashboardForRole(role: UserRole): string {
     switch (role) {
       case 'administrator':
+      case 'director':
+      case 'vice_director':
+      case 'department_head':
+      case 'manager_level':
+      case 'section_chief':
         return ROUTE_PATHS.ADMIN.DASHBOARD
       case 'social_worker':
+      case 'staff':
+      case 'assistant_manager':
         return ROUTE_PATHS.SOCIAL_WORKER.DASHBOARD
       case 'patient':
         return ROUTE_PATHS.PATIENT.DASHBOARD
+      case 'attending_physician':
+        return ROUTE_PATHS.DASHBOARD
       default:
         return ROUTE_PATHS.DASHBOARD
     }
@@ -193,6 +202,11 @@ export class RouteUtils {
   static getProfileForRole(role: UserRole): string {
     switch (role) {
       case 'social_worker':
+      case 'staff':
+      case 'assistant_manager':
+      case 'section_chief':
+      case 'manager_level':
+      case 'department_head':
         return ROUTE_PATHS.SOCIAL_WORKER.PROFILE
       case 'patient':
         return ROUTE_PATHS.PATIENT.PROFILE
@@ -365,6 +379,8 @@ export class RouteUtils {
         ]
 
       case 'social_worker':
+      case 'staff':
+      case 'assistant_manager':
         return [
           { title: '대시보드', path: ROUTE_PATHS.SOCIAL_WORKER.DASHBOARD, icon: 'dashboard' },
           { title: '담당 환자', path: ROUTE_PATHS.SOCIAL_WORKER.PATIENTS, icon: 'patients' },
@@ -374,6 +390,29 @@ export class RouteUtils {
           { title: '분석', path: ROUTE_PATHS.SOCIAL_WORKER.ANALYTICS, icon: 'analytics' },
         ]
 
+      case 'section_chief':
+      case 'manager_level':
+      case 'department_head':
+      case 'vice_director':
+      case 'director':
+        return [
+          { title: '대시보드', path: ROUTE_PATHS.ADMIN.DASHBOARD, icon: 'dashboard' },
+          { title: '담당 환자', path: ROUTE_PATHS.SOCIAL_WORKER.PATIENTS, icon: 'patients' },
+          { title: '목표 관리', path: ROUTE_PATHS.SOCIAL_WORKER.GOALS, icon: 'goals' },
+          { title: '평가', path: ROUTE_PATHS.SOCIAL_WORKER.ASSESSMENTS, icon: 'assessments' },
+          { title: '서비스', path: ROUTE_PATHS.SOCIAL_WORKER.SERVICES, icon: 'services' },
+          {
+            title: '사용자 관리',
+            path: ROUTE_PATHS.ADMIN.USERS,
+            icon: 'users',
+            children: [
+              { title: '직원', path: ROUTE_PATHS.ADMIN.SOCIAL_WORKERS },
+              { title: '환자', path: ROUTE_PATHS.ADMIN.PATIENTS },
+            ]
+          },
+          { title: '분석', path: ROUTE_PATHS.ADMIN.ANALYTICS, icon: 'analytics' },
+        ]
+
       case 'patient':
         return [
           { title: '내 대시보드', path: ROUTE_PATHS.PATIENT.DASHBOARD, icon: 'dashboard' },
@@ -381,6 +420,12 @@ export class RouteUtils {
           { title: '체크인', path: ROUTE_PATHS.PATIENT.CHECKINS, icon: 'checkins' },
           { title: '진행상황', path: ROUTE_PATHS.PATIENT.PROGRESS, icon: 'progress' },
           { title: '내 정보', path: ROUTE_PATHS.PATIENT.PROFILE, icon: 'profile' },
+        ]
+
+      case 'attending_physician':
+        return [
+          { title: '대시보드', path: ROUTE_PATHS.DASHBOARD, icon: 'dashboard' },
+          { title: '담당 환자', path: ROUTE_PATHS.SOCIAL_WORKER.PATIENTS, icon: 'patients' },
         ]
 
       default:

@@ -1,7 +1,26 @@
 import React, { useState } from 'react'
 import { Filter, X, RotateCcw, /* Calendar, */ TrendingUp, /* Users, */ Clock } from 'lucide-react'
 import { GoalStatus, GoalPriority, GoalType } from '@/types/goals'
-import { AdvancedGoalFilters } from '@/utils/goal-categorization'
+// import { AdvancedGoalFilters } from '@/utils/goal-categorization' // Removed - deprecated category system
+// Define AdvancedGoalFilters locally
+interface AdvancedGoalFilters {
+  categories?: string[]
+  tags?: string[]
+  statusList?: GoalStatus[]
+  priorityList?: GoalPriority[]
+  typeList?: GoalType[]
+  dateRange?: {
+    start: Date | null
+    end: Date | null
+  }
+  completionRate?: {
+    min: number
+    max: number
+  }
+  assignedTo?: string[]
+  hasSubGoals?: boolean
+  hasAttachments?: boolean
+}
 import { useGoalCategories } from '@/hooks/goal-categories/useGoalCategories'
 import { 
   ALL_GOAL_TAGS,

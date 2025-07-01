@@ -14,7 +14,7 @@ interface SignUpFormData {
   email: string
   password: string
   passwordConfirm: string
-  role: 'social_worker' | 'administrator' | 'patient'
+  role: 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director' | 'administrator' | 'patient' | 'attending_physician'
   fullName: string
   department?: string
   contactNumber?: string
@@ -25,7 +25,7 @@ export default function SignUpPage() {
     email: '',
     password: '',
     passwordConfirm: '',
-    role: 'social_worker',
+    role: 'staff',
     fullName: '',
     department: '',
     contactNumber: ''
@@ -197,7 +197,7 @@ export default function SignUpPage() {
                 </Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value: 'social_worker' | 'administrator' | 'patient') => 
+                  onValueChange={(value: any) => 
                     handleInputChange('role', value)
                   }
                 >
@@ -205,7 +205,14 @@ export default function SignUpPage() {
                     <SelectValue placeholder="사용자 유형을 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="social_worker">사회복지사</SelectItem>
+                    <SelectItem value="staff">사원</SelectItem>
+                    <SelectItem value="assistant_manager">주임</SelectItem>
+                    <SelectItem value="section_chief">계장</SelectItem>
+                    <SelectItem value="manager_level">과장</SelectItem>
+                    <SelectItem value="department_head">부장</SelectItem>
+                    <SelectItem value="vice_director">부원장</SelectItem>
+                    <SelectItem value="director">원장</SelectItem>
+                    <SelectItem value="attending_physician">주치의</SelectItem>
                     <SelectItem value="administrator">관리자</SelectItem>
                     <SelectItem value="patient">환자</SelectItem>
                   </SelectContent>

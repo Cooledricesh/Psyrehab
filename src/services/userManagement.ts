@@ -15,14 +15,34 @@ export class UserManagementService {
     console.log('🔄 사용자 역할 변경 시작:', { userId, newRole });
 
     try {
-      // 1. 현재 사용자 정보 조회
-      const { data: currentUser, error: userError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('id', userId)
+      // 1. 현재 사용자가 존재하는지 확인 (user_profiles 테이블에서)
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
         .single();
 
-      if (userError || !currentUser) {
+      // user_profiles에 없다면 직접 프로필 테이블에서 확인
+      const userExists = userProfile || await (async () => {
+        const { data: sw } = await supabase
+          .from('social_workers')
+          .select('user_id')
+          .eq('user_id', userId)
+          .single();
+        
+        if (sw) return true;
+        
+        const { data: admin } = await supabase
+          .from('administrators')
+          .select('user_id')
+          .eq('user_id', userId)
+          .single();
+          
+        return !!admin;
+      })();
+
+      if (!userExists) {
+        console.error('사용자를 찾을 수 없음:', userId);
         throw new Error('사용자를 찾을 수 없습니다.');
       }
 
@@ -91,7 +111,6 @@ export class UserManagementService {
       let insertData: any;
 
       switch (newRole) {
-        case 'social_worker':
         case 'staff':
         case 'assistant_manager':
         case 'section_chief':
@@ -148,7 +167,7 @@ export class UserManagementService {
       const { data: roleData, error: roleError } = await supabase
         .from('roles')
         .select('id')
-        .eq('name', newRole)
+        .eq('role_name', newRole)
         .single();
 
       if (roleError) {
@@ -183,7 +202,6 @@ export class UserManagementService {
   static getAvailableRoles(): Array<{ value: UserRole; label: string }> {
     return [
       { value: 'administrator', label: '관리자' },
-      { value: 'social_worker', label: '사회복지사' },
       { value: 'staff', label: '사원' },
       { value: 'assistant_manager', label: '주임' },
       { value: 'section_chief', label: '계장' },

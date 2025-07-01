@@ -85,4 +85,8 @@ export type { ArchivedRecommendation, ArchivedGoalData, ArchiveRecommendationPar
 
 // User Management Service
 export { UserManagementService } from './userManagement'
-export type { UpdateUserRoleParams } from './userManagement' 
+export type { UpdateUserRoleParams } from './userManagement'
+
+// Role Permissions Service
+export { RolePermissionsService } from './rolePermissions'
+export type { RolePermission } from './rolePermissions' 

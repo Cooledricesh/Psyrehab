@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/use-toast'
 import { Shield, Users, Settings, Save, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react'
 import type { UserRole, Permission } from '@/types/auth'
-import { ROLE_PERMISSIONS, ROLE_NAMES } from '@/types/auth'
+import { ROLE_NAMES } from '@/types/auth'
+import { RolePermissionsService } from '@/services/rolePermissions'
 
 // 권한 카테고리별 분류
 const PERMISSION_CATEGORIES = {
@@ -130,11 +131,34 @@ const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
 }
 
 export default function PermissionsPage() {
-  const [selectedRole, setSelectedRole] = useState<UserRole>('social_worker')
-  const [permissions, setPermissions] = useState<Record<UserRole, Permission[]>>(ROLE_PERMISSIONS)
+  const [selectedRole, setSelectedRole] = useState<UserRole>('staff')
+  const [permissions, setPermissions] = useState<Record<UserRole, Permission[]>>({} as Record<UserRole, Permission[]>)
+  const [originalPermissions, setOriginalPermissions] = useState<Record<UserRole, Permission[]>>({} as Record<UserRole, Permission[]>)
   const [hasChanges, setHasChanges] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+
+  useEffect(() => {
+    loadPermissions()
+  }, [])
+
+  const loadPermissions = async () => {
+    try {
+      setLoading(true)
+      const rolePermissions = await RolePermissionsService.getAllRolePermissions()
+      setPermissions(rolePermissions)
+      setOriginalPermissions(rolePermissions)
+    } catch (error) {
+      toast({
+        title: '오류',
+        description: '권한 설정을 불러오는 중 오류가 발생했습니다.',
+        variant: 'destructive'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // 권한 변경 핸들러
   const handlePermissionToggle = (role: UserRole, permission: Permission) => {
@@ -176,24 +200,34 @@ export default function PermissionsPage() {
     try {
       setSaving(true)
       
-      // 실제 구현에서는 여기에 백엔드 API 호출
-      // await updateRolePermissions(permissions)
-      
-      // 임시로 localStorage에 저장
-      localStorage.setItem('rolePermissions', JSON.stringify(permissions))
-      
-      await new Promise(resolve => setTimeout(resolve, 1000)) // 시뮬레이션
-      
-      toast({
-        title: '성공',
-        description: '권한 설정이 저장되었습니다.',
+      // 변경된 역할만 업데이트
+      const promises = Object.entries(permissions).map(async ([role, perms]) => {
+        const originalPerms = originalPermissions[role as UserRole] || []
+        const hasChanged = JSON.stringify(perms.sort()) !== JSON.stringify(originalPerms.sort())
+        
+        if (hasChanged) {
+          return RolePermissionsService.updateRolePermissions(role as UserRole, perms)
+        }
+        return true
       })
       
-      setHasChanges(false)
+      const results = await Promise.all(promises)
+      
+      if (results.every(result => result)) {
+        toast({
+          title: '성공',
+          description: '권한 설정이 저장되었습니다.',
+        })
+        
+        setOriginalPermissions({ ...permissions })
+        setHasChanges(false)
+      } else {
+        throw new Error('일부 역할의 권한 업데이트에 실패했습니다.')
+      }
     } catch (error) {
       toast({
         title: '오류',
-        description: '권한 설정 저장 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '권한 설정 저장 중 오류가 발생했습니다.',
         variant: 'destructive'
       })
     } finally {
@@ -203,11 +237,11 @@ export default function PermissionsPage() {
 
   // 초기화
   const handleReset = () => {
-    setPermissions(ROLE_PERMISSIONS)
+    setPermissions({ ...originalPermissions })
     setHasChanges(false)
     toast({
       title: '초기화 완료',
-      description: '권한 설정이 기본값으로 초기화되었습니다.',
+      description: '권한 설정이 원래 값으로 초기화되었습니다.',
     })
   }
 
@@ -220,11 +254,21 @@ export default function PermissionsPage() {
     'manager_level',
     'section_chief',
     'assistant_manager',
-    'social_worker',
     'staff',
     'attending_physician',
     'patient'
   ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600">권한 설정을 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-6">

@@ -239,12 +239,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'submit_check_ins'
   ],
   staff: [
+    'view_patient_data',
     'patient:read',
     'session:read',
     'announcement:read',
     'assessment:read'
   ],
   assistant_manager: [
+    'manage_assigned_patients',
+    'create_goals',
+    'update_goals',
+    'view_patient_data',
+    'create_assessments',
     'patient:read',
     'patient:update',
     'session:create',
@@ -256,6 +262,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'announcement:read'
   ],
   section_chief: [
+    'manage_assigned_patients',
+    'create_goals',
+    'update_goals',
+    'view_patient_data',
+    'create_assessments',
+    'manage_services',
+    'view_own_analytics',
     'patient:read',
     'patient:update',
     'session:create',
@@ -268,6 +281,16 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'report:read'
   ],
   manager_level: [
+    'manage_assigned_patients',
+    'create_goals',
+    'update_goals',
+    'view_patient_data',
+    'create_assessments',
+    'manage_services',
+    'view_own_analytics',
+    'manage_patients',
+    'view_all_data',
+    'view_analytics',
     'user:read',
     'patient:read',
     'patient:update',
@@ -282,6 +305,16 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'report:export'
   ],
   department_head: [
+    'manage_assigned_patients',
+    'create_goals',
+    'update_goals',
+    'view_patient_data',
+    'create_assessments',
+    'manage_services',
+    'view_own_analytics',
+    'manage_patients',
+    'view_all_data',
+    'view_analytics',
     'user:read',
     'user:update',
     'patient:create',
@@ -303,6 +336,16 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'report:export'
   ],
   vice_director: [
+    'manage_assigned_patients',
+    'create_goals',
+    'update_goals',
+    'view_patient_data',
+    'create_assessments',
+    'manage_services',
+    'view_own_analytics',
+    'manage_patients',
+    'view_all_data',
+    'view_analytics',
     'user:create',
     'user:read',
     'user:update',
@@ -328,14 +371,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
   director: ALL_PERMISSIONS,
   attending_physician: [
+    'view_patient_data',
     'patient:read',
-    'patient:update',
     'session:read',
-    'assessment:create',
     'assessment:read',
-    'assessment:update',
-    'announcement:read',
-    'report:read'
+    'announcement:read'
   ]
 }
 

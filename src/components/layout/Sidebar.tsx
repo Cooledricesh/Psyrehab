@@ -17,6 +17,8 @@ import {
   UserCheck,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { ROLE_NAMES } from '@/types/auth'
+import type { UserRole } from '@/types/auth'
 
 interface SidebarLinkProps {
   to: string
@@ -77,8 +79,23 @@ export const Sidebar = () => {
       
       setIsAdmin(!!adminRole)
 
-      // 사용자 정보 가져오기
-      if (adminRole) {
+      // 사용자 역할 및 프로필 정보 가져오기
+      // user_profiles 테이블은 존재하지 않으므로 user_roles와 조인하여 정보 가져오기
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select(`
+          role_id,
+          roles (
+            role_name
+          )
+        `)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (userRole) {
+        const roleName = (userRole as any).roles?.role_name
+        
+        // 관리자 테이블에서 정보 찾기
         const { data: adminInfo } = await supabase
           .from('administrators')
           .select('full_name')
@@ -86,17 +103,20 @@ export const Sidebar = () => {
           .maybeSingle()
         
         if (adminInfo) {
-          setUserInfo({ name: adminInfo.full_name, role: '관리자' })
-        }
-      } else {
-        const { data: swInfo } = await supabase
-          .from('social_workers')
-          .select('full_name')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        
-        if (swInfo) {
-          setUserInfo({ name: swInfo.full_name, role: '사회복지사' })
+          const displayRole = ROLE_NAMES[roleName as UserRole] || roleName || '관리자'
+          setUserInfo({ name: adminInfo.full_name, role: displayRole })
+        } else {
+          // social_workers 테이블에서 정보 찾기
+          const { data: swInfo } = await supabase
+            .from('social_workers')
+            .select('full_name')
+            .eq('user_id', user.id)
+            .maybeSingle()
+          
+          if (swInfo) {
+            const displayRole = ROLE_NAMES[roleName as UserRole] || roleName || '직원'
+            setUserInfo({ name: swInfo.full_name, role: displayRole })
+          }
         }
       }
     } catch {

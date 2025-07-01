@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { X, Plus, Search, Sparkles, Hash, Filter } from 'lucide-react'
 import { BaseGoal } from '@/types/goals'
-import { GoalTagRecommendationSystem } from '@/utils/goal-categorization'
+// import { GoalTagRecommendationSystem } from '@/utils/goal-categorization' // Removed - deprecated category system
 import { 
   ALL_GOAL_TAGS,
   GOAL_TAG_CATEGORIES,
@@ -58,12 +58,9 @@ export function GoalTagSelector({
     return tags
   }, [selectedCategory, searchQuery, value])
 
-  // AI 추천 태그
+  // AI 추천 태그 (deprecated - category system removed)
   const recommendedTags = useMemo(() => {
-    if (!goal || !showRecommendations) return []
-    
-    const recommendations = GoalTagRecommendationSystem.recommendTags(goal)
-    return recommendations.filter(tag => !value.includes(tag.id))
+    return [] // AI recommendation system has been deprecated
   }, [goal, value, showRecommendations])
 
   const handleTagAdd = (tagId: string) => {
@@ -194,32 +191,7 @@ export function GoalTagSelector({
               </div>
             </div>
 
-            {/* AI 추천 태그 */}
-            {recommendedTags.length > 0 && (
-              <div className="px-3 py-2 border-b border-gray-100">
-                <div className="flex items-center space-x-1 mb-2">
-                  <Sparkles className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs font-medium text-gray-600">AI 추천 태그</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {recommendedTags.slice(0, 5).map((tag) => (
-                    <button
-                      key={`recommended-${tag.id}`}
-                      onClick={() => handleTagAdd(tag.id)}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border-2 border-dashed border-yellow-300 hover:bg-yellow-50 transition-colors"
-                      style={{
-                        borderColor: `${tag.color}50`,
-                        color: tag.color
-                      }}
-                    >
-                      <Hash className="h-2 w-2 mr-1" />
-                      {tag.label}
-                      <Sparkles className="h-2 w-2 ml-1 text-yellow-500" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* AI 추천 태그 - deprecated (category system removed) */}
 
             {/* 태그 목록 */}
             <div className="max-h-64 overflow-y-auto">
