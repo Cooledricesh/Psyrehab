@@ -28,6 +28,12 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { useQueryClient } from '@tanstack/react-query';
+import { checkGoalDates, fixGoalDates } from '@/services/fix-goal-dates';
+import { fixGoalDatesV2 } from '@/services/fix-goal-dates-v2';
+import { fixGoalDatesFinal } from '@/services/fix-goal-dates-final';
+import { fixGoalDatesContinuous } from '@/services/fix-goal-dates-continuous';
+import { fixGoalDatesSimple } from '@/services/fix-goal-dates-simple';
+import { toast } from 'sonner';
 import SimpleWeeklyCheckbox from '@/components/progress/SimpleWeeklyCheckbox';
 import InlineDateEditor from '@/components/progress/InlineDateEditor';
 import { 
@@ -40,7 +46,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
@@ -406,7 +411,46 @@ export default function ProgressTracking() {
         {/* 목표 계층 구조 */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>목표 계층 구조</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>목표 계층 구조</CardTitle>
+              {/* 날짜 디버그 버튼 */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    console.log('🔍 날짜 확인 시작...');
+                    await checkGoalDates(selectedPatient || undefined);
+                  }}
+                >
+                  날짜 확인
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (confirm('선택한 환자의 모든 목표 날짜를 수정하시겠습니까?')) {
+                      console.log('🔧 날짜 수정 시작...');
+                      await fixGoalDatesSimple(selectedPatient || undefined);
+                      
+                      // 모든 관련 쿼리 무효화 및 새로고침
+                      await queryClient.invalidateQueries({ queryKey: ['patientGoals'] });
+                      await queryClient.invalidateQueries({ queryKey: ['activePatients'] });
+                      await queryClient.refetchQueries({ queryKey: ['patientGoals', selectedPatient] });
+                      
+                      toast.success('날짜 수정 완료! 화면을 새로고침합니다.');
+                      
+                      // 1초 후 페이지 새로고침
+                      setTimeout(() => {
+                        window.location.reload();
+                      }, 1000);
+                    }
+                  }}
+                >
+                  날짜 수정
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {selectedPatient ? (

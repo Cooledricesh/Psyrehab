@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { ArchivedGoalData } from '@/services/ai-recommendation-archive';
+import { addWeeks, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 export interface GoalData {
   id: string;
@@ -60,6 +61,9 @@ export class GoalService {
     
     console.log('💾 저장할 6개월 목표:', sixMonthGoal);
     
+    const startDate = new Date();
+    const endDate = addMonths(startDate, 6);
+    
     goalsToInsert.push({
       id: sixMonthGoalId,
       patient_id: patientId,
@@ -68,8 +72,8 @@ export class GoalService {
       description: sixMonthGoal.details || sixMonthGoal.description || '',
       goal_type: 'six_month',
       sequence_number: 1,
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
       status: 'active',
       plan_status: 'active',
       is_ai_suggested: true,
@@ -84,6 +88,10 @@ export class GoalService {
     detailedGoals.monthlyGoals?.forEach((monthlyPlan, monthIndex) => {
       const monthlyGoalId = crypto.randomUUID();
       
+      // 월간 목표의 시작일과 종료일 계산
+      const monthStartDate = startOfMonth(addMonths(startDate, monthIndex));
+      const monthEndDate = endOfMonth(monthStartDate);
+      
       goalsToInsert.push({
         id: monthlyGoalId,
         patient_id: patientId,
@@ -92,8 +100,8 @@ export class GoalService {
         description: monthlyPlan.activities?.join(', ') || monthlyPlan.description || '',
         goal_type: 'monthly',
         sequence_number: monthIndex + 1,
-        start_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
-        end_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex + 1)).toISOString().split('T')[0],
+        start_date: monthStartDate.toISOString().split('T')[0],
+        end_date: monthEndDate.toISOString().split('T')[0],
         status: monthIndex === 0 ? 'active' : 'pending',
         plan_status: 'active',
         is_ai_suggested: true,
@@ -109,6 +117,18 @@ export class GoalService {
           return (weeklyPlan.month - 1) === monthIndex;
         })
         ?.forEach((weeklyPlan, weekIndex) => {
+          // 해당 월의 시작일 계산
+          const monthStartDate = startOfMonth(addMonths(new Date(), monthIndex));
+          
+          // 주차별 시작일과 종료일 계산
+          const weekNumber = parseInt(weeklyPlan.week || `${weekIndex + 1}`) - 1; // 0-based index
+          const weekStartDate = addWeeks(monthStartDate, weekNumber);
+          const weekEndDate = addWeeks(weekStartDate, 1);
+          
+          // 마지막 주의 경우 해당 월의 마지막 날까지만
+          const monthEndDate = endOfMonth(monthStartDate);
+          const actualEndDate = weekEndDate > monthEndDate ? monthEndDate : weekEndDate;
+          
           goalsToInsert.push({
             id: crypto.randomUUID(),
             patient_id: patientId,
@@ -117,8 +137,8 @@ export class GoalService {
             description: weeklyPlan.description || '',
             goal_type: 'weekly',
             sequence_number: parseInt(weeklyPlan.week || `${weekIndex + 1}`),
-            start_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
-            end_date: new Date(new Date().setMonth(new Date().getMonth() + monthIndex)).toISOString().split('T')[0],
+            start_date: weekStartDate.toISOString().split('T')[0],
+            end_date: actualEndDate.toISOString().split('T')[0],
             status: monthIndex === 0 && weekIndex === 0 ? 'active' : 'pending',
             plan_status: 'active',
             is_ai_suggested: true,
