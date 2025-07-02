@@ -121,7 +121,6 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
         .select('id, status, progress')
         .eq('patient_id', patientId)
         .eq('goal_type', 'six_month')
-        .eq('plan_status', 'active')
         .neq('status', 'completed'); // 아직 완료되지 않은 목표만
 
       if (sixMonthGoals && sixMonthGoals.length > 0) {
@@ -278,7 +277,6 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
         .select('id')
         .eq('patient_id', patientId)
         .eq('goal_type', 'six_month')
-        .eq('plan_status', 'active')
         .neq('status', 'completed');
       
       if (!remainingGoals || remainingGoals.length === 0) {

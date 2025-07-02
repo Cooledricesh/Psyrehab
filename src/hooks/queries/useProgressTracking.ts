@@ -11,7 +11,6 @@ export const useActivePatients = () => {
         .from('rehabilitation_goals')
         .select('patient_id')
         .eq('goal_type', 'six_month')
-        .eq('plan_status', 'active')
         .eq('status', 'active');
 
       if (goalsError) throw goalsError;
@@ -56,7 +55,6 @@ export const usePatientGoals = (patientId: string | null) => {
         .select('*')
         .eq('patient_id', patientId)
         .eq('goal_type', 'six_month')
-        .eq('plan_status', 'active')
         .eq('status', 'active')
         .single();
 
@@ -69,7 +67,6 @@ export const usePatientGoals = (patientId: string | null) => {
         .select('*')
         .eq('parent_goal_id', sixMonthGoals.id)
         .eq('goal_type', 'monthly')
-        .eq('plan_status', 'active')
         .order('sequence_number');
 
       if (monthlyError) throw monthlyError;
@@ -94,7 +91,6 @@ export const usePatientGoals = (patientId: string | null) => {
             `)
             .eq('parent_goal_id', monthlyGoal.id)
             .eq('goal_type', 'weekly')
-            .eq('plan_status', 'active')
             .order('sequence_number');
 
           if (weeklyError) throw weeklyError;
@@ -135,7 +131,6 @@ export const useProgressStats = () => {
       const { data: patientsWithActiveGoals, error: goalsError } = await supabase
         .from('rehabilitation_goals')
         .select('patient_id')
-        .eq('plan_status', 'active')
         .eq('status', 'active')
         .eq('goal_type', 'six_month');
 
@@ -148,7 +143,6 @@ export const useProgressStats = () => {
       const { data: activeGoals, error } = await supabase
         .from('rehabilitation_goals')
         .select('progress, status, goal_type')
-        .eq('plan_status', 'active')
         .in('status', ['active', 'completed']);
 
       if (error) throw error;

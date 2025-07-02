@@ -134,7 +134,6 @@ export default function ProgressTracking() {
           .select('id')
           .eq('patient_id', selectedPatient)
           .eq('goal_type', 'six_month')
-          .eq('plan_status', 'active')
           .eq('status', 'active');
 
         if (!remainingGoals || remainingGoals.length === 0) {
@@ -264,7 +263,6 @@ export default function ProgressTracking() {
       .select('id')
       .eq('patient_id', selectedPatient)
       .eq('goal_type', 'six_month')
-      .eq('plan_status', 'active')
       .eq('status', 'active');
     
     if (!remainingGoals || remainingGoals.length === 0) {
