@@ -51,8 +51,8 @@ export function SimpleDashboard() {
         const dashboardData = await getDashboardStats()
         setStats(dashboardData)
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      console.error("대시보드 데이터 로딩 오류:", error)
       setError('대시보드 데이터를 불러오는데 실패했습니다.')
     } finally {
       setIsLoading(false)
@@ -60,7 +60,19 @@ export function SimpleDashboard() {
   }
 
   useEffect(() => {
-    fetchDashboardData()
+    let isActive = true
+    
+    const loadData = async () => {
+      if (isActive) {
+        await fetchDashboardData()
+      }
+    }
+    
+    loadData()
+    
+    return () => {
+      isActive = false
+    }
   }, [])
 
   if (isLoading) {
