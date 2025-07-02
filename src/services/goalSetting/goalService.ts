@@ -61,8 +61,13 @@ export class GoalService {
     
     console.log('💾 저장할 6개월 목표:', sixMonthGoal);
     
-    const startDate = new Date();
-    const endDate = addMonths(startDate, 6);
+    // 모든 날짜 계산의 기준이 되는 시작일
+    const baseStartDate = new Date();
+    baseStartDate.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+    
+    // 6개월 목표
+    const sixMonthEndDate = new Date(baseStartDate);
+    sixMonthEndDate.setMonth(sixMonthEndDate.getMonth() + 6);
     
     goalsToInsert.push({
       id: sixMonthGoalId,
@@ -72,8 +77,8 @@ export class GoalService {
       description: sixMonthGoal.details || sixMonthGoal.description || '',
       goal_type: 'six_month',
       sequence_number: 1,
-      start_date: startDate.toISOString().split('T')[0],
-      end_date: endDate.toISOString().split('T')[0],
+      start_date: baseStartDate.toISOString().split('T')[0],
+      end_date: sixMonthEndDate.toISOString().split('T')[0],
       status: 'active',
       plan_status: 'active',
       is_ai_suggested: true,
@@ -88,9 +93,12 @@ export class GoalService {
     detailedGoals.monthlyGoals?.forEach((monthlyPlan, monthIndex) => {
       const monthlyGoalId = crypto.randomUUID();
       
-      // 월간 목표의 시작일과 종료일 계산
-      const monthStartDate = startOfMonth(addMonths(startDate, monthIndex));
-      const monthEndDate = endOfMonth(monthStartDate);
+      // 월간 목표의 시작일과 종료일 계산 (각 월은 정확히 4주 = 28일)
+      const monthStartDate = new Date(baseStartDate);
+      monthStartDate.setDate(monthStartDate.getDate() + (monthIndex * 28)); // 28일씩 추가
+      
+      const monthEndDate = new Date(monthStartDate);
+      monthEndDate.setDate(monthEndDate.getDate() + 27); // 28일째 (시작일 포함)
       
       goalsToInsert.push({
         id: monthlyGoalId,
@@ -110,43 +118,44 @@ export class GoalService {
         created_by_social_worker_id: userId
       });
 
-      // 주간 목표들
-      detailedGoals.weeklyGoals
-        ?.filter(weeklyPlan => {
-          // weeklyPlan.month 필드를 직접 사용
-          return (weeklyPlan.month - 1) === monthIndex;
-        })
-        ?.forEach((weeklyPlan, weekIndex) => {
-          // 해당 월의 시작일 계산
-          const monthStartDate = startOfMonth(addMonths(new Date(), monthIndex));
-          
-          // 주차별 시작일과 종료일 계산
-          const weekNumber = parseInt(weeklyPlan.week || `${weekIndex + 1}`) - 1; // 0-based index
-          const weekStartDate = addWeeks(monthStartDate, weekNumber);
-          const weekEndDate = addWeeks(weekStartDate, 1);
-          
-          // 마지막 주의 경우 해당 월의 마지막 날까지만
-          const monthEndDate = endOfMonth(monthStartDate);
-          const actualEndDate = weekEndDate > monthEndDate ? monthEndDate : weekEndDate;
-          
-          goalsToInsert.push({
-            id: crypto.randomUUID(),
-            patient_id: patientId,
-            parent_goal_id: monthlyGoalId,
-            title: weeklyPlan.plan || weeklyPlan.title || `${weeklyPlan.week}주차 목표`,
-            description: weeklyPlan.description || '',
-            goal_type: 'weekly',
-            sequence_number: parseInt(weeklyPlan.week || `${weekIndex + 1}`),
-            start_date: weekStartDate.toISOString().split('T')[0],
-            end_date: actualEndDate.toISOString().split('T')[0],
-            status: monthIndex === 0 && weekIndex === 0 ? 'active' : 'pending',
-            plan_status: 'active',
-            is_ai_suggested: true,
-            source_recommendation_id: aiRecommendationId,
-            is_from_ai_recommendation: true,
-            created_by_social_worker_id: userId
-          });
+      // 주간 목표들 - 해당 월에 속하는 주간 목표만 필터링
+      const monthlyWeekGoals = detailedGoals.weeklyGoals?.filter(weeklyPlan => {
+        return (weeklyPlan.month - 1) === monthIndex;
+      }) || [];
+
+      // 주간 목표를 week 번호 순으로 정렬
+      monthlyWeekGoals.sort((a, b) => (a.week || 0) - (b.week || 0));
+
+      monthlyWeekGoals.forEach((weeklyPlan, weekIndex) => {
+        // 전체 주차 번호 (1부터 시작)
+        const overallWeekNumber = (monthIndex * 4) + weekIndex + 1;
+        
+        // 주간 목표의 시작일 계산 (기준일로부터 7일씩 추가)
+        const weekStartDate = new Date(baseStartDate);
+        weekStartDate.setDate(weekStartDate.getDate() + ((overallWeekNumber - 1) * 7));
+        
+        // 주간 목표의 종료일 계산 (시작일 + 6일)
+        const weekEndDate = new Date(weekStartDate);
+        weekEndDate.setDate(weekEndDate.getDate() + 6);
+        
+        goalsToInsert.push({
+          id: crypto.randomUUID(),
+          patient_id: patientId,
+          parent_goal_id: monthlyGoalId,
+          title: weeklyPlan.plan || weeklyPlan.title || `${overallWeekNumber}주차 목표`,
+          description: weeklyPlan.description || '',
+          goal_type: 'weekly',
+          sequence_number: overallWeekNumber,
+          start_date: weekStartDate.toISOString().split('T')[0],
+          end_date: weekEndDate.toISOString().split('T')[0],
+          status: overallWeekNumber === 1 ? 'active' : 'pending',
+          plan_status: 'active',
+          is_ai_suggested: true,
+          source_recommendation_id: aiRecommendationId,
+          is_from_ai_recommendation: true,
+          created_by_social_worker_id: userId
         });
+      });
     });
 
     return goalsToInsert;
