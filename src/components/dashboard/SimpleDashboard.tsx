@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { getDashboardStats } from '@/services/dashboard-stats'
-import { Loader2, Users, Target, Calendar, TrendingUp } from 'lucide-react'
+import { getSocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
+import { Loader2, Users, Target, Calendar, TrendingUp, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { useNavigate } from 'react-router-dom'
+import type { SocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
 
 export function SimpleDashboard() {
   const [stats, setStats] = useState({
@@ -9,15 +13,44 @@ export function SimpleDashboard() {
     thisWeekSessions: 0,
     completionRate: 0
   })
+  const [socialWorkerStats, setSocialWorkerStats] = useState<SocialWorkerDashboardStats | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      const dashboardData = await getDashboardStats()
-      setStats(dashboardData)
+      
+      // 사용자 역할 확인
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not found')
+      
+      const { data: userRoleData } = await supabase
+        .from('user_roles')
+        .select(`
+          roles (
+            role_name
+          )
+        `)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      
+      const roleName = (userRoleData as any)?.roles?.role_name
+      setUserRole(roleName)
+      
+      // 역할에 따라 다른 데이터 로드
+      if (roleName === 'staff' || roleName === 'assistant_manager') {
+        // 사원/주임용 대시보드 데이터
+        const swStats = await getSocialWorkerDashboardStats(user.id)
+        setSocialWorkerStats(swStats)
+      } else {
+        // 기존 대시보드 데이터
+        const dashboardData = await getDashboardStats()
+        setStats(dashboardData)
+      }
     } catch {
       console.error("Error occurred")
       setError('대시보드 데이터를 불러오는데 실패했습니다.')
@@ -60,6 +93,158 @@ export function SimpleDashboard() {
     )
   }
 
+  // 사원/주임용 대시보드
+  if ((userRole === 'staff' || userRole === 'assistant_manager') && socialWorkerStats) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">대시보드</h1>
+        
+        {/* 긴급 알림 섹션 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {/* 주간 점검 미완료 */}
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 cursor-pointer hover:shadow-lg transition-shadow"
+               onClick={() => navigate('/progress-tracking')}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">주간 점검 미완료</h3>
+                <p className="text-3xl font-bold text-red-600">{socialWorkerStats.weeklyCheckPending.length}</p>
+                <p className="text-sm text-gray-500 mt-1">이번 주 점검 필요</p>
+              </div>
+              <Clock className="h-8 w-8 text-red-500 opacity-80" />
+            </div>
+          </div>
+
+          {/* 4주 연속 실패 환자 */}
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500 cursor-pointer hover:shadow-lg transition-shadow"
+               onClick={() => navigate('/progress-tracking')}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">긴급 개입 필요</h3>
+                <p className="text-3xl font-bold text-orange-600">{socialWorkerStats.consecutiveFailures.length}</p>
+                <p className="text-sm text-gray-500 mt-1">4주 연속 목표 실패</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-orange-500 opacity-80" />
+            </div>
+          </div>
+
+          {/* 목표 미설정 환자 */}
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500 cursor-pointer hover:shadow-lg transition-shadow"
+               onClick={() => navigate('/goal-setting')}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">목표 설정 필요</h3>
+                <p className="text-3xl font-bold text-yellow-600">{socialWorkerStats.goalsNotSet.length}</p>
+                <p className="text-sm text-gray-500 mt-1">목표가 없는 환자</p>
+              </div>
+              <Target className="h-8 w-8 text-yellow-500 opacity-80" />
+            </div>
+          </div>
+
+          {/* 주간 달성률 */}
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">주간 달성률</h3>
+                <p className="text-3xl font-bold text-blue-600">
+                  {socialWorkerStats.weeklyAchievementRate.total > 0 
+                    ? Math.round((socialWorkerStats.weeklyAchievementRate.achieved / socialWorkerStats.weeklyAchievementRate.total) * 100)
+                    : 0}%
+                </p>
+                <p className="text-sm text-gray-500 mt-1">이번 주 목표 달성</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-blue-500 opacity-80" />
+            </div>
+          </div>
+        </div>
+
+        {/* 상세 정보 섹션 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 주간 점검 미완료 환자 리스트 */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <Clock className="h-5 w-5 mr-2 text-red-600" />
+              주간 점검 미완료 환자
+            </h2>
+            {socialWorkerStats.weeklyCheckPending.length > 0 ? (
+              <div className="space-y-2">
+                {socialWorkerStats.weeklyCheckPending.slice(0, 5).map((patient, index) => (
+                  <div key={`pending-${patient.goal_id}-${index}`} 
+                       className="p-3 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer transition-colors"
+                       onClick={() => navigate(`/patients/${patient.id}`)}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900">{patient.name}</p>
+                        <p className="text-sm text-gray-600">목표: {patient.goal_name}</p>
+                      </div>
+                      <span className="text-sm text-red-600">점검 필요</span>
+                    </div>
+                  </div>
+                ))}
+                {socialWorkerStats.weeklyCheckPending.length > 5 && (
+                  <p className="text-sm text-gray-500 text-center mt-2">
+                    +{socialWorkerStats.weeklyCheckPending.length - 5}명 더 있음
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-500">모든 환자의 주간 점검이 완료되었습니다.</p>
+            )}
+          </div>
+
+          {/* 주간 달성률 분포 */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+              주간 목표 달성률 분포
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <span className="text-gray-700 flex-1">달성</span>
+                <span className="font-semibold text-green-600">
+                  {socialWorkerStats.weeklyAchievementRate.achieved}명
+                </span>
+              </div>
+              <div className="flex items-center">
+                <XCircle className="h-5 w-5 text-red-500 mr-2" />
+                <span className="text-gray-700 flex-1">미달성</span>
+                <span className="font-semibold text-red-600">
+                  {socialWorkerStats.weeklyAchievementRate.failed}명
+                </span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-5 w-5 text-gray-500 mr-2" />
+                <span className="text-gray-700 flex-1">미점검</span>
+                <span className="font-semibold text-gray-600">
+                  {socialWorkerStats.weeklyAchievementRate.pending}명
+                </span>
+              </div>
+              <div className="mt-4 pt-3 border-t">
+                <p className="text-sm text-gray-600">
+                  전체 {socialWorkerStats.weeklyAchievementRate.total}명 중
+                  <span className="font-semibold text-green-600 ml-1">
+                    {socialWorkerStats.weeklyAchievementRate.achieved}명
+                  </span>이 목표를 달성했습니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 새로고침 버튼 */}
+        <div className="mt-6 text-right">
+          <button
+            onClick={fetchDashboardData}
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            🔄 통계 새로고침
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // 기존 대시보드 (다른 역할용)
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">대시보드</h1>

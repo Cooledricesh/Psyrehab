@@ -16,7 +16,7 @@ export default function PatientRegistrationModal({
 }: PatientRegistrationModalProps) {
   const [formData, setFormData] = useState<CreatePatientData>({
     full_name: '',
-    patient_identifier: '',
+    patient_identifier: '', // 빈 문자열로 초기화
     date_of_birth: '',
     gender: '',
     primary_diagnosis: '',
@@ -65,13 +65,27 @@ export default function PatientRegistrationModal({
       return
     }
 
+    if (!formData.patient_identifier?.trim()) {
+      setError('환자 식별번호(병록번호)를 입력해주세요.')
+      return
+    }
+
     try {
       setIsSubmitting(true)
       setError(null)
 
-      console.log('📝 환자 등록 시도:', formData)
+      const submitData: CreatePatientData = {
+        ...formData
+      }
+
+      console.log('📝 환자 등록 시도:', submitData)
+      console.log('📝 식별번호 상태:', {
+        원본값: formData.patient_identifier,
+        처리후: submitData.patient_identifier,
+        속성존재: 'patient_identifier' in submitData
+      })
       
-      const result = await createPatient(formData)
+      const result = await createPatient(submitData)
       
       if (result) {
         console.log('✅ 환자 등록 성공:', result)
@@ -93,7 +107,8 @@ export default function PatientRegistrationModal({
       }
     } catch (err: unknown) {
       console.error('❌ 환자 등록 실패:', err)
-      setError(err.message || '환자 등록 중 오류가 발생했습니다.')
+      const errorMessage = err instanceof Error ? err.message : '환자 등록 중 오류가 발생했습니다.'
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -140,15 +155,16 @@ export default function PatientRegistrationModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                환자 식별번호
+                환자 식별번호 (병록번호) *
               </label>
               <input
                 type="text"
                 value={formData.patient_identifier}
                 onChange={(e) => handleInputChange('patient_identifier', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="비워두면 자동 생성됩니다"
+                placeholder="병록번호를 입력하세요"
                 disabled={isSubmitting}
+                required
               />
             </div>
 

@@ -118,10 +118,29 @@ export const getPatients = async (): Promise<Patient[]> => {
 // 환자 생성
 export const createPatient = async (patientData: CreatePatientData): Promise<Patient | null> => {
   try {
-    // 환자 식별번호가 없으면 자동 생성
-    if (!patientData.patient_identifier) {
-      patientData.patient_identifier = await generatePatientIdentifier()
+    console.log('🔄 환자 생성 시작:', { 
+      이름: patientData.full_name,
+      식별번호: patientData.patient_identifier,
+      식별번호입력여부: !!patientData.patient_identifier
+    })
+    
+    // 환자 식별번호 필수 확인
+    if (!patientData.patient_identifier || patientData.patient_identifier.trim() === '') {
+      throw new Error('환자 식별번호(병록번호)는 필수 입력 항목입니다.')
     }
+    
+    // 입력한 식별번호가 이미 존재하는지 확인
+    const { data: existingPatient } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('patient_identifier', patientData.patient_identifier.trim())
+      .single()
+    
+    if (existingPatient) {
+      throw new Error(`환자 식별번호 '${patientData.patient_identifier}'는 이미 사용 중입니다.`)
+    }
+    
+    console.log('✅ 환자 식별번호 사용 가능:', patientData.patient_identifier)
 
     const { data, error } = await supabase
       .from('patients')
@@ -169,39 +188,58 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
       contact_info: data.contact_info,
       emergency_contact: data.emergency_contact
     }
-  } catch {
-    console.error("Error occurred")
-    throw error
+  } catch (err) {
+    console.error("Error occurred:", err)
+    throw err
   }
 }
 
 // 환자 식별번호 자동 생성
 const generatePatientIdentifier = async (): Promise<string> => {
-  const year = new Date().getFullYear()
-  const prefix = `P${year}`
-  
-  // 올해 생성된 환자 수 확인
-  const { data, error } = await supabase
-    .from('patients')
-    .select('patient_identifier')
-    .like('patient_identifier', `${prefix}%`)
-    .order('created_at', { ascending: false })
-    .limit(1)
+  try {
+    const year = new Date().getFullYear()
+    const prefix = `P${year}`
+    
+    // 데이터베이스에서 가장 큰 번호 직접 조회
+    const { data, error } = await supabase
+      .from('patients')
+      .select('patient_identifier')
+      .like('patient_identifier', `${prefix}%`)
+      .order('patient_identifier', { ascending: false })
 
-  if (error) {
-    console.log('식별번호 생성 중 오류, 기본값 사용:', error)
-    return `${prefix}001`
-  }
+    if (error) {
+      console.error('식별번호 조회 중 오류:', error)
+      // 에러 시 타임스탬프 기반 고유 번호 생성
+      const timestamp = Date.now().toString().slice(-6)
+      return `${prefix}${timestamp}`
+    }
 
-  if (data && data.length > 0) {
-    // 마지막 번호에서 1 증가
-    const lastId = data[0].patient_identifier
-    const lastNumber = parseInt(lastId.slice(-3)) || 0
-    const nextNumber = (lastNumber + 1).toString().padStart(3, '0')
-    return `${prefix}${nextNumber}`
-  } else {
-    // 첫 번째 환자
-    return `${prefix}001`
+    if (!data || data.length === 0) {
+      console.log('첫 번째 환자 식별번호 생성: P2025001')
+      return `${prefix}001`
+    }
+
+    // 모든 번호 추출 및 정렬
+    const existingNumbers = data
+      .map(p => {
+        const match = p.patient_identifier.match(/^P\d{4}(\d{3,})$/)
+        return match ? parseInt(match[1]) : null
+      })
+      .filter(num => num !== null)
+      .sort((a, b) => b - a)
+
+    const highestNumber = existingNumbers[0] || 0
+    const nextNumber = highestNumber + 1
+    const paddedNumber = nextNumber.toString().padStart(3, '0')
+    
+    console.log(`환자 식별번호 자동 생성: 기존 최고값 ${highestNumber} → 새 번호 ${prefix}${paddedNumber}`)
+    
+    return `${prefix}${paddedNumber}`
+  } catch (err) {
+    console.error('식별번호 생성 중 심각한 오류:', err)
+    // 최후의 수단: 랜덤 번호
+    const random = Math.floor(Math.random() * 90000) + 10000
+    return `P${new Date().getFullYear()}${random}`
   }
 }
 
@@ -512,9 +550,9 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
       contact_info: data.contact_info,
       emergency_contact: data.emergency_contact
     }
-  } catch {
-    console.error("Error occurred")
-    throw error
+  } catch (err) {
+    console.error("Error occurred:", err)
+    throw err
   }
 }
 
@@ -561,9 +599,9 @@ export const updatePatientStatus = async (
       contact_info: data.contact_info,
       emergency_contact: data.emergency_contact
     }
-  } catch {
-    console.error("Error occurred")
-    throw error
+  } catch (err) {
+    console.error("Error occurred:", err)
+    throw err
   }
 }
 
