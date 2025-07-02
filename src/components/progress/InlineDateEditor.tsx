@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import type { GoalType } from '@/types/goals';
+import { fixGoalDatesSimple } from '@/services/fix-goal-dates-simple';
 
 interface InlineDateEditorProps {
   goalId: string;
@@ -31,6 +32,9 @@ export default function InlineDateEditor({
     currentStartDate ? new Date(currentStartDate) : undefined
   );
   const queryClient = useQueryClient();
+  
+  // 6개월 목표가 아닌 경우 편집 불가능
+  const isEditable = goalType === 'six_month';
 
   const calculateEndDate = (startDate: Date, goalType: GoalType): Date => {
     switch (goalType) {
@@ -50,20 +54,43 @@ export default function InlineDateEditor({
     const endDate = calculateEndDate(date, goalType);
 
     try {
-      const { error } = await supabase
-        .from('rehabilitation_goals')
-        .update({
-          start_date: format(date, 'yyyy-MM-dd'),
-          end_date: format(endDate, 'yyyy-MM-dd')
-        })
-        .eq('id', goalId);
+      // 6개월 목표의 경우
+      if (goalType === 'six_month') {
+        // 먼저 6개월 목표 자체의 날짜 업데이트
+        const { error } = await supabase
+          .from('rehabilitation_goals')
+          .update({
+            start_date: format(date, 'yyyy-MM-dd'),
+            end_date: format(endDate, 'yyyy-MM-dd')
+          })
+          .eq('id', goalId);
 
-      if (error) throw error;
+        if (error) throw error;
+
+        // 확인 대화상자
+        const shouldRecalculate = confirm(
+          '시작 날짜가 변경되었습니다.\n\n' +
+          '모든 월간 및 주간 목표의 날짜를 자동으로 재계산하시겠습니까?\n\n' +
+          '확인: 전체 날짜 재계산\n' +
+          '취소: 6개월 목표 날짜만 변경'
+        );
+
+        if (shouldRecalculate) {
+          toast.info('하위 목표 날짜를 재계산하는 중...');
+          await fixGoalDatesSimple(patientId);
+          toast.success('모든 목표 날짜가 재계산되었습니다.');
+        } else {
+          toast.success('6개월 목표 날짜가 업데이트되었습니다.');
+        }
+      } else {
+        // 월간/주간 목표는 편집 불가능하므로 이 부분은 실행되지 않음
+        toast.warning('월간 및 주간 목표의 날짜는 6개월 목표 날짜 변경 시 자동으로 계산됩니다.');
+        return;
+      }
 
       // 캐시 새로고침
       await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
       
-      toast.success('날짜가 업데이트되었습니다.');
       setIsOpen(false);
     } catch (error) {
       console.error('날짜 업데이트 실패:', error);
@@ -82,6 +109,24 @@ export default function InlineDateEditor({
     }
   };
 
+  // 6개월 목표가 아닌 경우 읽기 전용 표시
+  if (!isEditable) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <CalendarIcon className="mr-1 h-3 w-3" />
+        {startDate ? (
+          <span>
+            {format(startDate, 'yyyy.MM.dd', { locale: ko })} ~ {' '}
+            {currentEndDate ? format(new Date(currentEndDate), 'yyyy.MM.dd', { locale: ko }) : '종료일 계산중'}
+          </span>
+        ) : (
+          <span>날짜 없음</span>
+        )}
+      </div>
+    );
+  }
+
+  // 6개월 목표인 경우 편집 가능한 Popover
   return (
     <div className="flex items-center gap-2 text-sm">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
