@@ -171,6 +171,31 @@ export function SimpleDashboard() {
 
         {/* 상세 정보 섹션 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 긴급 개입 필요 환자 리스트 */}
+          {socialWorkerStats.consecutiveFailures.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
+                긴급 개입 필요 환자
+              </h2>
+              <div className="space-y-2">
+                {socialWorkerStats.consecutiveFailures.map((patient, index) => (
+                  <div key={`failure-${patient.goal_id}-${index}`} 
+                       className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 cursor-pointer transition-colors"
+                       onClick={() => navigate(`/patients/${patient.id}`)}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900">{patient.name}</p>
+                        <p className="text-sm text-gray-600">{patient.goal_name}</p>
+                      </div>
+                      <span className="text-sm text-orange-600 font-medium">긴급</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {/* 주간 점검 미완료 환자 리스트 */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center">

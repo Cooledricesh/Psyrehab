@@ -47,13 +47,15 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
   return data?.map(patient => patient.id) || []
 }
 
-// 주간 목표 점검 미완료 환자 조회 (아직 체크하지 않은 현재 주 목표)
+// 주간 목표 점검 미완료 환자 조회 (오늘 날짜 기준 지난 주차 중 미체크 목표)
 export async function getWeeklyCheckPendingPatients(userId: string): Promise<PatientWithGoal[]> {
   try {
     const assignedPatients = await getAssignedPatients(userId)
     if (assignedPatients.length === 0) return []
 
     const pendingPatients: PatientWithGoal[] = []
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
     
     // 각 환자의 현재 진행 중인 주간 목표 확인
     for (const patientId of assignedPatients) {
@@ -75,35 +77,34 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 
       if (!monthlyGoals || monthlyGoals.length === 0) continue
 
-      // 각 월간 목표의 현재 주차 목표 확인
+      // 각 월간 목표의 주간 목표들 중 시작일이 오늘 이전인 것들 확인
       for (const monthlyGoal of monthlyGoals) {
-        // 가장 최근 주차의 목표 조회
+        // 시작일이 오늘 이전이고 아직 체크하지 않은 주간 목표 조회
         const { data: weeklyGoals } = await supabase
           .from('rehabilitation_goals')
-          .select('id, title, status, sequence_number')
+          .select('id, title, status, sequence_number, start_date, end_date')
           .eq('parent_goal_id', monthlyGoal.id)
           .eq('goal_type', 'weekly')
-          .order('sequence_number', { ascending: false })
-          .limit(1)
+          .in('status', ['active', 'in_progress'])
+          .lte('start_date', today.toISOString().split('T')[0])
+          .order('sequence_number', { ascending: true })
 
         if (!weeklyGoals || weeklyGoals.length === 0) continue
 
-        const currentWeekGoal = weeklyGoals[0]
+        // 첫 번째 미체크 목표만 추가 (환자당 하나)
+        const firstPendingGoal = weeklyGoals[0]
+        const patient = monthlyGoal.patients as any
         
-        // 아직 달성/미달성 체크하지 않은 목표만 포함
-        if (currentWeekGoal.status === 'active' || currentWeekGoal.status === 'in_progress') {
-          const patient = monthlyGoal.patients as any
-          pendingPatients.push({
-            id: patient.id,
-            name: patient.full_name,
-            patient_identifier: patient.patient_identifier,
-            goal_id: currentWeekGoal.id,
-            goal_name: `${currentWeekGoal.sequence_number}주차: ${currentWeekGoal.title}`,
-            goal_type: 'weekly',
-            start_date: ''
-          })
-          break // 환자당 하나만 표시
-        }
+        pendingPatients.push({
+          id: patient.id,
+          name: patient.full_name,
+          patient_identifier: patient.patient_identifier,
+          goal_id: firstPendingGoal.id,
+          goal_name: `${firstPendingGoal.sequence_number}주차: ${firstPendingGoal.title}`,
+          goal_type: 'weekly',
+          start_date: firstPendingGoal.start_date
+        })
+        break // 환자당 하나만 표시
       }
     }
 
@@ -122,6 +123,7 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 
     const consecutiveFailures: PatientWithGoal[] = []
     const today = new Date()
+    today.setHours(0, 0, 0, 0)
     
     // 환자별로 최근 4주의 주간 목표 상태를 확인
     for (const patientId of assignedPatients) {
@@ -146,12 +148,13 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 
       // 각 월간 목표에 대해 확인
       for (const monthlyGoal of monthlyGoals) {
-        // 해당 월간 목표의 주간 목표들 조회 (최근 4주)
+        // 오늘 날짜 이전에 시작된 주간 목표들 조회 (최근 4개)
         const { data: weeklyGoals } = await supabase
           .from('rehabilitation_goals')
           .select('id, sequence_number, status, start_date, title')
           .eq('parent_goal_id', monthlyGoal.id)
           .eq('goal_type', 'weekly')
+          .lte('start_date', today.toISOString().split('T')[0])
           .order('sequence_number', { ascending: false })
           .limit(4)
 
@@ -162,14 +165,16 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
         
         if (allFailed) {
           const patient = monthlyGoal.patients as any
-          // 가장 최근 실패한 주간 목표 정보 사용
-          const latestWeeklyGoal = weeklyGoals[0]
+          // 연속 실패한 주차 정보 포함
+          const weekNumbers = weeklyGoals.map(g => g.sequence_number).sort((a, b) => a - b)
+          const failureInfo = `${weekNumbers[0]}-${weekNumbers[3]}주차 연속 미달성`
+          
           consecutiveFailures.push({
             id: patient.id,
             name: patient.full_name,
             patient_identifier: patient.patient_identifier,
-            goal_id: latestWeeklyGoal.id,
-            goal_name: `${monthlyGoal.title} - ${latestWeeklyGoal.title}`,
+            goal_id: weeklyGoals[0].id,
+            goal_name: `${monthlyGoal.title} (${failureInfo})`,
             goal_type: 'weekly',
             start_date: monthlyGoal.start_date
           })
@@ -177,6 +182,11 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
         }
       }
     }
+
+    console.log(`4주 연속 실패 환자 수: ${consecutiveFailures.length}명`)
+    consecutiveFailures.forEach(patient => {
+      console.log(`- ${patient.name}: ${patient.goal_name}`)
+    })
 
     return consecutiveFailures
   } catch (error) {

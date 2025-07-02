@@ -50,6 +50,9 @@ export default function InlineDateEditor({
   const handleDateSelect = async (date: Date | undefined) => {
     if (!date) return;
 
+    // 즉시 Popover 닫기
+    setIsOpen(false);
+    
     setStartDate(date);
     const endDate = calculateEndDate(date, goalType);
 
@@ -87,11 +90,17 @@ export default function InlineDateEditor({
         toast.warning('월간 및 주간 목표의 날짜는 6개월 목표 날짜 변경 시 자동으로 계산됩니다.');
         return;
       }
-
-      // 캐시 새로고침
-      await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
       
-      setIsOpen(false);
+      // 잠시 대기 후 캐시 새로고침 및 리로드
+      setTimeout(async () => {
+        // 캐시 무효화
+        await queryClient.invalidateQueries({ queryKey: ['patientGoals', patientId] });
+        await queryClient.invalidateQueries({ queryKey: ['activePatients'] });
+        
+        // 강제 리페치
+        await queryClient.refetchQueries({ queryKey: ['patientGoals', patientId] });
+      }, 100);
+      
     } catch (error) {
       console.error('날짜 업데이트 실패:', error);
       toast.error('날짜 업데이트에 실패했습니다.');
@@ -129,48 +138,45 @@ export default function InlineDateEditor({
   // 6개월 목표인 경우 편집 가능한 Popover
   return (
     <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <CalendarIcon className="h-3 w-3" />
+        {startDate ? (
+          <span>
+            {format(startDate, 'yyyy.MM.dd', { locale: ko })} ~ {' '}
+            {currentEndDate ? format(new Date(currentEndDate), 'yyyy.MM.dd', { locale: ko }) : '종료일 계산중'}
+          </span>
+        ) : (
+          <span>날짜 없음</span>
+        )}
+      </div>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant="ghost"
-            className={cn(
-              "h-auto p-1 font-normal justify-start",
-              !startDate && "text-muted-foreground"
-            )}
+            variant="outline"
+            size="sm"
+            className="ml-2"
           >
-            <CalendarIcon className="mr-1 h-3 w-3" />
-            {startDate ? (
-              <span>
-                {format(startDate, 'yyyy.MM.dd', { locale: ko })} ~ {' '}
-                {currentEndDate ? format(new Date(currentEndDate), 'yyyy.MM.dd', { locale: ko }) : '종료일 계산중'}
-              </span>
-            ) : (
-              <span>시작일 지정</span>
-            )}
+            목표 시작일 변경
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-white border-2 border-gray-300 shadow-lg" align="start">
+        <PopoverContent className="w-[350px] p-0 bg-white border-2 border-gray-300 shadow-lg" align="start">
           <div className="p-4 space-y-3 bg-white">
             <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
               <p className="text-sm text-blue-700 font-medium">
                 📅 시작일을 선택하면 {getGoalTypeDuration(goalType)} 후 자동으로 종료일이 설정됩니다.
               </p>
             </div>
-            <Calendar
-              mode="single"
-              selected={startDate}
-              onSelect={handleDateSelect}
-              disabled={(date) => false}
-              initialFocus
-              locale={ko}
-              className="rounded-md border-2 border-gray-200 bg-white shadow-sm"
-              modifiers={{
-                sunday: (date) => date.getDay() === 0,
-              }}
-              modifiersClassNames={{
-                sunday: "text-red-500 font-semibold",
-              }}
-            />
+            <div className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={handleDateSelect}
+                disabled={(date) => false}
+                initialFocus
+                locale={ko}
+                className="rounded-md border border-gray-200 bg-white"
+              />
+            </div>
           </div>
         </PopoverContent>
       </Popover>
