@@ -44,7 +44,7 @@ export default function PatientManagement() {
         .eq('user_id', user.id)
         .single()
       
-      const roleName = userRoleData?.roles?.role_name
+      const roleName = (userRoleData as any)?.roles?.role_name
       // 계장 이상 직급인지 확인
       const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
       setCanViewAssignee(managementRoles.includes(roleName))
@@ -72,7 +72,7 @@ export default function PatientManagement() {
       setError(null)
     } catch (err: unknown) {
       console.error('❌ 환자 데이터 로드 실패:', err)
-      setError(err.message || '환자 데이터를 불러오는 중 오류가 발생했습니다.')
+      setError((err as any).message || '환자 데이터를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
@@ -142,44 +142,6 @@ export default function PatientManagement() {
     }
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return '목표 진행 중'
-      case 'pending':
-        return '목표 설정 대기'
-      case 'discharged':
-        return '입원 중'
-      default:
-        return '알 수 없음'
-    }
-  }
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800'
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'discharged':
-        return 'bg-blue-100 text-blue-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  // 환자의 실제 상태를 계산하는 함수 추가
-  const getPatientDisplayStatus = (patient: Patient): string => {
-    // 환자 목록에서 각 환자의 목표 상태를 확인하여 표시 상태 결정
-    // 이 정보는 서버에서 계산해서 보내주는 것이 이상적이지만,
-    // 현재는 클라이언트에서 처리
-    if (patient.status === 'completed') {
-      return 'completed'
-    }
-    // TODO: 목표 유무에 따른 상태 구분 필요
-    // 현재는 DB status를 그대로 사용
-    return patient.status
-  }
 
   if (loading) {
     return (
@@ -209,65 +171,6 @@ export default function PatientManagement() {
         <Button onClick={() => setIsRegistrationModalOpen(true)}>
           새 회원 등록
         </Button>
-      </div>
-
-      {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">담당 회원수</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalPatients}</p>
-            </div>
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">목표 진행 중</p>
-              <p className="text-2xl font-bold text-green-600">{stats.activePatients}</p>
-            </div>
-            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">목표 설정 대기</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.inactivePatients}</p>
-            </div>
-            <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">입원 중</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.completedPatients}</p>
-            </div>
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 환자 목록 테이블 */}
