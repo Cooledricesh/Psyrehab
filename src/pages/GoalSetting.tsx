@@ -557,6 +557,12 @@ const GoalSetting: React.FC = () => {
               const patient = patients.find(p => p.id === selectedPatient);
               return patient?.diagnosis ? simplifyDiagnosis(patient.diagnosis) : undefined;
             })()}
+            // 평가 항목 전달
+            focusTime={formData.focusTime}
+            motivationLevel={formData.motivationLevel}
+            pastSuccesses={formData.pastSuccesses}
+            constraints={formData.constraints}
+            socialPreference={formData.socialPreference}
             onSelectArchived={handleSelectArchivedGoal}
             onGenerateNew={handleGenerateNewGoals}
             onBack={() => setShowArchivedSelection(false)}

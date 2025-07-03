@@ -44,6 +44,14 @@ export interface ArchivedRecommendation {
   usage_count?: number; // 사용한 사람 수
   completion_count?: number; // 완료한 사람 수
   average_completion_rate?: number; // 여러 명이 사용한 경우 평균 달성률
+  // 추천 매칭 정보
+  matchInfo?: {
+    matchType: 'exact' | 'similar' | 'age_only' | 'popular';
+    matchedFields?: string[];
+    focusTime?: string;
+    motivationLevel?: number;
+    socialPreference?: string;
+  };
 }
 
 /**
@@ -367,7 +375,308 @@ export class AIRecommendationArchiveService {
   }
 
   /**
-   * 환자 프로필과 유사한 아카이빙된 목표 검색
+   * 평가 항목 기반 아카이빙된 목표 검색 (새로운 추천 로직)
+   */
+  static async searchArchivedGoalsByAssessment({
+    ageRange,
+    focusTime,
+    motivationLevel,
+    pastSuccesses,
+    constraints,
+    socialPreference,
+    limit = 10
+  }: {
+    ageRange?: string;
+    focusTime?: string;
+    motivationLevel?: number;
+    pastSuccesses?: string[];
+    constraints?: string[];
+    socialPreference?: string;
+    limit?: number;
+  }): Promise<ArchivedRecommendation[]> {
+    console.log('🔍 평가 기반 아카이빙된 목표 검색:', { 
+      ageRange, focusTime, motivationLevel, 
+      pastSuccesses, constraints, socialPreference 
+    });
+
+    try {
+      // 1차: 정확히 일치하는 평가 항목 검색
+      let results = await this.searchExactMatch({
+        ageRange, focusTime, motivationLevel, 
+        pastSuccesses, constraints, socialPreference, 
+        limit
+      });
+
+      // 2차: 결과가 부족하면 유사한 평가 항목 검색
+      if (results.length < 3) {
+        const similarResults = await this.searchSimilarMatch({
+          ageRange, focusTime, motivationLevel,
+          pastSuccesses, constraints, socialPreference,
+          limit: limit - results.length,
+          excludeIds: results.map(r => r.id),
+          userFocusTime: focusTime,
+          userMotivationLevel: motivationLevel,
+          userSocialPreference: socialPreference
+        });
+        results = [...results, ...similarResults];
+      }
+
+      // 3차: 여전히 부족하면 연령대만 고려
+      if (results.length < 3 && ageRange) {
+        const ageResults = await this.searchByAgeRange({
+          ageRange,
+          limit: limit - results.length,
+          excludeIds: results.map(r => r.id)
+        });
+        results = [...results, ...ageResults];
+      }
+
+      // 4차: 그래도 부족하면 인기 있는 successfully_completed 목표
+      if (results.length < 3) {
+        const popularResults = await this.searchPopularGoals({
+          limit: limit - results.length,
+          excludeIds: results.map(r => r.id)
+        });
+        results = [...results, ...popularResults];
+      }
+
+      return results;
+    } catch (error) {
+      console.error('❌ 평가 기반 목표 검색 실패:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 정확히 일치하는 평가 항목으로 검색
+   */
+  private static async searchExactMatch(params: any): Promise<ArchivedRecommendation[]> {
+    try {
+      // 먼저 매칭되는 평가를 찾기
+      const { data: matchingAssessments, error: assessmentError } = await supabase
+        .from('assessments')
+        .select('id')
+        .eq('focus_time', params.focusTime)
+        .eq('motivation_level', params.motivationLevel)
+        .eq('social_preference', params.socialPreference);
+
+      if (assessmentError || !matchingAssessments || matchingAssessments.length === 0) {
+        console.log('매칭되는 평가가 없습니다');
+        return [];
+      }
+
+      const assessmentIds = matchingAssessments.map(a => a.id);
+
+      // 해당 평가 ID들과 연결된 아카이빙 목표 찾기
+      let query = supabase
+        .from('ai_recommendation_archive')
+        .select('*')
+        .in('archived_reason', ['successfully_completed', 'goal_not_selected'])
+        .in('original_assessment_id', assessmentIds);
+      
+      // ageRange가 있을 때만 필터 적용
+      if (params.ageRange) {
+        query = query.eq('patient_age_range', params.ageRange);
+      }
+      
+      const { data, error } = await query
+        .order('archived_reason', { ascending: false })
+        .order('completion_rate', { ascending: false, nullsFirst: false })
+        .order('archived_at', { ascending: false })
+        .limit(params.limit);
+
+      if (error) {
+        console.error('정확한 매칭 검색 오류:', error);
+        return [];
+      }
+
+      // 매칭 정보 추가
+      const resultsWithMatchInfo = (data || []).map(item => ({
+        ...item,
+        matchInfo: {
+          matchType: 'exact' as const,
+          matchedFields: ['연령대', '집중 가능 시간', '변화 동기', '사회성'],
+          focusTime: params.focusTime,
+          motivationLevel: params.motivationLevel,
+          socialPreference: params.socialPreference
+        }
+      }));
+
+      return resultsWithMatchInfo;
+    } catch (error) {
+      console.error('정확한 매칭 검색 중 예외:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 유사한 평가 항목으로 검색
+   */
+  private static async searchSimilarMatch(params: any): Promise<ArchivedRecommendation[]> {
+    try {
+      // motivation_level ±1 범위로 검색
+      const motivationRange = params.motivationLevel 
+        ? [params.motivationLevel - 1, params.motivationLevel, params.motivationLevel + 1]
+        : [];
+
+      // 유사한 평가 찾기 - 더 많은 정보 조회
+      const { data: similarAssessments, error: assessmentError } = await supabase
+        .from('assessments')
+        .select('id, focus_time, motivation_level, social_preference')
+        .in('motivation_level', motivationRange);
+
+      if (assessmentError || !similarAssessments || similarAssessments.length === 0) {
+        console.log('유사한 평가가 없습니다');
+        return [];
+      }
+
+      const assessmentIds = similarAssessments.map(a => a.id);
+
+      // 해당 평가 ID들과 연결된 아카이빙 목표 찾기
+      let query = supabase
+        .from('ai_recommendation_archive')
+        .select('*')
+        .in('archived_reason', ['successfully_completed', 'goal_not_selected'])
+        .in('original_assessment_id', assessmentIds);
+      
+      // ageRange가 있을 때만 필터 적용
+      if (params.ageRange) {
+        query = query.eq('patient_age_range', params.ageRange);
+      }
+
+      // excludeIds가 있을 때만 not 조건 추가
+      if (params.excludeIds && params.excludeIds.length > 0) {
+        query = query.not('id', 'in', `(${params.excludeIds.join(',')})`);
+      }
+
+      const { data, error } = await query
+        .order('archived_reason', { ascending: false })
+        .order('completion_rate', { ascending: false, nullsFirst: false })
+        .order('archived_at', { ascending: false })
+        .limit(params.limit);
+
+      if (error) {
+        console.error('유사 매칭 검색 오류:', error);
+        return [];
+      }
+
+      // matchInfo 추가
+      return (data || []).map(archive => {
+        // 해당 아카이브의 평가 정보 찾기
+        const assessment = similarAssessments.find(a => a.id === archive.original_assessment_id);
+        const matchedFields = [];
+        
+        if (assessment) {
+          if (params.userFocusTime && assessment.focus_time === params.userFocusTime) {
+            matchedFields.push('집중 가능 시간');
+          }
+          if (params.userMotivationLevel !== undefined && assessment.motivation_level === params.userMotivationLevel) {
+            matchedFields.push('변화 동기');
+          } else if (motivationRange.includes(assessment.motivation_level)) {
+            matchedFields.push('변화 동기(유사)');
+          }
+          if (params.userSocialPreference && assessment.social_preference === params.userSocialPreference) {
+            matchedFields.push('사회성');
+          }
+        }
+        
+        if (params.ageRange && archive.patient_age_range === params.ageRange) {
+          matchedFields.push('연령대');
+        }
+        
+        return {
+          ...archive,
+          matchInfo: {
+            matchType: 'similar' as const,
+            matchedFields,
+            focusTime: assessment?.focus_time,
+            motivationLevel: assessment?.motivation_level,
+            socialPreference: assessment?.social_preference
+          }
+        };
+      });
+    } catch (error) {
+      console.error('유사 매칭 검색 중 예외:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 연령대만으로 검색
+   */
+  private static async searchByAgeRange(params: any): Promise<ArchivedRecommendation[]> {
+    let query = supabase
+      .from('ai_recommendation_archive')
+      .select('*')
+      .in('archived_reason', ['successfully_completed', 'goal_not_selected']);
+    
+    // ageRange가 있을 때만 필터 적용
+    if (params.ageRange) {
+      query = query.eq('patient_age_range', params.ageRange);
+    }
+
+    // excludeIds가 있을 때만 not 조건 추가
+    if (params.excludeIds && params.excludeIds.length > 0) {
+      query = query.not('id', 'in', `(${params.excludeIds.map(id => `'${id}'`).join(',')})`);
+    }
+
+    const { data, error } = await query
+      .order('archived_reason', { ascending: false })
+      .order('completion_rate', { ascending: false, nullsFirst: false })
+      .order('archived_at', { ascending: false })
+      .limit(params.limit);
+
+    if (error) {
+      console.error('연령대 검색 오류:', error);
+      return [];
+    }
+
+    // matchInfo 추가
+    return (data || []).map(archive => ({
+      ...archive,
+      matchInfo: {
+        matchType: 'age_only' as const,
+        matchedFields: ['연령대']
+      }
+    }));
+  }
+
+  /**
+   * 인기 있는 목표 검색
+   */
+  private static async searchPopularGoals(params: any): Promise<ArchivedRecommendation[]> {
+    let query = supabase
+      .from('ai_recommendation_archive')
+      .select('*')
+      .eq('archived_reason', 'successfully_completed');
+
+    // excludeIds가 있을 때만 not 조건 추가
+    if (params.excludeIds && params.excludeIds.length > 0) {
+      query = query.not('id', 'in', `(${params.excludeIds.map(id => `'${id}'`).join(',')})`);
+    }
+
+    const { data, error } = await query
+      .order('completion_rate', { ascending: false, nullsFirst: false })
+      .order('archived_at', { ascending: false })
+      .limit(params.limit);
+
+    if (error) {
+      console.error('인기 목표 검색 오류:', error);
+      return [];
+    }
+
+    // matchInfo 추가
+    return (data || []).map(archive => ({
+      ...archive,
+      matchInfo: {
+        matchType: 'popular' as const,
+        matchedFields: ['인기목표']
+      }
+    }));
+  }
+
+  /**
+   * 환자 프로필과 유사한 아카이빙된 목표 검색 (기존 메서드 - 하위 호환성 유지)
    */
   static async searchArchivedGoalsByProfile({
     ageRange,

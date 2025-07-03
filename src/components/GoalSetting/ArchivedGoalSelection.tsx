@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Sparkles, ChevronRight } from 'lucide-react';
+import { Loader2, FileText, Sparkles, ChevronRight, CheckCircle, Star } from 'lucide-react';
 import { AIRecommendationArchiveService, type ArchivedRecommendation } from '@/services/ai-recommendation-archive';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -11,6 +11,12 @@ interface ArchivedGoalSelectionProps {
   patientAge?: number;
   patientGender?: string;
   diagnosisCategory?: string;
+  // 평가 항목 추가
+  focusTime?: string;
+  motivationLevel?: number;
+  pastSuccesses?: string[];
+  constraints?: string[];
+  socialPreference?: string;
   onSelectArchived: (archivedGoal: ArchivedRecommendation) => void;
   onGenerateNew: () => void;
   onBack?: () => void;
@@ -20,6 +26,11 @@ export function ArchivedGoalSelection({
   patientAge,
   patientGender,
   diagnosisCategory,
+  focusTime,
+  motivationLevel,
+  pastSuccesses,
+  constraints,
+  socialPreference,
   onSelectArchived,
   onGenerateNew,
   onBack
@@ -41,10 +52,14 @@ export function ArchivedGoalSelection({
       // 연령대 계산
       const ageRange = getAgeRange(patientAge);
 
-      const goals = await AIRecommendationArchiveService.searchArchivedGoalsByProfile({
+      // 새로운 평가 기반 검색 사용
+      const goals = await AIRecommendationArchiveService.searchArchivedGoalsByAssessment({
         ageRange,
-        diagnosisCategory,
-        gender: patientGender,
+        focusTime,
+        motivationLevel,
+        pastSuccesses,
+        constraints,
+        socialPreference,
         limit: 5
       });
 
@@ -119,16 +134,69 @@ export function ArchivedGoalSelection({
                           <div className="flex items-start gap-3">
                             <RadioGroupItem value={goal.id} id={goal.id} />
                             <div className="flex-1 space-y-1">
-                              <div className="font-medium">{goalData.title}</div>
-                              <div className="text-sm text-muted-foreground">{goalData.purpose}</div>
-                              <div className="text-xs text-muted-foreground mt-2">
-                                {goal.patient_age_range && `연령대: ${goal.patient_age_range}`}
-                                {goal.patient_gender && ` · 성별: ${goal.patient_gender === 'male' ? '남성' : '여성'}`}
-                                {goal.diagnosis_category && ` · 진단: ${goal.diagnosis_category}`}
-                                {goal.archived_reason === 'successfully_completed' && (
-                                  <span className="ml-2 text-green-600 font-medium">
-                                    ✓ 성공적으로 완료됨 {goal.completion_rate && `(달성률: ${goal.completion_rate}%)`}
+                              {/* 매칭 타입 배지 */}
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="font-medium">{goalData.title}</div>
+                                {goal.matchInfo?.matchType === 'exact' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-medium">
+                                    <CheckCircle className="h-3 w-3" />
+                                    완벽 매칭
                                   </span>
+                                )}
+                                {goal.matchInfo?.matchType === 'similar' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 font-medium">
+                                    유사 매칭
+                                  </span>
+                                )}
+                                {goal.matchInfo?.matchType === 'age_only' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700 font-medium">
+                                    연령대 매칭
+                                  </span>
+                                )}
+                                {goal.matchInfo?.matchType === 'popular' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700 font-medium">
+                                    <Star className="h-3 w-3" />
+                                    인기 목표
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">{goalData.purpose}</div>
+                              <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                {/* 매칭 정보 표시 */}
+                                {goal.matchInfo && goal.matchInfo.matchedFields && goal.matchInfo.matchedFields.length > 0 && (
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    <span className="font-medium">매칭 항목:</span>
+                                    {goal.matchInfo.matchedFields.map((field, idx) => (
+                                      <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
+                                        {field}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                {/* 평가 항목 값 표시 */}
+                                {goal.matchInfo && (
+                                  <div className="flex flex-col gap-1 text-gray-500">
+                                    {goal.matchInfo.focusTime && (
+                                      <span>집중 가능 시간: {goal.matchInfo.focusTime}</span>
+                                    )}
+                                    {goal.matchInfo.motivationLevel !== undefined && (
+                                      <span>변화 동기: {goal.matchInfo.motivationLevel}점</span>
+                                    )}
+                                    {goal.matchInfo.socialPreference && (
+                                      <span>사회성: {goal.matchInfo.socialPreference}</span>
+                                    )}
+                                  </div>
+                                )}
+                                {/* 기존 정보 */}
+                                {goal.patient_age_range && (
+                                  <div>
+                                    <span className="text-gray-500">연령대: {goal.patient_age_range}</span>
+                                    {goal.archived_reason === 'successfully_completed' && (
+                                      <span className="ml-2 text-green-600 font-medium">
+                                        ✓ 성공적으로 완료됨 {goal.completion_rate && `(달성률: ${goal.completion_rate}%)`}
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             </div>
