@@ -83,6 +83,31 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
         .eq('is_active', true)
         .order('full_name')
       if (workersError) throw workersError
+      
+      // 각 사회복지사의 역할 확인
+      const workersWithRoles = await Promise.all(
+        (workersData || []).map(async (worker) => {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select(`
+              roles (
+                role_name
+              )
+            `)
+            .eq('user_id', worker.user_id)
+            .single()
+          
+          return {
+            ...worker,
+            role_name: roleData?.roles?.role_name
+          }
+        })
+      )
+      
+      // 사원, 주임, 계장만 필터링 (과장 이상 제외)
+      const filteredWorkers = workersWithRoles.filter(worker => {
+        return worker.role_name === 'staff' || worker.role_name === 'assistant_manager' || worker.role_name === 'section_chief'
+      })
 
       // 각 사회복지사별 담당 환자 수 계산
       const workerPatientCounts = new Map<string, number>()
@@ -94,7 +119,7 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
       })
 
       // 사회복지사 목록에 환자 수 추가
-      const workersWithCount = workersData?.map(worker => ({
+      const workersWithCount = filteredWorkers?.map(worker => ({
         ...worker,
         patient_count: workerPatientCounts.get(worker.user_id) || 0
       }))

@@ -6,6 +6,7 @@ import type { Patient, PatientStats } from '@/services/patient-management'
 import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
 import { GoalService } from '@/services/goalSetting';
+import { supabase } from '@/lib/supabase'
 
 export default function PatientManagement() {
   const navigate = useNavigate()
@@ -18,13 +19,39 @@ export default function PatientManagement() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [canViewAssignee, setCanViewAssignee] = useState(false)
   
   // 모달 상태 관리
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
 
   useEffect(() => {
+    checkUserRole()
     fetchData()
   }, [])
+  
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      
+      const { data: userRoleData } = await supabase
+        .from('user_roles')
+        .select(`
+          roles (
+            role_name
+          )
+        `)
+        .eq('user_id', user.id)
+        .single()
+      
+      const roleName = userRoleData?.roles?.role_name
+      // 계장 이상 직급인지 확인
+      const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
+      setCanViewAssignee(managementRoles.includes(roleName))
+    } catch (error) {
+      console.error('Error checking user role:', error)
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -276,9 +303,11 @@ export default function PatientManagement() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     진단명
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    등록일
-                  </th>
+                  {canViewAssignee && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      담당자
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
                   </th>
@@ -304,9 +333,13 @@ export default function PatientManagement() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{patient.diagnosis}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{patient.registration_date}</div>
-                    </td>
+                    {canViewAssignee && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {patient.social_worker ? patient.social_worker.full_name : '미배정'}
+                        </div>
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-semibold rounded px-2 py-1 ${
