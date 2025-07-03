@@ -256,12 +256,12 @@ export class PatientService {
     }
   }
 
-  // 환자 삭제 (소프트 삭제 - 상태를 inactive로 변경)
+  // 환자 삭제 (소프트 삭제 - 상태를 pending으로 변경)
   static async deletePatient(id: string) {
     const { data, error } = await supabase
       .from('patients')
       .update({ 
-        status: 'inactive',
+        status: 'pending',
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -331,7 +331,7 @@ export class PatientService {
     return {
       total: data.length,
       active: stats.active || 0,
-      inactive: stats.inactive || 0,
+      pending: stats.pending || 0,
       discharged: stats.discharged || 0
     }
   }

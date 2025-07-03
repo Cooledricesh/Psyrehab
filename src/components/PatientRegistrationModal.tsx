@@ -23,7 +23,7 @@ export default function PatientRegistrationModal({
     doctor: '',
     contact_info: {},
     additional_info: {},
-    status: 'inactive'  // 기본값을 inactive로 고정
+    status: 'pending'  // 기본값을 pending으로 고정
   })
   
   const [isSubmitting, setIsSubmitting] = useState(false)

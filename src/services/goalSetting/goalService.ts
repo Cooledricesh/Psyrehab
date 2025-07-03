@@ -193,21 +193,6 @@ export class GoalService {
     }
   }
 
-  /**
-   * 입원 환자의 목표 상태를 on_hold로 변경
-   */
-  static async holdPatientGoals(patientId: string): Promise<void> {
-    const { error } = await supabase
-      .from('rehabilitation_goals')
-      .update({ status: 'on_hold' })
-      .eq('patient_id', patientId)
-      .eq('status', 'active');
-    
-    if (error) {
-      console.error("Error occurred");
-      throw error;
-    }
-  }
 
   /**
    * 아카이빙된 목표를 DetailedGoals 형식으로 변환

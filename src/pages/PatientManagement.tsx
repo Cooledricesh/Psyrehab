@@ -91,8 +91,15 @@ export default function PatientManagement() {
       if (newStatus === 'discharged') {
         dbStatus = 'discharged'
         
-        // 입원 처리 시 활성 목표들을 비활성화
-        await GoalService.holdPatientGoals(patientId)
+        // 퇴원 시 환자의 목표들 삭제
+        const { error: deleteError } = await supabase
+          .from('rehabilitation_goals')
+          .delete()
+          .eq('patient_id', patientId)
+        
+        if (deleteError) {
+          console.error('목표 삭제 중 오류:', deleteError)
+        }
       } else if (newStatus === 'pending') {
         dbStatus = 'pending'
       } else {
@@ -278,7 +285,7 @@ export default function PatientManagement() {
                         )}
                         {patient.status === 'completed' && (
                           <button
-                            onClick={() => handleStatusChange(patient.id, 'inactive')}
+                            onClick={() => handleStatusChange(patient.id, 'pending')}
                             className="text-green-600 hover:text-green-900"
                           >
                             재등록

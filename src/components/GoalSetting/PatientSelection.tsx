@@ -58,7 +58,7 @@ const PatientSelection: React.FC<PatientSelectionProps> = ({
               </div>
               <h3 className="text-sm font-medium text-gray-900 mb-2">목표 설정이 필요한 회원이 없습니다</h3>
               <p className="text-sm text-gray-500">
-                새로운 회원을 등록하거나, 기존 회원의 상태를 '목표 설정 대기(inactive)'로 변경해주세요.
+                새로운 회원을 등록하거나, 기존 회원의 상태를 '목표 설정 대기(pending)'로 변경해주세요.
               </p>
             </div>
           )}

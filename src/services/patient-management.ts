@@ -10,7 +10,7 @@ export interface Patient {
   diagnosis: string
   doctor?: string
   registration_date: string // 환자 등록일 (시스템 등록 시점)
-  status: 'active' | 'inactive' | 'completed'
+  status: 'active' | 'pending' | 'completed'
   contact_info?: string
   emergency_contact?: string
   hasActiveGoal?: boolean  // 활성 목표 유무 추가
@@ -24,7 +24,7 @@ export interface Patient {
 export interface PatientStats {
   totalPatients: number
   activePatients: number
-  inactivePatients: number
+  pendingPatients: number
   completedPatients: number
 }
 
@@ -155,7 +155,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
           ...patientData.additional_info,
           primary_diagnosis: patientData.primary_diagnosis || null
         },
-        status: patientData.status || 'inactive',  // 기본값을 inactive로 변경
+        status: patientData.status || 'pending',  // 기본값을 pending으로 변경
         primary_social_worker_id: null, // 나중에 설정 가능
       }])
       .select(`
@@ -354,14 +354,14 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       return {
         totalPatients: 0,
         activePatients: 0,
-        inactivePatients: 0,
+        pendingPatients: 0,
         completedPatients: 0
       }
     }
 
-    // active/inactive 환자만 필터링 (discharged 제외)
-    const activeInactivePatients = allPatients?.filter(p => 
-      p.status === 'active' || p.status === 'inactive'
+    // active/pending 환자만 필터링 (discharged 제외)
+    const activePendingPatients = allPatients?.filter(p => 
+      p.status === 'active' || p.status === 'pending'
     ) || []
 
     // 활성 목표가 있는 환자 조회
@@ -384,21 +384,21 @@ export const getPatientStats = async (): Promise<PatientStats> => {
 
     // 통계 계산
     const totalPatients = allPatients?.length || 0
-    const activePatients = activeInactivePatients.filter(p => patientsWithGoals.has(p.id)).length  // 목표가 있는 환자
-    const inactivePatients = activeInactivePatients.filter(p => !patientsWithGoals.has(p.id)).length  // 목표가 없는 환자
+    const activePatients = activePendingPatients.filter(p => patientsWithGoals.has(p.id)).length  // 목표가 있는 환자
+    const pendingPatients = activePendingPatients.filter(p => !patientsWithGoals.has(p.id)).length  // 목표가 없는 환자
     const completedPatients = dischargedPatients.length  // 입원 중인 환자 (discharged 상태)
 
     console.log('📊 환자 통계:', {
       전체: totalPatients,
       목표진행중: activePatients,
-      목표설정대기: inactivePatients,
+      목표설정대기: pendingPatients,
       입원중: completedPatients
     })
 
     return {
       totalPatients,
       activePatients,
-      inactivePatients,
+      pendingPatients,
       completedPatients
     }
   } catch {
@@ -406,7 +406,7 @@ export const getPatientStats = async (): Promise<PatientStats> => {
     return {
       totalPatients: 0,
       activePatients: 0,
-      inactivePatients: 0,
+      pendingPatients: 0,
       completedPatients: 0
     }
   }
@@ -472,15 +472,14 @@ const calculateAge = (birthDate: string): number => {
   return age
 }
 
-const mapPatientStatus = (dbStatus: string): 'active' | 'inactive' | 'completed' => {
+const mapPatientStatus = (dbStatus: string): 'active' | 'pending' | 'completed' => {
   switch (dbStatus) {
     case 'active':
       return 'active'
-    case 'inactive':
-      return 'inactive'
+    case 'pending':
+      return 'pending'
     case 'discharged':
       return 'completed'  // discharged를 completed로 매핑
-    case 'on_hold':
     case 'transferred':
       return 'completed'
     default:
@@ -559,7 +558,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
 // 환자 상태 변경 (간단한 버전)
 export const updatePatientStatus = async (
   patientId: string, 
-  newStatus: 'active' | 'inactive' | 'discharged'
+  newStatus: 'active' | 'pending' | 'discharged'
 ): Promise<Patient | null> => {
   try {
     console.log('🔄 환자 상태 변경 시작:', { patientId, newStatus })

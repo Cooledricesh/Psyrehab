@@ -101,12 +101,9 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
           const allWeeklyCompleted = weeklyGoals.every(g => 
             g.status === 'completed' || g.status === 'cancelled'
           );
-          const hasAtLeastOneWeeklyCompleted = weeklyGoals.some(g => 
-            g.status === 'completed'
-          );
 
-          // 모든 주간 목표가 완료되었으면 월간 목표도 완료 처리 대화상자 표시
-          if (allWeeklyCompleted && hasAtLeastOneWeeklyCompleted && parentMonthlyGoal.status === 'active') {
+          // 모든 주간 목표가 체크되었으면(달성/미달성 무관) 월간 목표도 완료 처리 대화상자 표시
+          if (allWeeklyCompleted && parentMonthlyGoal.status === 'active') {
             setPendingGoalId(parentMonthlyGoal.id);
             setPendingGoalType('monthly');
             setShowConfirmComplete(true);
@@ -304,10 +301,10 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
   const handleCongratulationClose = async () => {
     setShowCongrats(false);
     
-    // 환자 상태를 inactive로 변경
+    // 환자 상태를 pending으로 변경
     const { error } = await supabase
       .from('patients')
-      .update({ status: 'inactive' })
+      .update({ status: 'pending' })
       .eq('id', patientId);
     
     if (error) {
@@ -319,7 +316,7 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       // 이벤트 발생
       eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, {
         patientId: patientId,
-        newStatus: 'inactive'
+        newStatus: 'pending'
       });
       
       // 모든 관련 쿼리 새로고침

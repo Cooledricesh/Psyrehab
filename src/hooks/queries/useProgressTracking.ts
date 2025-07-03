@@ -116,16 +116,16 @@ export const useProgressStats = () => {
   return useQuery({
     queryKey: ['progressStats'],
     queryFn: async () => {
-      // 1. active와 inactive 환자 조회 (discharged 제외)
-      const { data: activeAndInactivePatients, error: patientsError } = await supabase
+      // 1. active와 pending 환자 조회 (discharged 제외)
+      const { data: activeAndPendingPatients, error: patientsError } = await supabase
         .from('patients')
         .select('id, status, additional_info')
-        .in('status', ['active', 'inactive']);
+        .in('status', ['active', 'pending']);
 
       if (patientsError) throw patientsError;
 
-      // 활동 가능한 환자 수 (active + inactive, 입원 환자는 제외하지 않음)
-      const eligiblePatientCount = activeAndInactivePatients?.length || 0;
+      // 활동 가능한 환자 수 (active + pending, 입원 환자는 제외하지 않음)
+      const eligiblePatientCount = activeAndPendingPatients?.length || 0;
 
       // 2. 현재 목표가 진행 중인 환자 수 조회 (6개월 목표 기준)
       const { data: patientsWithActiveGoals, error: goalsError } = await supabase
@@ -165,7 +165,7 @@ export const useProgressStats = () => {
       }
 
       // 참여율 계산: (목표 진행중인 환자 수) / (목표 진행 중 + 목표 설정 대기 중인 환자 수) * 100
-      // 즉, active/inactive 상태인 모든 환자 대비 목표 진행중인 환자의 비율
+      // 즉, active/pending 상태인 모든 환자 대비 목표 진행중인 환자의 비율
       if (eligiblePatientCount > 0) {
         stats.participationRate = (uniquePatientsWithGoals / eligiblePatientCount) * 100;
         console.log('참여율 계산:', {
