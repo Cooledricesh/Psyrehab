@@ -60,14 +60,14 @@ export default function PatientManagement() {
   const handleStatusChange = async (patientId: string, newStatus: string) => {
     try {
       // UI 상태를 DB 상태로 변환
-      let dbStatus: 'active' | 'inactive' | 'discharged'
+      let dbStatus: 'active' | 'pending' | 'discharged'
       if (newStatus === 'discharged') {
         dbStatus = 'discharged'
         
         // 입원 처리 시 활성 목표들을 비활성화
         await GoalService.holdPatientGoals(patientId)
-      } else if (newStatus === 'inactive') {
-        dbStatus = 'inactive'
+      } else if (newStatus === 'pending') {
+        dbStatus = 'pending'
       } else {
         dbStatus = 'active'
       }
@@ -119,9 +119,9 @@ export default function PatientManagement() {
     switch (status) {
       case 'active':
         return '목표 진행 중'
-      case 'inactive':
+      case 'pending':
         return '목표 설정 대기'
-      case 'completed':
+      case 'discharged':
         return '입원 중'
       default:
         return '알 수 없음'
@@ -132,9 +132,9 @@ export default function PatientManagement() {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800'
-      case 'inactive':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800'
-      case 'completed':
+      case 'discharged':
         return 'bg-blue-100 text-blue-800'
       default:
         return 'bg-gray-100 text-gray-800'

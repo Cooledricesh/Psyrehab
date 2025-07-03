@@ -23,24 +23,24 @@ interface PatientStatusManagerProps {
   onStatusChange?: () => void
 }
 
-type PatientStatus = 'active' | 'inactive' | 'discharged' | 'on_hold' | 'transferred'
+type PatientStatus = 'active' | 'pending' | 'discharged' | 'on_hold' | 'transferred'
 
 const statusOptions: { value: PatientStatus; label: string; icon: React.ReactNode; color: string }[] = [
   {
     value: 'active',
-    label: '활성',
+    label: '목표 진행 중',
     icon: <CheckCircle2 className="h-4 w-4" />,
     color: 'bg-green-100 text-green-800 border-green-200'
   },
   {
-    value: 'inactive',
-    label: '비활성',
+    value: 'pending',
+    label: '목표 설정 대기',
     icon: <XCircle className="h-4 w-4" />,
-    color: 'bg-gray-100 text-gray-800 border-gray-200'
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200'
   },
   {
     value: 'discharged',
-    label: '퇴원',
+    label: '입원 중',
     icon: <Calendar className="h-4 w-4" />,
     color: 'bg-blue-100 text-blue-800 border-blue-200'
   },
@@ -48,7 +48,7 @@ const statusOptions: { value: PatientStatus; label: string; icon: React.ReactNod
     value: 'on_hold',
     label: '보류',
     icon: <Clock className="h-4 w-4" />,
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    color: 'bg-orange-100 text-orange-800 border-orange-200'
   },
   {
     value: 'transferred',

@@ -209,3 +209,8 @@ git checkout <last-stable-commit>  # Full rollback
 
 ### Social Worker Role Deprecation
 - '사회복지사'라는 역할은 이제 사용하지 않는다.
+
+## Development Issues
+
+### Calendar and Date Calculation Concerns
+- 개선 방안에서 4번은 또 이해를 못하고 하는 소리지. 이 프로그램의 기본은 1주는 7일, 한달은 28일이라는 개념으로 접근하는 건데 실제 달력기반 계산을 왜 해?대체 메모리에 입력은 제대로 되어있는거냐?

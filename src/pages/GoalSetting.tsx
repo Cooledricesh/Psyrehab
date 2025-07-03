@@ -104,11 +104,11 @@ const GoalSetting: React.FC = () => {
     autoLogin();
   }, []);
 
-  // 환자 데이터 가져오기 - inactive 상태의 환자만
+  // 환자 데이터 가져오기 - pending 상태의 환자만
   const { data: patientsResponse, isLoading: patientsLoading, refetch } = useQuery({
-    queryKey: ['patients', 'inactive'],
+    queryKey: ['patients', 'pending'],
     queryFn: () => PatientService.getPatients({
-      filters: { status: 'inactive' }
+      filters: { status: 'pending' }
     }),
     staleTime: 0, // 항상 최신 데이터를 가져오도록
     refetchOnWindowFocus: true, // 탭 포커스시 리패치

@@ -102,7 +102,7 @@ export default function PatientRegistrationModal({
           doctor: '',
           contact_info: {},
           additional_info: {},
-          status: 'inactive'  // 기본값을 inactive로 고정
+          status: 'pending'  // 기본값을 pending으로 변경
         })
       }
     } catch (err: unknown) {

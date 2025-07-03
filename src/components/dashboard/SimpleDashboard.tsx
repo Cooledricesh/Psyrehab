@@ -11,7 +11,8 @@ export function SimpleDashboard() {
     totalPatients: 0,
     activeGoals: 0,
     thisWeekSessions: 0,
-    completionRate: 0
+    completionRate: 0,
+    pendingPatients: 0
   })
   const [socialWorkerStats, setSocialWorkerStats] = useState<SocialWorkerDashboardStats | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
@@ -285,7 +286,7 @@ export function SimpleDashboard() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">대시보드</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
         {/* 총 환자 수 */}
         <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
@@ -295,6 +296,18 @@ export function SimpleDashboard() {
               <p className="text-sm text-gray-500 mt-1">등록된 전체 환자</p>
             </div>
             <Users className="h-8 w-8 text-blue-500 opacity-80" />
+          </div>
+        </div>
+
+        {/* 목표 설정 대기 */}
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">목표 설정 대기</h3>
+              <p className="text-3xl font-bold text-yellow-600">{stats.pendingPatients}</p>
+              <p className="text-sm text-gray-500 mt-1">목표가 필요한 환자</p>
+            </div>
+            <AlertTriangle className="h-8 w-8 text-yellow-500 opacity-80" />
           </div>
         </div>
 

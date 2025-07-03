@@ -245,9 +245,9 @@ export default function PatientUnifiedModal({
     switch (status) {
       case 'active':
         return '목표 진행 중'
-      case 'inactive':
+      case 'pending':
         return '목표 설정 대기'
-      case 'completed':
+      case 'discharged':
         return '입원 중'
       default:
         return '알 수 없음'
@@ -258,9 +258,9 @@ export default function PatientUnifiedModal({
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800'
-      case 'inactive':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800'
-      case 'completed':
+      case 'discharged':
         return 'bg-blue-100 text-blue-800'
       default:
         return 'bg-gray-100 text-gray-800'

@@ -32,12 +32,12 @@ interface PatientWithGoal extends Patient {
 }
 
 // 현재 사용자가 담당하는 환자 목록 조회
-// 담당 필드가 없으므로 inactive가 아닌 모든 환자를 조회
+// 담당 필드가 없으므로 pending이 아닌 모든 환자를 조회
 async function getAssignedPatients(userId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('patients')
     .select('id, status')
-    .neq('status', 'inactive')
+    .neq('status', 'pending')
 
   if (error) {
     console.error('Error fetching assigned patients:', error)
@@ -198,49 +198,18 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 // 목표 미설정 환자 조회
 export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]> {
   try {
-    // 모든 환자 조회
-    const { data: allPatients, error: patientsError } = await supabase
+    // pending 상태인 환자들을 조회 (목표 설정 대기)
+    const { data: pendingPatients, error: patientsError } = await supabase
       .from('patients')
       .select('id, full_name, patient_identifier, status')
+      .eq('status', 'pending')
 
-    if (patientsError || !allPatients) {
+    if (patientsError || !pendingPatients) {
       console.error('Error fetching patients:', patientsError)
       return []
     }
 
-    // discharged, transferred 상태가 아닌 모든 환자 (active, inactive, on_hold 포함)
-    const eligiblePatients = allPatients.filter(p => 
-      p.status !== 'discharged' && p.status !== 'transferred'
-    )
-
-    if (eligiblePatients.length === 0) {
-      return []
-    }
-
-    // 활성 목표가 있는 환자들을 조회
-    const { data: goalsData, error: goalsError } = await supabase
-      .from('rehabilitation_goals')
-      .select('patient_id, status')
-      .in('patient_id', eligiblePatients.map(p => p.id))
-
-    if (goalsError) {
-      console.error('Error fetching goals:', goalsError)
-      return []
-    }
-
-    // 진행중이거나 활성 상태인 목표가 있는 환자들
-    const patientsWithActiveGoals = goalsData
-      ?.filter(g => g.status === 'active' || g.status === 'in_progress' || g.status === 'pending')
-      .map(g => g.patient_id) || []
-
-    const patientsWithGoalsIds = [...new Set(patientsWithActiveGoals)]
-
-    // 목표가 없는 환자 필터링
-    const patientsWithoutGoals = eligiblePatients.filter(
-      patient => !patientsWithGoalsIds.includes(patient.id)
-    )
-
-    return patientsWithoutGoals.map(p => ({
+    return pendingPatients.map(p => ({
       id: p.id,
       name: p.full_name,
       patient_identifier: p.patient_identifier

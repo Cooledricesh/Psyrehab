@@ -6,6 +6,7 @@ export interface DashboardStats {
   activeGoals: number
   thisWeekSessions: number
   completionRate: number
+  pendingPatients: number
 }
 
 // 총 환자 수 조회
@@ -110,21 +111,43 @@ export const getCompletionRate = async (): Promise<number> => {
   }
 }
 
+// 목표 설정 대기 환자 수 조회 (pending 상태)
+export const getPendingPatients = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('patients')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    
+    if (error) {
+      console.error("Error occurred")
+      return 0
+    }
+    
+    return count || 0
+  } catch {
+    console.error("Error occurred")
+    return 0
+  }
+}
+
 // 모든 대시보드 통계를 한 번에 조회
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
-    const [totalPatients, activeGoals, thisWeekSessions, completionRate] = await Promise.all([
+    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients] = await Promise.all([
       getTotalPatients(),
       getActiveGoals(),
       getThisWeekSessions(),
-      getCompletionRate()
+      getCompletionRate(),
+      getPendingPatients()
     ])
     
     return {
       totalPatients,
       activeGoals,
       thisWeekSessions,
-      completionRate
+      completionRate,
+      pendingPatients
     }
   } catch {
     console.error("Error occurred")
@@ -132,7 +155,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       totalPatients: 0,
       activeGoals: 0,
       thisWeekSessions: 0,
-      completionRate: 0
+      completionRate: 0,
+      pendingPatients: 0
     }
   }
 } 
