@@ -63,7 +63,7 @@ export class GoalService {
     
     // 모든 날짜 계산의 기준이 되는 시작일
     const baseStartDate = new Date();
-    baseStartDate.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+    baseStartDate.setHours(12, 0, 0, 0); // UTC 변환시 날짜가 바뀌지 않도록 정오로 설정
     
     // 6개월 목표
     const sixMonthEndDate = new Date(baseStartDate);

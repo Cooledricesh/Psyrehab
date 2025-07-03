@@ -152,14 +152,14 @@ export const Sidebar = () => {
 
       <aside 
         ref={sidebarRef}
-        className={`fixed lg:relative inset-y-0 left-0 bg-white shadow-lg w-64 transform lg:translate-x-0 transition-transform z-30 flex flex-col ${
+        className={`fixed inset-y-0 left-0 bg-white shadow-lg w-64 transform lg:translate-x-0 transition-transform z-30 flex flex-col h-screen ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
         role="navigation"
         aria-label="주요 내비게이션"
       >
-        <div className="h-full flex flex-col">
-          <header className="p-4 border-b border-gray-200">
+        <div className="h-full flex flex-col overflow-hidden">
+          <header className="p-4 border-b border-gray-200 flex-shrink-0">
             <Link to="/">
               <h1 className="text-xl font-bold text-blue-600 cursor-pointer hover:text-blue-700 transition-colors">
                 PsyRehab
@@ -168,7 +168,7 @@ export const Sidebar = () => {
             <p className="text-sm text-gray-600">정신건강 전문가 포털</p>
           </header>
 
-          <nav className="overflow-y-auto flex-1 py-4">
+          <nav className="overflow-y-auto flex-1 py-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <ul className="space-y-1">
               {/* 계장 이상 직급 - 관리자 대시보드를 맨 위에 표시 */}
               {canViewManagement && (
@@ -301,7 +301,7 @@ export const Sidebar = () => {
             </ul>
           </nav>
 
-          <footer className="p-4 border-t border-gray-200">
+          <footer className="p-4 border-t border-gray-200 flex-shrink-0">
             <div className="text-center">
               <p className="font-medium text-sm">{userInfo.name}</p>
               <p className="text-xs text-gray-600">{userInfo.role}</p>
