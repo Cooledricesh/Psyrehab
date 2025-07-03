@@ -56,6 +56,7 @@ export const Sidebar = () => {
   const [canViewManagement, setCanViewManagement] = useState(false)
   const [adminMenuOpen, setAdminMenuOpen] = useState(false)
   const [userInfo, setUserInfo] = useState<{ name: string; role: string }>({ name: '사용자', role: '' })
+  const [userRole, setUserRole] = useState<string | null>(null)
   const sidebarRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -84,6 +85,9 @@ export const Sidebar = () => {
       if (userRoleData) {
         const roleName = (userRoleData as any).roles?.role_name
         console.log('User role:', roleName)
+        
+        // 역할 저장
+        setUserRole(roleName)
         
         // 관리자인지 확인
         setIsAdmin(roleName === 'administrator')
@@ -166,12 +170,29 @@ export const Sidebar = () => {
 
           <nav className="overflow-y-auto flex-1 py-4">
             <ul className="space-y-1">
-              <SidebarLink
-                to="/dashboard"
-                icon={<Home size={18} />}
-                label="대시보드"
-                isActive={location.pathname === '/dashboard'}
-              />
+              {/* 계장 이상 직급 - 관리자 대시보드를 맨 위에 표시 */}
+              {canViewManagement && (
+                <>
+                  <SidebarLink
+                    to="/admin/dashboard"
+                    icon={<Activity size={18} />}
+                    label="관리자 대시보드"
+                    isActive={location.pathname === '/admin/dashboard'}
+                  />
+                  <li className="my-2 h-px bg-gray-200 mx-4"></li>
+                </>
+              )}
+              
+              {/* 일반 대시보드 - 관리자이거나 계장급 미만만 표시 */}
+              {(userRole === 'administrator' || !canViewManagement || userRole === null) && (
+                <SidebarLink
+                  to="/dashboard"
+                  icon={<Home size={18} />}
+                  label="대시보드"
+                  isActive={location.pathname === '/dashboard'}
+                />
+              )}
+              
               <SidebarLink
                 to="/patient-management"
                 icon={<Users size={18} />}
@@ -195,12 +216,6 @@ export const Sidebar = () => {
               {canViewManagement && (
                 <>
                   <li className="my-2 h-px bg-gray-200 mx-4"></li>
-                  <SidebarLink
-                    to="/admin/dashboard"
-                    icon={<Activity size={18} />}
-                    label="관리자 대시보드"
-                    isActive={location.pathname === '/admin/dashboard'}
-                  />
                   <SidebarLink
                     to="/admin/patient-assignment"
                     icon={<UserCheck size={18} />}
