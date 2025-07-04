@@ -579,13 +579,13 @@ const GoalSetting: React.FC = () => {
             </h3>
             <p className="text-gray-600">
               {isExtendedPolling 
-                ? '최적의 목표를 찾기 위해 추가 분석을 수행하고 있습니다...'
+                ? '조금만 더 기다려주세요...'
                 : 'AI가 최적의 재활 목표를 분석하고 있습니다...'
               }
             </p>
             <div className="mt-6 text-sm text-gray-500">
               {isExtendedPolling
-                ? 'n8n에서 여러 가지 목표 옵션을 검토 중입니다. 조금 더 기다려주세요.'
+                ? 'AI가 더 나은 목표를 찾기 위해 추가 검토를 진행하고 있습니다. 최대 90초까지 소요될 수 있습니다.'
                 : '평가 데이터를 분석하여 개인맞춤형 목표를 생성하고 있습니다.'
               }
             </div>

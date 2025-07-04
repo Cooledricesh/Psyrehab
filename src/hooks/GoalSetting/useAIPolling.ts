@@ -33,13 +33,19 @@ export const useAIPolling = ({
   const [pollingStatus, setPollingStatus] = useState<'idle' | 'polling' | 'success' | 'error' | 'timeout' | 'extending'>('idle');
   const [isExtendedPolling, setIsExtendedPolling] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const attemptsRef = useRef(0);
+  const isExtendedRef = useRef(false);
 
   // AI 상태 확인 함수
   const checkAIStatus = useCallback(async () => {
     if (!currentAssessmentId) return;
 
     try {
-      console.log(`📊 AI 처리 상태 확인 중... (시도 ${pollingAttempts + 1}/${MAX_POLLING_ATTEMPTS})`);
+      attemptsRef.current += 1;
+      const currentAttempts = attemptsRef.current;
+      const maxAttempts = isExtendedRef.current ? MAX_POLLING_ATTEMPTS * 2 : MAX_POLLING_ATTEMPTS;
+      
+      console.log(`📊 AI 처리 상태 확인 중... (시도 ${currentAttempts}/${maxAttempts})`);
       
       const recommendation = await AIRecommendationService.checkRecommendationStatus(currentAssessmentId);
 
@@ -127,29 +133,27 @@ export const useAIPolling = ({
         onError(MESSAGES.error.aiRecommendationFailed);
         stopPolling();
         
-      } else if (pollingAttempts >= MAX_POLLING_ATTEMPTS - 1) {
-        // 첫 번째 타임아웃: 연장 시도
-        if (!isExtendedPolling) {
-          console.log('⏰ 첫 번째 타임아웃 도달. n8n 재시도 감안하여 폴링 연장...');
-          setPollingStatus('extending');
-          setIsExtendedPolling(true);
-          setPollingAttempts(0); // 카운터 리셋
-        } else {
-          // 연장 후에도 타임아웃: 최종 실패
-          console.log('❌ 연장 폴링도 시간 초과. 최종 실패 처리');
-          setPollingStatus('timeout');
-          onError(MESSAGES.error.aiRecommendationTimeout);
-          stopPolling();
-        }
+      } else if (currentAttempts >= MAX_POLLING_ATTEMPTS && !isExtendedRef.current) {
+        // 첫 번째 타임아웃 (45초): 연장 시도
+        console.log('⏰ 45초 경과. 조금만 더 기다려주세요...');
+        setPollingStatus('extending');
+        setIsExtendedPolling(true);
+        isExtendedRef.current = true;
+        // 상태 업데이트를 위해 pollingAttempts도 업데이트
+        setPollingAttempts(currentAttempts);
+        
+      } else if (currentAttempts >= MAX_POLLING_ATTEMPTS * 2) {
+        // 최종 타임아웃 (90초): 실패 처리
+        console.log('❌ 90초 경과. AI 처리 시간 초과');
+        setPollingStatus('timeout');
+        onError(MESSAGES.error.aiRecommendationTimeout);
+        stopPolling();
         
       } else {
-        const statusText = isExtendedPolling ? 'extending' : 'polling';
-        const attemptInfo = isExtendedPolling ? 
-          `연장 시도 ${pollingAttempts + 1}/${MAX_POLLING_ATTEMPTS}` : 
-          `시도 ${pollingAttempts + 1}/${MAX_POLLING_ATTEMPTS}`;
-        
-        console.log(`⏳ AI 처리 진행 중... 상태: ${recommendation?.n8n_processing_status || 'waiting'} (${attemptInfo})`);
-        setPollingAttempts(prev => prev + 1);
+        // 계속 폴링
+        const statusText = isExtendedRef.current ? '조금만 더 기다려주세요' : 'AI 처리 중';
+        console.log(`⏳ ${statusText}... 상태: ${recommendation?.n8n_processing_status || 'waiting'} (${currentAttempts}/${maxAttempts})`);
+        setPollingAttempts(currentAttempts);
       }
     } catch (error) {
       console.error('폴링 중 오류:', error);
@@ -166,7 +170,11 @@ export const useAIPolling = ({
     setIsPolling(true);
     setPollingStatus('polling');
     setPollingAttempts(0);
-    setIsExtendedPolling(false); // 초기화
+    setIsExtendedPolling(false);
+    
+    // ref 초기화
+    attemptsRef.current = 0;
+    isExtendedRef.current = false;
     
     // 즉시 한 번 확인
     checkAIStatus();
