@@ -519,7 +519,7 @@ const GoalSetting: React.FC = () => {
       <StepIndicator currentStep={currentStep} steps={steps} />
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className={`mx-auto px-4 py-8 ${showArchivedSelection ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {currentStep === 1 && (
           <PatientSelection
             patients={patients}

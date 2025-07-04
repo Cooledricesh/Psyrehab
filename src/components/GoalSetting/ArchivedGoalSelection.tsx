@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Sparkles, ChevronRight, CheckCircle, Star, Archive } from 'lucide-react';
+import { Loader2, FileText, Sparkles, ChevronRight, CheckCircle, Star, Archive, Check } from 'lucide-react';
 import { AIRecommendationArchiveService, type ArchivedRecommendation } from '@/services/ai-recommendation-archive';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -48,10 +46,15 @@ export function ArchivedGoalSelection({
   const [error, setError] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [loadingAll, setLoadingAll] = useState(false);
   const pageSize = 10;
+  const allGoalsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchArchivedGoals();
+  }, []);
+
+  useEffect(() => {
     fetchAllArchivedGoals();
   }, [currentPage]);
 
@@ -85,6 +88,7 @@ export function ArchivedGoalSelection({
 
   const fetchAllArchivedGoals = async () => {
     try {
+      setLoadingAll(true);
       const result = await AIRecommendationArchiveService.getArchivedRecommendations({
         limit: pageSize,
         offset: (currentPage - 1) * pageSize
@@ -92,8 +96,12 @@ export function ArchivedGoalSelection({
       
       setAllArchivedGoals(result.data);
       setTotalCount(result.count);
+      
+      // 스크롤 위치 조정 제거 - 자동 스크롤 방지
     } catch (err) {
       console.error('전체 아카이빙된 목표 조회 실패:', err);
+    } finally {
+      setLoadingAll(false);
     }
   };
 
@@ -110,7 +118,7 @@ export function ArchivedGoalSelection({
   };
 
   const handleSelectArchived = () => {
-    const selected = archivedGoals.find(g => g.id === selectedGoalId);
+    const selected = [...archivedGoals, ...allArchivedGoals].find(g => g.id === selectedGoalId);
     if (selected) {
       onSelectArchived(selected);
     }
@@ -128,7 +136,7 @@ export function ArchivedGoalSelection({
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
@@ -149,15 +157,29 @@ export function ArchivedGoalSelection({
           <>
             <div className="space-y-4">
               <h3 className="font-medium">유사한 환자의 목표 ({archivedGoals.length}개)</h3>
-              <RadioGroup value={selectedGoalId} onValueChange={(value) => setSelectedGoalId(value)}>
+              <div className="space-y-3">
                 {archivedGoals.map((goal) => {
                   const goalData = goal.archived_goal_data[0];
                   return (
-                    <Card key={goal.id} className="cursor-pointer hover:border-primary">
+                    <Card 
+                      key={goal.id} 
+                      className={`cursor-pointer hover:border-primary transition-all ${
+                        selectedGoalId === goal.id ? 'border-primary ring-2 ring-primary ring-opacity-20' : ''
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedGoalId(goal.id);
+                      }}
+                    >
                       <CardContent className="p-4">
-                        <Label htmlFor={goal.id} className="cursor-pointer space-y-2">
+                        <div className="space-y-2">
                           <div className="flex items-start gap-3">
-                            <RadioGroupItem value={goal.id} id={goal.id} />
+                            <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                              selectedGoalId === goal.id ? 'border-primary bg-primary' : 'border-gray-300'
+                            }`}>
+                              {selectedGoalId === goal.id && <Check className="h-2.5 w-2.5 text-white" />}
+                            </div>
                             <div className="flex-1 space-y-1">
                               {/* 매칭 타입 배지 */}
                               <div className="flex items-center gap-2 mb-1">
@@ -226,31 +248,52 @@ export function ArchivedGoalSelection({
                               </div>
                             </div>
                           </div>
-                        </Label>
+                        </div>
                       </CardContent>
                     </Card>
                   );
                 })}
-              </RadioGroup>
+              </div>
             </div>
 
             {/* 전체 아카이빙된 목표 섹션 */}
             <Separator className="my-6" />
             
-            <div className="space-y-4">
+            <div className="space-y-4" ref={allGoalsRef}>
               <h3 className="font-medium flex items-center gap-2">
                 <Archive className="h-4 w-4" />
                 전체 아카이빙된 목표 ({totalCount}개)
               </h3>
-              <RadioGroup value={selectedGoalId} onValueChange={(value) => setSelectedGoalId(value)}>
-                {allArchivedGoals.map((goal) => {
+              <div className="space-y-3">
+                {loadingAll ? (
+                  <Card>
+                    <CardContent className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-muted-foreground">목표를 불러오는 중...</span>
+                    </CardContent>
+                  </Card>
+                ) : allArchivedGoals.map((goal) => {
                   const goalData = goal.archived_goal_data[0];
                   return (
-                    <Card key={goal.id} className="cursor-pointer hover:border-primary">
+                    <Card 
+                      key={goal.id} 
+                      className={`cursor-pointer hover:border-primary transition-all ${
+                        selectedGoalId === goal.id ? 'border-primary ring-2 ring-primary ring-opacity-20' : ''
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedGoalId(goal.id);
+                      }}
+                    >
                       <CardContent className="p-4">
-                        <Label htmlFor={`all-${goal.id}`} className="cursor-pointer space-y-2">
+                        <div className="space-y-2">
                           <div className="flex items-start gap-3">
-                            <RadioGroupItem value={goal.id} id={`all-${goal.id}`} />
+                            <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                              selectedGoalId === goal.id ? 'border-primary bg-primary' : 'border-gray-300'
+                            }`}>
+                              {selectedGoalId === goal.id && <Check className="h-2.5 w-2.5 text-white" />}
+                            </div>
                             <div className="flex-1 space-y-1">
                               <div className="font-medium">{removeGoalPrefix(goalData.title)}</div>
                               <div className="text-sm text-muted-foreground">{goalData.purpose}</div>
@@ -271,12 +314,12 @@ export function ArchivedGoalSelection({
                               </div>
                             </div>
                           </div>
-                        </Label>
+                        </div>
                       </CardContent>
                     </Card>
                   );
                 })}
-              </RadioGroup>
+              </div>
               
               {/* 페이지네이션 */}
               {totalCount > pageSize && (
@@ -284,9 +327,9 @@ export function ArchivedGoalSelection({
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious 
-                        href="#"
                         onClick={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           if (currentPage > 1) {
                             setCurrentPage(prev => prev - 1);
                           }
@@ -307,10 +350,10 @@ export function ArchivedGoalSelection({
                         pages.push(
                           <PaginationItem key={i}>
                             <PaginationLink
-                              href="#"
                               isActive={currentPage === i}
                               onClick={(e) => {
                                 e.preventDefault();
+                                e.stopPropagation();
                                 setCurrentPage(i);
                               }}
                             >
@@ -325,9 +368,9 @@ export function ArchivedGoalSelection({
 
                     <PaginationItem>
                       <PaginationNext 
-                        href="#"
                         onClick={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           if (currentPage < Math.ceil(totalCount / pageSize)) {
                             setCurrentPage(prev => prev + 1);
                           }
@@ -340,7 +383,7 @@ export function ArchivedGoalSelection({
               )}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-6">
               {onBack && (
                 <Button
                   onClick={onBack}
