@@ -320,7 +320,6 @@ export class PatientService {
             throw new Error('퇴원 처리 중 목표 정리에 실패했습니다.')
           }
 
-          console.log(`환자 ${id} 퇴원: ${activeGoals.length}개의 미완료 목표가 삭제됨`)
         }
       }
 

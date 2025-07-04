@@ -44,8 +44,6 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
     return []
   }
 
-  console.log('전체 활성 환자 목록:', data?.map(p => `${p.full_name}(${p.status})`))
-  console.log('김영희 환자 포함 여부:', data?.some(p => p.full_name === '김영희'))
   
   return data?.map(patient => patient.id) || []
 }
@@ -121,15 +119,9 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 // 4주 연속 실패 환자 조회
 export async function getConsecutiveFailurePatients(userId: string): Promise<PatientWithGoal[]> {
   try {
-    console.log('=== getConsecutiveFailurePatients 시작 ===')
-    console.log('userId:', userId)
-    
     const assignedPatients = await getAssignedPatients(userId)
-    console.log('할당된 환자 수:', assignedPatients.length)
-    console.log('할당된 환자 ID 목록:', assignedPatients)
     
     if (assignedPatients.length === 0) {
-      console.log('할당된 환자가 없어 빈 배열 반환')
       return []
     }
 
@@ -191,34 +183,13 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
         return endDate < today
       })
 
-      // 디버깅: 김영희의 데이터 확인
-      if (patientData.full_name === '김영희') {
-        console.log('김영희 환자 ID:', patientId)
-        console.log('오늘 날짜:', today.toISOString().split('T')[0])
-        console.log('김영희의 전체 주간 목표 수:', weeklyGoals?.length || 0)
-        console.log('김영희의 과거 주간 목표 수:', pastWeeklyGoals.length)
-        if (pastWeeklyGoals.length >= 4) {
-          console.log('김영희의 이전 4개 주간 목표:')
-          pastWeeklyGoals.slice(0, 4).forEach((goal, index) => {
-            console.log(`  ${index + 1}. ${goal.start_date} - ${goal.status} - ${goal.title}`)
-          })
-        }
-      }
-
       if (pastWeeklyGoals.length < 4) {
-        if (patientData.full_name === '김영희') {
-          console.log('김영희는 4개 미만의 과거 주간 목표를 가지고 있어 스킵됨')
-        }
         continue
       }
 
       // 이전 4주가 모두 cancelled(미달성) 상태인지 확인
       const recentFourWeeks = pastWeeklyGoals.slice(0, 4)
       const allFailed = recentFourWeeks.every(goal => goal.status === 'cancelled')
-      
-      if (patientData.full_name === '김영희') {
-        console.log('김영희의 4주 연속 실패 여부:', allFailed)
-      }
       
       if (allFailed) {
         // 연속 실패한 주차 정보 포함
@@ -236,17 +207,8 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
           goal_type: 'weekly',
           start_date: recentFourWeeks[3].start_date // 가장 오래된 실패 주차의 시작일
         })
-        
-        if (patientData.full_name === '김영희') {
-          console.log('김영희가 4주 연속 실패 목록에 추가됨')
-        }
       }
     }
-
-    console.log(`4주 연속 실패 환자 수: ${consecutiveFailures.length}명`)
-    consecutiveFailures.forEach(patient => {
-      console.log(`- ${patient.name}: ${patient.goal_name}`)
-    })
 
     return consecutiveFailures
   } catch (error) {
@@ -343,8 +305,6 @@ export async function getSocialWorkerDashboardStats(userId: string): Promise<Soc
         return cached.data
     }
 
-    const startTime = Date.now()
-    
     // 담당 환자 목록을 먼저 조회하여 공유
     const assignedPatients = await getAssignedPatients(userId)
     
@@ -383,9 +343,6 @@ export async function getSocialWorkerDashboardStats(userId: string): Promise<Soc
       timestamp: Date.now()
     })
 
-    const endTime = Date.now()
-    console.log(`대시보드 로딩 시간: ${endTime - startTime}ms`)
-    
     return result
   } catch (error) {
     console.error('Error in getSocialWorkerDashboardStats:', error)

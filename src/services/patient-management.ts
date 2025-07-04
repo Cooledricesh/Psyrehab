@@ -71,8 +71,6 @@ export const getPatients = async (): Promise<Patient[]> => {
     }
 
     // 디버깅: 원본 데이터 구조 확인
-    console.log('🔍 원본 환자 데이터 (첫 번째 환자):', data?.[0])
-    console.log('🔍 모든 환자 데이터:', data)
 
     return data?.map((patient: unknown) => {
       // 활성 6개월 목표가 있는지 확인
