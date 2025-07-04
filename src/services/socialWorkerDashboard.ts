@@ -10,12 +10,7 @@ export interface SocialWorkerDashboardStats {
   weeklyCheckPending: PatientWithGoal[]  // 주간 점검 미완료 환자
   consecutiveFailures: PatientWithGoal[]  // 4주 연속 실패 환자
   goalsNotSet: Patient[]                  // 목표 미설정 환자
-  weeklyAchievementRate: {                // 주간 달성률 분포
-    achieved: number
-    failed: number
-    pending: number
-    total: number
-  }
+  fourWeeksAchieved: PatientWithGoal[]   // 4주 연속 목표 달성 환자
 }
 
 interface Patient {
@@ -48,7 +43,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
   return data?.map(patient => patient.id) || []
 }
 
-// 주간 목표 점검 미완료 환자 조회 (현재 날짜가 포함된 주차의 pending 상태 목표)
+// 주간 목표 점검 미완료 환자 조회 (이번 주차 제외하고 이전 주간 목표 중 pending 상태인 목표)
 export async function getWeeklyCheckPendingPatients(userId: string): Promise<PatientWithGoal[]> {
   try {
     const assignedPatients = await getAssignedPatients(userId)
@@ -56,9 +51,9 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 
     const pendingPatients: PatientWithGoal[] = []
     const today = new Date()
-    const todayString = today.toISOString().split('T')[0]
+    today.setHours(0, 0, 0, 0)
     
-    // 각 환자의 현재 주차 pending 목표 확인
+    // 각 환자의 이전 주차 pending 목표 확인
     for (const patientId of assignedPatients) {
       // 환자 정보 먼저 조회
       const { data: patientData } = await supabase
@@ -69,22 +64,45 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 
       if (!patientData) continue
 
-      // 현재 날짜가 포함된 주간 목표 중 pending 상태인 것 조회
-      // start_date <= 오늘 <= end_date 이고 status가 pending인 목표
-      const { data: currentWeekGoals } = await supabase
+      // 현재 활성화된 6개월 목표 찾기
+      const { data: activeSixMonthGoals } = await supabase
         .from('rehabilitation_goals')
-        .select('id, title, status, sequence_number, start_date, end_date')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'six_month')
+        .in('status', ['active', 'in_progress'])
+        
+      if (!activeSixMonthGoals || activeSixMonthGoals.length === 0) continue
+      
+      const activeSixMonthGoal = activeSixMonthGoals[0]
+      
+      // 해당 6개월 목표의 모든 월간 목표 ID 가져오기
+      const { data: monthlyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'monthly')
+        .eq('parent_goal_id', activeSixMonthGoal.id)
+        
+      if (!monthlyGoals || monthlyGoals.length === 0) continue
+      
+      const monthlyGoalIds = monthlyGoals.map(g => g.id)
+      
+      // 해당 월간 목표들의 주간 목표들 중 이전 주차들만 조회 (end_date가 오늘보다 이전)
+      const { data: pastWeeklyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id, sequence_number, status, start_date, end_date, title')
         .eq('patient_id', patientId)
         .eq('goal_type', 'weekly')
-        .eq('status', 'pending')
-        .lte('start_date', todayString)
-        .gte('end_date', todayString)
-        .order('sequence_number', { ascending: true })
-        .limit(1)
+        .in('parent_goal_id', monthlyGoalIds)
+        .lt('end_date', today.toISOString().split('T')[0]) // 종료일이 오늘보다 이전
+        .eq('status', 'pending') // pending 상태인 목표만
+        .order('start_date', { ascending: false }) // 최근 날짜부터
+        .limit(1) // 가장 최근 pending 목표 1개만
 
-      if (!currentWeekGoals || currentWeekGoals.length === 0) continue
+      if (!pastWeeklyGoals || pastWeeklyGoals.length === 0) continue
 
-      const pendingGoal = currentWeekGoals[0]
+      const pendingGoal = pastWeeklyGoals[0]
       
       pendingPatients.push({
         id: patientData.id,
@@ -230,56 +248,104 @@ export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]>
   }
 }
 
-// 주간 목표 달성률 분포 조회
-export async function getWeeklyAchievementRate(userId: string): Promise<SocialWorkerDashboardStats['weeklyAchievementRate']> {
+// 4주 연속 달성 환자 조회
+export async function get4WeeksAchievedPatients(userId: string): Promise<PatientWithGoal[]> {
   try {
     const assignedPatients = await getAssignedPatients(userId)
+    
     if (assignedPatients.length === 0) {
-      return { achieved: 0, failed: 0, pending: 0, total: 0 }
+      return []
     }
 
-    // 현재 진행 중인 모든 주간 목표 조회
-    const { data: weeklyGoals } = await supabase
-      .from('rehabilitation_goals')
-      .select('id, patient_id, title, start_date, status, sequence_number')
-      .in('patient_id', assignedPatients)
-      .eq('goal_type', 'weekly')
-      .not('status', 'is', null)
+    const fourWeeksAchieved: PatientWithGoal[] = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    // 환자별로 최근 4주의 주간 목표 상태를 확인
+    for (const patientId of assignedPatients) {
+      // 환자 정보 먼저 조회
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('id, full_name, patient_identifier')
+        .eq('id', patientId)
+        .single()
 
-    if (!weeklyGoals || weeklyGoals.length === 0) {
-      return { achieved: 0, failed: 0, pending: 0, total: 0 }
-    }
+      if (!patientData) continue
 
-    // 현재 주차에 해당하는 목표들만 필터링
-    const currentWeekGoals = weeklyGoals.filter(goal => {
-      // 각 환자의 가장 최근 주차 목표만 포함
-      const samePatientGoals = weeklyGoals.filter(g => g.patient_id === goal.patient_id)
-      const maxSequence = Math.max(...samePatientGoals.map(g => g.sequence_number || 0))
-      return goal.sequence_number === maxSequence
-    })
+      // 현재 활성화된 6개월 목표 찾기
+      const { data: activeSixMonthGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'six_month')
+        .in('status', ['active', 'in_progress'])
+        
+      if (!activeSixMonthGoals || activeSixMonthGoals.length === 0) continue
+      
+      const activeSixMonthGoal = activeSixMonthGoals[0]
+      
+      // 해당 6개월 목표의 모든 월간 목표 ID 가져오기
+      const { data: monthlyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'monthly')
+        .eq('parent_goal_id', activeSixMonthGoal.id)
+        
+      if (!monthlyGoals || monthlyGoals.length === 0) continue
+      
+      const monthlyGoalIds = monthlyGoals.map(g => g.id)
+      
+      // 해당 월간 목표들의 주간 목표들 중 최근 5주 조회 (현재 주차 제외를 위해)
+      const { data: weeklyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id, sequence_number, status, start_date, end_date, title, parent_goal_id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'weekly')
+        .in('parent_goal_id', monthlyGoalIds)
+        .lte('start_date', today.toISOString().split('T')[0]) // 오늘 이전에 시작된 목표
+        .order('start_date', { ascending: false }) // 최근 날짜부터
+        .limit(5) // 최근 5개 (현재 주차 포함)
 
-    const stats = {
-      achieved: 0,
-      failed: 0,
-      pending: 0,
-      total: currentWeekGoals.length
-    }
+      if (!weeklyGoals || weeklyGoals.length === 0) continue
 
-    // 각 목표의 상태 확인
-    for (const goal of currentWeekGoals) {
-      if (goal.status === 'completed') {
-        stats.achieved++
-      } else if (goal.status === 'cancelled') {
-        stats.failed++
-      } else if (goal.status === 'active' || goal.status === 'in_progress') {
-        stats.pending++
+      // 현재 주차인 목표 제외 (end_date가 오늘 이후인 목표)
+      const pastWeeklyGoals = weeklyGoals.filter(goal => {
+        const endDate = new Date(goal.end_date)
+        return endDate < today
+      })
+
+      if (pastWeeklyGoals.length < 4) {
+        continue
+      }
+
+      // 이전 4주가 모두 completed(달성) 상태인지 확인
+      const recentFourWeeks = pastWeeklyGoals.slice(0, 4)
+      const allAchieved = recentFourWeeks.every(goal => goal.status === 'completed')
+      
+      if (allAchieved) {
+        // 연속 달성한 주차 정보 포함
+        const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
+        const achievementInfo = weekNumbers.length >= 2 
+          ? `${weekNumbers[0]}-${weekNumbers[weekNumbers.length - 1]}주차 연속 달성`
+          : '최근 4주 연속 달성'
+        
+        fourWeeksAchieved.push({
+          id: patientData.id,
+          name: patientData.full_name,
+          patient_identifier: patientData.patient_identifier,
+          goal_id: recentFourWeeks[0].id,
+          goal_name: achievementInfo,
+          goal_type: 'weekly',
+          start_date: recentFourWeeks[3].start_date // 가장 오래된 달성 주차의 시작일
+        })
       }
     }
 
-    return stats
+    return fourWeeksAchieved
   } catch (error) {
-    console.error('Error in getWeeklyAchievementRate:', error)
-    return { achieved: 0, failed: 0, pending: 0, total: 0 }
+    console.error('Error in get4WeeksAchievedPatients:', error)
+    return []
   }
 }
 
@@ -311,7 +377,7 @@ export async function getSocialWorkerDashboardStats(userId: string): Promise<Soc
         weeklyCheckPending: [],
         consecutiveFailures: [],
         goalsNotSet: [],
-        weeklyAchievementRate: { achieved: 0, failed: 0, pending: 0, total: 0 }
+        fourWeeksAchieved: []
       }
     }
 
@@ -320,19 +386,19 @@ export async function getSocialWorkerDashboardStats(userId: string): Promise<Soc
       weeklyCheckPending,
       consecutiveFailures,
       goalsNotSet,
-      weeklyAchievementRate
+      fourWeeksAchieved
     ] = await Promise.all([
       getWeeklyCheckPendingPatients(userId),
       getConsecutiveFailurePatients(userId),
       getGoalsNotSetPatients(userId),
-      getWeeklyAchievementRate(userId)
+      get4WeeksAchievedPatients(userId)
     ])
 
     const result = {
       weeklyCheckPending,
       consecutiveFailures,
       goalsNotSet,
-      weeklyAchievementRate
+      fourWeeksAchieved
     }
 
     // 캐시에 저장
@@ -348,7 +414,7 @@ export async function getSocialWorkerDashboardStats(userId: string): Promise<Soc
       weeklyCheckPending: [],
       consecutiveFailures: [],
       goalsNotSet: [],
-      weeklyAchievementRate: { achieved: 0, failed: 0, pending: 0, total: 0 }
+      fourWeeksAchieved: []
     }
   }
 }
