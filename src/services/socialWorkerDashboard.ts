@@ -48,7 +48,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
   return data?.map(patient => patient.id) || []
 }
 
-// 주간 목표 점검 미완료 환자 조회 (오늘 날짜 기준 지난 주차 중 미체크 목표)
+// 주간 목표 점검 미완료 환자 조회 (현재 날짜가 포함된 주차의 pending 상태 목표)
 export async function getWeeklyCheckPendingPatients(userId: string): Promise<PatientWithGoal[]> {
   try {
     const assignedPatients = await getAssignedPatients(userId)
@@ -56,57 +56,45 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 
     const pendingPatients: PatientWithGoal[] = []
     const today = new Date()
-    today.setHours(23, 59, 59, 999)
+    const todayString = today.toISOString().split('T')[0]
     
-    // 각 환자의 현재 진행 중인 주간 목표 확인
+    // 각 환자의 현재 주차 pending 목표 확인
     for (const patientId of assignedPatients) {
-      // 해당 환자의 활성 월간 목표들 조회
-      const { data: monthlyGoals } = await supabase
+      // 환자 정보 먼저 조회
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('id, full_name, patient_identifier')
+        .eq('id', patientId)
+        .single()
+
+      if (!patientData) continue
+
+      // 현재 날짜가 포함된 주간 목표 중 pending 상태인 것 조회
+      // start_date <= 오늘 <= end_date 이고 status가 pending인 목표
+      const { data: currentWeekGoals } = await supabase
         .from('rehabilitation_goals')
-        .select(`
-          id,
-          title,
-          patients!inner (
-            id,
-            full_name,
-            patient_identifier
-          )
-        `)
+        .select('id, title, status, sequence_number, start_date, end_date')
         .eq('patient_id', patientId)
-        .eq('goal_type', 'monthly')
-        .in('status', ['active', 'in_progress'])
+        .eq('goal_type', 'weekly')
+        .eq('status', 'pending')
+        .lte('start_date', todayString)
+        .gte('end_date', todayString)
+        .order('sequence_number', { ascending: true })
+        .limit(1)
 
-      if (!monthlyGoals || monthlyGoals.length === 0) continue
+      if (!currentWeekGoals || currentWeekGoals.length === 0) continue
 
-      // 각 월간 목표의 주간 목표들 중 시작일이 오늘 이전인 것들 확인
-      for (const monthlyGoal of monthlyGoals) {
-        // 시작일이 오늘 이전이고 아직 체크하지 않은 주간 목표 조회
-        const { data: weeklyGoals } = await supabase
-          .from('rehabilitation_goals')
-          .select('id, title, status, sequence_number, start_date, end_date')
-          .eq('parent_goal_id', monthlyGoal.id)
-          .eq('goal_type', 'weekly')
-          .in('status', ['active', 'in_progress'])
-          .lte('start_date', today.toISOString().split('T')[0])
-          .order('sequence_number', { ascending: true })
-
-        if (!weeklyGoals || weeklyGoals.length === 0) continue
-
-        // 첫 번째 미체크 목표만 추가 (환자당 하나)
-        const firstPendingGoal = weeklyGoals[0]
-        const patient = monthlyGoal.patients as any
-        
-        pendingPatients.push({
-          id: patient.id,
-          name: patient.full_name,
-          patient_identifier: patient.patient_identifier,
-          goal_id: firstPendingGoal.id,
-          goal_name: `${firstPendingGoal.sequence_number}주차: ${firstPendingGoal.title}`,
-          goal_type: 'weekly',
-          start_date: firstPendingGoal.start_date
-        })
-        break // 환자당 하나만 표시
-      }
+      const pendingGoal = currentWeekGoals[0]
+      
+      pendingPatients.push({
+        id: patientData.id,
+        name: patientData.full_name,
+        patient_identifier: patientData.patient_identifier,
+        goal_id: pendingGoal.id,
+        goal_name: `${pendingGoal.sequence_number}주차: ${pendingGoal.title}`,
+        goal_type: 'weekly',
+        start_date: pendingGoal.start_date
+      })
     }
 
     return pendingPatients
@@ -292,6 +280,16 @@ export async function getWeeklyAchievementRate(userId: string): Promise<SocialWo
   } catch (error) {
     console.error('Error in getWeeklyAchievementRate:', error)
     return { achieved: 0, failed: 0, pending: 0, total: 0 }
+  }
+}
+
+// 캐시 무효화 함수
+export function invalidateDashboardCache(userId?: string) {
+  if (userId) {
+    cache.delete(`dashboard-${userId}`)
+  } else {
+    // 모든 대시보드 캐시 삭제
+    cache.clear()
   }
 }
 

@@ -26,4 +26,5 @@ export const eventBus = new EventBus();
 export const EVENTS = {
   PATIENT_STATUS_CHANGED: 'patient:status:changed',
   MONTHLY_GOAL_COMPLETED: 'goal:monthly:completed',
+  GOAL_STATUS_UPDATED: 'goal:status:updated',
 } as const;

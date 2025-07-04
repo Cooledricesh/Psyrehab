@@ -76,19 +76,7 @@ export const usePatientGoals = (patientId: string | null) => {
         (monthlyGoals || []).map(async (monthlyGoal) => {
           const { data: weeklyGoals, error: weeklyError } = await supabase
             .from('rehabilitation_goals')
-            .select(`
-              *,
-              weekly_check_ins(
-                id,
-                week_number,
-                check_in_date,
-                is_completed,
-                completion_notes,
-                obstacles_faced,
-                support_needed,
-                mood_rating
-              )
-            `)
+            .select('*')
             .eq('parent_goal_id', monthlyGoal.id)
             .eq('goal_type', 'weekly')
             .order('sequence_number');
@@ -183,27 +171,3 @@ export const useProgressStats = () => {
   });
 };
 
-// 주간 체크인 데이터 조회
-export const useWeeklyCheckIns = (goalId: string | null) => {
-  return useQuery({
-    queryKey: ['weeklyCheckIns', goalId],
-    queryFn: async () => {
-      if (!goalId) return [];
-
-      const { data, error } = await supabase
-        .from('weekly_check_ins')
-        .select(`
-          *,
-          social_workers!checked_by(
-            full_name
-          )
-        `)
-        .eq('goal_id', goalId)
-        .order('week_number');
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!goalId,
-  });
-};

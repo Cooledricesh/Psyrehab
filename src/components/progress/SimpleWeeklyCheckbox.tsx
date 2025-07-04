@@ -159,6 +159,13 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       
       // 진행 상황 통계 새로고침
       await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+      
+      // 목표 상태 변경 이벤트 발생 (대시보드 새로고침용)
+      eventBus.emit(EVENTS.GOAL_STATUS_UPDATED, {
+        goalId: weeklyGoal.id,
+        patientId: patientId,
+        newStatus: data.status
+      });
     },
     onError: (error) => {
       console.error("Error occurred");

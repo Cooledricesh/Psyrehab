@@ -21,8 +21,7 @@ import {
 import { 
   useActivePatients, 
   usePatientGoals, 
-  useProgressStats,
-  useWeeklyCheckIns 
+  useProgressStats
 } from '@/hooks/queries/useProgressTracking';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';

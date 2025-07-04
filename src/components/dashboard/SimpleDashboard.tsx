@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { getDashboardStats } from '@/services/dashboard-stats'
-import { getSocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
+import { getSocialWorkerDashboardStats, invalidateDashboardCache } from '@/services/socialWorkerDashboard'
 import { Loader2, Users, Target, Calendar, TrendingUp, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import type { SocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
+import { eventBus, EVENTS } from '@/lib/eventBus'
 
 export function SimpleDashboard() {
   const [stats, setStats] = useState({
@@ -44,7 +45,8 @@ export function SimpleDashboard() {
       
       // 역할에 따라 다른 데이터 로드
       if (roleName === 'staff' || roleName === 'assistant_manager') {
-        // 사원/주임용 대시보드 데이터
+        // 캐시 무효화 후 사원/주임용 대시보드 데이터 로드
+        invalidateDashboardCache(user.id)
         const swStats = await getSocialWorkerDashboardStats(user.id)
         setSocialWorkerStats(swStats)
       } else {
@@ -71,8 +73,22 @@ export function SimpleDashboard() {
     
     loadData()
     
+    // 목표 상태 변경 시 대시보드 새로고침
+    const handleGoalStatusUpdate = () => {
+      fetchDashboardData()
+    }
+    
+    // 이벤트 리스너 등록
+    eventBus.on(EVENTS.GOAL_STATUS_UPDATED, handleGoalStatusUpdate)
+    eventBus.on(EVENTS.PATIENT_STATUS_CHANGED, handleGoalStatusUpdate)
+    eventBus.on(EVENTS.MONTHLY_GOAL_COMPLETED, handleGoalStatusUpdate)
+    
     return () => {
       isActive = false
+      // 이벤트 리스너 해제
+      eventBus.off(EVENTS.GOAL_STATUS_UPDATED, handleGoalStatusUpdate)
+      eventBus.off(EVENTS.PATIENT_STATUS_CHANGED, handleGoalStatusUpdate)
+      eventBus.off(EVENTS.MONTHLY_GOAL_COMPLETED, handleGoalStatusUpdate)
     }
   }, [])
 
