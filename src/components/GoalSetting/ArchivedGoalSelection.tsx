@@ -35,6 +35,12 @@ export function ArchivedGoalSelection({
   onGenerateNew,
   onBack
 }: ArchivedGoalSelectionProps) {
+  // '목표 N:' 형식의 접두사를 제거하는 함수
+  const removeGoalPrefix = (text: string): string => {
+    if (!text) return text;
+    // '목표 1:', '목표1:', '목표 2 :', 등의 패턴 제거
+    return text.replace(/^목표\s*\d+\s*[:：]\s*/i, '').trim();
+  };
   const [loading, setLoading] = useState(true);
   const [archivedGoals, setArchivedGoals] = useState<ArchivedRecommendation[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
@@ -136,7 +142,7 @@ export function ArchivedGoalSelection({
                             <div className="flex-1 space-y-1">
                               {/* 매칭 타입 배지 */}
                               <div className="flex items-center gap-2 mb-1">
-                                <div className="font-medium">{goalData.title}</div>
+                                <div className="font-medium">{removeGoalPrefix(goalData.title)}</div>
                                 {goal.matchInfo?.matchType === 'exact' && (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-medium">
                                     <CheckCircle className="h-3 w-3" />

@@ -1,8 +1,28 @@
 import React from 'react';
 import { Target, Loader2 } from 'lucide-react';
 
+interface DetailedGoals {
+  selectedIndex?: number;
+  sixMonthGoal: {
+    title: string;
+    sixMonthGoal?: string;
+    goal?: string;
+    purpose?: string;
+    details?: string;
+  };
+  monthlyGoals: Array<{
+    month?: string | number;
+    goal: string;
+  }>;
+  weeklyGoals: Array<{
+    month: number;
+    week?: string | number;
+    plan: string;
+  }>;
+}
+
 interface GoalDetailViewProps {
-  detailedGoals: unknown;
+  detailedGoals: DetailedGoals;
   viewMode: 'monthly' | 'weekly';
   onViewModeChange: (mode: 'monthly' | 'weekly') => void;
   onBack: () => void;
@@ -22,6 +42,12 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
   onNewGoal,
   isProcessing,
 }) => {
+  // '목표 N:' 형식의 접두사를 제거하는 함수
+  const removeGoalPrefix = (text: string): string => {
+    if (!text) return text;
+    // '목표 1:', '목표1:', '목표 2 :', 등의 패턴 제거
+    return text.replace(/^목표\s*\d+\s*[:：]\s*/i, '').trim();
+  };
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -30,7 +56,7 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
           선택한 목표의 계층적 구조가 생성되었습니다.
         </h3>
         <p className="text-center text-gray-600 text-sm">
-          목표 {(detailedGoals.selectedIndex || 0) + 1}: {detailedGoals.sixMonthGoal.title}
+          목표 {(detailedGoals.selectedIndex || 0) + 1}: {removeGoalPrefix(detailedGoals.sixMonthGoal.title)}
         </p>
       </div>
 
@@ -43,11 +69,11 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
           <h4 className="font-semibold text-gray-900">6개월 전체 목표</h4>
         </div>
         <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
-          <h5 className="font-semibold text-blue-900 mb-2">{detailedGoals.sixMonthGoal.title}</h5>
+          <h5 className="font-semibold text-blue-900 mb-2">{removeGoalPrefix(detailedGoals.sixMonthGoal.title)}</h5>
           <div className="text-blue-800 text-sm">
             <p className="font-medium mb-1">6개월 목표:</p>
             <p>{detailedGoals.sixMonthGoal.sixMonthGoal || detailedGoals.sixMonthGoal.goal}</p>
-            <p className="mt-2">목적: {detailedGoals.sixMonthGoal.purpose}</p>
+            <p className="mt-2">목적: {detailedGoals.sixMonthGoal.purpose || detailedGoals.sixMonthGoal.details || '목적이 설정되지 않았습니다'}</p>
           </div>
         </div>
       </div>
@@ -83,7 +109,7 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
           {/* 월간 목표 뷰 */}
           {(!viewMode || viewMode === 'monthly') && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {detailedGoals.monthlyGoals.map((goal: unknown, index: number) => (
+              {detailedGoals.monthlyGoals.map((goal, index) => (
                 <div key={goal.month || index} className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <h5 className="font-semibold text-green-900 text-sm">{goal.month || index + 1}개월차</h5>
@@ -104,8 +130,8 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
                   </h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                     {detailedGoals.weeklyGoals
-                      .filter((goal: unknown) => goal.month === month)
-                      .map((goal: unknown, index: number) => (
+                      .filter((goal) => goal.month === month)
+                      .map((goal, index) => (
                         <div key={goal.week || index} className="bg-orange-50 border border-orange-200 rounded-lg p-2">
                           <div className="flex items-center justify-between mb-1">
                             <h6 className="font-medium text-orange-900 text-xs">{goal.week}주차</h6>

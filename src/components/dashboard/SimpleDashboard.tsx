@@ -126,19 +126,17 @@ export function SimpleDashboard() {
   if ((userRole === 'staff' || userRole === 'assistant_manager') && socialWorkerStats) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">대시보드</h1>
-        
         {/* 긴급 알림 섹션 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {/* 4주 연속 목표 달성 */}
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">4주 연속 목표 달성</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">대단해요!</h3>
                 <p className="text-3xl font-bold text-green-600">
                   {socialWorkerStats.fourWeeksAchieved?.length || 0}명
                 </p>
-                <p className="text-sm text-gray-500 mt-1">연속 달성 환자</p>
+                <p className="text-sm text-gray-500 mt-1">4주 연속 달성 회원</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500 opacity-80" />
             </div>
@@ -149,9 +147,9 @@ export function SimpleDashboard() {
                onClick={() => navigate('/progress-tracking')}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">주간 점검 미완료</h3>
-                <p className="text-3xl font-bold text-red-600">{socialWorkerStats.weeklyCheckPending.length}</p>
-                <p className="text-sm text-gray-500 mt-1">이번 주 점검 필요</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">주간 체크 미완료</h3>
+                <p className="text-3xl font-bold text-red-600">{socialWorkerStats.weeklyCheckPending.length}명</p>
+                <p className="text-sm text-gray-500 mt-1">지난 주간 목표 점검 필요</p>
               </div>
               <Clock className="h-8 w-8 text-red-500 opacity-80" />
             </div>
@@ -163,8 +161,8 @@ export function SimpleDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">긴급 개입 필요</h3>
-                <p className="text-3xl font-bold text-orange-600">{socialWorkerStats.consecutiveFailures.length}</p>
-                <p className="text-sm text-gray-500 mt-1">4주 연속 목표 실패</p>
+                <p className="text-3xl font-bold text-orange-600">{socialWorkerStats.consecutiveFailures.length}명</p>
+                <p className="text-sm text-gray-500 mt-1">4주 연속 미달성 회원</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-orange-500 opacity-80" />
             </div>
@@ -176,8 +174,8 @@ export function SimpleDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">목표 설정 필요</h3>
-                <p className="text-3xl font-bold text-yellow-600">{socialWorkerStats.goalsNotSet.length}</p>
-                <p className="text-sm text-gray-500 mt-1">목표가 없는 환자</p>
+                <p className="text-3xl font-bold text-yellow-600">{socialWorkerStats.goalsNotSet.length}명</p>
+                <p className="text-sm text-gray-500 mt-1">목표 미설정 회원</p>
               </div>
               <Target className="h-8 w-8 text-yellow-500 opacity-80" />
             </div>
@@ -191,7 +189,7 @@ export function SimpleDashboard() {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-                4주 연속 목표 달성 환자
+                4주 연속 목표 달성 회원
               </h2>
               <div className="space-y-2">
                 {socialWorkerStats.fourWeeksAchieved.map((patient, index) => (
@@ -216,7 +214,7 @@ export function SimpleDashboard() {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
-                긴급 개입 필요 환자
+                긴급 개입 필요 회원
               </h2>
               <div className="space-y-2">
                 {socialWorkerStats.consecutiveFailures.map((patient, index) => (
@@ -240,7 +238,7 @@ export function SimpleDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center">
               <Clock className="h-5 w-5 mr-2 text-red-600" />
-              주간 점검 미완료 환자
+              주간 체크 미완료 회원
             </h2>
             {socialWorkerStats.weeklyCheckPending.length > 0 ? (
               <div className="space-y-2">
@@ -273,7 +271,7 @@ export function SimpleDashboard() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <Target className="h-5 w-5 mr-2 text-yellow-600" />
-                목표 설정 필요 환자
+                목표 설정 필요 회원
               </h2>
               <div className="space-y-2">
                 {socialWorkerStats.goalsNotSet.slice(0, 5).map((patient, index) => (
@@ -283,7 +281,7 @@ export function SimpleDashboard() {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-medium text-gray-900">{patient.name}</p>
-                        <p className="text-sm text-gray-600">환자번호: {patient.patient_identifier}</p>
+                        <p className="text-sm text-gray-600">병록번호: {patient.patient_identifier}</p>
                       </div>
                       <span className="text-sm text-yellow-600 font-medium">목표 설정 대기</span>
                     </div>
