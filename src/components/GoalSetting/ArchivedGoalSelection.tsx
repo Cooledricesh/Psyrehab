@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Sparkles, ChevronRight, CheckCircle, Star } from 'lucide-react';
+import { Loader2, FileText, Sparkles, ChevronRight, CheckCircle, Star, Archive } from 'lucide-react';
 import { AIRecommendationArchiveService, type ArchivedRecommendation } from '@/services/ai-recommendation-archive';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Separator } from '@/components/ui/separator';
 
 interface ArchivedGoalSelectionProps {
   patientAge?: number;
@@ -24,8 +26,6 @@ interface ArchivedGoalSelectionProps {
 
 export function ArchivedGoalSelection({
   patientAge,
-  patientGender,
-  diagnosisCategory,
   focusTime,
   motivationLevel,
   pastSuccesses,
@@ -43,12 +43,17 @@ export function ArchivedGoalSelection({
   };
   const [loading, setLoading] = useState(true);
   const [archivedGoals, setArchivedGoals] = useState<ArchivedRecommendation[]>([]);
+  const [allArchivedGoals, setAllArchivedGoals] = useState<ArchivedRecommendation[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   useEffect(() => {
     fetchArchivedGoals();
-  }, []);
+    fetchAllArchivedGoals();
+  }, [currentPage]);
 
   const fetchArchivedGoals = async () => {
     try {
@@ -75,6 +80,20 @@ export function ArchivedGoalSelection({
       setError('아카이빙된 목표를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllArchivedGoals = async () => {
+    try {
+      const result = await AIRecommendationArchiveService.getArchivedRecommendations({
+        limit: pageSize,
+        offset: (currentPage - 1) * pageSize
+      });
+      
+      setAllArchivedGoals(result.data);
+      setTotalCount(result.count);
+    } catch (err) {
+      console.error('전체 아카이빙된 목표 조회 실패:', err);
     }
   };
 
@@ -130,7 +149,7 @@ export function ArchivedGoalSelection({
           <>
             <div className="space-y-4">
               <h3 className="font-medium">유사한 환자의 목표 ({archivedGoals.length}개)</h3>
-              <RadioGroup value={selectedGoalId} onValueChange={setSelectedGoalId}>
+              <RadioGroup value={selectedGoalId} onValueChange={(value) => setSelectedGoalId(value)}>
                 {archivedGoals.map((goal) => {
                   const goalData = goal.archived_goal_data[0];
                   return (
@@ -213,6 +232,112 @@ export function ArchivedGoalSelection({
                   );
                 })}
               </RadioGroup>
+            </div>
+
+            {/* 전체 아카이빙된 목표 섹션 */}
+            <Separator className="my-6" />
+            
+            <div className="space-y-4">
+              <h3 className="font-medium flex items-center gap-2">
+                <Archive className="h-4 w-4" />
+                전체 아카이빙된 목표 ({totalCount}개)
+              </h3>
+              <RadioGroup value={selectedGoalId} onValueChange={(value) => setSelectedGoalId(value)}>
+                {allArchivedGoals.map((goal) => {
+                  const goalData = goal.archived_goal_data[0];
+                  return (
+                    <Card key={goal.id} className="cursor-pointer hover:border-primary">
+                      <CardContent className="p-4">
+                        <Label htmlFor={`all-${goal.id}`} className="cursor-pointer space-y-2">
+                          <div className="flex items-start gap-3">
+                            <RadioGroupItem value={goal.id} id={`all-${goal.id}`} />
+                            <div className="flex-1 space-y-1">
+                              <div className="font-medium">{removeGoalPrefix(goalData.title)}</div>
+                              <div className="text-sm text-muted-foreground">{goalData.purpose}</div>
+                              <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                {goal.patient_age_range && (
+                                  <div>
+                                    <span className="text-gray-500">연령대: {goal.patient_age_range}</span>
+                                    {goal.archived_reason === 'successfully_completed' && (
+                                      <span className="ml-2 text-green-600 font-medium">
+                                        ✓ 성공적으로 완료됨 {goal.completion_rate && `(달성률: ${goal.completion_rate}%)`}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                                {goal.diagnosis_category && (
+                                  <span className="text-gray-500">진단: {goal.diagnosis_category}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </Label>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </RadioGroup>
+              
+              {/* 페이지네이션 */}
+              {totalCount > pageSize && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage > 1) {
+                            setCurrentPage(prev => prev - 1);
+                          }
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+
+                    {/* 페이지 번호들 */}
+                    {(() => {
+                      const totalPages = Math.ceil(totalCount / pageSize);
+                      const pages: React.ReactNode[] = [];
+                      
+                      const startPage = Math.max(1, currentPage - 2);
+                      const endPage = Math.min(totalPages, currentPage + 2);
+
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              href="#"
+                              isActive={currentPage === i}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(i);
+                              }}
+                            >
+                              {i}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+
+                      return pages;
+                    })()}
+
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage < Math.ceil(totalCount / pageSize)) {
+                            setCurrentPage(prev => prev + 1);
+                          }
+                        }}
+                        className={currentPage >= Math.ceil(totalCount / pageSize) ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
 
             <div className="flex gap-3">

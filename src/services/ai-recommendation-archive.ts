@@ -223,13 +223,6 @@ export class AIRecommendationArchiveService {
       const goalTitle = firstGoal?.title;
       const sixMonthGoal = firstGoal?.sixMonthGoal;
 
-      console.log('📊 getGoalUsageStats 디버깅:', {
-        goalTitle,
-        sixMonthGoal,
-        recommendation_id: archivedItem.original_recommendation_id,
-        archived_at: archivedItem.archived_at,
-        archived_reason: archivedItem.archived_reason
-      });
 
       // 선택되지 않은 목표는 사용 통계가 없음
       if (archivedItem.archived_reason === 'goal_not_selected') {
@@ -259,13 +252,6 @@ export class AIRecommendationArchiveService {
         const completedGoals = allGoals.filter(g => g.status === 'completed');
         const completedPatients = new Set(completedGoals.map(g => g.patient_id));
 
-        console.log('📊 제목 기반 통계:', {
-          title: sixMonthGoal,
-          totalGoals: allGoals.length,
-          uniquePatientsCount: uniquePatients.size,
-          completedCount: completedGoals.length,
-          completedPatientsCount: completedPatients.size
-        });
 
         // 평균 달성률 계산
         let averageCompletionRate = undefined;
@@ -304,7 +290,6 @@ export class AIRecommendationArchiveService {
           .eq('source_recommendation_id', archivedItem.original_recommendation_id);
         
         if (!error && data) {
-          console.log('📋 source_recommendation_id로 조회:', data.length, '개');
           goals.push(...data);
         }
       }
@@ -339,16 +324,6 @@ export class AIRecommendationArchiveService {
       const completedGoals = uniqueGoals.filter(g => g.status === 'completed');
       const completedPatients = new Set(completedGoals.map(g => g.patient_id));
 
-      console.log('📊 목표 사용 통계 디버깅:', {
-        archivedItemId: archivedItem.id,
-        sixMonthGoal: sixMonthGoal,
-        original_recommendation_id: archivedItem.original_recommendation_id,
-        totalGoals: uniqueGoals.length,
-        uniquePatientsCount: uniquePatients.size,
-        completedPatientsCount: completedPatients.size,
-        completedPatientIds: Array.from(completedPatients),
-        goalStatuses: uniqueGoals.map(g => ({ patient_id: g.patient_id, status: g.status }))
-      });
 
       // 완료된 목표들의 실제 달성률 계산
       let averageCompletionRate = undefined;
@@ -394,10 +369,6 @@ export class AIRecommendationArchiveService {
     socialPreference?: string;
     limit?: number;
   }): Promise<ArchivedRecommendation[]> {
-    console.log('🔍 평가 기반 아카이빙된 목표 검색:', { 
-      ageRange, focusTime, motivationLevel, 
-      pastSuccesses, constraints, socialPreference 
-    });
 
     try {
       // 1차: 정확히 일치하는 평가 항목 검색
@@ -461,7 +432,6 @@ export class AIRecommendationArchiveService {
         .eq('social_preference', params.socialPreference);
 
       if (assessmentError || !matchingAssessments || matchingAssessments.length === 0) {
-        console.log('매칭되는 평가가 없습니다');
         return [];
       }
 
@@ -617,7 +587,7 @@ export class AIRecommendationArchiveService {
 
     // excludeIds가 있을 때만 not 조건 추가
     if (params.excludeIds && params.excludeIds.length > 0) {
-      query = query.not('id', 'in', `(${params.excludeIds.map(id => `'${id}'`).join(',')})`);
+      query = query.not('id', 'in', `(${params.excludeIds.map((id: string) => `'${id}'`).join(',')})`);
     }
 
     const { data, error } = await query
@@ -652,7 +622,7 @@ export class AIRecommendationArchiveService {
 
     // excludeIds가 있을 때만 not 조건 추가
     if (params.excludeIds && params.excludeIds.length > 0) {
-      query = query.not('id', 'in', `(${params.excludeIds.map(id => `'${id}'`).join(',')})`);
+      query = query.not('id', 'in', `(${params.excludeIds.map((id: string) => `'${id}'`).join(',')})`);
     }
 
     const { data, error } = await query
