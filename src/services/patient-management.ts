@@ -563,9 +563,38 @@ export const updatePatientStatus = async (
   try {
     console.log('🔄 환자 상태 변경 시작:', { patientId, newStatus })
 
+    // 퇴원 처리인 경우, 활성 목표들을 완전 삭제
+    if (newStatus === 'discharged') {
+      // 해당 환자의 모든 미완료 목표를 조회
+      const { data: activeGoals, error: goalsError } = await supabase
+        .from('rehabilitation_goals')
+        .select('id, goal_type, status')
+        .eq('patient_id', patientId)
+        .in('status', ['active', 'pending', 'on_hold', 'cancelled'])
+
+      if (goalsError) {
+        console.error('활성 목표 조회 중 오류:', goalsError)
+      } else if (activeGoals && activeGoals.length > 0) {
+        // 모든 미완료 목표를 삭제
+        const { error: deleteError } = await supabase
+          .from('rehabilitation_goals')
+          .delete()
+          .in('id', activeGoals.map(goal => goal.id))
+
+        if (deleteError) {
+          console.error('목표 삭제 중 오류:', deleteError)
+          throw new Error('퇴원 처리 중 목표 정리에 실패했습니다.')
+        }
+
+        console.log(`환자 ${patientId} 퇴원: ${activeGoals.length}개의 미완료 목표가 삭제됨`)
+      }
+    }
+
     const { data, error } = await supabase
       .from('patients')
-      .update({ status: newStatus })
+      .update({ 
+        status: newStatus
+      })
       .eq('id', patientId)
       .select(`
         *,

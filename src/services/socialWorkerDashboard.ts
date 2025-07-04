@@ -36,7 +36,7 @@ interface PatientWithGoal extends Patient {
 async function getAssignedPatients(userId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('patients')
-    .select('id, status')
+    .select('id, status, full_name')
     .neq('status', 'pending')
 
   if (error) {
@@ -44,6 +44,9 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
     return []
   }
 
+  console.log('전체 활성 환자 목록:', data?.map(p => `${p.full_name}(${p.status})`))
+  console.log('김영희 환자 포함 여부:', data?.some(p => p.full_name === '김영희'))
+  
   return data?.map(patient => patient.id) || []
 }
 
@@ -118,8 +121,17 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 // 4주 연속 실패 환자 조회
 export async function getConsecutiveFailurePatients(userId: string): Promise<PatientWithGoal[]> {
   try {
+    console.log('=== getConsecutiveFailurePatients 시작 ===')
+    console.log('userId:', userId)
+    
     const assignedPatients = await getAssignedPatients(userId)
-    if (assignedPatients.length === 0) return []
+    console.log('할당된 환자 수:', assignedPatients.length)
+    console.log('할당된 환자 ID 목록:', assignedPatients)
+    
+    if (assignedPatients.length === 0) {
+      console.log('할당된 환자가 없어 빈 배열 반환')
+      return []
+    }
 
     const consecutiveFailures: PatientWithGoal[] = []
     const today = new Date()
@@ -127,58 +139,106 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
     
     // 환자별로 최근 4주의 주간 목표 상태를 확인
     for (const patientId of assignedPatients) {
-      // 해당 환자의 활성 월간 목표들 조회
+      // 환자 정보 먼저 조회
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('id, full_name, patient_identifier')
+        .eq('id', patientId)
+        .single()
+
+      if (!patientData) continue
+
+      // 현재 활성화된 6개월 목표 찾기
+      const { data: activeSixMonthGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'six_month')
+        .in('status', ['active', 'in_progress'])
+        
+      if (!activeSixMonthGoals || activeSixMonthGoals.length === 0) continue
+      
+      const activeSixMonthGoal = activeSixMonthGoals[0]
+      
+      // 해당 6개월 목표의 모든 월간 목표 ID 가져오기
       const { data: monthlyGoals } = await supabase
         .from('rehabilitation_goals')
-        .select(`
-          id,
-          title,
-          start_date,
-          patients!inner (
-            id,
-            full_name,
-            patient_identifier
-          )
-        `)
+        .select('id')
         .eq('patient_id', patientId)
         .eq('goal_type', 'monthly')
-        .in('status', ['active', 'in_progress'])
-
-      if (!monthlyGoals || monthlyGoals.length === 0) continue
-
-      // 각 월간 목표에 대해 확인
-      for (const monthlyGoal of monthlyGoals) {
-        // 오늘 날짜 이전에 시작된 주간 목표들 조회 (최근 4개)
-        const { data: weeklyGoals } = await supabase
-          .from('rehabilitation_goals')
-          .select('id, sequence_number, status, start_date, title')
-          .eq('parent_goal_id', monthlyGoal.id)
-          .eq('goal_type', 'weekly')
-          .lte('start_date', today.toISOString().split('T')[0])
-          .order('sequence_number', { ascending: false })
-          .limit(4)
-
-        if (!weeklyGoals || weeklyGoals.length < 4) continue
-
-        // 최근 4주가 모두 cancelled(미달성) 상태인지 확인
-        const allFailed = weeklyGoals.every(goal => goal.status === 'cancelled')
+        .eq('parent_goal_id', activeSixMonthGoal.id)
         
-        if (allFailed) {
-          const patient = monthlyGoal.patients as any
-          // 연속 실패한 주차 정보 포함
-          const weekNumbers = weeklyGoals.map(g => g.sequence_number).sort((a, b) => a - b)
-          const failureInfo = `${weekNumbers[0]}-${weekNumbers[3]}주차 연속 미달성`
-          
-          consecutiveFailures.push({
-            id: patient.id,
-            name: patient.full_name,
-            patient_identifier: patient.patient_identifier,
-            goal_id: weeklyGoals[0].id,
-            goal_name: `${monthlyGoal.title} (${failureInfo})`,
-            goal_type: 'weekly',
-            start_date: monthlyGoal.start_date
+      if (!monthlyGoals || monthlyGoals.length === 0) continue
+      
+      const monthlyGoalIds = monthlyGoals.map(g => g.id)
+      
+      // 해당 월간 목표들의 주간 목표들 중 최근 5주 조회 (현재 주차 제외를 위해)
+      const { data: weeklyGoals } = await supabase
+        .from('rehabilitation_goals')
+        .select('id, sequence_number, status, start_date, end_date, title, parent_goal_id')
+        .eq('patient_id', patientId)
+        .eq('goal_type', 'weekly')
+        .in('parent_goal_id', monthlyGoalIds)
+        .lte('start_date', today.toISOString().split('T')[0]) // 오늘 이전에 시작된 목표
+        .order('start_date', { ascending: false }) // 최근 날짜부터
+        .limit(5) // 최근 5개 (현재 주차 포함)
+
+      if (!weeklyGoals || weeklyGoals.length === 0) continue
+
+      // 현재 주차인 목표 제외 (end_date가 오늘 이후인 목표)
+      const pastWeeklyGoals = weeklyGoals.filter(goal => {
+        const endDate = new Date(goal.end_date)
+        return endDate < today
+      })
+
+      // 디버깅: 김영희의 데이터 확인
+      if (patientData.full_name === '김영희') {
+        console.log('김영희 환자 ID:', patientId)
+        console.log('오늘 날짜:', today.toISOString().split('T')[0])
+        console.log('김영희의 전체 주간 목표 수:', weeklyGoals?.length || 0)
+        console.log('김영희의 과거 주간 목표 수:', pastWeeklyGoals.length)
+        if (pastWeeklyGoals.length >= 4) {
+          console.log('김영희의 이전 4개 주간 목표:')
+          pastWeeklyGoals.slice(0, 4).forEach((goal, index) => {
+            console.log(`  ${index + 1}. ${goal.start_date} - ${goal.status} - ${goal.title}`)
           })
-          break // 환자당 하나만 표시
+        }
+      }
+
+      if (pastWeeklyGoals.length < 4) {
+        if (patientData.full_name === '김영희') {
+          console.log('김영희는 4개 미만의 과거 주간 목표를 가지고 있어 스킵됨')
+        }
+        continue
+      }
+
+      // 이전 4주가 모두 cancelled(미달성) 상태인지 확인
+      const recentFourWeeks = pastWeeklyGoals.slice(0, 4)
+      const allFailed = recentFourWeeks.every(goal => goal.status === 'cancelled')
+      
+      if (patientData.full_name === '김영희') {
+        console.log('김영희의 4주 연속 실패 여부:', allFailed)
+      }
+      
+      if (allFailed) {
+        // 연속 실패한 주차 정보 포함
+        const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
+        const failureInfo = weekNumbers.length >= 2 
+          ? `${weekNumbers[0]}-${weekNumbers[weekNumbers.length - 1]}주차 연속 미달성`
+          : '최근 4주 연속 미달성'
+        
+        consecutiveFailures.push({
+          id: patientData.id,
+          name: patientData.full_name,
+          patient_identifier: patientData.patient_identifier,
+          goal_id: recentFourWeeks[0].id,
+          goal_name: failureInfo,
+          goal_type: 'weekly',
+          start_date: recentFourWeeks[3].start_date // 가장 오래된 실패 주차의 시작일
+        })
+        
+        if (patientData.full_name === '김영희') {
+          console.log('김영희가 4주 연속 실패 목록에 추가됨')
         }
       }
     }

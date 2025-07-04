@@ -214,3 +214,8 @@ git checkout <last-stable-commit>  # Full rollback
 
 ### Calendar and Date Calculation Concerns
 - 개선 방안에서 4번은 또 이해를 못하고 하는 소리지. 이 프로그램의 기본은 1주는 7일, 한달은 28일이라는 개념으로 접근하는 건데 실제 달력기반 계산을 왜 해?대체 메모리에 입력은 제대로 되어있는거냐?
+
+## System Status Tracking
+
+### Patient Status Management
+- 환자 상태 중 'inactive'는 더이상 쓰이지 않는다. 모두 'pending'으로 대체되었다.

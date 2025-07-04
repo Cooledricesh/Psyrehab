@@ -195,7 +195,7 @@ export class PatientService {
       }
 
       return data
-    } catch {
+    } catch (error) {
       const appError = parseError(error)
       logError(appError, 'PatientService.createPatient')
       throw error
@@ -249,7 +249,7 @@ export class PatientService {
       }
 
       return data
-    } catch {
+    } catch (error) {
       const appError = parseError(error)
       logError(appError, 'PatientService.updatePatient')
       throw error
@@ -296,21 +296,54 @@ export class PatientService {
 
   // 환자 상태 변경
   static async updatePatientStatus(id: string, status: string) {
-    const { data, error } = await supabase
-      .from('patients')
-      .update({ 
-        status,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single()
+    try {
+      // 퇴원 처리인 경우, 활성 목표들을 완전 삭제
+      if (status === 'discharged') {
+        // 해당 환자의 모든 미완료 목표를 조회
+        const { data: activeGoals, error: goalsError } = await supabase
+          .from('rehabilitation_goals')
+          .select('id, goal_type, status')
+          .eq('patient_id', id)
+          .in('status', ['active', 'pending', 'on_hold', 'cancelled'])
 
-    if (error) {
-      throw new Error(`환자 상태 변경 중 오류가 발생했습니다: ${error.message}`)
+        if (goalsError) {
+          console.error('활성 목표 조회 중 오류:', goalsError)
+        } else if (activeGoals && activeGoals.length > 0) {
+          // 모든 미완료 목표를 삭제
+          const { error: deleteError } = await supabase
+            .from('rehabilitation_goals')
+            .delete()
+            .in('id', activeGoals.map(goal => goal.id))
+
+          if (deleteError) {
+            console.error('목표 삭제 중 오류:', deleteError)
+            throw new Error('퇴원 처리 중 목표 정리에 실패했습니다.')
+          }
+
+          console.log(`환자 ${id} 퇴원: ${activeGoals.length}개의 미완료 목표가 삭제됨`)
+        }
+      }
+
+      // 환자 상태 변경
+      const { data, error } = await supabase
+        .from('patients')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        throw new Error(`환자 상태 변경 중 오류가 발생했습니다: ${error.message}`)
+      }
+
+      return data
+    } catch (err) {
+      console.error('updatePatientStatus 오류:', err)
+      throw err
     }
-
-    return data
   }
 
   // 환자 통계 조회
@@ -377,8 +410,8 @@ export class PatientService {
 
       // null이 아닌 환자들만 필터링하여 반환
       return patientsWithGoalStatus.filter((patient) => patient !== null)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      console.error("Error occurred:", error)
       throw error
     }
   }
