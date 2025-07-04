@@ -33,6 +33,8 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ApprovedSignUpPage from '@/pages/auth/ApprovedSignUpPage'
 import PendingApprovalPage from '@/pages/auth/PendingApprovalPage'
+import About from '@/pages/About'
+import { RedirectToAbout } from '@/components/auth/RedirectToAbout'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +51,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
+          {/* 루트 경로 리다이렉트 */}
+          <Route path="/" element={<RedirectToAbout />} />
+          
+          {/* 랜딩 페이지 */}
+          <Route path="/about" element={<About />} />
+          
           {/* 인증 관련 라우트 (레이아웃 없음) */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/sign-up" element={<SignUpPage />} />
@@ -68,7 +76,6 @@ function App() {
                   <Header />
                   <main className="flex-1 p-6 bg-gray-50 overflow-auto">
                     <Routes>
-                      <Route path="/" element={<Home />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/patient-management" element={<PatientManagement />} />
                       <Route path="/patients/:id" element={<PatientDetailPage />} />

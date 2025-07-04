@@ -3,7 +3,20 @@ import { Link } from 'react-router-dom'
 
 export default function About() {
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex justify-end p-6 space-x-4">
+        <Link to="/auth/login">
+          <Button variant="outline" size="lg">
+            로그인
+          </Button>
+        </Link>
+        <Link to="/auth/sign-up">
+          <Button size="lg">
+            가입하기
+          </Button>
+        </Link>
+      </div>
+      <div className="space-y-8 max-w-4xl mx-auto px-6 pb-16">
       <header className="text-center">
         <h1 className="text-4xl font-bold font-display text-foreground mb-4">
           PsyRehab 소개
@@ -76,12 +89,26 @@ export default function About() {
           </div>
         </div>
         
-        <div className="text-center">
-          <Link to="/">
-            <Button size="lg">홈으로 돌아가기</Button>
-          </Link>
+        <div className="text-center space-y-4">
+          <h3 className="text-xl font-semibold mb-4">지금 시작하세요</h3>
+          <p className="text-muted-foreground mb-6">
+            정신장애인 재활 목표 관리의 새로운 기준을 경험해보세요
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link to="/auth/sign-up">
+              <Button size="lg" className="px-8">
+                무료로 시작하기
+              </Button>
+            </Link>
+            <Link to="/auth/login">
+              <Button size="lg" variant="outline" className="px-8">
+                기존 사용자 로그인
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
+      </div>
     </div>
   )
 } 
