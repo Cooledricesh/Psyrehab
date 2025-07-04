@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getDashboardStats } from '@/services/dashboard-stats'
 import { getSocialWorkerDashboardStats, invalidateDashboardCache } from '@/services/socialWorkerDashboard'
-import { Loader2, Users, Target, Calendar, TrendingUp, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Loader2, Users, Target, Calendar, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import type { SocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
@@ -130,6 +130,20 @@ export function SimpleDashboard() {
         
         {/* 긴급 알림 섹션 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {/* 4주 연속 목표 달성 */}
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">4주 연속 목표 달성</h3>
+                <p className="text-3xl font-bold text-green-600">
+                  {socialWorkerStats.fourWeeksAchieved?.length || 0}명
+                </p>
+                <p className="text-sm text-gray-500 mt-1">연속 달성 환자</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-500 opacity-80" />
+            </div>
+          </div>
+
           {/* 주간 점검 미완료 */}
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 cursor-pointer hover:shadow-lg transition-shadow"
                onClick={() => navigate('/progress-tracking')}>
@@ -168,26 +182,35 @@ export function SimpleDashboard() {
               <Target className="h-8 w-8 text-yellow-500 opacity-80" />
             </div>
           </div>
-
-          {/* 주간 달성률 */}
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">주간 달성률</h3>
-                <p className="text-3xl font-bold text-blue-600">
-                  {socialWorkerStats.weeklyAchievementRate.total > 0 
-                    ? Math.round((socialWorkerStats.weeklyAchievementRate.achieved / socialWorkerStats.weeklyAchievementRate.total) * 100)
-                    : 0}%
-                </p>
-                <p className="text-sm text-gray-500 mt-1">이번 주 목표 달성</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-blue-500 opacity-80" />
-            </div>
-          </div>
         </div>
 
         {/* 상세 정보 섹션 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 4주 연속 달성 환자 리스트 */}
+          {socialWorkerStats.fourWeeksAchieved?.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                4주 연속 목표 달성 환자
+              </h2>
+              <div className="space-y-2">
+                {socialWorkerStats.fourWeeksAchieved.map((patient, index) => (
+                  <div key={`achieved-${patient.goal_id}-${index}`} 
+                       className="p-3 bg-green-50 rounded-lg hover:bg-green-100 cursor-pointer transition-colors"
+                       onClick={() => navigate(`/patients/${patient.id}`)}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900">{patient.name}</p>
+                        <p className="text-sm text-gray-600">{patient.goal_name}</p>
+                      </div>
+                      <span className="text-sm text-green-600 font-medium">우수</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 긴급 개입 필요 환자 리스트 */}
           {socialWorkerStats.consecutiveFailures.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
@@ -245,44 +268,35 @@ export function SimpleDashboard() {
             )}
           </div>
 
-          {/* 주간 달성률 분포 */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4 flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
-              주간 목표 달성률 분포
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-gray-700 flex-1">달성</span>
-                <span className="font-semibold text-green-600">
-                  {socialWorkerStats.weeklyAchievementRate.achieved}명
-                </span>
-              </div>
-              <div className="flex items-center">
-                <XCircle className="h-5 w-5 text-red-500 mr-2" />
-                <span className="text-gray-700 flex-1">미달성</span>
-                <span className="font-semibold text-red-600">
-                  {socialWorkerStats.weeklyAchievementRate.failed}명
-                </span>
-              </div>
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 text-gray-500 mr-2" />
-                <span className="text-gray-700 flex-1">미점검</span>
-                <span className="font-semibold text-gray-600">
-                  {socialWorkerStats.weeklyAchievementRate.pending}명
-                </span>
-              </div>
-              <div className="mt-4 pt-3 border-t">
-                <p className="text-sm text-gray-600">
-                  전체 {socialWorkerStats.weeklyAchievementRate.total}명 중
-                  <span className="font-semibold text-green-600 ml-1">
-                    {socialWorkerStats.weeklyAchievementRate.achieved}명
-                  </span>이 목표를 달성했습니다.
-                </p>
+          {/* 목표 설정 필요 환자 리스트 */}
+          {socialWorkerStats.goalsNotSet.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <Target className="h-5 w-5 mr-2 text-yellow-600" />
+                목표 설정 필요 환자
+              </h2>
+              <div className="space-y-2">
+                {socialWorkerStats.goalsNotSet.slice(0, 5).map((patient, index) => (
+                  <div key={`notset-${patient.id}-${index}`} 
+                       className="p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 cursor-pointer transition-colors"
+                       onClick={() => navigate(`/patients/${patient.id}`)}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900">{patient.name}</p>
+                        <p className="text-sm text-gray-600">환자번호: {patient.patient_identifier}</p>
+                      </div>
+                      <span className="text-sm text-yellow-600 font-medium">목표 설정 대기</span>
+                    </div>
+                  </div>
+                ))}
+                {socialWorkerStats.goalsNotSet.length > 5 && (
+                  <p className="text-sm text-gray-500 text-center mt-2">
+                    +{socialWorkerStats.goalsNotSet.length - 5}명 더 있음
+                  </p>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* 새로고침 버튼 */}
