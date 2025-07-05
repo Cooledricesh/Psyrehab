@@ -10,7 +10,7 @@ export interface Patient {
   diagnosis: string
   doctor?: string
   registration_date: string // 환자 등록일 (시스템 등록 시점)
-  status: 'active' | 'pending' | 'completed'
+  status: 'active' | 'pending' | 'discharged'
   contact_info?: string
   emergency_contact?: string
   hasActiveGoal?: boolean  // 활성 목표 유무 추가
@@ -25,7 +25,7 @@ export interface PatientStats {
   totalPatients: number
   activePatients: number
   pendingPatients: number
-  completedPatients: number
+  dischargedPatients: number
 }
 
 // 환자 생성용 타입
@@ -353,7 +353,7 @@ export const getPatientStats = async (): Promise<PatientStats> => {
         totalPatients: 0,
         activePatients: 0,
         pendingPatients: 0,
-        completedPatients: 0
+        dischargedPatients: 0
       }
     }
 
@@ -384,20 +384,20 @@ export const getPatientStats = async (): Promise<PatientStats> => {
     const totalPatients = allPatients?.length || 0
     const activePatients = activePendingPatients.filter(p => patientsWithGoals.has(p.id)).length  // 목표가 있는 환자
     const pendingPatients = activePendingPatients.filter(p => !patientsWithGoals.has(p.id)).length  // 목표가 없는 환자
-    const completedPatients = dischargedPatients.length  // 입원 중인 환자 (discharged 상태)
+    const dischargedPatientsCount = dischargedPatients.length  // 입원 중인 환자 (discharged 상태)
 
     console.log('📊 환자 통계:', {
       전체: totalPatients,
       목표진행중: activePatients,
       목표설정대기: pendingPatients,
-      입원중: completedPatients
+      입원중: dischargedPatientsCount
     })
 
     return {
       totalPatients,
       activePatients,
       pendingPatients,
-      completedPatients
+      dischargedPatients: dischargedPatientsCount
     }
   } catch {
     console.error("Error occurred")
@@ -405,7 +405,7 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       totalPatients: 0,
       activePatients: 0,
       pendingPatients: 0,
-      completedPatients: 0
+      dischargedPatients: 0
     }
   }
 }
@@ -470,16 +470,16 @@ const calculateAge = (birthDate: string): number => {
   return age
 }
 
-const mapPatientStatus = (dbStatus: string): 'active' | 'pending' | 'completed' => {
+const mapPatientStatus = (dbStatus: string): 'active' | 'pending' | 'discharged' => {
   switch (dbStatus) {
     case 'active':
       return 'active'
     case 'pending':
       return 'pending'
     case 'discharged':
-      return 'completed'  // discharged를 completed로 매핑
+      return 'discharged'
     case 'transferred':
-      return 'completed'
+      return 'discharged'  // transferred도 discharged로 처리
     default:
       return 'active'
   }
@@ -566,7 +566,7 @@ export const updatePatientStatus = async (
         .from('rehabilitation_goals')
         .select('id, goal_type, status')
         .eq('patient_id', patientId)
-        .in('status', ['active', 'pending', 'on_hold', 'cancelled'])
+        .in('status', ['active', 'pending'])
 
       if (goalsError) {
         console.error('활성 목표 조회 중 오류:', goalsError)

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -27,126 +28,202 @@ import {
   FileText,
   Users,
   Calendar,
-  Target
+  Target,
+  UserPlus
 } from 'lucide-react'
+import { getPatients, getPatientStats } from '@/services/patient-management'
+import type { Patient, PatientStats } from '@/services/patient-management'
+import { supabase } from '@/lib/supabase'
+import PatientRegistrationModal from '@/components/PatientRegistrationModal'
+import { eventBus, EVENTS } from '@/lib/eventBus'
 
-interface Patient {
-  id: string
-  name: string
-  age: number
-  status: 'active' | 'inactive' | 'completed'
-  goals: number
-  completed: number
-  lastSession: string
-  progress: number
-  assignedWorker: string
+interface PatientWithGoal extends Patient {
+  activeGoal?: {
+    id: string
+    title: string
+    start_date: string
+    goal_type: 'weekly' | 'monthly' | 'six_month'
+  }
 }
 
-const mockPatients: Patient[] = [
-  {
-    id: '1',
-    name: '김철수',
-    age: 45,
-    status: 'active',
-    goals: 5,
-    completed: 3,
-    lastSession: '2024-01-15',
-    progress: 75,
-    assignedWorker: '이사회복지사'
-  },
-  {
-    id: '2',
-    name: '박영희',
-    age: 38,
-    status: 'active',
-    goals: 4,
-    completed: 2,
-    lastSession: '2024-01-14',
-    progress: 60,
-    assignedWorker: '김정신보건사'
-  },
-  {
-    id: '3',
-    name: '이민수',
-    age: 52,
-    status: 'completed',
-    goals: 6,
-    completed: 6,
-    lastSession: '2024-01-10',
-    progress: 100,
-    assignedWorker: '이사회복지사'
-  },
-  {
-    id: '4',
-    name: '최수진',
-    age: 29,
-    status: 'active',
-    goals: 3,
-    completed: 1,
-    lastSession: '2024-01-16',
-    progress: 40,
-    assignedWorker: '박심리상담사'
-  },
-  {
-    id: '5',
-    name: '정대호',
-    age: 61,
-    status: 'inactive',
-    goals: 4,
-    completed: 1,
-    lastSession: '2024-01-05',
-    progress: 25,
-    assignedWorker: '김정신보건사'
-  }
-]
-
 export function PatientsDataTable() {
-  const [patients, setPatients] = useState<Patient[]>([])
+  const navigate = useNavigate()
+  const [patients, setPatients] = useState<PatientWithGoal[]>([])
+  const [stats, setStats] = useState<PatientStats>({
+    totalPatients: 0,
+    activePatients: 0,
+    pendingPatients: 0,
+    completedPatients: 0
+  })
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [isLoading, setIsLoading] = useState(true)
+  const [canViewAssignee, setCanViewAssignee] = useState(false)
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
 
   useEffect(() => {
-    // 실제 환경에서는 API에서 데이터를 가져옴
-    setTimeout(() => {
-      setPatients(mockPatients)
-      setIsLoading(false)
-    }, 1000)
+    checkUserRole()
+    fetchData()
+    
+    // 이벤트 리스너 등록
+    const handleStatusChange = () => fetchData()
+    eventBus.on(EVENTS.PATIENT_STATUS_CHANGED, handleStatusChange)
+    
+    return () => {
+      eventBus.off(EVENTS.PATIENT_STATUS_CHANGED, handleStatusChange)
+    }
   }, [])
-
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.assignedWorker.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || patient.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
-
-  const getStatusBadge = (status: Patient['status']) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">활성</Badge>
-      case 'inactive':
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">비활성</Badge>
-      case 'completed':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800">완료</Badge>
-      default:
-        return <Badge variant="secondary">알 수 없음</Badge>
+  
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      
+      const { data: userRoleData } = await supabase
+        .from('user_roles')
+        .select(`
+          roles (
+            role_name
+          )
+        `)
+        .eq('user_id', user.id)
+        .single()
+      
+      const roleName = (userRoleData as any)?.roles?.role_name
+      const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
+      setCanViewAssignee(managementRoles.includes(roleName))
+    } catch (error) {
+      console.error('Error checking user role:', error)
     }
   }
 
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'text-green-600'
-    if (progress >= 60) return 'text-blue-600'
-    if (progress >= 40) return 'text-yellow-600'
-    return 'text-red-600'
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      
+      // 환자 목록과 통계를 병렬로 가져오기
+      const [patientsResult, statsResult] = await Promise.all([
+        getPatients(),
+        getPatientStats()
+      ])
+      
+      // 각 환자의 6개월 목표 정보 가져오기
+      const patientsWithGoals = await Promise.all(
+        patientsResult.map(async (patient) => {
+          try {
+            const { data: goalData, error } = await supabase
+              .from('rehabilitation_goals')
+              .select('id, title, start_date, goal_type')
+              .eq('patient_id', patient.id)
+              .eq('goal_type', 'six_month')
+              .in('status', ['active', 'in_progress'])
+              .maybeSingle()
+            
+            if (error) {
+              console.error(`목표 조회 실패 - 환자 ${patient.id}:`, error)
+              return { ...patient, activeGoal: undefined } as PatientWithGoal
+            }
+            
+            return {
+              ...patient,
+              activeGoal: goalData ? {
+                id: goalData.id,
+                title: goalData.title,
+                start_date: goalData.start_date,
+                goal_type: goalData.goal_type as 'weekly' | 'monthly' | 'six_month'
+              } : undefined
+            } as PatientWithGoal
+          } catch (err) {
+            console.error(`목표 조회 중 예외 발생 - 환자 ${patient.id}:`, err)
+            return { ...patient, activeGoal: undefined } as PatientWithGoal
+          }
+        })
+      )
+
+      setPatients(patientsWithGoals)
+      setStats(statsResult)
+    } catch (err) {
+      console.error('환자 데이터 로드 실패:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredPatients = patients.filter(patient => {
+    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         patient.diagnosis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         patient.social_worker?.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    let matchesStatus = true
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'active') {
+        matchesStatus = patient.hasActiveGoal === true
+      } else if (statusFilter === 'pending') {
+        matchesStatus = patient.hasActiveGoal === false && patient.status !== 'completed'
+      } else if (statusFilter === 'completed') {
+        matchesStatus = patient.status === 'completed'
+      }
+    }
+    
+    return matchesSearch && matchesStatus
+  })
+
+  const getStatusBadge = (patient: PatientWithGoal) => {
+    if (patient.status === 'completed') {
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800">입원 중</Badge>
+    } else if (patient.hasActiveGoal) {
+      return <Badge variant="default" className="bg-green-100 text-green-800">목표 진행 중</Badge>
+    } else {
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">목표 설정 대기</Badge>
+    }
+  }
+  
+  const getGenderText = (gender: string) => {
+    if (!gender) return '-'
+    
+    switch (gender.toLowerCase()) {
+      case 'male':
+      case 'm':
+      case '남성':
+      case '남':
+      case 'man':
+      case '1':
+        return '남성'
+      case 'female':
+      case 'f':
+      case '여성':
+      case '여':
+      case 'woman':
+      case '2':
+        return '여성'
+      case 'other':
+      case '기타':
+      case '0':
+        return '기타'
+      default:
+        return gender
+    }
+  }
+
+  const handleCloseModals = () => {
+    setIsRegistrationModalOpen(false)
+    fetchData()
+  }
+  
+  const handleViewDetail = (patientId: string) => {
+    navigate(`/patients/${patientId}`)
+  }
+  
+  const handleGoalSetting = (patientId: string) => {
+    navigate(`/patients/${patientId}/goals`)
   }
 
   if (isLoading) {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>환자 목록</CardTitle>
-          <CardDescription>등록된 환자들의 상세 정보</CardDescription>
+          <CardTitle>회원 목록</CardTitle>
+          <CardDescription>등록된 회원들의 상세 정보</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -172,10 +249,10 @@ export function PatientsDataTable() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              환자 목록
+              회원 목록
             </CardTitle>
             <CardDescription>
-              총 {patients.length}명의 환자가 등록되어 있습니다
+              총 {stats.totalPatients}명의 회원이 등록되어 있습니다
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -183,8 +260,9 @@ export function PatientsDataTable() {
               <FileText className="h-4 w-4 mr-2" />
               내보내기
             </Button>
-            <Button size="sm">
-              환자 추가
+            <Button size="sm" onClick={() => setIsRegistrationModalOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              회원 추가
             </Button>
           </div>
         </div>
@@ -194,14 +272,14 @@ export function PatientsDataTable() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 transform -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder="환자명 또는 담당자로 검색..."
+              placeholder="회원명, 진단명 또는 담당자로 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
           <div className="flex gap-2">
-            {['all', 'active', 'inactive', 'completed'].map((status) => (
+            {['all', 'active', 'pending', 'completed'].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? "default" : "outline"}
@@ -209,8 +287,8 @@ export function PatientsDataTable() {
                 onClick={() => setStatusFilter(status)}
               >
                 {status === 'all' ? '전체' :
-                 status === 'active' ? '활성' :
-                 status === 'inactive' ? '비활성' : '완료'}
+                 status === 'active' ? '목표 진행 중' :
+                 status === 'pending' ? '목표 설정 대기' : '입원 중'}
               </Button>
             ))}
           </div>
@@ -224,53 +302,53 @@ export function PatientsDataTable() {
               <TableRow>
                 <TableHead>환자명</TableHead>
                 <TableHead>나이</TableHead>
+                <TableHead>성별</TableHead>
                 <TableHead>상태</TableHead>
-                <TableHead>목표 진행</TableHead>
-                <TableHead>완료율</TableHead>
-                <TableHead>마지막 세션</TableHead>
-                <TableHead>담당자</TableHead>
+                <TableHead>6개월 목표</TableHead>
+                <TableHead>목표 시작 날짜</TableHead>
+                {canViewAssignee && <TableHead>담당자</TableHead>}
                 <TableHead className="text-right">작업</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPatients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
-                    검색 조건에 맞는 환자가 없습니다.
+                  <TableCell colSpan={canViewAssignee ? 8 : 7} className="h-24 text-center">
+                    검색 조건에 맞는 회원이 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredPatients.map((patient) => (
                   <TableRow key={patient.id}>
                     <TableCell className="font-medium">{patient.name}</TableCell>
-                    <TableCell>{patient.age}세</TableCell>
-                    <TableCell>{getStatusBadge(patient.status)}</TableCell>
+                    <TableCell>{patient.age ? `${patient.age}세` : '-'}</TableCell>
+                    <TableCell>{getGenderText(patient.gender || '')}</TableCell>
+                    <TableCell>{getStatusBadge(patient)}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-gray-400" />
-                        <span>{patient.completed}/{patient.goals}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full transition-all"
-                            style={{ width: `${patient.progress}%` }}
-                          ></div>
+                      {patient.activeGoal ? (
+                        <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm">{patient.activeGoal.title}</span>
                         </div>
-                        <span className={`text-sm font-medium ${getProgressColor(patient.progress)}`}>
-                          {patient.progress}%
-                        </span>
-                      </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        {new Date(patient.lastSession).toLocaleDateString('ko-KR')}
-                      </div>
+                      {patient.activeGoal ? (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          {new Date(patient.activeGoal.start_date).toLocaleDateString('ko-KR')}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </TableCell>
-                    <TableCell>{patient.assignedWorker}</TableCell>
+                    {canViewAssignee && (
+                      <TableCell>
+                        {patient.social_worker?.full_name || '미배정'}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -281,7 +359,7 @@ export function PatientsDataTable() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>작업</DropdownMenuLabel>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewDetail(patient.id)}>
                             <Eye className="mr-2 h-4 w-4" />
                             상세보기
                           </DropdownMenuItem>
@@ -289,10 +367,12 @@ export function PatientsDataTable() {
                             <Edit className="mr-2 h-4 w-4" />
                             정보수정
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Target className="mr-2 h-4 w-4" />
-                            목표관리
-                          </DropdownMenuItem>
+                          {!patient.hasActiveGoal && patient.status !== 'completed' && (
+                            <DropdownMenuItem onClick={() => handleGoalSetting(patient.id)}>
+                              <Target className="mr-2 h-4 w-4" />
+                              목표 설정
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem>
                             <FileText className="mr-2 h-4 w-4" />
@@ -313,31 +393,38 @@ export function PatientsDataTable() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {patients.filter(p => p.status === 'active').length}
+                {stats.activePatients}
               </div>
-              <div className="text-sm text-gray-500">활성 환자</div>
+              <div className="text-sm text-gray-500">목표 진행 중</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pendingPatients}
+              </div>
+              <div className="text-sm text-gray-500">목표 설정 대기</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {Math.round(patients.reduce((acc, p) => acc + p.progress, 0) / patients.length)}%
+                {stats.completedPatients}
               </div>
-              <div className="text-sm text-gray-500">평균 진행률</div>
+              <div className="text-sm text-gray-500">입원 중</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {patients.reduce((acc, p) => acc + p.completed, 0)}
+                {stats.totalPatients}
               </div>
-              <div className="text-sm text-gray-500">완료된 목표</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
-                {patients.filter(p => p.status === 'completed').length}
-              </div>
-              <div className="text-sm text-gray-500">완료된 환자</div>
+              <div className="text-sm text-gray-500">전체 회원</div>
             </div>
           </div>
         </div>
       </CardContent>
+      
+      {/* 회원 등록 모달 */}
+      <PatientRegistrationModal
+        isOpen={isRegistrationModalOpen}
+        onClose={handleCloseModals}
+        onSuccess={handleCloseModals}
+      />
     </Card>
   )
 }
