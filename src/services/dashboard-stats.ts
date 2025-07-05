@@ -9,6 +9,8 @@ export interface DashboardStats {
   pendingPatients: number
   avgPatientsPerWorker: number
   patientChangeFromLastMonth: number
+  completedSixMonthGoals: number
+  totalWeeklyCheckPending: number
 }
 
 // 총 환자 수 조회 (discharged 제외)
@@ -168,6 +170,61 @@ export const getPatientChangeFromLastMonth = async (): Promise<number> => {
   }
 }
 
+// 달성한 6개월 목표 수 조회
+export const getCompletedSixMonthGoals = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('rehabilitation_goals')
+      .select('*', { count: 'exact', head: true })
+      .eq('goal_type', 'six_month')
+      .eq('status', 'completed')
+    
+    if (error) {
+      console.error("Error fetching completed six month goals:", error)
+      return 0
+    }
+    
+    return count || 0
+  } catch (error) {
+    console.error("Error in getCompletedSixMonthGoals:", error)
+    return 0
+  }
+}
+
+// 전체 주간 체크 미완료 환자 수 조회
+export const getTotalWeeklyCheckPending = async (): Promise<number> => {
+  try {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    // 모든 환자의 이전 주차 pending 주간 목표 조회
+    const { data: pendingWeeklyGoals, error } = await supabase
+      .from('rehabilitation_goals')
+      .select(`
+        id,
+        patient_id,
+        patients!inner(status)
+      `)
+      .eq('goal_type', 'weekly')
+      .eq('status', 'pending')
+      .lt('end_date', today.toISOString().split('T')[0]) // 종료일이 오늘보다 이전
+      .neq('patients.status', 'discharged')
+    
+    if (error) {
+      console.error("Error fetching weekly pending goals:", error)
+      return 0
+    }
+    
+    // 중복된 patient_id 제거 (한 환자가 여러 pending 목표를 가질 수 있음)
+    const uniquePatients = new Set(pendingWeeklyGoals?.map(goal => goal.patient_id) || [])
+    
+    return uniquePatients.size
+  } catch (error) {
+    console.error("Error in getTotalWeeklyCheckPending:", error)
+    return 0
+  }
+}
+
 // 사회복지사당 평균 담당 환자 수 계산
 export const getAvgPatientsPerWorker = async (): Promise<number> => {
   try {
@@ -201,17 +258,63 @@ export const getAvgPatientsPerWorker = async (): Promise<number> => {
   }
 }
 
+// 월별 환자수 추이 데이터 조회
+export const getMonthlyPatientTrend = async (months: number = 3) => {
+  try {
+    // 현재 날짜와 n개월 전 날짜 계산
+    const now = new Date()
+    const monthsAgo = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1)
+    
+    // 월별 데이터를 저장할 객체
+    const monthlyData: { [key: string]: number } = {}
+    
+    // 지정된 기간 동안의 각 월 초를 계산
+    for (let i = 0; i < months; i++) {
+      const monthDate = new Date(monthsAgo.getFullYear(), monthsAgo.getMonth() + i, 1)
+      const monthKey = `${monthDate.getMonth() + 1}월`
+      
+      // 해당 월의 마지막 날 계산
+      const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
+      
+      // 해당 월의 마지막 날까지 생성된 환자 수 조회
+      const { count, error } = await supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true })
+        .lte('created_at', lastDay.toISOString())
+        .neq('status', 'discharged')
+      
+      if (error) {
+        console.error(`Error fetching patients for ${monthKey}:`, error)
+        monthlyData[monthKey] = 0
+      } else {
+        monthlyData[monthKey] = count || 0
+      }
+    }
+    
+    // 차트 데이터 형식으로 변환
+    return Object.entries(monthlyData).map(([month, count]) => ({
+      month,
+      patients: count
+    }))
+  } catch (error) {
+    console.error("Error in getMonthlyPatientTrend:", error)
+    return []
+  }
+}
+
 // 모든 대시보드 통계를 한 번에 조회
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
-    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients, avgPatientsPerWorker, patientChangeFromLastMonth] = await Promise.all([
+    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients, avgPatientsPerWorker, patientChangeFromLastMonth, completedSixMonthGoals, totalWeeklyCheckPending] = await Promise.all([
       getTotalPatients(),
       getActiveGoals(),
       getThisWeekSessions(),
       getCompletionRate(),
       getPendingPatients(),
       getAvgPatientsPerWorker(),
-      getPatientChangeFromLastMonth()
+      getPatientChangeFromLastMonth(),
+      getCompletedSixMonthGoals(),
+      getTotalWeeklyCheckPending()
     ])
     
     return {
@@ -221,7 +324,9 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       completionRate,
       pendingPatients,
       avgPatientsPerWorker,
-      patientChangeFromLastMonth
+      patientChangeFromLastMonth,
+      completedSixMonthGoals,
+      totalWeeklyCheckPending
     }
   } catch {
     console.error("Error occurred")
@@ -232,7 +337,9 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       completionRate: 0,
       pendingPatients: 0,
       avgPatientsPerWorker: 0,
-      patientChangeFromLastMonth: 0
+      patientChangeFromLastMonth: 0,
+      completedSixMonthGoals: 0,
+      totalWeeklyCheckPending: 0
     }
   }
 } 

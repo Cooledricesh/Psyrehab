@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { TrendingUp, Users, Target, Calendar } from 'lucide-react'
+import { TrendingUp, Users, Target, Calendar, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { getDashboardStats } from '@/services/dashboard-stats'
@@ -10,10 +10,11 @@ interface RehabStats {
   avgPatientsPerWorker: number
   thisWeekSessions: number
   completionRate: number
-  improvementRate: number
+  completedSixMonthGoals: number
   newPatientsThisMonth: number
   avgSessionsPerWeek: number
   patientChangeFromLastMonth: number
+  totalWeeklyCheckPending: number
 }
 
 export function RehabStatsCards() {
@@ -23,10 +24,11 @@ export function RehabStatsCards() {
     avgPatientsPerWorker: 0,
     thisWeekSessions: 0,
     completionRate: 0,
-    improvementRate: 0,
+    completedSixMonthGoals: 0,
     newPatientsThisMonth: 0,
     avgSessionsPerWeek: 0,
-    patientChangeFromLastMonth: 0
+    patientChangeFromLastMonth: 0,
+    totalWeeklyCheckPending: 0
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -40,7 +42,6 @@ export function RehabStatsCards() {
         setStats({
           ...basicStats,
           // 아래는 목업 데이터입니다 (실제 데이터로 교체 필요)
-          improvementRate: 15.3, // 목업: 고정값
           newPatientsThisMonth: Math.round(basicStats.totalPatients * 0.1), // 목업: 전체 환자의 10%
           avgSessionsPerWeek: Math.round(basicStats.thisWeekSessions / 4 * 10) / 10 // 목업: 단순 계산
         })
@@ -171,41 +172,40 @@ export function RehabStatsCards() {
         </CardContent>
       </Card>
 
-      {/* 개선율 */}
+      {/* 달성한 6개월 목표 */}
       <Card className="bg-gradient-to-t from-cyan-50 to-white">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-muted-foreground">환자 개선율 (목업)</div>
-            <TrendingUp className="h-4 w-4 text-cyan-600" />
+            <div className="text-sm font-medium text-muted-foreground">달성한 6개월 목표</div>
+            <Target className="h-4 w-4 text-cyan-600" />
           </div>
-          <div className="text-2xl font-bold text-cyan-600">{stats.improvementRate}%</div>
+          <div className="text-2xl font-bold text-cyan-600">{stats.completedSixMonthGoals}개</div>
           <Badge variant="outline" className="w-fit">
-            <TrendingUp className="h-3 w-3 mr-1" />
-            지속적 상승
+            전체 달성 누적
           </Badge>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-xs text-muted-foreground">
-            재활 프로그램 효과성 지표
+            모든 담당자의 6개월 목표 달성 수
           </div>
         </CardContent>
       </Card>
 
-      {/* 평균 세션 수 */}
+      {/* 주간 체크 미완료 */}
       <Card className="bg-gradient-to-t from-rose-50 to-white">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-muted-foreground">주간 평균 세션 (목업)</div>
-            <Calendar className="h-4 w-4 text-rose-600" />
+            <div className="text-sm font-medium text-muted-foreground">주간 체크 미완료</div>
+            <Clock className="h-4 w-4 text-rose-600" />
           </div>
-          <div className="text-2xl font-bold text-rose-600">{stats.avgSessionsPerWeek}</div>
+          <div className="text-2xl font-bold text-rose-600">{stats.totalWeeklyCheckPending}명</div>
           <Badge variant="outline" className="w-fit">
-            안정적 유지
+            전체 사회복지사
           </Badge>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-xs text-muted-foreground">
-            환자당 주간 평균 참여도
+            이번 주 점검이 필요한 전체 환자 수
           </div>
         </CardContent>
       </Card>

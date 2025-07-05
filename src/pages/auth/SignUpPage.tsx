@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Eye, EyeOff, Heart, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { getAuthErrorMessage } from '@/utils/auth'
@@ -15,7 +14,7 @@ interface SignUpFormData {
   email: string
   password: string
   passwordConfirm: string
-  role: 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director' | 'administrator' | 'patient' | 'attending_physician'
+  role: 'staff' | 'assistant_manager' | 'section_chief' | 'manager_level' | 'department_head' | 'vice_director' | 'director' | 'administrator' | 'attending_physician'
   fullName: string
   department?: string
   contactNumber?: string
@@ -191,34 +190,8 @@ export default function SignUpPage() {
           
           <CardContent className="space-y-6">
             <form onSubmit={handleSignUp} className="space-y-4">
-              {/* 역할 선택 */}
-              <div className="space-y-2">
-                <Label htmlFor="role" className="text-sm font-medium text-gray-700">
-                  사용자 유형 <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value: any) => 
-                    handleInputChange('role', value)
-                  }
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="사용자 유형을 선택하세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="staff">사원</SelectItem>
-                    <SelectItem value="assistant_manager">주임</SelectItem>
-                    <SelectItem value="section_chief">계장</SelectItem>
-                    <SelectItem value="manager_level">과장</SelectItem>
-                    <SelectItem value="department_head">부장</SelectItem>
-                    <SelectItem value="vice_director">부원장</SelectItem>
-                    <SelectItem value="director">원장</SelectItem>
-                    <SelectItem value="attending_physician">주치의</SelectItem>
-                    <SelectItem value="administrator">관리자</SelectItem>
-                    <SelectItem value="patient">환자</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* 역할 선택 - 숨김 처리 (기본값: staff) */}
+              <input type="hidden" value="staff" />
 
               {/* 기본 정보 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,38 +279,36 @@ export default function SignUpPage() {
                 </div>
               </div>
 
-              {/* 추가 정보 (직원/관리자) */}
-              {(formData.role !== 'patient') && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="department" className="text-sm font-medium text-gray-700">
-                      부서
-                    </Label>
-                    <Input
-                      id="department"
-                      type="text"
-                      placeholder="부서명을 입력하세요"
-                      value={formData.department}
-                      onChange={e => handleInputChange('department', e.target.value)}
-                      className="h-11"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="contactNumber" className="text-sm font-medium text-gray-700">
-                      연락처
-                    </Label>
-                    <Input
-                      id="contactNumber"
-                      type="tel"
-                      placeholder="연락처를 입력하세요 (예: 010-0000-0000)"
-                      value={formData.contactNumber}
-                      onChange={e => handleInputChange('contactNumber', e.target.value)}
-                      className="h-11"
-                    />
-                  </div>
+              {/* 추가 정보 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="department" className="text-sm font-medium text-gray-700">
+                    부서
+                  </Label>
+                  <Input
+                    id="department"
+                    type="text"
+                    placeholder="부서명을 입력하세요"
+                    value={formData.department}
+                    onChange={e => handleInputChange('department', e.target.value)}
+                    className="h-11"
+                  />
                 </div>
-              )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="contactNumber" className="text-sm font-medium text-gray-700">
+                    연락처
+                  </Label>
+                  <Input
+                    id="contactNumber"
+                    type="tel"
+                    placeholder="연락처를 입력하세요 (예: 010-0000-0000)"
+                    value={formData.contactNumber}
+                    onChange={e => handleInputChange('contactNumber', e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+              </div>
 
               {/* 에러 메시지 */}
               {error && (
