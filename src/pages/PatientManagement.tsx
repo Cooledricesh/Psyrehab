@@ -14,8 +14,8 @@ export default function PatientManagement() {
   const [stats, setStats] = useState<PatientStats>({
     totalPatients: 0,
     activePatients: 0,
-    inactivePatients: 0,
-    completedPatients: 0
+    pendingPatients: 0,
+    dischargedPatients: 0
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -244,14 +244,14 @@ export default function PatientManagement() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-semibold rounded px-2 py-1 ${
-                          patient.status === 'completed' 
-                            ? 'bg-blue-100 text-blue-800'
+                          patient.status === 'discharged' 
+                            ? 'bg-gray-100 text-gray-800'
                             : patient.hasActiveGoal 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {patient.status === 'completed' 
-                            ? '입원 중' 
+                          {patient.status === 'discharged' 
+                            ? '퇴원' 
                             : patient.hasActiveGoal 
                               ? '목표 진행 중' 
                               : '목표 설정 대기'}
@@ -266,7 +266,7 @@ export default function PatientManagement() {
                         >
                           상세보기
                         </button>
-                        {patient.status !== 'completed' && (
+                        {patient.status !== 'discharged' && (
                           <button
                             onClick={() => handleStatusChange(patient.id, 'discharged')}
                             className="text-red-600 hover:text-red-900"
@@ -274,7 +274,7 @@ export default function PatientManagement() {
                             퇴원
                           </button>
                         )}
-                        {patient.status === 'completed' && (
+                        {patient.status === 'discharged' && (
                           <button
                             onClick={() => handleStatusChange(patient.id, 'pending')}
                             className="text-green-600 hover:text-green-900"

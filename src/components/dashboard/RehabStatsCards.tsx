@@ -13,6 +13,7 @@ interface RehabStats {
   improvementRate: number
   newPatientsThisMonth: number
   avgSessionsPerWeek: number
+  patientChangeFromLastMonth: number
 }
 
 export function RehabStatsCards() {
@@ -24,7 +25,8 @@ export function RehabStatsCards() {
     completionRate: 0,
     improvementRate: 0,
     newPatientsThisMonth: 0,
-    avgSessionsPerWeek: 0
+    avgSessionsPerWeek: 0,
+    patientChangeFromLastMonth: 0
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -82,12 +84,12 @@ export function RehabStatsCards() {
           <div className="text-2xl font-bold text-blue-600">{stats.totalPatients}</div>
           <Badge variant="outline" className="w-fit">
             <TrendingUp className="h-3 w-3 mr-1" />
-            +{stats.newPatientsThisMonth} 신규
+            {stats.patientChangeFromLastMonth >= 0 ? '+' : ''}{stats.patientChangeFromLastMonth}명
           </Badge>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-xs text-muted-foreground">
-            이번 달 신규 환자 {stats.newPatientsThisMonth}명 증가
+            지난달 대비 {stats.patientChangeFromLastMonth >= 0 ? '증가' : '감소'}
           </div>
         </CardContent>
       </Card>
@@ -140,7 +142,7 @@ export function RehabStatsCards() {
           </div>
           <div className="text-2xl font-bold text-orange-600">{stats.thisWeekSessions}</div>
           <Badge variant="outline" className="w-fit">
-            평균 {stats.avgSessionsPerWeek}/주
+            평균 {stats.avgSessionsPerWeek}/주 (목업)
           </Badge>
         </CardHeader>
         <CardContent className="pt-0">

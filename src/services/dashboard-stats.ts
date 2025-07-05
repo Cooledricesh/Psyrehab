@@ -8,14 +8,16 @@ export interface DashboardStats {
   completionRate: number
   pendingPatients: number
   avgPatientsPerWorker: number
+  patientChangeFromLastMonth: number
 }
 
-// 총 환자 수 조회
+// 총 환자 수 조회 (discharged 제외)
 export const getTotalPatients = async (): Promise<number> => {
   try {
     const { count, error } = await supabase
       .from('patients')
       .select('*', { count: 'exact', head: true })
+      .neq('status', 'discharged')
     
     if (error) {
       console.error("Error occurred")
@@ -132,6 +134,40 @@ export const getPendingPatients = async (): Promise<number> => {
   }
 }
 
+// 지난달 대비 환자 수 변화 계산
+export const getPatientChangeFromLastMonth = async (): Promise<number> => {
+  try {
+    const now = new Date()
+    
+    // 지난달 마지막 날짜 계산
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+    lastMonthEnd.setHours(23, 59, 59, 999)
+    
+    // 지난달 마지막날까지의 환자 수 조회 (created_at 기준, discharged 제외)
+    const { count: lastMonthCount, error: lastMonthError } = await supabase
+      .from('patients')
+      .select('*', { count: 'exact', head: true })
+      .lte('created_at', lastMonthEnd.toISOString())
+      .neq('status', 'discharged')
+    
+    if (lastMonthError) {
+      console.error("Error fetching last month patients:", lastMonthError)
+      return 0
+    }
+    
+    // 현재 총 환자 수 (이미 discharged 제외됨)
+    const currentCount = await getTotalPatients()
+    
+    // 증감 계산
+    const change = currentCount - (lastMonthCount || 0)
+    
+    return change
+  } catch (error) {
+    console.error("Error in getPatientChangeFromLastMonth:", error)
+    return 0
+  }
+}
+
 // 사회복지사당 평균 담당 환자 수 계산
 export const getAvgPatientsPerWorker = async (): Promise<number> => {
   try {
@@ -151,17 +187,12 @@ export const getAvgPatientsPerWorker = async (): Promise<number> => {
     // 전체 환자 수 조회
     const totalPatients = await getTotalPatients()
     
-    console.log('Worker count:', workerCount)
-    console.log('Total patients:', totalPatients)
-    
     if (workerCount === 0) {
-      console.log('No workers found')
       return 0
     }
     
     // 평균 계산 (소수점 첫째 자리까지)
     const average = Math.round((totalPatients / workerCount) * 10) / 10
-    console.log('Average patients per worker:', average)
     
     return average
   } catch (error) {
@@ -173,13 +204,14 @@ export const getAvgPatientsPerWorker = async (): Promise<number> => {
 // 모든 대시보드 통계를 한 번에 조회
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
-    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients, avgPatientsPerWorker] = await Promise.all([
+    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients, avgPatientsPerWorker, patientChangeFromLastMonth] = await Promise.all([
       getTotalPatients(),
       getActiveGoals(),
       getThisWeekSessions(),
       getCompletionRate(),
       getPendingPatients(),
-      getAvgPatientsPerWorker()
+      getAvgPatientsPerWorker(),
+      getPatientChangeFromLastMonth()
     ])
     
     return {
@@ -188,7 +220,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       thisWeekSessions,
       completionRate,
       pendingPatients,
-      avgPatientsPerWorker
+      avgPatientsPerWorker,
+      patientChangeFromLastMonth
     }
   } catch {
     console.error("Error occurred")
@@ -198,7 +231,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       thisWeekSessions: 0,
       completionRate: 0,
       pendingPatients: 0,
-      avgPatientsPerWorker: 0
+      avgPatientsPerWorker: 0,
+      patientChangeFromLastMonth: 0
     }
   }
 } 
