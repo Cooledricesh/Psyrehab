@@ -54,16 +54,7 @@ export function DashboardTabs() {
     )
   }
 
-  // 계장 이상: 고급 대시보드만
-  if (userRole === 'section_chief' || userRole === 'team_leader' || userRole === 'director' || userRole === 'ceo') {
-    return (
-      <div className="w-full">
-        <AdvancedDashboard />
-      </div>
-    )
-  }
-
-  // 관리자: 둘 다 표시
+  // 관리자: 둘 다 표시 (탭으로 전환)
   if (userRole === 'administrator') {
     return (
       <div className="w-full">
@@ -101,6 +92,17 @@ export function DashboardTabs() {
       </div>
     )
   }
+
+  // 계장 이상: 고급 대시보드만
+  if (userRole === 'section_chief' || userRole === 'manager_level' || userRole === 'department_head' || 
+      userRole === 'vice_director' || userRole === 'director' || userRole === 'attending_physician') {
+    return (
+      <div className="w-full">
+        <AdvancedDashboard />
+      </div>
+    )
+  }
+
 
   // 기본값: 간편 대시보드
   return (

@@ -170,8 +170,8 @@ export const Sidebar = () => {
 
           <nav className="overflow-y-auto flex-1 py-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <ul className="space-y-1">
-              {/* 계장 이상 직급 - 관리자 대시보드를 맨 위에 표시 */}
-              {canViewManagement && (
+              {/* 관리자 대시보드 - 관리자만 표시 */}
+              {isAdmin && (
                 <>
                   <SidebarLink
                     to="/admin/dashboard"
@@ -183,15 +183,13 @@ export const Sidebar = () => {
                 </>
               )}
               
-              {/* 일반 대시보드 - 관리자이거나 계장급 미만만 표시 */}
-              {(userRole === 'administrator' || !canViewManagement || userRole === null) && (
-                <SidebarLink
-                  to="/dashboard"
-                  icon={<Home size={18} />}
-                  label="대시보드"
-                  isActive={location.pathname === '/dashboard'}
-                />
-              )}
+              {/* 일반 대시보드 - 모든 사용자에게 표시 */}
+              <SidebarLink
+                to="/dashboard"
+                icon={<Home size={18} />}
+                label="대시보드"
+                isActive={location.pathname === '/dashboard'}
+              />
               
               <SidebarLink
                 to="/patient-management"

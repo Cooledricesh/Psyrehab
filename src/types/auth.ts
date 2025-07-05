@@ -257,6 +257,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'create_goals',
     'update_goals',
     'view_patient_data',
+    'view_all_data',
     'create_assessments',
     'manage_services',
     'view_own_analytics',

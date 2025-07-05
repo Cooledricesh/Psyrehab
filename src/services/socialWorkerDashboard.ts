@@ -28,6 +28,28 @@ interface PatientWithGoal extends Patient {
 
 // 현재 사용자가 담당하는 환자 목록 조회
 async function getAssignedPatients(userId: string): Promise<string[]> {
+  // First, check if the user is an administrator or has permission to view all data
+  const { getUserProfile, hasPermission } = await import('@/lib/supabase')
+  const userProfile = await getUserProfile(userId)
+  
+  // Check if user has permission to view all data
+  const canViewAllData = await hasPermission(userId, 'view_all_data')
+  
+  // If user can view all data, return all patients
+  if (canViewAllData) {
+    const { data, error } = await supabase
+      .from('patients')
+      .select('id')
+    
+    if (error) {
+      console.error('Error fetching all patients:', error)
+      return []
+    }
+    
+    return data?.map(patient => patient.id) || []
+  }
+  
+  // Otherwise, return only assigned patients
   const { data, error } = await supabase
     .from('patients')
     .select('id, status, full_name')
@@ -198,9 +220,7 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
       if (allFailed) {
         // 연속 실패한 주차 정보 포함
         const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
-        const failureInfo = weekNumbers.length >= 2 
-          ? `${weekNumbers[0]}-${weekNumbers[weekNumbers.length - 1]}주차 연속 미달성`
-          : '최근 4주 연속 미달성'
+        const failureInfo = '4주 연속 목표 미달성'
         
         consecutiveFailures.push({
           id: patientData.id,
@@ -324,9 +344,7 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
       if (allAchieved) {
         // 연속 달성한 주차 정보 포함
         const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
-        const achievementInfo = weekNumbers.length >= 2 
-          ? `${weekNumbers[0]}-${weekNumbers[weekNumbers.length - 1]}주차 연속 달성`
-          : '최근 4주 연속 달성'
+        const achievementInfo = '4주 연속 목표 달성'
         
         fourWeeksAchieved.push({
           id: patientData.id,
