@@ -188,7 +188,7 @@ export class GoalService {
       .eq('id', patientId);
 
     if (error) {
-      console.error("Error occurred");
+      console.error("Error occurred:", error);
       throw error;
     }
   }

@@ -559,8 +559,6 @@ export const updatePatientStatus = async (
   newStatus: 'active' | 'pending' | 'discharged'
 ): Promise<Patient | null> => {
   try {
-    console.log('🔄 환자 상태 변경 시작:', { patientId, newStatus })
-
     // 퇴원 처리인 경우, 활성 목표들을 완전 삭제
     if (newStatus === 'discharged') {
       // 해당 환자의 모든 미완료 목표를 조회
@@ -583,11 +581,9 @@ export const updatePatientStatus = async (
           console.error('목표 삭제 중 오류:', deleteError)
           throw new Error('퇴원 처리 중 목표 정리에 실패했습니다.')
         }
-
-        console.log(`환자 ${patientId} 퇴원: ${activeGoals.length}개의 미완료 목표가 삭제됨`)
       }
     }
-
+    
     const { data, error } = await supabase
       .from('patients')
       .update({ 
@@ -605,11 +601,9 @@ export const updatePatientStatus = async (
       .single()
 
     if (error) {
-      console.error("Error occurred")
+      console.error("Error occurred:", error)
       throw new Error(error.message)
     }
-
-    console.log('✅ 환자 상태 변경 성공:', data)
 
     // 변경된 환자 데이터를 표준 형식으로 변환
     return {

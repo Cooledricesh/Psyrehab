@@ -71,8 +71,7 @@ const GoalDetailView: React.FC<GoalDetailViewProps> = ({
         <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
           <h5 className="font-semibold text-blue-900 mb-2">{removeGoalPrefix(detailedGoals.sixMonthGoal.title)}</h5>
           <div className="text-blue-800 text-sm">
-            <p className="font-medium mb-1">6개월 목표:</p>
-            <p>{detailedGoals.sixMonthGoal.sixMonthGoal || detailedGoals.sixMonthGoal.goal}</p>
+            <p className="font-medium mb-1">6개월 목표: {detailedGoals.sixMonthGoal.sixMonthGoal || detailedGoals.sixMonthGoal.goal}</p>
             <p className="mt-2">목적: {detailedGoals.sixMonthGoal.purpose || detailedGoals.sixMonthGoal.details || '목적이 설정되지 않았습니다'}</p>
           </div>
         </div>

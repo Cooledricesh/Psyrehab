@@ -99,6 +99,7 @@ export default function PatientManagement() {
         
         if (deleteError) {
           console.error('목표 삭제 중 오류:', deleteError)
+          throw new Error(`목표 삭제 실패: ${deleteError.message}`)
         }
       } else if (newStatus === 'pending') {
         dbStatus = 'pending'
@@ -111,8 +112,8 @@ export default function PatientManagement() {
       
       // 상태 변경 이벤트 발생
       eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, { patientId, newStatus: dbStatus })
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      console.error("Error occurred:", error)
       alert('상태 변경에 실패했습니다. 다시 시도해주세요.')
     }
   }
