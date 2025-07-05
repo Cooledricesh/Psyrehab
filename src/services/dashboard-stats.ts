@@ -231,7 +231,13 @@ export const getAvgPatientsPerWorker = async (): Promise<number> => {
     // 주임과 사원 역할의 사용자 수 조회
     const { data: workerData, error: workerError } = await supabase
       .from('user_roles')
-      .select('user_id, roles!inner(role_name)')
+      .select(`
+        user_id,
+        roles!inner(
+          id,
+          role_name
+        )
+      `)
       .in('roles.role_name', ['assistant_manager', 'staff'])
     
     if (workerError) {
@@ -265,37 +271,47 @@ export const getMonthlyPatientTrend = async (months: number = 3) => {
     const now = new Date()
     const monthsAgo = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1)
     
-    // 월별 데이터를 저장할 객체
-    const monthlyData: { [key: string]: number } = {}
+    // 월별 데이터를 저장할 배열
+    const chartData = []
     
     // 지정된 기간 동안의 각 월 초를 계산
     for (let i = 0; i < months; i++) {
       const monthDate = new Date(monthsAgo.getFullYear(), monthsAgo.getMonth() + i, 1)
       const monthKey = `${monthDate.getMonth() + 1}월`
       
-      // 해당 월의 마지막 날 계산
+      // 해당 월의 첫날과 마지막 날 계산
+      const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1)
       const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
       
-      // 해당 월의 마지막 날까지 생성된 환자 수 조회
-      const { count, error } = await supabase
+      // 해당 월의 마지막 날까지 생성된 전체 환자 수 조회
+      const { count: totalCount, error: totalError } = await supabase
         .from('patients')
         .select('*', { count: 'exact', head: true })
         .lte('created_at', lastDay.toISOString())
         .neq('status', 'discharged')
       
-      if (error) {
-        console.error(`Error fetching patients for ${monthKey}:`, error)
-        monthlyData[monthKey] = 0
-      } else {
-        monthlyData[monthKey] = count || 0
+      // 해당 월에 신규로 생성된 환자 수 조회
+      const { count: newCount, error: newError } = await supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', firstDay.toISOString())
+        .lte('created_at', lastDay.toISOString())
+      
+      if (totalError) {
+        console.error(`Error fetching total patients for ${monthKey}:`, totalError)
       }
+      if (newError) {
+        console.error(`Error fetching new patients for ${monthKey}:`, newError)
+      }
+      
+      chartData.push({
+        month: monthKey,
+        patients: totalCount || 0,
+        newPatients: newCount || 0
+      })
     }
     
-    // 차트 데이터 형식으로 변환
-    return Object.entries(monthlyData).map(([month, count]) => ({
-      month,
-      patients: count
-    }))
+    return chartData
   } catch (error) {
     console.error("Error in getMonthlyPatientTrend:", error)
     return []

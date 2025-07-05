@@ -6,6 +6,7 @@ import Dashboard from '@/pages/Dashboard'
 import { SimpleProtectedRoute } from '@/components/auth/SimpleProtectedRoute'
 import { AdminProtectedRoute } from '@/components/auth/AdminProtectedRoute'
 import { ManagementProtectedRoute } from '@/components/auth/ManagementProtectedRoute'
+import { Toaster } from '@/components/ui/toaster'
 
 // 실제 페이지 컴포넌트들
 import Home from '@/pages/Home'
@@ -50,6 +51,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
+        <Toaster />
         <Routes>
           {/* 루트 경로 리다이렉트 */}
           <Route path="/" element={<RedirectToAbout />} />

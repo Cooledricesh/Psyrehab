@@ -51,6 +51,20 @@ export const supabase = createClient(
   }
 )
 
+// Admin client with service role key (only for admin operations)
+export const supabaseAdmin = ENV.SUPABASE_SERVICE_ROLE_KEY 
+  ? createClient(
+      ENV.SUPABASE_URL || '',
+      ENV.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+  : null
+
 // Import the generated database types
 import type { Database } from '@/types/supabase'
 
