@@ -27,18 +27,16 @@ interface PatientWithGoal extends Patient {
 }
 
 // 현재 사용자가 담당하는 환자 목록 조회
-// 담당 필드가 없으므로 pending이 아닌 모든 환자를 조회
 async function getAssignedPatients(userId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('patients')
     .select('id, status, full_name')
-    .neq('status', 'pending')
+    .eq('primary_social_worker_id', userId)
 
   if (error) {
     console.error('Error fetching assigned patients:', error)
     return []
   }
-
   
   return data?.map(patient => patient.id) || []
 }

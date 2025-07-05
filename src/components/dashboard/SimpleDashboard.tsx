@@ -185,12 +185,12 @@ export function SimpleDashboard() {
         {/* 상세 정보 섹션 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 4주 연속 달성 환자 리스트 */}
-          {socialWorkerStats.fourWeeksAchieved?.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-              <h2 className="text-xl font-bold mb-4 flex items-center">
-                <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-                4주 연속 목표 달성 회원
-              </h2>
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+              4주 연속 목표 달성 회원
+            </h2>
+            {socialWorkerStats.fourWeeksAchieved?.length > 0 ? (
               <div className="space-y-2">
                 {socialWorkerStats.fourWeeksAchieved.map((patient, index) => (
                   <div key={`achieved-${patient.goal_id}-${index}`} 
@@ -206,16 +206,18 @@ export function SimpleDashboard() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-500">해당되는 환자가 없습니다.</p>
+            )}
+          </div>
 
           {/* 긴급 개입 필요 환자 리스트 */}
-          {socialWorkerStats.consecutiveFailures.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
-              <h2 className="text-xl font-bold mb-4 flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
-                긴급 개입 필요 회원
-              </h2>
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
+              긴급 개입 필요 회원
+            </h2>
+            {socialWorkerStats.consecutiveFailures.length > 0 ? (
               <div className="space-y-2">
                 {socialWorkerStats.consecutiveFailures.map((patient, index) => (
                   <div key={`failure-${patient.goal_id}-${index}`} 
@@ -231,8 +233,10 @@ export function SimpleDashboard() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-500">해당되는 환자가 없습니다.</p>
+            )}
+          </div>
           
           {/* 주간 점검 미완료 환자 리스트 */}
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -267,12 +271,12 @@ export function SimpleDashboard() {
           </div>
 
           {/* 목표 설정 필요 환자 리스트 */}
-          {socialWorkerStats.goalsNotSet.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4 flex items-center">
-                <Target className="h-5 w-5 mr-2 text-yellow-600" />
-                목표 설정 필요 회원
-              </h2>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <Target className="h-5 w-5 mr-2 text-yellow-600" />
+              목표 설정 필요 회원
+            </h2>
+            {socialWorkerStats.goalsNotSet.length > 0 ? (
               <div className="space-y-2">
                 {socialWorkerStats.goalsNotSet.slice(0, 5).map((patient, index) => (
                   <div key={`notset-${patient.id}-${index}`} 
@@ -293,8 +297,10 @@ export function SimpleDashboard() {
                   </p>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-500">모든 회원이 목표 진행중입니다.</p>
+            )}
+          </div>
         </div>
 
         {/* 새로고침 버튼 */}
