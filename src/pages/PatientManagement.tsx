@@ -90,23 +90,13 @@ export default function PatientManagement() {
       let dbStatus: 'active' | 'pending' | 'discharged'
       if (newStatus === 'discharged') {
         dbStatus = 'discharged'
-        
-        // 퇴원 시 환자의 목표들 삭제
-        const { error: deleteError } = await supabase
-          .from('rehabilitation_goals')
-          .delete()
-          .eq('patient_id', patientId)
-        
-        if (deleteError) {
-          console.error('목표 삭제 중 오류:', deleteError)
-          throw new Error(`목표 삭제 실패: ${deleteError.message}`)
-        }
       } else if (newStatus === 'pending') {
         dbStatus = 'pending'
       } else {
         dbStatus = 'active'
       }
       
+      // patient-management.ts의 updatePatientStatus가 목표 삭제를 처리함
       await updatePatientStatus(patientId, dbStatus)
       await fetchData() // 데이터 새로고침
       
