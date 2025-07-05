@@ -97,7 +97,6 @@ export function SimpleDashboard() {
   if (isLoading) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">대시보드</h1>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           <span className="ml-2 text-gray-600">통계를 불러오는 중...</span>
@@ -109,7 +108,6 @@ export function SimpleDashboard() {
   if (error) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">대시보드</h1>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-red-800 mb-2">데이터 로딩 오류</h3>
           <p className="text-red-600 mb-4">{error}</p>
@@ -321,7 +319,6 @@ export function SimpleDashboard() {
   // 데이터 로딩 실패 시 fallback
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">대시보드</h1>
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
         <p className="text-yellow-800">대시보드 데이터를 불러올 수 없습니다.</p>
         <button

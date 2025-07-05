@@ -7,6 +7,7 @@ export interface DashboardStats {
   thisWeekSessions: number
   completionRate: number
   pendingPatients: number
+  avgPatientsPerWorker: number
 }
 
 // 총 환자 수 조회
@@ -131,15 +132,54 @@ export const getPendingPatients = async (): Promise<number> => {
   }
 }
 
+// 사회복지사당 평균 담당 환자 수 계산
+export const getAvgPatientsPerWorker = async (): Promise<number> => {
+  try {
+    // 주임과 사원 역할의 사용자 수 조회
+    const { data: workerData, error: workerError } = await supabase
+      .from('user_roles')
+      .select('user_id, roles!inner(role_name)')
+      .in('roles.role_name', ['assistant_manager', 'staff'])
+    
+    if (workerError) {
+      console.error("Error fetching workers:", workerError)
+      return 0
+    }
+    
+    const workerCount = workerData?.length || 0
+    
+    // 전체 환자 수 조회
+    const totalPatients = await getTotalPatients()
+    
+    console.log('Worker count:', workerCount)
+    console.log('Total patients:', totalPatients)
+    
+    if (workerCount === 0) {
+      console.log('No workers found')
+      return 0
+    }
+    
+    // 평균 계산 (소수점 첫째 자리까지)
+    const average = Math.round((totalPatients / workerCount) * 10) / 10
+    console.log('Average patients per worker:', average)
+    
+    return average
+  } catch (error) {
+    console.error("Error in getAvgPatientsPerWorker:", error)
+    return 0
+  }
+}
+
 // 모든 대시보드 통계를 한 번에 조회
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
-    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients] = await Promise.all([
+    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients, avgPatientsPerWorker] = await Promise.all([
       getTotalPatients(),
       getActiveGoals(),
       getThisWeekSessions(),
       getCompletionRate(),
-      getPendingPatients()
+      getPendingPatients(),
+      getAvgPatientsPerWorker()
     ])
     
     return {
@@ -147,7 +187,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       activeGoals,
       thisWeekSessions,
       completionRate,
-      pendingPatients
+      pendingPatients,
+      avgPatientsPerWorker
     }
   } catch {
     console.error("Error occurred")
@@ -156,7 +197,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       activeGoals: 0,
       thisWeekSessions: 0,
       completionRate: 0,
-      pendingPatients: 0
+      pendingPatients: 0,
+      avgPatientsPerWorker: 0
     }
   }
 } 

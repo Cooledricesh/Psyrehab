@@ -304,7 +304,7 @@ export class PatientService {
           .from('rehabilitation_goals')
           .select('id, goal_type, status')
           .eq('patient_id', id)
-          .in('status', ['active', 'pending', 'on_hold', 'cancelled'])
+          .in('status', ['active', 'pending'])
 
         if (goalsError) {
           console.error('활성 목표 조회 중 오류:', goalsError)

@@ -2,7 +2,6 @@ import React from 'react'
 import { RehabStatsCards } from './RehabStatsCards'
 import { ProgressChart } from './ProgressChart'
 import { PatientsDataTable } from './PatientsDataTable'
-import { QuickActions } from './QuickActions'
 
 export function AdvancedDashboard() {
   return (
@@ -15,11 +14,6 @@ export function AdvancedDashboard() {
           {/* 차트 섹션 */}
           <div className="px-4 lg:px-6">
             <ProgressChart />
-          </div>
-          
-          {/* 빠른 작업 섹션 */}
-          <div className="px-4 lg:px-6">
-            <QuickActions />
           </div>
           
           {/* 환자 데이터 테이블 */}
