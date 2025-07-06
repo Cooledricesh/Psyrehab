@@ -12,6 +12,7 @@ export interface DashboardStats {
   completedSixMonthGoals: number
   totalWeeklyCheckPending: number
   fourWeeksAchievedCount: number
+  newPatientsThisMonth: number
 }
 
 // 총 환자 수 조회 (discharged 제외)
@@ -410,10 +411,37 @@ export const getFourWeeksAchievedCount = async (): Promise<number> => {
   }
 }
 
+// 이번 달 신규 회원 수 조회
+export const getNewPatientsThisMonth = async (): Promise<number> => {
+  try {
+    const now = new Date()
+    
+    // 이번 달의 첫날 계산
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    firstDayOfMonth.setHours(0, 0, 0, 0)
+    
+    // 이번 달에 생성된 환자 수 조회
+    const { count, error } = await supabase
+      .from('patients')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', firstDayOfMonth.toISOString())
+    
+    if (error) {
+      console.error("Error fetching new patients this month:", error)
+      return 0
+    }
+    
+    return count || 0
+  } catch (error) {
+    console.error("Error in getNewPatientsThisMonth:", error)
+    return 0
+  }
+}
+
 // 모든 대시보드 통계를 한 번에 조회
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
-    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients, avgPatientsPerWorker, patientChangeFromLastMonth, completedSixMonthGoals, totalWeeklyCheckPending, fourWeeksAchievedCount] = await Promise.all([
+    const [totalPatients, activeGoals, thisWeekSessions, completionRate, pendingPatients, avgPatientsPerWorker, patientChangeFromLastMonth, completedSixMonthGoals, totalWeeklyCheckPending, fourWeeksAchievedCount, newPatientsThisMonth] = await Promise.all([
       getTotalPatients(),
       getActiveGoals(),
       getThisWeekSessions(),
@@ -423,7 +451,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       getPatientChangeFromLastMonth(),
       getCompletedSixMonthGoals(),
       getTotalWeeklyCheckPending(),
-      getFourWeeksAchievedCount()
+      getFourWeeksAchievedCount(),
+      getNewPatientsThisMonth()
     ])
     
     return {
@@ -436,7 +465,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       patientChangeFromLastMonth,
       completedSixMonthGoals,
       totalWeeklyCheckPending,
-      fourWeeksAchievedCount
+      fourWeeksAchievedCount,
+      newPatientsThisMonth
     }
   } catch {
     console.error("Error occurred")
@@ -450,7 +480,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       patientChangeFromLastMonth: 0,
       completedSixMonthGoals: 0,
       totalWeeklyCheckPending: 0,
-      fourWeeksAchievedCount: 0
+      fourWeeksAchievedCount: 0,
+      newPatientsThisMonth: 0
     }
   }
 } 
