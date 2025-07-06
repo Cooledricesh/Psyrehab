@@ -9,7 +9,6 @@ import { ManagementProtectedRoute } from '@/components/auth/ManagementProtectedR
 import { Toaster } from '@/components/ui/toaster'
 
 // 실제 페이지 컴포넌트들
-import Home from '@/pages/Home'
 import GoalSetting from '@/pages/GoalSetting'
 import ProgressTracking from '@/pages/ProgressTracking'
 import Reports from '@/pages/Reports'

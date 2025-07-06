@@ -1,0 +1,128 @@
+{
+  "timestamp": "2025-07-06T04:35:39.708Z",
+  "dependencies": {
+    "auditReportVersion": 2,
+    "vulnerabilities": {
+      "brace-expansion": {
+        "name": "brace-expansion",
+        "severity": "low",
+        "isDirect": false,
+        "via": [
+          {
+            "source": 1105443,
+            "name": "brace-expansion",
+            "dependency": "brace-expansion",
+            "title": "brace-expansion Regular Expression Denial of Service vulnerability",
+            "url": "https://github.com/advisories/GHSA-v6h2-p8h4-qcjw",
+            "severity": "low",
+            "cwe": [
+              "CWE-400"
+            ],
+            "cvss": {
+              "score": 3.1,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
+            },
+            "range": ">=1.0.0 <=1.1.11"
+          },
+          {
+            "source": 1105444,
+            "name": "brace-expansion",
+            "dependency": "brace-expansion",
+            "title": "brace-expansion Regular Expression Denial of Service vulnerability",
+            "url": "https://github.com/advisories/GHSA-v6h2-p8h4-qcjw",
+            "severity": "low",
+            "cwe": [
+              "CWE-400"
+            ],
+            "cvss": {
+              "score": 3.1,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
+            },
+            "range": ">=2.0.0 <=2.0.1"
+          }
+        ],
+        "effects": [],
+        "range": "1.0.0 - 1.1.11 || 2.0.0 - 2.0.1",
+        "nodes": [
+          "node_modules/@eslint/config-array/node_modules/brace-expansion",
+          "node_modules/@eslint/eslintrc/node_modules/brace-expansion",
+          "node_modules/brace-expansion",
+          "node_modules/eslint-plugin-jsx-a11y/node_modules/brace-expansion",
+          "node_modules/eslint-plugin-react/node_modules/brace-expansion",
+          "node_modules/eslint/node_modules/brace-expansion"
+        ],
+        "fixAvailable": true
+      }
+    },
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 1,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 1
+      },
+      "dependencies": {
+        "prod": 336,
+        "dev": 420,
+        "optional": 47,
+        "peer": 7,
+        "peerOptional": 0,
+        "total": 757
+      }
+    }
+  },
+  "codeAnalysis": {
+    "issues": [
+      {
+        "file": ".env",
+        "issue": ".env file should not be committed",
+        "severity": "medium",
+        "line": "N/A"
+      }
+    ],
+    "totalIssues": 1
+  },
+  "configuration": {
+    "issues": [
+      {
+        "file": "package.json",
+        "issue": "Missing security dependency: helmet",
+        "severity": "medium"
+      },
+      {
+        "file": "package.json",
+        "issue": "Missing security dependency: express-rate-limit",
+        "severity": "medium"
+      },
+      {
+        "file": "package.json",
+        "issue": "Missing security dependency: cors",
+        "severity": "medium"
+      },
+      {
+        "file": "package.json",
+        "issue": "Missing security dependency: bcrypt",
+        "severity": "medium"
+      },
+      {
+        "file": ".gitignore",
+        "issue": "Missing ignore pattern: build",
+        "severity": "low"
+      }
+    ],
+    "totalIssues": 5
+  },
+  "certificates": {
+    "issues": [],
+    "totalIssues": 0
+  },
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 5,
+    "low": 2,
+    "passed": 8
+  }
+}

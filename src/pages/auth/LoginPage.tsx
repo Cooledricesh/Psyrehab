@@ -7,8 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Eye, EyeOff, Heart, CheckCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { getAuthErrorMessage } from '@/utils/auth'
+import { AuthService } from '@/services/auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -35,17 +34,14 @@ export default function LoginPage() {
     setError(null)
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const result = await AuthService.signIn({ email, password })
 
-      if (error) {
-        setError(getAuthErrorMessage(error))
+      if (!result.success) {
+        setError(result.error || '로그인에 실패했습니다.')
         return
       }
 
-      if (data.user) {
+      if (result.user) {
         // 로그인 성공 시 메인 페이지로 리다이렉트
         navigate('/dashboard')
       }

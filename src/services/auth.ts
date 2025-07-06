@@ -103,6 +103,12 @@ export class AuthService {
 
       // Get user profile
       const profile = await getUserProfile(data.user.id)
+      console.log('Login attempt - User profile:', {
+        userId: data.user.id,
+        email: credentials.email,
+        profile: profile,
+        is_active: profile?.is_active
+      })
 
       // Check if profile exists and is active
       if (!profile) {
@@ -113,6 +119,11 @@ export class AuthService {
       }
 
       if (!profile.is_active) {
+        console.log('Login blocked - User inactive:', {
+          userId: data.user.id,
+          email: credentials.email,
+          is_active: profile.is_active
+        })
         return {
           success: false,
           error: '계정이 비활성화되었습니다. 관리자에게 문의하세요.'

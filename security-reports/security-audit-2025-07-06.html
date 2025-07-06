@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Audit Report - 2025-07-06</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #f4f4f4; padding: 20px; border-radius: 5px; }
+        .summary { display: flex; gap: 20px; margin: 20px 0; }
+        .metric { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 5px; text-align: center; }
+        .critical { background-color: #ffebee; border-color: #f44336; }
+        .high { background-color: #fff3e0; border-color: #ff9800; }
+        .medium { background-color: #fff8e1; border-color: #ffc107; }
+        .low { background-color: #f3e5f5; border-color: #9c27b0; }
+        .passed { background-color: #e8f5e8; border-color: #4caf50; }
+        .section { margin: 20px 0; }
+        .issues { background: #f9f9f9; padding: 15px; border-radius: 5px; }
+        .issue { background: #fff; margin: 10px 0; padding: 10px; border-left: 4px solid #ddd; }
+        .issue.critical { border-left-color: #f44336; }
+        .issue.high { border-left-color: #ff9800; }
+        .issue.medium { border-left-color: #ffc107; }
+        .issue.low { border-left-color: #9c27b0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Security Audit Report</h1>
+        <p><strong>Date:</strong> 2025-07-06T04:35:39.708Z</p>
+        <p><strong>Application:</strong> PsyRehab</p>
+    </div>
+    
+    <div class="summary">
+        <div class="metric critical">
+            <h3>0</h3>
+            <p>Critical</p>
+        </div>
+        <div class="metric high">
+            <h3>0</h3>
+            <p>High</p>
+        </div>
+        <div class="metric medium">
+            <h3>5</h3>
+            <p>Medium</p>
+        </div>
+        <div class="metric low">
+            <h3>2</h3>
+            <p>Low</p>
+        </div>
+        <div class="metric passed">
+            <h3>8</h3>
+            <p>Passed</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Dependency Vulnerabilities</h2>
+        <div class="issues">
+            
+      <div class="issue low">
+        <strong>brace-expansion</strong> (low)
+        <p>[object Object], [object Object]</p>
+      </div>
+    
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Code Analysis</h2>
+        <div class="issues">
+            
+      <div class="issue medium">
+        <strong>.env</strong> (medium)
+        <p>.env file should not be committed</p>
+        
+      </div>
+    
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Configuration</h2>
+        <div class="issues">
+            
+      <div class="issue medium">
+        <strong>package.json</strong> (medium)
+        <p>Missing security dependency: helmet</p>
+      </div>
+    
+      <div class="issue medium">
+        <strong>package.json</strong> (medium)
+        <p>Missing security dependency: express-rate-limit</p>
+      </div>
+    
+      <div class="issue medium">
+        <strong>package.json</strong> (medium)
+        <p>Missing security dependency: cors</p>
+      </div>
+    
+      <div class="issue medium">
+        <strong>package.json</strong> (medium)
+        <p>Missing security dependency: bcrypt</p>
+      </div>
+    
+      <div class="issue low">
+        <strong>.gitignore</strong> (low)
+        <p>Missing ignore pattern: build</p>
+      </div>
+    
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Certificates</h2>
+        <div class="issues">
+            <p>No certificate issues found</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Recommendations</h2>
+        <ul>
+            <li>Review and address all critical and high severity issues immediately</li>
+            <li>Update dependencies regularly to patch known vulnerabilities</li>
+            <li>Implement automated security scanning in CI/CD pipeline</li>
+            <li>Conduct regular penetration testing</li>
+            <li>Monitor security advisories for used technologies</li>
+        </ul>
+    </div>
+</body>
+</html>
