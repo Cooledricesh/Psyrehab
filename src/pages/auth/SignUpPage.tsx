@@ -25,7 +25,7 @@ export default function SignUpPage() {
     email: '',
     password: '',
     passwordConfirm: '',
-    role: 'staff',
+    role: 'staff',  // UI에서는 숨김처리되어 있지만 실제로는 staff로 설정
     fullName: '',
     department: '',
     contactNumber: ''
@@ -103,7 +103,7 @@ export default function SignUpPage() {
         .insert({
           email: formData.email,
           full_name: formData.fullName,
-          requested_role: formData.role,
+          requested_role: 'staff',  // 기본값으로 staff 설정
           employee_id: generatedEmployeeId,
           department: formData.department || null,
           contact_number: formData.contactNumber || null,

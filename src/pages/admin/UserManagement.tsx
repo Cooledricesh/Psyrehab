@@ -4,18 +4,18 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
-import { Search, UserPlus, Edit2, Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
+import { Search, UserPlus, Edit2, Trash2, CheckCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
 import type { UserRole } from '@/types/auth'
 import { ROLE_NAMES } from '@/types/auth'
 import { UserManagementService } from '@/services'
 import { jobTitleRoles, getUserTable, getRoleBadge, getStatusBadge } from '@/utils/userManagement'
+import { UserEditDialog, type EditFormData } from '@/components/admin/UserEditDialog'
+import { UserDeleteDialog } from '@/components/admin/UserDeleteDialog'
 
 interface User {
   id: string
@@ -42,15 +42,6 @@ export default function UserManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const { toast } = useToast()
-
-  // 수정 폼 데이터
-  const [editFormData, setEditFormData] = useState({
-    fullName: '',
-    department: '',
-    contactNumber: '',
-    isActive: true,
-    role: '' as UserRole | ''
-  })
 
   useEffect(() => {
     loadUsers()
@@ -214,27 +205,20 @@ export default function UserManagement() {
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user)
-    setEditFormData({
-      fullName: user.fullName,
-      department: user.department || '',
-      contactNumber: user.contactNumber || '',
-      isActive: user.isActive,
-      role: user.role === 'pending' ? '' : user.role
-    })
     setShowEditDialog(true)
   }
 
-  const handleUpdateUser = async () => {
-    if (!selectedUser) return
+  const handleUpdateUser = async (user: User, editFormData: EditFormData) => {
+    if (!user) return
 
     try {
       // 역할이 변경되었는지 확인
-      const roleChanged = editFormData.role && editFormData.role !== selectedUser.role
+      const roleChanged = editFormData.role && editFormData.role !== user.role
 
       if (roleChanged) {
         // 역할 변경 처리
         const result = await UserManagementService.updateUserRole({
-          userId: selectedUser.id,
+          userId: user.id,
           newRole: editFormData.role as UserRole
         })
 
@@ -246,7 +230,7 @@ export default function UserManagement() {
       // 기본 정보 업데이트 (역할 변경 후 새로운 테이블에서)
       const table = roleChanged 
         ? getUserTable(editFormData.role)
-        : getUserTable(selectedUser.role)
+        : getUserTable(user.role)
       
       // 모든 테이블에 동일한 필드가 있으므로 같은 데이터 사용
       const updateData = {
@@ -260,7 +244,7 @@ export default function UserManagement() {
       const { error } = await supabase
         .from(table)
         .update(updateData)
-        .eq('user_id', selectedUser.id)
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -548,16 +532,26 @@ export default function UserManagement() {
 
       // 4. 프로필 생성
       const table = getUserTable(user.requestedRole)
+      
+      // administrators 테이블은 employee_id, department, contact_number 컬럼이 없음
+      const profileData = table === 'administrators' 
+        ? {
+            user_id: userId,
+            full_name: request.full_name,
+            is_active: true
+          }
+        : {
+            user_id: userId,
+            full_name: request.full_name,
+            employee_id: request.employee_id || null,
+            department: request.department || null,
+            contact_number: request.contact_number || null,
+            is_active: true
+          }
+      
       const { error: profileError } = await supabase
         .from(table)
-        .insert({
-          user_id: userId,
-          full_name: request.full_name,
-          employee_id: request.employee_id || null,
-          department: request.department || null,
-          contact_number: request.contact_number || null,
-          is_active: true
-        })
+        .insert(profileData)
 
       if (profileError && !profileError.message.includes('duplicate')) {
         throw profileError
@@ -748,104 +742,20 @@ export default function UserManagement() {
       </Card>
 
       {/* 수정 대화상자 */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="bg-white">
-          <DialogHeader>
-            <DialogTitle>사용자 정보 수정</DialogTitle>
-            <DialogDescription>
-              {selectedUser?.fullName}님의 정보를 수정합니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="fullName">이름</Label>
-              <Input
-                id="fullName"
-                value={editFormData.fullName}
-                onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="role">역할</Label>
-              <Select 
-                value={editFormData.role || selectedUser?.role || ''} 
-                onValueChange={(value) => setEditFormData({ ...editFormData, role: value as UserRole })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="역할 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  {UserManagementService.getAvailableRoles().map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="department">부서</Label>
-              <Input
-                id="department"
-                value={editFormData.department}
-                onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="contactNumber">연락처</Label>
-              <Input
-                id="contactNumber"
-                value={editFormData.contactNumber}
-                onChange={(e) => setEditFormData({ ...editFormData, contactNumber: e.target.value })}
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={editFormData.isActive}
-                onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="isActive">활성 상태</Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              취소
-            </Button>
-            <Button onClick={handleUpdateUser}>
-              저장
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UserEditDialog
+        user={selectedUser}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSave={handleUpdateUser}
+      />
 
       {/* 삭제 확인 대화상자 */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-white">  
-          <DialogHeader>
-            <DialogTitle>사용자 삭제</DialogTitle>
-            <DialogDescription asChild>
-              <div className="flex items-start gap-3 mt-4">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p>정말로 <strong>{selectedUser?.fullName}</strong>을(를) 삭제하시겠습니까?</p>
-                  <p className="mt-2 text-sm text-gray-500">이 작업은 되돌릴 수 없습니다.</p>
-                </div>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-              취소
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteUser}>
-              삭제
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UserDeleteDialog
+        user={selectedUser}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onDelete={handleDeleteUser}
+      />
     </div>
   )
 }
