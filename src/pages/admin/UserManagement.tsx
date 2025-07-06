@@ -63,7 +63,7 @@ export default function UserManagement() {
     try {
       setLoading(true)
 
-      // 사회복지사 조회
+      // 직원 조회
       const { data: socialWorkers, error: swError } = await supabase
         .from('social_workers')
         .select(`
@@ -312,12 +312,11 @@ export default function UserManagement() {
         throw new Error('관리자 권한이 필요합니다.')
       }
 
-      // 환자가 할당된 사회복지사는 삭제할 수 없음
-      const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'attending_physician']
+      // 환자가 할당된 직원은 삭제할 수 없음
       if (jobTitleRoles.includes(selectedUser.role) && selectedUser.patientCount && selectedUser.patientCount > 0) {
         toast({
           title: '삭제 불가',
-          description: `담당 환자가 ${selectedUser.patientCount}명 있는 사회복지사는 삭제할 수 없습니다. 먼저 환자를 다른 사회복지사에게 이관해주세요.`,
+          description: `담당 환자가 ${selectedUser.patientCount}명 있는 직원은 삭제할 수 없습니다. 먼저 환자를 다른 직원에게 이관해주세요.`,
           variant: 'destructive'
         })
         setShowDeleteDialog(false)
@@ -355,7 +354,6 @@ export default function UserManagement() {
       // 2. 프로필 삭제
       if (selectedUser.role !== 'pending') {
         // 직급별 역할들은 모두 social_workers 테이블에 저장됨
-        const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'attending_physician']
         const table = jobTitleRoles.includes(selectedUser.role) ? 'social_workers' : 'administrators'
         
         // 프로필 삭제
@@ -392,7 +390,7 @@ export default function UserManagement() {
                 relatedData.push(`${goalCount}개의 재활 목표`)
               }
               
-              throw new Error(`이 사회복지사와 연결된 데이터가 있어 삭제할 수 없습니다: ${relatedData.join(', ')}`)
+              throw new Error(`이 직원과 연결된 데이터가 있어 삭제할 수 없습니다: ${relatedData.join(', ')}`)
             } else if (selectedUser.role === 'administrator') {
               // 공지사항 확인
               const { count: announcementCount } = await supabase
@@ -440,14 +438,12 @@ export default function UserManagement() {
               toast({
                 title: '부분 삭제 완료',
                 description: `${selectedUser.fullName}님의 프로필은 삭제되었지만, Auth 계정 삭제에 실패했습니다.`,
-                variant: 'destructive',
-                duration: 8000
+                variant: 'destructive'
               })
             } else {
               toast({
                 title: '삭제 완료',
-                description: `${selectedUser.fullName}님의 모든 계정 정보가 완전히 삭제되었습니다.`,
-                duration: 5000
+                description: `${selectedUser.fullName}님의 모든 계정 정보가 완전히 삭제되었습니다.`
               })
             }
           } catch (authError) {
@@ -455,8 +451,7 @@ export default function UserManagement() {
             toast({
               title: '부분 삭제 완료', 
               description: `${selectedUser.fullName}님의 프로필은 삭제되었지만, Auth 계정 삭제 중 오류가 발생했습니다.`,
-              variant: 'destructive',
-              duration: 8000
+              variant: 'destructive'
             })
           }
         } else {
@@ -464,15 +459,13 @@ export default function UserManagement() {
           toast({
             title: '부분 삭제 완료',
             description: `${selectedUser.fullName}님의 프로필은 삭제되었습니다. Auth 계정 삭제를 위해서는 Service Role Key가 필요합니다.`,
-            variant: 'default',
-            duration: 8000
+            variant: 'default'
           })
         }
       } else {
         toast({
           title: '삭제 완료',
-          description: `${selectedUser.fullName}님의 가입 신청이 삭제되었습니다.`,
-          duration: 5000
+          description: `${selectedUser.fullName}님의 가입 신청이 삭제되었습니다.`
         })
       }
 
@@ -488,8 +481,7 @@ export default function UserManagement() {
       toast({
         title: '삭제 실패',
         description: errorMessage,
-        variant: 'destructive',
-        duration: 5000
+        variant: 'destructive'
       })
     }
   }
@@ -560,7 +552,6 @@ export default function UserManagement() {
       }
 
       // 4. 프로필 생성
-      const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'attending_physician']
       const table = jobTitleRoles.includes(user.requestedRole) ? 'social_workers' : 'administrators'
       const { error: profileError } = await supabase
         .from(table)
@@ -759,7 +750,7 @@ export default function UserManagement() {
                           className="text-green-600 hover:text-green-700"
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          {user.requestedRole === 'administrator' ? '관리자 승인' : '사회복지사 승인'}
+                          {user.requestedRole === 'administrator' ? '관리자 승인' : '직원 승인'}
                         </Button>
                       ) : (
                         <>

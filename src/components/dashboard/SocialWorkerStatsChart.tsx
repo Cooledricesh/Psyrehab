@@ -55,11 +55,12 @@ export function SocialWorkerStatsChart() {
           
           const userName = userData?.full_name || '이름 없음'
 
-          // 담당 환자 수 조회
+          // 담당 환자 수 조회 (퇴원 환자 제외)
           const { count: totalPatients } = await supabase
             .from('patients')
             .select('*', { count: 'exact', head: true })
             .eq('primary_social_worker_id', userId)
+            .neq('status', 'discharged')
 
           // 사회복지사 대시보드 통계 사용하여 주간 체크 미완료 수 계산
           const dashboardStats = await getSocialWorkerDashboardStats(userId)
@@ -171,15 +172,15 @@ export function SocialWorkerStatsChart() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-gray-400 rounded" />
-                            <span className="text-sm">총 환자: {(payload[0]?.value || 0) + (payload[1]?.value || 0)}명</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded" />
-                            <span className="text-sm">체크 완료: {payload[0]?.value || 0}명</span>
+                            <span className="text-sm">총 환자: {Number(payload[0]?.value || 0) + Number(payload[1]?.value || 0)}명</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded" />
-                            <span className="text-sm">체크 미완료: {payload[1]?.value || 0}명</span>
+                            <span className="text-sm">체크 미완료: {payload[0]?.value || 0}명</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded" />
+                            <span className="text-sm">체크 완료: {payload[1]?.value || 0}명</span>
                           </div>
                         </div>
                       </div>
@@ -189,16 +190,16 @@ export function SocialWorkerStatsChart() {
                 }}
               />
               <Bar
-                dataKey="completedChecks"
+                dataKey="incompleteChecks"
                 stackId="a"
-                fill="#3b82f6"
+                fill="#ef4444"
                 radius={[0, 0, 0, 0]}
                 barSize={50}
               />
               <Bar
-                dataKey="incompleteChecks"
+                dataKey="completedChecks"
                 stackId="a"
-                fill="#ef4444"
+                fill="#3b82f6"
                 radius={[4, 4, 0, 0]}
                 barSize={50}
               />
