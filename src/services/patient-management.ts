@@ -80,15 +80,8 @@ export const getPatients = async (): Promise<Patient[]> => {
         goal.status === 'active'
       )
 
-      // 각 환자별로 매핑 과정 로깅
-      console.log(`📝 환자 ${patient.full_name} 매핑:`, {
-        원본_성별: patient.gender,
-        매핑된_성별: mapGender(patient.gender),
-        원본_additional_info: patient.additional_info,
-        재활목표들: patient.rehabilitation_goals,
-        활성목표여부: hasActiveGoal,
-        원본_전체: patient
-      })
+      // 디버깅이 필요한 경우에만 활성화
+      // console.log(`📝 환자 ${patient.full_name} 매핑:`, { ... })
 
       return {
         id: patient.id?.toString() || '',
@@ -128,13 +121,12 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
     }
     
     // 입력한 식별번호가 이미 존재하는지 확인
-    const { data: existingPatient } = await supabase
+    const { data: existingPatients } = await supabase
       .from('patients')
       .select('id')
       .eq('patient_identifier', patientData.patient_identifier.trim())
-      .single()
     
-    if (existingPatient) {
+    if (existingPatients && existingPatients.length > 0) {
       throw new Error(`환자 식별번호 '${patientData.patient_identifier}'는 이미 사용 중입니다.`)
     }
     
