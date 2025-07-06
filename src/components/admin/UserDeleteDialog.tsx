@@ -1,22 +1,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
-
-interface User {
-  id: string
-  email: string
-  fullName: string
-  role: string
-  roleId: string
-  isActive: boolean
-  createdAt: string
-  employeeId?: string
-  department?: string
-  contactNumber?: string
-  patientCount?: number
-  needsApproval?: boolean
-  requestedRole?: string
-}
+import type { User } from '@/services/userManagement'
 
 interface UserDeleteDialogProps {
   user: User | null

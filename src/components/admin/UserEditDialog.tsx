@@ -4,24 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { UserManagementService } from '@/services'
+import { UserManagementService, type User } from '@/services/userManagement'
 import type { UserRole } from '@/types/auth'
-
-interface User {
-  id: string
-  email: string
-  fullName: string
-  role: UserRole | 'pending'
-  roleId: string
-  isActive: boolean
-  createdAt: string
-  employeeId?: string
-  department?: string
-  contactNumber?: string
-  patientCount?: number
-  needsApproval?: boolean
-  requestedRole?: UserRole
-}
 
 interface UserEditDialogProps {
   user: User | null

@@ -3,35 +3,19 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
-import { Search, UserPlus, Edit2, Trash2, CheckCircle, RefreshCw } from 'lucide-react'
+import { UserPlus } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
 import type { UserRole } from '@/types/auth'
 import { ROLE_NAMES } from '@/types/auth'
-import { UserManagementService } from '@/services'
-import { jobTitleRoles, getUserTable, getRoleBadge, getStatusBadge } from '@/utils/userManagement'
+import { UserManagementService, type User } from '@/services/userManagement'
+import { jobTitleRoles, getUserTable } from '@/utils/userManagement'
 import { UserEditDialog, type EditFormData } from '@/components/admin/UserEditDialog'
 import { UserDeleteDialog } from '@/components/admin/UserDeleteDialog'
-
-interface User {
-  id: string
-  email: string
-  fullName: string
-  role: UserRole | 'pending'
-  roleId: string
-  isActive: boolean
-  createdAt: string
-  employeeId?: string
-  department?: string
-  contactNumber?: string
-  patientCount?: number
-  needsApproval?: boolean
-  requestedRole?: UserRole  // 요청한 역할 추가
-}
+import { UserTable } from '@/components/admin/UserTable'
+import { UserFilter } from '@/components/admin/UserFilter'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
@@ -48,159 +32,22 @@ export default function UserManagement() {
   }, [])
 
   const loadUsers = async () => {
-    try {
-      setLoading(true)
-
-      // 직원 조회
-      const { data: socialWorkers, error: swError } = await supabase
-        .from('social_workers')
-        .select(`
-          user_id,
-          full_name,
-          employee_id,
-          department,
-          contact_number,
-          is_active,
-          created_at
-        `)
-
-      if (swError) throw swError
-
-      // 관리자 조회
-      const { data: administrators, error: adminError } = await supabase
-        .from('administrators')
-        .select(`
-          user_id,
-          full_name,
-          is_active,
-          created_at
-        `)
-
-      if (adminError) throw adminError
-
-
-      // 모든 사용자의 역할 정보 조회
-      const allUserIds = [
-        ...(socialWorkers || []).map(sw => sw.user_id),
-        ...(administrators || []).map(admin => admin.user_id)
-      ]
-
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select(`
-          user_id,
-          role_id
-        `)
-        .in('user_id', allUserIds)
-      
-      if (rolesError) throw rolesError
-
-      // 모든 역할 정보 조회
-      const { data: allRoles, error: allRolesError } = await supabase
-        .from('roles')
-        .select('id, role_name')
-      
-      if (allRolesError) throw allRolesError
-      
-      // 역할 ID로 역할 이름을 찾을 수 있는 맵 생성
-      const roleIdToName = new Map(
-        (allRoles || []).map(r => [r.id, r.role_name])
-      )
-
-      // 역할 정보를 맵으로 변환
-      const roleMap = new Map(
-        (userRoles || []).map(ur => [
-          ur.user_id,
-          {
-            role_id: ur.role_id,
-            role_name: roleIdToName.get(ur.role_id) || 'unknown'
-          }
-        ])
-      )
-
-      // 승인 대기 중인 신청서 조회
-      const { data: pendingRequests, error: requestError } = await supabase
-        .from('signup_requests')
-        .select('*')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-
-      if (requestError) throw requestError
-
-      // 승인 대기 사용자 변환
-      const pendingUsers: User[] = (pendingRequests || []).map(request => ({
-        id: request.id, // signup_requests의 id를 사용
-        email: request.email,
-        fullName: request.full_name,
-        role: 'pending' as const,
-        roleId: '',
-        isActive: false,
-        createdAt: request.created_at,
-        employeeId: request.employee_id,
-        department: request.department,
-        contactNumber: request.contact_number,
-        needsApproval: true,
-        requestedRole: request.requested_role as UserRole
-      }))
-      const patientCounts: Record<string, number> = {}
-      if (socialWorkers) {
-        for (const sw of socialWorkers) {
-          const { count } = await supabase
-            .from('patients')
-            .select('*', { count: 'exact', head: true })
-            .eq('primary_social_worker_id', sw.user_id)
-          
-          patientCounts[sw.user_id] = count || 0
-        }
-      }
-
-      // 데이터 변환
-      const allUsers: User[] = [
-        ...(socialWorkers || []).map(sw => ({
-          id: sw.user_id,
-          email: '', // email은 나중에 채워질 예정
-          fullName: sw.full_name,
-          role: (roleMap.get(sw.user_id)?.role_name || 'staff') as UserRole,
-          roleId: roleMap.get(sw.user_id)?.role_id || '',
-          isActive: sw.is_active,
-          createdAt: sw.created_at,
-          employeeId: sw.employee_id,
-          department: sw.department,
-          contactNumber: sw.contact_number,
-          patientCount: patientCounts[sw.user_id] || 0
-        })),
-        ...(administrators || []).map(admin => ({
-          id: admin.user_id,
-          email: '', // email은 나중에 채워질 예정
-          fullName: admin.full_name,
-          role: (roleMap.get(admin.user_id)?.role_name || 'administrator') as UserRole,
-          roleId: roleMap.get(admin.user_id)?.role_id || '',
-          isActive: admin.is_active,
-          createdAt: admin.created_at,
-          employeeId: '',
-          department: '',
-          contactNumber: ''
-        }))
-      ]
-
-      // 중복 제거
-      const uniqueUsers = Array.from(
-        new Map([...allUsers, ...pendingUsers].map(user => [user.id, user])).values()
-      ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-
-      setUsers(uniqueUsers)
-
-    } catch (error) {
-      console.error("Error in loadUsers:", error)
+    setLoading(true)
+    
+    const result = await UserManagementService.loadUsers()
+    
+    if (result.success && result.users) {
+      setUsers(result.users)
+    } else {
       console.error("Error occurred")
       toast({
         title: '오류',
-        description: '사용자 목록을 불러오는 중 오류가 발생했습니다.',
+        description: result.error || '사용자 목록을 불러오는 중 오류가 발생했습니다.',
         variant: 'destructive'
       })
-    } finally {
-      setLoading(false)
     }
+    
+    setLoading(false)
   }
 
   const handleEditUser = (user: User) => {
@@ -599,14 +446,7 @@ export default function UserManagement() {
 
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600">사용자 목록을 불러오는 중...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner message="사용자 목록을 불러오는 중..." />
   }
 
   return (
@@ -624,47 +464,13 @@ export default function UserManagement() {
       </div>
 
       {/* 필터 및 검색 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>사용자 검색</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="이름, 이메일, 직원번호로 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={filterRole} onValueChange={setFilterRole}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="역할 필터" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">전체</SelectItem>
-                <SelectItem value="administrator">관리자</SelectItem>
-                {/* social_worker는 이제 사용하지 않음 */}
-                <SelectItem value="staff">사원</SelectItem>
-                <SelectItem value="assistant_manager">주임</SelectItem>
-                <SelectItem value="section_chief">계장</SelectItem>
-                <SelectItem value="manager_level">과장</SelectItem>
-                <SelectItem value="department_head">부장</SelectItem>
-                <SelectItem value="vice_director">부원장</SelectItem>
-                <SelectItem value="director">원장</SelectItem>
-                <SelectItem value="attending_physician">주치의</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={loadUsers}>
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <UserFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filterRole={filterRole}
+        onFilterRoleChange={setFilterRole}
+        onRefresh={loadUsers}
+      />
 
       {/* 사용자 목록 */}
       <Card>
@@ -673,71 +479,15 @@ export default function UserManagement() {
           <CardDescription>총 {filteredUsers.length}명의 사용자</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>이름</TableHead>
-                <TableHead>역할</TableHead>
-                <TableHead>직원번호</TableHead>
-                <TableHead>부서</TableHead>
-                <TableHead>상태</TableHead>
-                <TableHead>담당 환자</TableHead>
-                <TableHead>가입일</TableHead>
-                <TableHead className="text-right">작업</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.fullName}</TableCell>
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{user.employeeId || '-'}</TableCell>
-                  <TableCell>{user.department || '-'}</TableCell>
-                  <TableCell>{getStatusBadge(user.isActive)}</TableCell>
-                  <TableCell>
-                    {jobTitleRoles.includes(user.role as any) ? `${user.patientCount || 0}명` : '-'}
-                  </TableCell>
-                  <TableCell>{new Date(user.createdAt).toLocaleDateString('ko-KR')}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      {user.needsApproval ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleApproveUser(user)}
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          {user.requestedRole === 'administrator' ? '관리자 승인' : '직원 승인'}
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditUser(user)}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user)
-                              setShowDeleteDialog(true)
-                            }}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <UserTable
+            users={filteredUsers}
+            onEdit={handleEditUser}
+            onDelete={(user) => {
+              setSelectedUser(user)
+              setShowDeleteDialog(true)
+            }}
+            onApprove={handleApproveUser}
+          />
         </CardContent>
       </Card>
 

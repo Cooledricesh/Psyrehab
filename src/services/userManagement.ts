@@ -6,7 +6,177 @@ export interface UpdateUserRoleParams {
   newRole: UserRole;
 }
 
+export interface User {
+  id: string
+  email: string
+  fullName: string
+  role: UserRole | 'pending'
+  roleId: string
+  isActive: boolean
+  createdAt: string
+  employeeId?: string
+  department?: string
+  contactNumber?: string
+  patientCount?: number
+  needsApproval?: boolean
+  requestedRole?: UserRole
+}
+
 export class UserManagementService {
+  /**
+   * 모든 사용자 목록을 조회합니다.
+   */
+  static async loadUsers(): Promise<{ success: boolean; users?: User[]; error?: string }> {
+    try {
+      // 직원 조회
+      const { data: socialWorkers, error: swError } = await supabase
+        .from('social_workers')
+        .select(`
+          user_id,
+          full_name,
+          employee_id,
+          department,
+          contact_number,
+          is_active,
+          created_at
+        `)
+
+      if (swError) throw swError
+
+      // 관리자 조회
+      const { data: administrators, error: adminError } = await supabase
+        .from('administrators')
+        .select(`
+          user_id,
+          full_name,
+          is_active,
+          created_at
+        `)
+
+      if (adminError) throw adminError
+
+      // 모든 사용자의 역할 정보 조회
+      const allUserIds = [
+        ...(socialWorkers || []).map(sw => sw.user_id),
+        ...(administrators || []).map(admin => admin.user_id)
+      ]
+
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select(`
+          user_id,
+          role_id
+        `)
+        .in('user_id', allUserIds)
+      
+      if (rolesError) throw rolesError
+
+      // 모든 역할 정보 조회
+      const { data: allRoles, error: allRolesError } = await supabase
+        .from('roles')
+        .select('id, role_name')
+      
+      if (allRolesError) throw allRolesError
+      
+      // 역할 ID로 역할 이름을 찾을 수 있는 맵 생성
+      const roleIdToName = new Map(
+        (allRoles || []).map(r => [r.id, r.role_name])
+      )
+
+      // 역할 정보를 맵으로 변환
+      const roleMap = new Map(
+        (userRoles || []).map(ur => [
+          ur.user_id,
+          {
+            role_id: ur.role_id,
+            role_name: roleIdToName.get(ur.role_id) || 'unknown'
+          }
+        ])
+      )
+
+      // 승인 대기 중인 신청서 조회
+      const { data: pendingRequests, error: requestError } = await supabase
+        .from('signup_requests')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (requestError) throw requestError
+
+      // 승인 대기 사용자 변환
+      const pendingUsers: User[] = (pendingRequests || []).map(request => ({
+        id: request.id, // signup_requests의 id를 사용
+        email: request.email,
+        fullName: request.full_name,
+        role: 'pending' as const,
+        roleId: '',
+        isActive: false,
+        createdAt: request.created_at,
+        employeeId: request.employee_id,
+        department: request.department,
+        contactNumber: request.contact_number,
+        needsApproval: true,
+        requestedRole: request.requested_role as UserRole
+      }))
+
+      // 환자 수 카운트
+      const patientCounts: Record<string, number> = {}
+      if (socialWorkers) {
+        for (const sw of socialWorkers) {
+          const { count } = await supabase
+            .from('patients')
+            .select('*', { count: 'exact', head: true })
+            .eq('primary_social_worker_id', sw.user_id)
+          
+          patientCounts[sw.user_id] = count || 0
+        }
+      }
+
+      // 데이터 변환
+      const allUsers: User[] = [
+        ...(socialWorkers || []).map(sw => ({
+          id: sw.user_id,
+          email: '', // email은 나중에 채워질 예정
+          fullName: sw.full_name,
+          role: (roleMap.get(sw.user_id)?.role_name || 'staff') as UserRole,
+          roleId: roleMap.get(sw.user_id)?.role_id || '',
+          isActive: sw.is_active,
+          createdAt: sw.created_at,
+          employeeId: sw.employee_id,
+          department: sw.department,
+          contactNumber: sw.contact_number,
+          patientCount: patientCounts[sw.user_id] || 0
+        })),
+        ...(administrators || []).map(admin => ({
+          id: admin.user_id,
+          email: '', // email은 나중에 채워질 예정
+          fullName: admin.full_name,
+          role: (roleMap.get(admin.user_id)?.role_name || 'administrator') as UserRole,
+          roleId: roleMap.get(admin.user_id)?.role_id || '',
+          isActive: admin.is_active,
+          createdAt: admin.created_at,
+          employeeId: '',
+          department: '',
+          contactNumber: ''
+        }))
+      ]
+
+      // 중복 제거
+      const uniqueUsers = Array.from(
+        new Map([...allUsers, ...pendingUsers].map(user => [user.id, user])).values()
+      ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+      return { success: true, users: uniqueUsers }
+
+    } catch (error) {
+      console.error("Error in loadUsers:", error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : '사용자 목록을 불러오는 중 오류가 발생했습니다.' 
+      }
+    }
+  }
+
   /**
    * 사용 가능한 역할 목록을 반환합니다.
    */

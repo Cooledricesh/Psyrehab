@@ -29,11 +29,11 @@ export const getRoleBadge = (role: string) => {
     staff: <Badge className="bg-gray-100 text-gray-800">사원</Badge>,
     assistant_manager: <Badge className="bg-indigo-100 text-indigo-800">주임</Badge>,
     section_chief: <Badge className="bg-cyan-100 text-cyan-800">계장</Badge>,
-    manager_level: <Badge className="bg-blue-100 text-blue-800">과장급</Badge>,
+    manager_level: <Badge className="bg-blue-100 text-blue-800">과장</Badge>,
     department_head: <Badge className="bg-teal-100 text-teal-800">부장</Badge>,
-    vice_director: <Badge className="bg-orange-100 text-orange-800">본부장</Badge>,
+    vice_director: <Badge className="bg-orange-100 text-orange-800">부원장</Badge>,
     director: <Badge className="bg-red-100 text-red-800">원장</Badge>,
-    attending_physician: <Badge className="bg-pink-100 text-pink-800">주치의사</Badge>
+    attending_physician: <Badge className="bg-pink-100 text-pink-800">주치의</Badge>
   }
   return badges[role] || <Badge>{role}</Badge>
 }
