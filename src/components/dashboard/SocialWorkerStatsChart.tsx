@@ -27,7 +27,7 @@ export function SocialWorkerStatsChart() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['socialWorkerStats'],
     queryFn: async () => {
-      // 사원과 주임 역할의 사용자 목록 조회
+      // 사원, 주임, 계장 역할의 사용자 목록 조회
       const { data: userRoles, error: swError } = await supabase
         .from('user_roles')
         .select(`
@@ -36,7 +36,7 @@ export function SocialWorkerStatsChart() {
             role_name
           )
         `)
-        .in('roles.role_name', ['staff', 'assistant_manager'])
+        .in('roles.role_name', ['staff', 'assistant_manager', 'section_chief'])
 
       if (swError) throw swError
 
@@ -44,7 +44,12 @@ export function SocialWorkerStatsChart() {
       const stats: SocialWorkerStats[] = await Promise.all(
         (userRoles || []).map(async (ur) => {
           const userId = ur.user_id
-          const roleName = (ur.roles as any)?.role_name === 'staff' ? '사원' : '주임'
+          const roleMap: Record<string, string> = {
+            'staff': '사원',
+            'assistant_manager': '주임',
+            'section_chief': '계장'
+          }
+          const roleName = roleMap[(ur.roles as any)?.role_name] || '알 수 없음'
 
           // 사용자 정보 조회 - social_workers 테이블에서
           const { data: userData } = await supabase
@@ -76,10 +81,8 @@ export function SocialWorkerStatsChart() {
         })
       )
 
-      // 이름순으로 정렬
-      return stats
-        .filter(stat => stat.totalPatients > 0)
-        .sort((a, b) => a.name.localeCompare(b.name))
+      // 이름순으로 정렬 (환자가 없어도 모두 표시)
+      return stats.sort((a, b) => a.name.localeCompare(b.name))
     },
     refetchInterval: 30000, // 30초마다 새로고침
   })

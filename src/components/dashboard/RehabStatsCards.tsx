@@ -15,6 +15,7 @@ interface RehabStats {
   avgSessionsPerWeek: number
   patientChangeFromLastMonth: number
   totalWeeklyCheckPending: number
+  fourWeeksAchievedCount: number
 }
 
 export function RehabStatsCards() {
@@ -28,7 +29,8 @@ export function RehabStatsCards() {
     newPatientsThisMonth: 0,
     avgSessionsPerWeek: 0,
     patientChangeFromLastMonth: 0,
-    totalWeeklyCheckPending: 0
+    totalWeeklyCheckPending: 0,
+    fourWeeksAchievedCount: 0
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -95,22 +97,22 @@ export function RehabStatsCards() {
         </CardContent>
       </Card>
 
-      {/* 활성 목표 */}
+      {/* 4주 연속 달성 */}
       <Card className="bg-gradient-to-t from-green-50 to-white">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-muted-foreground">활성 목표</div>
+            <div className="text-sm font-medium text-muted-foreground">4주 연속 달성</div>
             <Target className="h-4 w-4 text-green-600" />
           </div>
-          <div className="text-2xl font-bold text-green-600">{stats.activeGoals}</div>
+          <div className="text-2xl font-bold text-green-600">{stats.fourWeeksAchievedCount}명</div>
           <Badge variant="outline" className="w-fit">
             <TrendingUp className="h-3 w-3 mr-1" />
-            {stats.completionRate}% 완료율
+            우수 환자
           </Badge>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-xs text-muted-foreground">
-            진행 중인 재활 목표
+            4주 연속 목표 달성 환자
           </div>
         </CardContent>
       </Card>
