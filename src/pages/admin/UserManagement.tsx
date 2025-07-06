@@ -6,16 +6,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
-import { Search, UserPlus, Edit2, Trash2, AlertCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
+import { Search, UserPlus, Edit2, Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
 import type { UserRole } from '@/types/auth'
 import { ROLE_NAMES } from '@/types/auth'
 import { UserManagementService } from '@/services'
+import { jobTitleRoles, getUserTable, getRoleBadge, getStatusBadge } from '@/utils/userManagement'
 
 interface User {
   id: string
@@ -42,9 +42,6 @@ export default function UserManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const { toast } = useToast()
-  
-  // 직급별 역할 정의
-  const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'attending_physician']
 
   // 수정 폼 데이터
   const [editFormData, setEditFormData] = useState({
@@ -248,10 +245,8 @@ export default function UserManagement() {
 
       // 기본 정보 업데이트 (역할 변경 후 새로운 테이블에서)
       const table = roleChanged 
-        ? (editFormData.role === 'administrator' || editFormData.role === 'director' || editFormData.role === 'vice_director' || editFormData.role === 'department_head' || editFormData.role === 'manager_level' || editFormData.role === 'section_chief'
-          ? 'administrators' 
-          : 'social_workers')
-        : (jobTitleRoles.includes(selectedUser.role) ? 'social_workers' : 'administrators')
+        ? getUserTable(editFormData.role)
+        : getUserTable(selectedUser.role)
       
       // 모든 테이블에 동일한 필드가 있으므로 같은 데이터 사용
       const updateData = {
@@ -313,7 +308,7 @@ export default function UserManagement() {
       }
 
       // 환자가 할당된 직원은 삭제할 수 없음
-      if (jobTitleRoles.includes(selectedUser.role) && selectedUser.patientCount && selectedUser.patientCount > 0) {
+      if (jobTitleRoles.includes(selectedUser.role as any) && selectedUser.patientCount && selectedUser.patientCount > 0) {
         toast({
           title: '삭제 불가',
           description: `담당 환자가 ${selectedUser.patientCount}명 있는 직원은 삭제할 수 없습니다. 먼저 환자를 다른 직원에게 이관해주세요.`,
@@ -354,7 +349,7 @@ export default function UserManagement() {
       // 2. 프로필 삭제
       if (selectedUser.role !== 'pending') {
         // 직급별 역할들은 모두 social_workers 테이블에 저장됨
-        const table = jobTitleRoles.includes(selectedUser.role) ? 'social_workers' : 'administrators'
+        const table = getUserTable(selectedUser.role)
         
         // 프로필 삭제
         const { error: profileError } = await supabase
@@ -367,7 +362,7 @@ export default function UserManagement() {
           // 409 에러 처리
           if (profileError.code === '23503' || profileError.message.includes('violates foreign key constraint')) {
             // 관련 데이터 확인
-            if (jobTitleRoles.includes(selectedUser.role)) {
+            if (jobTitleRoles.includes(selectedUser.role as any)) {
               const relatedData = []
               
               // 평가 기록 확인
@@ -552,7 +547,7 @@ export default function UserManagement() {
       }
 
       // 4. 프로필 생성
-      const table = jobTitleRoles.includes(user.requestedRole) ? 'social_workers' : 'administrators'
+      const table = getUserTable(user.requestedRole)
       const { error: profileError } = await supabase
         .from(table)
         .insert({
@@ -608,37 +603,6 @@ export default function UserManagement() {
     return matchesSearch && matchesRole
   })
 
-  const getRoleBadge = (role: string) => {
-    const badges: Record<string, React.ReactElement> = {
-      // social_worker는 이제 사용하지 않음
-      administrator: <Badge className="bg-purple-100 text-purple-800">관리자</Badge>,
-      patient: <Badge className="bg-green-100 text-green-800">환자</Badge>,
-      pending: <Badge className="bg-yellow-100 text-yellow-800">승인 대기</Badge>,
-      staff: <Badge className="bg-gray-100 text-gray-800">사원</Badge>,
-      assistant_manager: <Badge className="bg-indigo-100 text-indigo-800">주임</Badge>,
-      section_chief: <Badge className="bg-cyan-100 text-cyan-800">계장</Badge>,
-      manager_level: <Badge className="bg-teal-100 text-teal-800">과장</Badge>,
-      department_head: <Badge className="bg-orange-100 text-orange-800">부장</Badge>,
-      vice_director: <Badge className="bg-pink-100 text-pink-800">부원장</Badge>,
-      director: <Badge className="bg-red-100 text-red-800">원장</Badge>,
-      attending_physician: <Badge className="bg-emerald-100 text-emerald-800">주치의</Badge>
-    }
-    return badges[role] || <Badge>{role}</Badge>
-  }
-
-  const getStatusBadge = (isActive: boolean) => {
-    return isActive ? (
-      <Badge className="bg-green-100 text-green-800">
-        <CheckCircle className="w-3 h-3 mr-1" />
-        활성
-      </Badge>
-    ) : (
-      <Badge className="bg-red-100 text-red-800">
-        <XCircle className="w-3 h-3 mr-1" />
-        비활성
-      </Badge>
-    )
-  }
 
   if (loading) {
     return (
@@ -737,7 +701,7 @@ export default function UserManagement() {
                   <TableCell>{user.department || '-'}</TableCell>
                   <TableCell>{getStatusBadge(user.isActive)}</TableCell>
                   <TableCell>
-                    {jobTitleRoles.includes(user.role) ? `${user.patientCount || 0}명` : '-'}
+                    {jobTitleRoles.includes(user.role as any) ? `${user.patientCount || 0}명` : '-'}
                   </TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleDateString('ko-KR')}</TableCell>
                   <TableCell className="text-right">
