@@ -56,10 +56,10 @@ export function ProgressChart() {
         <div className="grid flex-1 gap-1 text-center sm:text-left">
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            총 환자수 변화 추이
+            총 회원수 변화 추이
           </CardTitle>
           <CardDescription>
-            월별 전체 환자수 변화를 보여줍니다
+            월별 전체 회원수 변화를 보여줍니다
           </CardDescription>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -182,7 +182,7 @@ export function ProgressChart() {
           <div className="flex flex-col items-center gap-2 text-center">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-              <span className="text-sm font-medium">현재 환자수</span>
+              <span className="text-sm font-medium">현재 회원수</span>
             </div>
             <div className="text-2xl font-bold text-blue-600">{currentPatients}명</div>
             <div className="text-xs text-gray-500">마지막 월 기준</div>
@@ -200,7 +200,7 @@ export function ProgressChart() {
           <div className="flex flex-col items-center gap-2 text-center">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-green-500"></div>
-              <span className="text-sm font-medium">신규 환자</span>
+              <span className="text-sm font-medium">신규 회원</span>
             </div>
             <div className="text-2xl font-bold text-green-600">{totalNewPatients}명</div>
             <div className="text-xs text-gray-500">기간 내 신규 등록</div>

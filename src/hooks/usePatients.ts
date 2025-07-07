@@ -97,8 +97,9 @@ export function useDeletePatient() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => PatientService.deletePatient(id),
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, forceDelete = false }: { id: string; forceDelete?: boolean }) => 
+      PatientService.deletePatient(id, forceDelete),
+    onSuccess: (_, { id }) => {
       // 환자 상세 쿼리 제거
       queryClient.removeQueries({ queryKey: patientQueryKeys.detail(id) })
       // 환자 목록 쿼리 무효화

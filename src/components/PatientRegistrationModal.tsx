@@ -51,7 +51,7 @@ export default function PatientRegistrationModal({
     
     // 기본 유효성 검사
     if (!formData.full_name?.trim()) {
-      setError('환자 이름을 입력해주세요.')
+      setError('회원 이름을 입력해주세요.')
       return
     }
 
@@ -66,7 +66,7 @@ export default function PatientRegistrationModal({
     }
 
     if (!formData.patient_identifier?.trim()) {
-      setError('환자 식별번호(병록번호)를 입력해주세요.')
+      setError('병록번호를 입력해주세요.')
       return
     }
 
@@ -78,7 +78,7 @@ export default function PatientRegistrationModal({
         ...formData
       }
 
-      console.log('📝 환자 등록 시도:', submitData)
+      console.log('📝 회원 등록 시도:', submitData)
       console.log('📝 식별번호 상태:', {
         원본값: formData.patient_identifier,
         처리후: submitData.patient_identifier,
@@ -140,14 +140,14 @@ export default function PatientRegistrationModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                환자 이름 *
+                회원 이름 *
               </label>
               <input
                 type="text"
                 value={formData.full_name}
                 onChange={(e) => handleInputChange('full_name', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="환자 이름을 입력하세요"
+                placeholder="회원 이름을 입력하세요"
                 disabled={isSubmitting}
                 required
               />
@@ -155,7 +155,7 @@ export default function PatientRegistrationModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                환자 식별번호 (병록번호) *
+                병록번호 *
               </label>
               <input
                 type="text"
@@ -228,22 +228,7 @@ export default function PatientRegistrationModal({
               value={formData.doctor || ''}
               onChange={(e) => handleInputChange('doctor', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="예: 김철수 교수, 이영희 원장 등"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          {/* 연락처 정보 - 이메일 제거 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              전화번호
-            </label>
-            <input
-              type="tel"
-              value={(formData.contact_info as unknown)?.phone || ''}
-              onChange={(e) => handleContactInfoChange('phone', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="010-1234-5678"
+              placeholder="예: 김철수, 이영희 등"
               disabled={isSubmitting}
             />
           </div>

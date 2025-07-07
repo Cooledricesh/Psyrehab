@@ -116,7 +116,7 @@ export function PatientsDataTable() {
               .select('id, title, start_date, goal_type')
               .eq('patient_id', patient.id)
               .eq('goal_type', 'six_month')
-              .in('status', ['active', 'in_progress'])
+              .in('status', ['active'])
               .maybeSingle()
             
             if (error) {

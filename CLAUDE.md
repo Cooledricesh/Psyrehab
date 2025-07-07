@@ -219,3 +219,6 @@ git checkout <last-stable-commit>  # Full rollback
 
 ### Patient Status Management
 - 환자 상태 중 'inactive'는 더이상 쓰이지 않는다. 모두 'pending'으로 대체되었다.
+
+### Updates
+- 주간 체크인 이제 안씀

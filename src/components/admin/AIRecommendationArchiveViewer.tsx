@@ -35,7 +35,10 @@ import {
   ChevronDown,
   ChevronUp,
   User,
-  Award
+  Award,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { 
   useArchivedRecommendations, 
@@ -52,12 +55,24 @@ interface FilterState {
   searchTerm: string;
 }
 
+type SortField = 'diagnosis_category' | 'archived_reason' | 'usage_count' | 'completion_count' | 'completion_rate';
+type SortDirection = 'asc' | 'desc';
+
+interface SortState {
+  field: SortField | null;
+  direction: SortDirection;
+}
+
 const AIRecommendationArchiveViewer: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<FilterState>({
     diagnosisCategory: '',
     ageRange: '',
     searchTerm: ''
+  });
+  const [sortState, setSortState] = useState<SortState>({
+    field: null,
+    direction: 'desc'
   });
 
   const pageSize = 20;
@@ -71,12 +86,23 @@ const AIRecommendationArchiveViewer: React.FC = () => {
     limit: pageSize,
     offset: (currentPage - 1) * pageSize,
     diagnosisCategory: filters.diagnosisCategory || undefined,
-    ageRange: filters.ageRange || undefined
+    ageRange: filters.ageRange || undefined,
+    sortField: sortState.field || undefined,
+    sortDirection: sortState.field ? sortState.direction : undefined
   });
 
   // 액션 훅들
   const refreshData = useRefreshArchiveData();
   const exportData = useExportArchiveData();
+
+  // 정렬 핸들러
+  const handleSort = (field: SortField) => {
+    setSortState(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+    setCurrentPage(1); // 정렬 변경 시 첫 페이지로 이동
+  };
 
   // 필터 핸들러
   const handleFilterChange = (key: keyof FilterState, value: string) => {
@@ -255,19 +281,73 @@ const AIRecommendationArchiveViewer: React.FC = () => {
               <TableRow>
                 <TableHead className="w-[150px]">생성 날짜</TableHead>
                 <TableHead>6개월 목표</TableHead>
-                <TableHead className="w-[120px]">환자 정보</TableHead>
-                <TableHead className="w-[100px]">진단</TableHead>
-                <TableHead className="w-[100px]">상태</TableHead>
-                <TableHead className="w-[80px] text-center">사용</TableHead>
-                <TableHead className="w-[80px] text-center">완료</TableHead>
-                <TableHead className="w-[80px] text-center">달성률</TableHead>
+                <TableHead className="w-[100px]">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 flex items-center gap-1 font-medium"
+                    onClick={() => handleSort('diagnosis_category')}
+                  >
+                    진단
+                    {sortState.field === 'diagnosis_category' ? (
+                      sortState.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 opacity-50" />
+                    )}
+                  </Button>
+                </TableHead>
+                <TableHead className="w-[80px] text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 flex items-center gap-1 font-medium w-full justify-center"
+                    onClick={() => handleSort('usage_count')}
+                  >
+                    사용
+                    {sortState.field === 'usage_count' ? (
+                      sortState.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 opacity-50" />
+                    )}
+                  </Button>
+                </TableHead>
+                <TableHead className="w-[80px] text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 flex items-center gap-1 font-medium w-full justify-center"
+                    onClick={() => handleSort('completion_count')}
+                  >
+                    완료
+                    {sortState.field === 'completion_count' ? (
+                      sortState.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 opacity-50" />
+                    )}
+                  </Button>
+                </TableHead>
+                <TableHead className="w-[80px] text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 flex items-center gap-1 font-medium w-full justify-center"
+                    onClick={() => handleSort('completion_rate')}
+                  >
+                    달성률
+                    {sortState.field === 'completion_rate' ? (
+                      sortState.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 opacity-50" />
+                    )}
+                  </Button>
+                </TableHead>
                 <TableHead className="w-[120px] text-center">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {archivedData?.data?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     아카이빙된 목표가 없습니다.
                   </TableCell>
                 </TableRow>
@@ -432,14 +512,6 @@ const ArchivedGoalRow: React.FC<{ item: ArchivedRecommendation }> = ({ item }) =
         </div>
       </TableCell>
       
-      {/* 환자 정보 */}
-      <TableCell>
-        <div className="text-sm text-muted-foreground">
-          {item.patient_age_range && <span>{item.patient_age_range}</span>}
-          {item.patient_gender && <span className="ml-1">({item.patient_gender === 'M' ? '남' : '여'})</span>}
-        </div>
-      </TableCell>
-      
       {/* 진단 */}
       <TableCell>
         {item.diagnosis_category && (
@@ -447,13 +519,6 @@ const ArchivedGoalRow: React.FC<{ item: ArchivedRecommendation }> = ({ item }) =
             {getDiagnosisCategoryKorean(item.diagnosis_category)}
           </Badge>
         )}
-      </TableCell>
-      
-      {/* 상태 */}
-      <TableCell>
-        <Badge variant={getStatusBadgeVariant(item.archived_reason)}>
-          {getStatusText(item.archived_reason)}
-        </Badge>
       </TableCell>
       
       {/* 사용 횟수 */}
@@ -502,18 +567,7 @@ const ArchivedGoalRow: React.FC<{ item: ArchivedRecommendation }> = ({ item }) =
       
       {/* 달성률 */}
       <TableCell className="text-center">
-        {/* 여러 명이 사용한 경우 평균 달성률, 한 명만 사용한 경우 개별 달성률 표시 */}
-        {(item.average_completion_rate !== undefined && item.usage_count && item.usage_count > 1) ? (
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-1">
-              <TrendingUp className="h-3 w-3 text-green-600" />
-              <span className="text-sm font-medium text-green-600">
-                {item.average_completion_rate}%
-              </span>
-            </div>
-            <span className="text-xs text-muted-foreground">평균</span>
-          </div>
-        ) : item.completion_rate ? (
+        {item.completion_rate !== null && item.completion_rate !== undefined ? (
           <div className="flex items-center justify-center gap-1">
             <TrendingUp className="h-3 w-3 text-green-600" />
             <span className="text-sm font-medium text-green-600">
@@ -547,7 +601,7 @@ const ArchivedGoalRow: React.FC<{ item: ArchivedRecommendation }> = ({ item }) =
     {/* 완료 이력 드롭다운 */}
     {isHistoryOpen && (
       <TableRow>
-        <TableCell colSpan={9} className="bg-gray-50 dark:bg-gray-900/50 border-t-0">
+        <TableCell colSpan={7} className="bg-gray-50 dark:bg-gray-900/50 border-t-0">
           {isLoadingHistory ? (
             <div className="flex items-center justify-center py-4">
               <RefreshCw className="h-4 w-4 animate-spin mr-2" />
@@ -646,16 +700,13 @@ const GoalDetailDialog: React.FC<{ item: ArchivedRecommendation }> = ({ item }) 
                   <span className="ml-2 text-gray-900 dark:text-gray-100">{new Date(item.completion_date).toLocaleDateString('ko-KR')}</span>
                 </div>
               )}
-              {(item.average_completion_rate !== undefined && item.usage_count && item.usage_count > 1) ? (
+              {item.completion_rate !== null && item.completion_rate !== undefined ? (
                 <div>
                   <span className="text-gray-600 dark:text-gray-400">평균 달성률:</span>
-                  <span className="ml-2 font-medium text-green-600 dark:text-green-400">{item.average_completion_rate}%</span>
-                  <span className="ml-1 text-xs text-gray-500">({item.completion_count}명 평균)</span>
-                </div>
-              ) : item.completion_rate ? (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">달성률:</span>
                   <span className="ml-2 font-medium text-green-600 dark:text-green-400">{item.completion_rate}%</span>
+                  {item.completion_count && item.completion_count > 1 && (
+                    <span className="ml-1 text-xs text-gray-500">({item.completion_count}명 평균)</span>
+                  )}
                 </div>
               ) : null}
               {item.usage_count !== undefined && (

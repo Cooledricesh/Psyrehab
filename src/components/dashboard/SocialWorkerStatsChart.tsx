@@ -125,15 +125,15 @@ export function SocialWorkerStatsChart() {
         <div className="grid flex-1 gap-1 text-center sm:text-left">
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            사회복지사별 환자 관리 현황
+            담당자별 회원 관리 현황
           </CardTitle>
           <CardDescription>
-            각 사회복지사가 담당하는 환자 수와 주간 체크 미완료 현황
+            각 담당자의 회원 수와 주간 체크 미완료 현황
           </CardDescription>
         </div>
         <div className="flex gap-2">
           <Badge variant="default">
-            총 환자 {totalPatientCount}명
+            총 회원 {totalPatientCount}명
           </Badge>
           <Badge variant="destructive">
             미완료 {totalIncompleteCount}명

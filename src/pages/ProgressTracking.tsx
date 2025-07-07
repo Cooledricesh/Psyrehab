@@ -199,10 +199,10 @@ export default function ProgressTracking() {
     setShowCongrats(false);
     
     if (completedPatientId) {
-      // 환자 상태를 inactive로 변경
+      // 환자 상태를 pending으로 변경
       const { error } = await supabase
         .from('patients')
-        .update({ status: 'inactive' })
+        .update({ status: 'pending' })
         .eq('id', completedPatientId);
       
       if (error) {
@@ -214,7 +214,7 @@ export default function ProgressTracking() {
         // 이벤트 발생
         eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, {
           patientId: completedPatientId,
-          newStatus: 'inactive'
+          newStatus: 'pending'
         });
         
         // 모든 관련 쿼리 새로고침

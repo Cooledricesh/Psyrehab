@@ -135,7 +135,7 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
             .select('id')
             .eq('patient_id', patientId)
             .eq('goal_type', 'six_month')
-            .in('status', ['active', 'in_progress'])
+            .in('status', ['active'])
             
           if (!activeSixMonthGoals || activeSixMonthGoals.length === 0) return null
           
@@ -226,7 +226,7 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
             .select('id')
             .eq('patient_id', patientId)
             .eq('goal_type', 'six_month')
-            .in('status', ['active', 'in_progress'])
+            .in('status', ['active'])
             
           if (!activeSixMonthGoals || activeSixMonthGoals.length === 0) return null
           
@@ -361,7 +361,7 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
             .select('id')
             .eq('patient_id', patientId)
             .eq('goal_type', 'six_month')
-            .in('status', ['active', 'in_progress'])
+            .in('status', ['active'])
             
           if (!activeSixMonthGoals || activeSixMonthGoals.length === 0) return null
           

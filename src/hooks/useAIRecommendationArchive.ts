@@ -10,25 +10,31 @@ export const useArchivedRecommendations = ({
   offset = 0,
   diagnosisCategory,
   ageRange,
+  sortField,
+  sortDirection,
   enabled = true
 }: {
   limit?: number;
   offset?: number;
   diagnosisCategory?: string;
   ageRange?: string;
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
   enabled?: boolean;
 } = {}) => {
   return useQuery({
-    queryKey: ['archived-recommendations', { limit, offset, diagnosisCategory, ageRange }],
+    queryKey: ['archived-recommendations', { limit, offset, diagnosisCategory, ageRange, sortField, sortDirection }],
     queryFn: () => AIRecommendationArchiveService.getArchivedRecommendations({
       limit,
       offset,
       diagnosisCategory,
-      ageRange
+      ageRange,
+      sortField,
+      sortDirection
     }),
     enabled,
     staleTime: 5 * 60 * 1000, // 5분
-    cacheTime: 10 * 60 * 1000, // 10분
+    gcTime: 10 * 60 * 1000, // 10분
   });
 };
 
@@ -41,7 +47,7 @@ export const useArchiveStatistics = (enabled = true) => {
     queryFn: () => AIRecommendationArchiveService.getArchiveStatistics(),
     enabled,
     staleTime: 10 * 60 * 1000, // 10분
-    cacheTime: 30 * 60 * 1000, // 30분
+    gcTime: 30 * 60 * 1000, // 30분
   });
 };
 

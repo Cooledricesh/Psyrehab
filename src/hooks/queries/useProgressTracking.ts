@@ -32,7 +32,7 @@ export const useActivePatients = () => {
           )
         `)
         .in('id', patientIds)
-        .in('status', ['active', 'inactive'])  // discharged 제외
+        .in('status', ['active', 'pending'])  // discharged 제외
         .order('full_name', { ascending: true });  // 이름순으로 정렬
 
       if (error) throw error;

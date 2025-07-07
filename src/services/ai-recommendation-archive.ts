@@ -160,12 +160,16 @@ export class AIRecommendationArchiveService {
     limit = 100,
     offset = 0,
     diagnosisCategory,
-    ageRange
+    ageRange,
+    sortField,
+    sortDirection
   }: {
     limit?: number;
     offset?: number;
     diagnosisCategory?: string;
     ageRange?: string;
+    sortField?: string;
+    sortDirection?: 'asc' | 'desc';
   } = {}): Promise<{
     data: ArchivedRecommendation[];
     count: number;
@@ -182,8 +186,23 @@ export class AIRecommendationArchiveService {
       query = query.eq('patient_age_range', ageRange);
     }
 
+    // 정렬 설정
+    if (sortField && sortDirection) {
+      // completion_rate 정렬 시 NULL 값을 항상 뒤로
+      if (sortField === 'completion_rate') {
+        query = query.order(sortField, { 
+          ascending: sortDirection === 'asc',
+          nullsFirst: false  // NULL 값을 항상 마지막에 표시
+        });
+      } else {
+        query = query.order(sortField, { ascending: sortDirection === 'asc' });
+      }
+    } else {
+      // 기본 정렬: 아카이빙 날짜 내림차순
+      query = query.order('archived_at', { ascending: false });
+    }
+
     const { data, error, count } = await query
-      .order('archived_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -191,20 +210,9 @@ export class AIRecommendationArchiveService {
       throw error;
     }
 
-    // 각 아카이빙된 목표의 사용/완료 횟수 계산
-    const enrichedData = await Promise.all((data || []).map(async (item) => {
-      const usageStats = await this.getGoalUsageStats(item);
-      return {
-        ...item,
-        usage_count: usageStats.usage_count,
-        completion_count: usageStats.completion_count,
-        // 여러 명이 사용한 경우 평균 달성률로 표시
-        average_completion_rate: usageStats.average_completion_rate
-      };
-    }));
-
+    // 데이터베이스에 저장된 통계를 그대로 사용
     return {
-      data: enrichedData,
+      data: data || [],
       count: count || 0
     };
   }
@@ -1099,6 +1107,58 @@ export class AIRecommendationArchiveService {
     } catch (error) {
       console.error('❌ 목표 완료 이력 조회 중 오류:', error);
       return { patients: [] };
+    }
+  }
+
+  /**
+   * 모든 아카이빙된 목표의 통계 업데이트
+   */
+  static async updateAllArchiveStats(): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('📊 전체 아카이빙 통계 업데이트 시작...');
+      
+      const { data, error } = await supabase
+        .rpc('update_archive_stats');
+      
+      if (error) {
+        console.error('❌ 통계 업데이트 실패:', error);
+        return { success: false, error: error.message };
+      }
+      
+      console.log('✅ 전체 아카이빙 통계 업데이트 완료');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ 통계 업데이트 중 오류:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
+      };
+    }
+  }
+
+  /**
+   * 특정 아카이빙된 목표의 통계 업데이트
+   */
+  static async updateSingleArchiveStats(archiveId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('📊 개별 아카이빙 통계 업데이트:', archiveId);
+      
+      const { data, error } = await supabase
+        .rpc('update_single_archive_stats', { archive_id: archiveId });
+      
+      if (error) {
+        console.error('❌ 개별 통계 업데이트 실패:', error);
+        return { success: false, error: error.message };
+      }
+      
+      console.log('✅ 개별 아카이빙 통계 업데이트 완료');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ 개별 통계 업데이트 중 오류:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
+      };
     }
   }
 

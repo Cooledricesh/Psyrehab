@@ -256,23 +256,137 @@ export class PatientService {
     }
   }
 
-  // 환자 삭제 (소프트 삭제 - 상태를 pending으로 변경)
-  static async deletePatient(id: string) {
-    const { data, error } = await supabase
-      .from('patients')
-      .update({ 
-        status: 'pending',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single()
+  // 환자 삭제 (실제 삭제)
+  static async deletePatient(id: string, forceDelete: boolean = false) {
+    try {
+      // 1. 연관된 데이터 확인
+      const relatedData = await this.checkPatientRelatedData(id)
 
-    if (error) {
-      throw new Error(`환자 삭제 중 오류가 발생했습니다: ${error.message}`)
+      // 2. 연관된 데이터가 있고 강제 삭제가 아닌 경우 에러
+      if (relatedData.length > 0 && !forceDelete) {
+        const dataList = relatedData.map(item => `${item.count}개의 ${item.name}`).join(', ')
+        throw new Error(`이 환자와 연결된 데이터가 있어 삭제할 수 없습니다: ${dataList}`)
+      }
+
+      // 3. 강제 삭제인 경우 연관 데이터부터 삭제
+      if (forceDelete && relatedData.length > 0) {
+        for (const { table } of relatedData) {
+          if (table === 'ai_recommendation_archive') {
+            // AI 추천 아카이빙은 assessment_id로 연결됨
+            const { error } = await supabase
+              .from(table)
+              .delete()
+              .eq('original_assessment_id', id)
+
+            if (error) {
+              throw new Error(`연관 데이터 삭제 실패: ${table}`)
+            }
+          } else if (table === 'rehabilitation_goals') {
+            // 재활 목표는 진행 중인 것만 삭제 (완료된 목표는 보존)
+            const { error } = await supabase
+              .from(table)
+              .delete()
+              .eq('patient_id', id)
+              .neq('status', 'completed')
+
+            if (error) {
+              throw new Error(`진행 중인 재활 목표 삭제 실패`)
+            }
+          } else {
+            // 다른 테이블들은 patient_id로 연결됨
+            const { error } = await supabase
+              .from(table)
+              .delete()
+              .eq('patient_id', id)
+
+            if (error) {
+              throw new Error(`연관 데이터 삭제 실패: ${table}`)
+            }
+          }
+        }
+      }
+
+      // 4. 환자 삭제
+      const { error: deleteError } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', id)
+
+      if (deleteError) {
+        // 외래키 제약 조건 오류 처리
+        if (deleteError.code === '23503' || deleteError.message.includes('violates foreign key constraint')) {
+          throw new Error('연결된 데이터로 인해 환자를 삭제할 수 없습니다. 먼저 관련 데이터를 정리해주세요.')
+        }
+        
+        throw new Error(deleteError.message)
+      }
+
+      return { success: true }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // 환자와 연관된 모든 데이터 확인
+  static async checkPatientRelatedData(patientId: string) {
+    const relatedTables = [
+      { table: 'ai_goal_recommendations', name: 'AI 목표 추천' },
+      { table: 'assessment_milestones', name: '평가 마일스톤' },
+      { table: 'assessments', name: '평가 기록' },
+      { table: 'detailed_assessments', name: '상세 평가' },
+      { table: 'patient_transfer_log', name: '환자 이관 로그' },
+      { table: 'progress_insights', name: '진행 인사이트' },
+      { table: 'service_records', name: '서비스 기록' }
+    ]
+
+    const relatedData = []
+    
+    for (const { table, name } of relatedTables) {
+      const { count, error } = await supabase
+        .from(table)
+        .select('*', { count: 'exact', head: true })
+        .eq('patient_id', patientId)
+
+      if (error) {
+        console.error(`${table} 조회 실패:`, error)
+        continue
+      }
+
+      if (count && count > 0) {
+        relatedData.push({ table, name, count })
+      }
     }
 
-    return data
+    // 진행 중인 재활 목표만 확인 (완료된 목표는 보존)
+    const { count: activeGoalCount, error: goalError } = await supabase
+      .from('rehabilitation_goals')
+      .select('*', { count: 'exact', head: true })
+      .eq('patient_id', patientId)
+      .neq('status', 'completed')
+
+    if (!goalError && activeGoalCount && activeGoalCount > 0) {
+      relatedData.push({ 
+        table: 'rehabilitation_goals', 
+        name: '진행 중인 재활 목표', 
+        count: activeGoalCount 
+      })
+    }
+
+    // AI 추천 아카이빙 데이터도 확인 (간접 연관)
+    const { count: archiveCount, error: archiveError } = await supabase
+      .from('ai_recommendation_archive')
+      .select('*', { count: 'exact', head: true })
+      .eq('original_assessment_id', patientId)
+
+    if (!archiveError && archiveCount && archiveCount > 0) {
+      relatedData.push({ 
+        table: 'ai_recommendation_archive', 
+        name: 'AI 추천 아카이빙', 
+        count: archiveCount 
+      })
+    }
+
+    return relatedData
   }
 
   // 사회복지사 배정
