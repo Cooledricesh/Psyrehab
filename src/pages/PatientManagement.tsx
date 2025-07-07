@@ -204,6 +204,9 @@ export default function PatientManagement() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     진단명
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    주치의
+                  </th>
                   {canViewAssignee && (
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       담당자
@@ -233,6 +236,9 @@ export default function PatientManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{patient.diagnosis}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{patient.doctor || '-'}</div>
                     </td>
                     {canViewAssignee && (
                       <td className="px-6 py-4 whitespace-nowrap">

@@ -626,7 +626,9 @@ export class AIRecommendationArchiveService {
     let query = supabase
       .from('ai_recommendation_archive')
       .select('*')
-      .eq('archived_reason', 'successfully_completed');
+      .eq('archived_reason', 'successfully_completed')
+      .not('completion_rate', 'is', null)  // completion_rate가 NULL이 아닌 것만
+      .gt('usage_count', 0);  // usage_count가 0보다 큰 것만
 
     // excludeIds가 있을 때만 not 조건 추가
     if (params.excludeIds && params.excludeIds.length > 0) {
@@ -634,7 +636,8 @@ export class AIRecommendationArchiveService {
     }
 
     const { data, error } = await query
-      .order('completion_rate', { ascending: false, nullsFirst: false })
+      .order('usage_count', { ascending: false })  // 사용 횟수로 먼저 정렬
+      .order('completion_rate', { ascending: false, nullsFirst: false })  // 그 다음 달성률로 정렬
       .order('archived_at', { ascending: false })
       .limit(params.limit);
 
@@ -643,8 +646,13 @@ export class AIRecommendationArchiveService {
       return [];
     }
 
+    // 실제로 통계가 있는 목표만 반환
+    const validGoals = (data || []).filter(archive => 
+      archive.usage_count > 0 && archive.completion_rate !== null
+    );
+
     // matchInfo 추가
-    return (data || []).map(archive => ({
+    return validGoals.map(archive => ({
       ...archive,
       matchInfo: {
         matchType: 'popular' as const,

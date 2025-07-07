@@ -153,12 +153,12 @@ export function ArchivedGoalSelection({
           </Alert>
         )}
 
-        {archivedGoals.length > 0 ? (
-          <>
-            <div className="space-y-4">
-              <h3 className="font-medium">유사한 환자의 목표 ({archivedGoals.length}개)</h3>
-              <div className="space-y-3">
-                {archivedGoals.map((goal) => {
+        {/* 유사한 환자의 목표 섹션 */}
+        <div className="space-y-4">
+          <h3 className="font-medium">유사한 환자의 목표 ({archivedGoals.length}개)</h3>
+          {archivedGoals.length > 0 ? (
+            <div className="space-y-3">
+              {archivedGoals.map((goal) => {
                   const goalData = goal.archived_goal_data[0];
                   return (
                     <Card 
@@ -253,13 +253,20 @@ export function ArchivedGoalSelection({
                     </Card>
                   );
                 })}
-              </div>
             </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                유사한 환자의 목표를 찾을 수 없습니다
+              </p>
+            </div>
+          )}
+        </div>
 
-            {/* 전체 아카이빙된 목표 섹션 */}
-            <Separator className="my-6" />
-            
-            <div className="space-y-4" ref={allGoalsRef}>
+        {/* 전체 아카이빙된 목표 섹션 */}
+        <Separator className="my-6" />
+        
+        <div className="space-y-4" ref={allGoalsRef}>
               <h3 className="font-medium flex items-center gap-2">
                 <Archive className="h-4 w-4" />
                 전체 아카이빙된 목표 ({totalCount}개)
@@ -381,46 +388,35 @@ export function ArchivedGoalSelection({
                   </PaginationContent>
                 </Pagination>
               )}
-            </div>
+        </div>
 
-            <div className="flex gap-3 mt-6">
-              {onBack && (
-                <Button
-                  onClick={onBack}
-                  variant="outline"
-                >
-                  이전
-                </Button>
-              )}
-              <Button
-                onClick={handleSelectArchived}
-                disabled={!selectedGoalId}
-                className="flex-1"
-              >
-                선택한 목표 사용하기
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button
-                onClick={onGenerateNew}
-                variant="outline"
-                className="flex-1"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                AI로 새 목표 생성
-              </Button>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-8 space-y-4">
-            <p className="text-muted-foreground">
-              유사한 환자의 목표를 찾을 수 없습니다
-            </p>
-            <Button onClick={onGenerateNew} className="mx-auto">
-              <Sparkles className="mr-2 h-4 w-4" />
-              AI로 새 목표 생성하기
+        {/* 버튼 섹션 */}
+        <div className="flex gap-3 mt-6">
+          {onBack && (
+            <Button
+              onClick={onBack}
+              variant="outline"
+            >
+              이전
             </Button>
-          </div>
-        )}
+          )}
+          <Button
+            onClick={handleSelectArchived}
+            disabled={!selectedGoalId}
+            className="flex-1"
+          >
+            선택한 목표 사용하기
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+          <Button
+            onClick={onGenerateNew}
+            variant="outline"
+            className="flex-1"
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            AI로 새 목표 생성
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

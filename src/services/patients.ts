@@ -331,11 +331,8 @@ export class PatientService {
   static async checkPatientRelatedData(patientId: string) {
     const relatedTables = [
       { table: 'ai_goal_recommendations', name: 'AI 목표 추천' },
-      { table: 'assessment_milestones', name: '평가 마일스톤' },
       { table: 'assessments', name: '평가 기록' },
-      { table: 'detailed_assessments', name: '상세 평가' },
       { table: 'patient_transfer_log', name: '환자 이관 로그' },
-      { table: 'progress_insights', name: '진행 인사이트' },
       { table: 'service_records', name: '서비스 기록' }
     ]
 

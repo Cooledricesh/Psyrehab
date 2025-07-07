@@ -107,38 +107,45 @@ export function PatientsDataTable() {
         getPatientStats()
       ])
       
-      // 각 환자의 6개월 목표 정보 가져오기
-      const patientsWithGoals = await Promise.all(
-        patientsResult.map(async (patient) => {
-          try {
-            const { data: goalData, error } = await supabase
-              .from('rehabilitation_goals')
-              .select('id, title, start_date, goal_type')
-              .eq('patient_id', patient.id)
-              .eq('goal_type', 'six_month')
-              .in('status', ['active'])
-              .maybeSingle()
-            
-            if (error) {
-              console.error(`목표 조회 실패 - 환자 ${patient.id}:`, error)
-              return { ...patient, activeGoal: undefined } as PatientWithGoal
-            }
-            
-            return {
-              ...patient,
-              activeGoal: goalData ? {
-                id: goalData.id,
-                title: goalData.title,
-                start_date: goalData.start_date,
-                goal_type: goalData.goal_type as 'weekly' | 'monthly' | 'six_month'
-              } : undefined
-            } as PatientWithGoal
-          } catch (err) {
-            console.error(`목표 조회 중 예외 발생 - 환자 ${patient.id}:`, err)
-            return { ...patient, activeGoal: undefined } as PatientWithGoal
+      // 모든 환자의 ID 목록 가져오기
+      const patientIds = patientsResult.map(p => p.id)
+      
+      // 한 번의 쿼리로 모든 활성 6개월 목표 가져오기
+      let activeGoals: any[] = []
+      if (patientIds.length > 0) {
+        const { data: goalsData, error: goalsError } = await supabase
+          .from('rehabilitation_goals')
+          .select('id, title, start_date, goal_type, patient_id')
+          .in('patient_id', patientIds)
+          .eq('goal_type', 'six_month')
+          .in('status', ['active'])
+          .order('start_date', { ascending: false })
+        
+        if (goalsError) {
+          console.error('목표 일괄 조회 실패:', goalsError)
+        } else {
+          activeGoals = goalsData || []
+        }
+      }
+      
+      // 환자 ID별로 목표 매핑 (각 환자의 가장 최근 목표만 저장)
+      const goalsByPatientId = activeGoals.reduce((acc, goal) => {
+        if (!acc[goal.patient_id]) {
+          acc[goal.patient_id] = {
+            id: goal.id,
+            title: goal.title,
+            start_date: goal.start_date,
+            goal_type: goal.goal_type as 'weekly' | 'monthly' | 'six_month'
           }
-        })
-      )
+        }
+        return acc
+      }, {} as Record<string, any>)
+      
+      // 환자 데이터와 목표 결합
+      const patientsWithGoals = patientsResult.map(patient => ({
+        ...patient,
+        activeGoal: goalsByPatientId[patient.id] || undefined
+      } as PatientWithGoal))
 
       setPatients(patientsWithGoals)
       setStats(statsResult)
@@ -303,6 +310,7 @@ export function PatientsDataTable() {
                 <TableHead>환자명</TableHead>
                 <TableHead>나이</TableHead>
                 <TableHead>성별</TableHead>
+                <TableHead>주치의</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead>6개월 목표</TableHead>
                 <TableHead>목표 시작 날짜</TableHead>
@@ -313,7 +321,7 @@ export function PatientsDataTable() {
             <TableBody>
               {filteredPatients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={canViewAssignee ? 8 : 7} className="h-24 text-center">
+                  <TableCell colSpan={canViewAssignee ? 9 : 8} className="h-24 text-center">
                     검색 조건에 맞는 회원이 없습니다.
                   </TableCell>
                 </TableRow>
@@ -323,6 +331,7 @@ export function PatientsDataTable() {
                     <TableCell className="font-medium">{patient.name}</TableCell>
                     <TableCell>{patient.age ? `${patient.age}세` : '-'}</TableCell>
                     <TableCell>{getGenderText(patient.gender || '')}</TableCell>
+                    <TableCell>{patient.doctor || '-'}</TableCell>
                     <TableCell>{getStatusBadge(patient)}</TableCell>
                     <TableCell>
                       {patient.activeGoal ? (
