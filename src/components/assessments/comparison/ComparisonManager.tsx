@@ -33,6 +33,7 @@ import {
   type ComparisonFilters as FiltersType,
   type GroupOptions
 } from './utils/comparisonUtils'
+import { handleApiError } from '@/utils/error-handler'
 
 export type ComparisonMode = 'time' | 'patient' | 'group' | 'progress'
 export type ViewMode = 'overview' | 'detailed' | 'charts' | 'summary'
@@ -176,8 +177,8 @@ export const ComparisonManager: React.FC<ComparisonManagerProps> = ({
         onDataChange(comparisonResults)
       }
 
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'ComparisonManager.executeComparison')
     } finally {
       setIsLoading(false)
     }

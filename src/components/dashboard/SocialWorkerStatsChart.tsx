@@ -14,6 +14,7 @@ import { Loader2, Users, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { getSocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
 import { Badge } from '@/components/ui/badge'
+import { handleApiError } from '@/utils/error-handler'
 
 interface SocialWorkerStats {
   name: string
@@ -62,7 +63,7 @@ export function SocialWorkerStatsChart() {
         if (userError || !userData) {
           // PGRST116 에러는 비활성 사용자일 때 발생하는 정상적인 상황
           if (userError && userError.code !== '406' && userError.code !== 'PGRST116') {
-            console.error(`사용자 정보 조회 실패 (${userId}):`, userError)
+            handleApiError(userError, `SocialWorkerStatsChart.fetchUserData.${userId}`)
           }
           // 비활성 사용자는 대시보드에 표시하지 않음
           return null

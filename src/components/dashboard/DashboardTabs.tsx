@@ -3,6 +3,7 @@ import { SimpleDashboard } from './SimpleDashboard'
 import { AdvancedDashboard } from './AdvancedDashboard'
 import { supabase } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
+import { handleApiError } from '@/utils/error-handler'
 
 export function DashboardTabs() {
   const [activeTab, setActiveTab] = useState('simple')
@@ -28,7 +29,7 @@ export function DashboardTabs() {
         const roleName = (userRoleData as any)?.roles?.role_name
         setUserRole(roleName)
       } catch (error) {
-        console.error('Error fetching user role:', error)
+        handleApiError(error, 'DashboardTabs.fetchUserRole')
       } finally {
         setIsLoading(false)
       }

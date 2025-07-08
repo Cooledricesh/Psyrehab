@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
+import { handleApiError } from '@/utils/error-handler'
 
 interface ManagementProtectedRouteProps {
   children: React.ReactNode
@@ -45,8 +46,8 @@ export function ManagementProtectedRoute({ children }: ManagementProtectedRouteP
       } else {
         setHasAccess(false)
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'ManagementProtectedRoute.checkManagementAccess')
       setHasAccess(false)
     } finally {
       setIsLoading(false)

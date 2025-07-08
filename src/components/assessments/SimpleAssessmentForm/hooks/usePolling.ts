@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { POLLING_CONFIG } from '../constants'
+import { handleApiError } from '@/utils/error-handler'
 
 interface UsePollingProps {
   shouldPoll: boolean
@@ -80,8 +81,8 @@ export function usePolling({
             })
           }
         }
-      } catch {
-        console.error("Error occurred")
+      } catch (error) {
+        handleApiError(error, 'usePolling.poll')
         attempts++
         if (attempts >= maxAttempts) {
           clearInterval(intervalId)
