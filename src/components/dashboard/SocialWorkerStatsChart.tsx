@@ -40,46 +40,59 @@ export function SocialWorkerStatsChart() {
 
       if (swError) throw swError
 
-      // 각 사용자의 정보 조회
-      const stats: SocialWorkerStats[] = await Promise.all(
-        (userRoles || []).map(async (ur) => {
-          const userId = ur.user_id
-          const roleMap: Record<string, string> = {
-            'staff': '사원',
-            'assistant_manager': '주임',
-            'section_chief': '계장'
+      // 각 사용자의 정보 조회 (활성 사용자만)
+      const statsPromises = (userRoles || []).map(async (ur) => {
+        const userId = ur.user_id
+        const roleMap: Record<string, string> = {
+          'staff': '사원',
+          'assistant_manager': '주임',
+          'section_chief': '계장'
+        }
+        const roleName = roleMap[(ur.roles as any)?.role_name] || '알 수 없음'
+
+        // 사용자 정보 조회 - social_workers 테이블에서 (활성 사용자만)
+        const { data: userData, error: userError } = await supabase
+          .from('social_workers')
+          .select('full_name, is_active')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .maybeSingle()
+        
+        // 에러가 발생하거나 비활성 사용자는 null 반환
+        if (userError || !userData) {
+          // PGRST116 에러는 비활성 사용자일 때 발생하는 정상적인 상황
+          if (userError && userError.code !== '406' && userError.code !== 'PGRST116') {
+            console.error(`사용자 정보 조회 실패 (${userId}):`, userError)
           }
-          const roleName = roleMap[(ur.roles as any)?.role_name] || '알 수 없음'
+          // 비활성 사용자는 대시보드에 표시하지 않음
+          return null
+        }
+        
+        const userName = userData.full_name || '이름 없음'
 
-          // 사용자 정보 조회 - social_workers 테이블에서
-          const { data: userData } = await supabase
-            .from('social_workers')
-            .select('full_name')
-            .eq('user_id', userId)
-            .single()
-          
-          const userName = userData?.full_name || '이름 없음'
+        // 담당 환자 수 조회 (퇴원 환자 제외)
+        const { count: totalPatients } = await supabase
+          .from('patients')
+          .select('*', { count: 'exact', head: true })
+          .eq('primary_social_worker_id', userId)
+          .neq('status', 'discharged')
 
-          // 담당 환자 수 조회 (퇴원 환자 제외)
-          const { count: totalPatients } = await supabase
-            .from('patients')
-            .select('*', { count: 'exact', head: true })
-            .eq('primary_social_worker_id', userId)
-            .neq('status', 'discharged')
+        // 사회복지사 대시보드 통계 사용하여 주간 체크 미완료 수 계산
+        const dashboardStats = await getSocialWorkerDashboardStats(userId)
+        const incompleteChecks = dashboardStats.weeklyCheckPending.length
 
-          // 사회복지사 대시보드 통계 사용하여 주간 체크 미완료 수 계산
-          const dashboardStats = await getSocialWorkerDashboardStats(userId)
-          const incompleteChecks = dashboardStats.weeklyCheckPending.length
+        return {
+          name: `${userName} (${roleName})`,
+          role: roleName,
+          totalPatients: totalPatients || 0,
+          incompleteChecks: incompleteChecks,
+          completedChecks: (totalPatients || 0) - incompleteChecks, // 완료된 체크 수
+        }
+      })
 
-          return {
-            name: `${userName} (${roleName})`,
-            role: roleName,
-            totalPatients: totalPatients || 0,
-            incompleteChecks: incompleteChecks,
-            completedChecks: (totalPatients || 0) - incompleteChecks, // 완료된 체크 수
-          }
-        })
-      )
+      const allStats = await Promise.all(statsPromises)
+      // null 값 필터링 (비활성 사용자 제외)
+      const stats: SocialWorkerStats[] = allStats.filter((stat): stat is SocialWorkerStats => stat !== null)
 
       // 이름순으로 정렬 (환자가 없어도 모두 표시)
       return stats.sort((a, b) => a.name.localeCompare(b.name))

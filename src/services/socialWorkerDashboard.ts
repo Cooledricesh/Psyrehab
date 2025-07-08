@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { startOfWeek, differenceInWeeks, subWeeks } from 'date-fns'
+import { handleApiError } from '@/utils/error-handler'
 
 // 캐시 저장소
 const cache = new Map<string, { data: any, timestamp: number }>()
@@ -82,7 +83,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
       // 캐시 크기 관리
       manageCacheSize(permissionCache, MAX_PERMISSION_CACHE_SIZE)
     } catch (error) {
-      console.error('Permission check failed:', error)
+      handleApiError(error, 'socialWorkerDashboard.getAssignedPatients.permissionCheck')
       canViewAllData = false
     }
   }
@@ -100,7 +101,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
   const { data, error } = await query
 
   if (error) {
-    console.error('Error fetching patients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getAssignedPatients')
     return []
   }
   
@@ -179,7 +180,7 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
             start_date: pendingGoal.start_date
           }
         } catch (error) {
-          console.error(`Error processing patient ${patientId}:`, error)
+          handleApiError(error, `socialWorkerDashboard.getWeeklyCheckPendingPatients.patient.${patientId}`)
           return null
         }
       })
@@ -190,7 +191,7 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 
     return pendingPatients
   } catch (error) {
-    console.error('Error in getWeeklyCheckPendingPatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getWeeklyCheckPendingPatients')
     return []
   }
 }
@@ -289,7 +290,7 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 
           return null
         } catch (error) {
-          console.error(`Error processing patient ${patientId}:`, error)
+          handleApiError(error, `socialWorkerDashboard.getConsecutiveFailurePatients.patient.${patientId}`)
           return null
         }
       })
@@ -300,7 +301,7 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 
     return consecutiveFailures
   } catch (error) {
-    console.error('Error in getConsecutiveFailurePatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getConsecutiveFailurePatients')
     return []
   }
 }
@@ -315,7 +316,7 @@ export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]>
       .eq('status', 'pending')
 
     if (patientsError || !pendingPatients) {
-      console.error('Error fetching patients:', patientsError)
+      handleApiError(patientsError, 'socialWorkerDashboard.getGoalsNotSetPatients')
       return []
     }
 
@@ -325,7 +326,7 @@ export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]>
       patient_identifier: p.patient_identifier
     }))
   } catch (error) {
-    console.error('Error in getGoalsNotSetPatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getGoalsNotSetPatients')
     return []
   }
 }
@@ -424,7 +425,7 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
 
           return null
         } catch (error) {
-          console.error(`Error processing patient ${patientId}:`, error)
+          handleApiError(error, `socialWorkerDashboard.get4WeeksAchievedPatients.patient.${patientId}`)
           return null
         }
       })
@@ -435,7 +436,7 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
 
     return fourWeeksAchieved
   } catch (error) {
-    console.error('Error in get4WeeksAchievedPatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.get4WeeksAchievedPatients')
     return []
   }
 }
@@ -507,7 +508,7 @@ export async function getSocialWorkerDashboardStats(userId: string): Promise<Soc
     
     return result
   } catch (error) {
-    console.error('Error in getSocialWorkerDashboardStats:', error)
+    handleApiError(error, 'socialWorkerDashboard.getSocialWorkerDashboardStats')
     return {
       weeklyCheckPending: [],
       consecutiveFailures: [],

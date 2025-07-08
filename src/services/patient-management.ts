@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 // 환자 관리 관련 타입 정의
 export interface Patient {
@@ -36,8 +37,8 @@ export interface CreatePatientData {
   gender?: string
   primary_diagnosis?: string
   doctor?: string
-  contact_info?: unknown
-  additional_info?: unknown
+  contact_info?: any
+  additional_info?: any
   status?: string
 }
 
@@ -66,15 +67,15 @@ export const getPatients = async (): Promise<Patient[]> => {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'PatientManagement.getPatients')
       return []
     }
 
     // 디버깅: 원본 데이터 구조 확인
 
-    return data?.map((patient: unknown) => {
+    return data?.map((patient: any) => {
       // 활성 6개월 목표가 있는지 확인
-      const hasActiveGoal = patient.rehabilitation_goals?.some((goal: unknown) => 
+      const hasActiveGoal = patient.rehabilitation_goals?.some((goal: any) => 
         goal.goal_type === 'six_month' && 
         goal.plan_status === 'active' && 
         goal.status === 'active'
@@ -100,8 +101,8 @@ export const getPatients = async (): Promise<Patient[]> => {
         social_worker: patient.social_worker
       }
     }) || []
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'PatientManagement.getPatients')
     return []
   }
 }
@@ -142,7 +143,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
         doctor: patientData.doctor || null,
         contact_info: patientData.contact_info || null,
         additional_info: {
-          ...patientData.additional_info,
+          ...(patientData.additional_info || {}),
           primary_diagnosis: patientData.primary_diagnosis || null
         },
         status: patientData.status || 'pending',  // 기본값을 pending으로 변경
@@ -158,7 +159,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
       .single()
 
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'PatientManagement.createPatient')
       throw new Error(error.message)
     }
 
@@ -179,7 +180,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
       emergency_contact: data.emergency_contact
     }
   } catch (err) {
-    console.error("Error occurred:", err)
+    handleApiError(err, 'PatientManagement.createPatient')
     throw err
   }
 }
@@ -198,7 +199,7 @@ const generatePatientIdentifier = async (): Promise<string> => {
       .order('patient_identifier', { ascending: false })
 
     if (error) {
-      console.error('식별번호 조회 중 오류:', error)
+      handleApiError(error, 'PatientManagement.generatePatientIdentifier')
       // 에러 시 타임스탬프 기반 고유 번호 생성
       const timestamp = Date.now().toString().slice(-6)
       return `${prefix}${timestamp}`
@@ -226,7 +227,7 @@ const generatePatientIdentifier = async (): Promise<string> => {
     
     return `${prefix}${paddedNumber}`
   } catch (err) {
-    console.error('식별번호 생성 중 심각한 오류:', err)
+    handleApiError(err, 'PatientManagement.generatePatientIdentifier')
     // 최후의 수단: 랜덤 번호
     const random = Math.floor(Math.random() * 90000) + 10000
     return `P${new Date().getFullYear()}${random}`
@@ -234,24 +235,24 @@ const generatePatientIdentifier = async (): Promise<string> => {
 }
 
 // 성별 매핑 함수 - 다양한 형태의 성별 값을 표준화
-const mapGender = (gender: unknown): string => {
+const mapGender = (gender: any): string => {
   if (!gender) {
     console.log('🚫 성별 정보 없음 (null/undefined)')
     return '정보 없음'
   }
   
   const genderStr = String(gender).toLowerCase().trim()
-  console.log(`🔍 성별 매핑 시도: "${gender}" -> "${genderStr}"`)
+  // 디버깅용 로그 제거
   
   // 남성 패턴들
   if (['male', 'm', '남성', '남', 'man', '1'].includes(genderStr)) {
-    console.log(`✅ 남성으로 매핑됨`)
+    // 남성으로 매핑
     return 'male'
   }
   
   // 여성 패턴들
   if (['female', 'f', '여성', '여', 'woman', '2'].includes(genderStr)) {
-    console.log(`✅ 여성으로 매핑됨`)
+    // 여성으로 매핑
     return 'female'
   }
   
@@ -266,8 +267,8 @@ const mapGender = (gender: unknown): string => {
 }
 
 // 진단 정보 추출 함수 - 여러 소스에서 진단 정보 찾기
-const extractDiagnosis = (patient: unknown): string => {
-  console.log(`🔍 진단 정보 추출 시도 - 환자: ${patient.full_name}`)
+const extractDiagnosis = (patient: any): string => {
+  // 진단 정보 추출
   
   // 1. 직접 컬럼들 확인
   if (patient.diagnosis) {
@@ -286,32 +287,32 @@ const extractDiagnosis = (patient: unknown): string => {
       ? JSON.parse(patient.additional_info) 
       : patient.additional_info
     
-    console.log(`🔍 additional_info 내용:`, additionalInfo)
+    // additional_info 내용 확인
     
     if (additionalInfo?.diagnosis) {
-      console.log(`✅ additional_info.diagnosis에서 발견: ${additionalInfo.diagnosis}`)
+      // diagnosis 필드에서 발견
       return additionalInfo.diagnosis
     }
     
     if (additionalInfo?.primary_diagnosis) {
-      console.log(`✅ additional_info.primary_diagnosis에서 발견: ${additionalInfo.primary_diagnosis}`)
+      // primary_diagnosis 필드에서 발견
       return additionalInfo.primary_diagnosis
     }
     
     if (additionalInfo?.medical_history) {
-      console.log(`✅ additional_info.medical_history에서 발견: ${additionalInfo.medical_history}`)
+      // medical_history 필드에서 발견
       return additionalInfo.medical_history
     }
     
     if (additionalInfo?.notes) {
-      console.log(`✅ additional_info.notes에서 발견: ${additionalInfo.notes}`)
+      // notes 필드에서 발견
       return additionalInfo.notes
     }
   }
   
   // 3. 재활 목표에서 유추하기
   if (patient.rehabilitation_goals && patient.rehabilitation_goals.length > 0) {
-    const goalTitles = patient.rehabilitation_goals.map((g: unknown) => g.title).join(', ')
+    const goalTitles = patient.rehabilitation_goals.map((g: any) => g.title).join(', ')
     console.log(`🎯 재활 목표에서 유추: ${goalTitles}`)
     
     // 일반적인 정신건강 진단명 패턴 찾기
@@ -327,7 +328,7 @@ const extractDiagnosis = (patient: unknown): string => {
     return `진단명 확인 필요 (재활 목표: ${goalTitles.substring(0, 50)}...)`
   }
 
-  console.log(`❌ 진단 정보를 찾을 수 없음`)
+  // 진단 정보를 찾을 수 없음
   return '진단 정보 없음'
 }
 
@@ -340,7 +341,7 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       .select('id, status, additional_info')
 
     if (allPatientsError) {
-      console.error('Error fetching all patients:', allPatientsError)
+      handleApiError(allPatientsError, 'PatientManagement.getPatientStats.allPatients')
       return {
         totalPatients: 0,
         activePatients: 0,
@@ -363,7 +364,7 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       .eq('status', 'active')
 
     if (goalsError) {
-      console.error('Error fetching active goals:', goalsError)
+      handleApiError(goalsError, 'PatientManagement.getPatientStats.activeGoals')
     }
 
     // 입원 중인 환자 (status가 discharged인 환자)
@@ -378,12 +379,7 @@ export const getPatientStats = async (): Promise<PatientStats> => {
     const pendingPatients = activePendingPatients.filter(p => !patientsWithGoals.has(p.id)).length  // 목표가 없는 환자
     const dischargedPatientsCount = dischargedPatients.length  // 입원 중인 환자 (discharged 상태)
 
-    console.log('📊 환자 통계:', {
-      전체: totalPatients,
-      목표진행중: activePatients,
-      목표설정대기: pendingPatients,
-      입원중: dischargedPatientsCount
-    })
+    // 환자 통계 계산 완료
 
     return {
       totalPatients,
@@ -391,8 +387,8 @@ export const getPatientStats = async (): Promise<PatientStats> => {
       pendingPatients,
       dischargedPatients: dischargedPatientsCount
     }
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'PatientManagement.getPatientStats')
     return {
       totalPatients: 0,
       activePatients: 0,
@@ -423,7 +419,7 @@ export const getPatientById = async (patientId: string): Promise<Patient | null>
       .single()
 
     if (error || !data) {
-      console.error("Error occurred")
+      handleApiError(error, 'PatientManagement.getPatientById')
       return null
     }
 
@@ -442,8 +438,8 @@ export const getPatientById = async (patientId: string): Promise<Patient | null>
       primary_social_worker_id: data.primary_social_worker_id,
       social_worker: data.social_worker
     }
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'PatientManagement.getPatientById')
     return null
   }
 }
@@ -483,7 +479,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
     console.log('🔄 환자 정보 수정 시작:', patientId, patientData)
 
     // 업데이트할 데이터 준비 (status 제외 - 별도 관리)
-    const updateData: unknown = {}
+    const updateData: any = {}
     
     if (patientData.full_name) updateData.full_name = patientData.full_name
     if (patientData.date_of_birth !== undefined) updateData.date_of_birth = patientData.date_of_birth
@@ -496,7 +492,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
     // additional_info 업데이트 (진단 정보 포함)
     if (patientData.primary_diagnosis || patientData.additional_info) {
       updateData.additional_info = {
-        ...patientData.additional_info,
+        ...(patientData.additional_info || {}),
         primary_diagnosis: patientData.primary_diagnosis || null
       }
     }
@@ -519,7 +515,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
       .single()
 
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'PatientManagement.updatePatient')
       throw new Error(error.message)
     }
 
@@ -540,7 +536,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
       emergency_contact: data.emergency_contact
     }
   } catch (err) {
-    console.error("Error occurred:", err)
+    handleApiError(err, 'PatientManagement.updatePatient')
     throw err
   }
 }
@@ -561,7 +557,7 @@ export const updatePatientStatus = async (
         .in('status', ['active', 'pending'])
 
       if (goalsError) {
-        console.error('활성 목표 조회 중 오류:', goalsError)
+        handleApiError(goalsError, 'PatientManagement.updatePatientStatus.activeGoals')
       } else if (activeGoals && activeGoals.length > 0) {
         // 모든 미완료 목표를 삭제
         const { error: deleteError } = await supabase
@@ -570,7 +566,7 @@ export const updatePatientStatus = async (
           .in('id', activeGoals.map(goal => goal.id))
 
         if (deleteError) {
-          console.error('목표 삭제 중 오류:', deleteError)
+          handleApiError(deleteError, 'PatientManagement.updatePatientStatus.deleteGoals')
           throw new Error('퇴원 처리 중 목표 정리에 실패했습니다.')
         }
       }
@@ -593,7 +589,7 @@ export const updatePatientStatus = async (
       .single()
 
     if (error) {
-      console.error("Error occurred:", error)
+      handleApiError(error, 'PatientManagement.updatePatientStatus')
       throw new Error(error.message)
     }
 
@@ -612,7 +608,7 @@ export const updatePatientStatus = async (
       emergency_contact: data.emergency_contact
     }
   } catch (err) {
-    console.error("Error occurred:", err)
+    handleApiError(err, 'PatientManagement.updatePatientStatus')
     throw err
   }
 }
@@ -639,7 +635,7 @@ export const checkPatientRelatedData = async (patientId: string) => {
         .eq('patient_id', patientId)
 
       if (error) {
-        console.error(`${table} 조회 실패:`, error)
+        handleApiError(error, `PatientManagement.checkPatientRelatedData.${table}`)
         continue
       }
 
@@ -666,7 +662,7 @@ export const checkPatientRelatedData = async (patientId: string) => {
     return relatedData
 
   } catch (error) {
-    console.error('❌ 연관 데이터 확인 실패:', error)
+    handleApiError(error, 'PatientManagement.checkPatientRelatedData')
     throw error
   }
 }
@@ -698,7 +694,7 @@ export const deletePatient = async (patientId: string, forceDelete: boolean = fa
             .eq('original_assessment_id', patientId)
 
           if (error) {
-            console.error(`${table} 삭제 실패:`, error)
+            handleApiError(error, `PatientManagement.deletePatient.${table}`)
             throw new Error(`연관 데이터 삭제 실패: ${table}`)
           }
         } else {
@@ -709,7 +705,7 @@ export const deletePatient = async (patientId: string, forceDelete: boolean = fa
             .eq('patient_id', patientId)
 
           if (error) {
-            console.error(`${table} 삭제 실패:`, error)
+            handleApiError(error, `PatientManagement.deletePatient.${table}`)
             throw new Error(`연관 데이터 삭제 실패: ${table}`)
           }
         }
@@ -725,7 +721,7 @@ export const deletePatient = async (patientId: string, forceDelete: boolean = fa
       .eq('id', patientId)
 
     if (deleteError) {
-      console.error('환자 삭제 실패:', deleteError)
+      handleApiError(deleteError, 'PatientManagement.deletePatient')
       
       // 외래키 제약 조건 오류 처리
       if (deleteError.code === '23503' || deleteError.message.includes('violates foreign key constraint')) {
@@ -738,7 +734,7 @@ export const deletePatient = async (patientId: string, forceDelete: boolean = fa
     console.log('✅ 환자 삭제 성공:', patientId)
 
   } catch (error) {
-    console.error('❌ 환자 삭제 실패:', error)
+    handleApiError(error, 'PatientManagement.deletePatient')
     throw error
   }
 }

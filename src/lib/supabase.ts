@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { ENV, validateEnvironment } from './env'
+import { handleApiError } from '@/utils/error-handler'
 
 // Validate environment variables on import
 validateEnvironment()
@@ -76,7 +77,7 @@ export async function testSupabaseConnection() {
   try {
     // First check if environment variables are available
     if (!ENV.SUPABASE_URL || !ENV.SUPABASE_ANON_KEY) {
-      console.error('Supabase environment variables not found')
+      handleApiError(new Error('Supabase environment variables not found'), 'supabase.testSupabaseConnection')
       return false
     }
 
@@ -85,14 +86,14 @@ export async function testSupabaseConnection() {
     
     // Even if there's no session, a successful response means connection is working
     if (error && error.message.includes('Failed to fetch')) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.testSupabaseConnection.getSession')
       return false
     }
     
     console.log('✅ Supabase connection successful')
     return true
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.testSupabaseConnection')
     return false
   }
 }
@@ -102,12 +103,12 @@ export async function getCurrentUser() {
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.getCurrentUser')
       return null
     }
     return user
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.getCurrentUser')
     return null
   }
 }
@@ -116,12 +117,12 @@ export async function getCurrentSession() {
   try {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.getCurrentSession')
       return null
     }
     return session
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.getCurrentSession')
     return null
   }
 }
@@ -137,7 +138,7 @@ async function createUserRoleAndProfile(userId: string, signupRequest: any) {
       .single()
 
     if (roleQueryError || !roleData) {
-      console.error('역할 조회 실패:', roleQueryError)
+      handleApiError(roleQueryError, 'supabase.createUserRoleAndProfile.roleQuery')
       return false
     }
 
@@ -150,7 +151,7 @@ async function createUserRoleAndProfile(userId: string, signupRequest: any) {
       })
 
     if (roleError && !roleError.message.includes('duplicate')) {
-      console.error('역할 할당 실패:', roleError)
+      handleApiError(roleError, 'supabase.createUserRoleAndProfile.roleAssign')
       return false
     }
 
@@ -170,7 +171,7 @@ async function createUserRoleAndProfile(userId: string, signupRequest: any) {
         })
 
       if (profileError && !profileError.message.includes('duplicate')) {
-        console.error('프로필 생성 실패:', profileError)
+        handleApiError(profileError, 'supabase.createUserRoleAndProfile.socialWorkerProfile')
         return false
       }
     } else if (signupRequest.requested_role === 'administrator') {
@@ -186,7 +187,7 @@ async function createUserRoleAndProfile(userId: string, signupRequest: any) {
         })
 
       if (profileError && !profileError.message.includes('duplicate')) {
-        console.error('프로필 생성 실패:', profileError)
+        handleApiError(profileError, 'supabase.createUserRoleAndProfile.administratorProfile')
         return false
       }
     }
@@ -201,12 +202,12 @@ async function createUserRoleAndProfile(userId: string, signupRequest: any) {
       .eq('id', signupRequest.id)
 
     if (updateError) {
-      console.error('신청서 업데이트 실패:', updateError)
+      handleApiError(updateError, 'supabase.createUserRoleAndProfile.updateSignupRequest')
     }
 
     return true
   } catch (error) {
-    console.error('사용자 역할 및 프로필 생성 중 오류:', error)
+    handleApiError(error, 'supabase.createUserRoleAndProfile')
     return false
   }
 }
@@ -225,13 +226,13 @@ export async function getUserRole(userId: string): Promise<string | null> {
       .single()
 
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.getUserRole')
       return null
     }
 
     return data?.roles?.role_name || null
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.getUserRole')
     return null
   }
 }
@@ -259,7 +260,7 @@ export async function getUserProfile(userId: string) {
         .single()
       
       if (swError) {
-        console.error('Error fetching social worker profile:', swError.message)
+        handleApiError(swError, 'supabase.getUserProfile.socialWorker')
         return null
       }
       
@@ -272,7 +273,7 @@ export async function getUserProfile(userId: string) {
         .single()
       
       if (adminError) {
-        console.error('Error fetching administrator profile:', adminError.message)
+        handleApiError(adminError, 'supabase.getUserProfile.administrator')
         return null
       }
       
@@ -285,7 +286,7 @@ export async function getUserProfile(userId: string) {
         .single()
       
       if (patientError) {
-        console.error('Error fetching patient profile:', patientError.message)
+        handleApiError(patientError, 'supabase.getUserProfile.patient')
         return null
       }
       
@@ -296,8 +297,8 @@ export async function getUserProfile(userId: string) {
     }
 
     return profile
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.getUserProfile')
     return null
   }
 }
@@ -407,8 +408,8 @@ export async function hasPermission(userId: string, permission: string): Promise
     }
 
     return rolePermissions[role]?.includes(permission) || false
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.hasPermission')
     return false
   }
 }
@@ -453,4 +454,4 @@ export function getEnvironmentConfig() {
     isDevelopment: import.meta.env.DEV,
     isProduction: import.meta.env.PROD
   }
-} 
+}

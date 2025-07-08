@@ -4,6 +4,12 @@
 
 이 문서는 `console.error`를 토스트 알림 기반 에러 처리로 마이그레이션하는 가이드입니다.
 
+## 진행 상황
+
+- **시작 시점**: 304개 console.error
+- **현재 상태**: 198개 console.error (106개 마이그레이션 완료)
+- **완료율**: 34.9%
+
 ## 새로운 에러 처리 유틸리티
 
 ### 기본 사용법
@@ -164,13 +170,18 @@ handleError(error, '메시지', {
 
 ### Phase 1: 핵심 서비스 (1주차)
 - [ ] AuthService
-- [ ] PatientService  
+- [x] PatientService ✅ (2025-01-08)
+  - [x] patient-management.ts - 23개 console.error 마이그레이션 완료
 - [ ] GoalService
 - [ ] AssessmentService
 - [x] DashboardService ✅ (2025-01-08)
   - [x] dashboard-stats.ts - 28개 console.error 마이그레이션 완료
 - [x] AIRecommendationArchiveService ✅ (2025-01-08)
   - [x] ai-recommendation-archive.ts - 24개 console.error 마이그레이션 완료
+- [x] Supabase Lib ✅ (2025-01-08)
+  - [x] lib/supabase.ts - 20개 console.error 마이그레이션 완료
+- [x] SocialWorkerDashboard ✅ (2025-01-08)
+  - [x] socialWorkerDashboard.ts - 11개 console.error 마이그레이션 완료
 
 ### Phase 2: 주요 컴포넌트 (2주차)
 - [ ] 로그인/회원가입 폼
@@ -214,6 +225,27 @@ handleError(error, '메시지', {
 2. 개발 환경에서 콘솔 로그 출력 확인
 3. 운영 환경에서 콘솔 로그 미출력 확인
 4. 에러 발생 시 사용자 경험 개선 확인
+
+## 다음 우선순위 작업
+
+### 즉시 처리 필요 (높은 사용 빈도)
+1. **AuthService** (src/services/auth.ts) - 7개
+   - 인증 관련 핵심 서비스
+   - 모든 사용자에게 영향
+
+2. **UserManagement 페이지** (src/pages/admin/UserManagement.tsx) - 11개
+   - 관리자 핵심 기능
+   - 사용자 관리 시 에러 처리 중요
+
+3. **ProgressTracking 서비스** (src/services/progress-tracking.ts) - 8개
+   - 진행 상황 추적 핵심 기능
+
+### 중간 우선순위
+4. **DashboardService** (src/services/dashboardService.ts) - 8개
+5. **PermissionService** (src/services/permissionService.ts) - 7개
+6. **GoalSetting 페이지** (src/pages/GoalSetting.tsx) - 7개
+7. **Patients 서비스** (src/services/patients.ts) - 6개
+8. **AI Recommendation 서비스** (src/services/goalSetting/aiRecommendationService.ts) - 6개
 
 ## 향후 개선사항
 

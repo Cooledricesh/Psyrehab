@@ -53,7 +53,7 @@ export function PatientsDataTable() {
     totalPatients: 0,
     activePatients: 0,
     pendingPatients: 0,
-    completedPatients: 0
+    dischargedPatients: 0
   })
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -166,9 +166,9 @@ export function PatientsDataTable() {
       if (statusFilter === 'active') {
         matchesStatus = patient.hasActiveGoal === true
       } else if (statusFilter === 'pending') {
-        matchesStatus = patient.hasActiveGoal === false && patient.status !== 'completed'
-      } else if (statusFilter === 'completed') {
-        matchesStatus = patient.status === 'completed'
+        matchesStatus = patient.hasActiveGoal === false && patient.status !== 'discharged'
+      } else if (statusFilter === 'discharged') {
+        matchesStatus = patient.status === 'discharged'
       }
     }
     
@@ -176,8 +176,8 @@ export function PatientsDataTable() {
   })
 
   const getStatusBadge = (patient: PatientWithGoal) => {
-    if (patient.status === 'completed') {
-      return <Badge variant="outline" className="bg-blue-100 text-blue-800">입원 중</Badge>
+    if (patient.status === 'discharged') {
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800">퇴원</Badge>
     } else if (patient.hasActiveGoal) {
       return <Badge variant="default" className="bg-green-100 text-green-800">목표 진행 중</Badge>
     } else {
@@ -286,7 +286,7 @@ export function PatientsDataTable() {
             />
           </div>
           <div className="flex gap-2">
-            {['all', 'active', 'pending', 'completed'].map((status) => (
+            {['all', 'active', 'pending', 'discharged'].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? "default" : "outline"}
@@ -295,7 +295,7 @@ export function PatientsDataTable() {
               >
                 {status === 'all' ? '전체' :
                  status === 'active' ? '목표 진행 중' :
-                 status === 'pending' ? '목표 설정 대기' : '입원 중'}
+                 status === 'pending' ? '목표 설정 대기' : '퇴원'}
               </Button>
             ))}
           </div>
@@ -376,7 +376,7 @@ export function PatientsDataTable() {
                             <Edit className="mr-2 h-4 w-4" />
                             정보수정
                           </DropdownMenuItem>
-                          {!patient.hasActiveGoal && patient.status !== 'completed' && (
+                          {!patient.hasActiveGoal && patient.status !== 'discharged' && (
                             <DropdownMenuItem onClick={() => handleGoalSetting(patient.id)}>
                               <Target className="mr-2 h-4 w-4" />
                               목표 설정
@@ -414,9 +414,9 @@ export function PatientsDataTable() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {stats.completedPatients}
+                {stats.dischargedPatients}
               </div>
-              <div className="text-sm text-gray-500">입원 중</div>
+              <div className="text-sm text-gray-500">퇴원</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">

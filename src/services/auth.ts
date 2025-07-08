@@ -21,6 +21,7 @@ import {
   getAuthErrorMessage
 } from '@/utils/auth'
 import { AUTH_ERROR_CODES, AUTH_FLOW_CONFIG } from '@/constants/auth'
+import { handleError, handleApiError } from '@/utils/error-handler'
 
 // Enhanced Authentication service class
 export class AuthService {
@@ -90,7 +91,10 @@ export class AuthService {
         .maybeSingle()
 
       if (requestError) {
-        console.error('승인 상태 확인 실패:', requestError)
+        handleError(requestError, '승인 상태 확인에 실패했습니다.', { 
+          context: 'AuthService.signIn',
+          showToast: false // 내부 오류는 토스트 표시하지 않음
+        })
       }
 
       // Not approved yet
@@ -138,6 +142,14 @@ export class AuthService {
       }
     } catch (error: unknown) {
       recordAttempt('signin', credentials.email, false)
+      
+      // Log error for debugging in development
+      handleError(error, '로그인 중 오류가 발생했습니다.', { 
+        context: 'AuthService.signIn',
+        showToast: false,
+        logToConsole: true
+      })
+      
       return {
         success: false,
         error: getAuthErrorMessage(error)
