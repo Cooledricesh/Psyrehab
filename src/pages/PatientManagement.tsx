@@ -7,6 +7,7 @@ import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
 import { GoalService } from '@/services/goalSetting';
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 export default function PatientManagement() {
   const navigate = useNavigate()
@@ -49,7 +50,7 @@ export default function PatientManagement() {
       const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
       setCanViewAssignee(managementRoles.includes(roleName))
     } catch (error) {
-      console.error('Error checking user role:', error)
+      handleApiError(error, 'PatientManagement.checkUserRole')
     }
   }
 
@@ -71,7 +72,7 @@ export default function PatientManagement() {
       setStats(statsResult)
       setError(null)
     } catch (err: unknown) {
-      console.error('❌ 환자 데이터 로드 실패:', err)
+      handleApiError(err, 'PatientManagement.fetchData')
       setError((err as any).message || '환자 데이터를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
@@ -103,7 +104,7 @@ export default function PatientManagement() {
       // 상태 변경 이벤트 발생
       eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, { patientId, newStatus: dbStatus })
     } catch (error) {
-      console.error("Error occurred:", error)
+      handleApiError(error, 'PatientManagement.handleStatusChange')
       alert('상태 변경에 실패했습니다. 다시 시도해주세요.')
     }
   }

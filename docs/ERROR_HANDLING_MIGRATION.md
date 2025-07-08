@@ -7,8 +7,8 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 93개 console.error (211개 마이그레이션 완료)
-- **완료율**: 69.4%
+- **현재 상태**: 81개 console.error (223개 마이그레이션 완료)
+- **완료율**: 73.4%
 - **최근 업데이트**: 2025-07-09
 
 ## 새로운 에러 처리 유틸리티
@@ -180,6 +180,10 @@ handleError(error, '메시지', {
 - [x] Header component ✅ (2025-07-09) - 4개 console.error 마이그레이션 완료
 - [x] userManagement service ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
 - [x] goalService ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
+- [x] fix-goal-dates-simple service ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
+- [x] PatientManagement page ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
+- [x] SignUpPage ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
+- [x] useAIRecommendationArchive hook ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
 
 ## 마이그레이션 체크리스트
 

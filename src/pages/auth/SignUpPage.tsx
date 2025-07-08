@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Eye, EyeOff, Heart, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { getAuthErrorMessage } from '@/utils/auth'
+import { handleApiError } from '@/utils/error-handler'
 
 interface SignUpFormData {
   email: string
@@ -113,7 +114,7 @@ export default function SignUpPage() {
         .single()
 
       if (requestError) {
-        console.error('신청서 저장 실패:', requestError)
+        handleApiError(requestError, 'SignUpPage.signupRequest')
         throw requestError
       }
 
@@ -134,7 +135,7 @@ export default function SignUpPage() {
       })
 
       if (authError) {
-        console.error('Auth 에러:', authError)
+        handleApiError(authError, 'SignUpPage.authSignUp')
         // Auth 에러 시 signup_requests 삭제
         await supabase.from('signup_requests').delete().eq('email', formData.email)
         throw authError
@@ -150,7 +151,7 @@ export default function SignUpPage() {
       })
 
     } catch (err: unknown) {
-      console.error("Error occurred:", err)
+      handleApiError(err, 'SignUpPage.handleSignUp')
       if (err.message?.includes('already registered') || err.message?.includes('duplicate')) {
         setError('이미 등록된 이메일입니다.')
       } else {
