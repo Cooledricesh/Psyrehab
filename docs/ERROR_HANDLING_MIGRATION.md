@@ -7,8 +7,8 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 132개 console.error (172개 마이그레이션 완료)
-- **완료율**: 56.6%
+- **현재 상태**: 117개 console.error (187개 마이그레이션 완료)
+- **완료율**: 61.5%
 - **최근 업데이트**: 2025-01-08
 
 ## 새로운 에러 처리 유틸리티
@@ -166,6 +166,11 @@ handleError(error, '메시지', {
   context: 'BackgroundSync'
 })
 ```
+
+### Phase 2.5: 추가 주요 컴포넌트 및 훅
+- [x] ApprovedSignUpPage ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
+- [x] AnnouncementsManagement ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
+- [x] usePatients hook ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
 
 ## 마이그레이션 체크리스트
 
