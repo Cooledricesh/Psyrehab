@@ -7,9 +7,9 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 107개 console.error (197개 마이그레이션 완료)
-- **완료율**: 64.8%
-- **최근 업데이트**: 2025-01-08
+- **현재 상태**: 93개 console.error (211개 마이그레이션 완료)
+- **완료율**: 69.4%
+- **최근 업데이트**: 2025-07-09
 
 ## 새로운 에러 처리 유틸리티
 
@@ -168,34 +168,41 @@ handleError(error, '메시지', {
 ```
 
 ### Phase 2.5: 추가 주요 컴포넌트 및 훅
-- [x] ApprovedSignUpPage ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
-- [x] AnnouncementsManagement ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
-- [x] usePatients hook ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
-- [x] useGoalSave hook ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
-- [x] useAIProcessing hook ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
+- [x] ApprovedSignUpPage ✅ (2025-07-09) - 5개 console.error 마이그레이션 완료
+- [x] AnnouncementsManagement ✅ (2025-07-09) - 5개 console.error 마이그레이션 완료
+- [x] usePatients hook ✅ (2025-07-09) - 5개 console.error 마이그레이션 완료
+- [x] useGoalSave hook ✅ (2025-07-09) - 5개 console.error 마이그레이션 완료
+- [x] useAIProcessing hook ✅ (2025-07-09) - 5개 console.error 마이그레이션 완료
+- [x] PatientUnifiedModal ✅ (2025-07-09) - 5개 console.error 마이그레이션 완료
+- [x] useValidatedForm hook ✅ (2025-07-09) - 4개 console.error 마이그레이션 완료
+- [x] useAssessments hook ✅ (2025-07-09) - 4개 console.error 마이그레이션 완료
+- [x] SimpleWeeklyCheckbox ✅ (2025-07-09) - 4개 console.error 마이그레이션 완료
+- [x] Header component ✅ (2025-07-09) - 4개 console.error 마이그레이션 완료
+- [x] userManagement service ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
+- [x] goalService ✅ (2025-07-09) - 3개 console.error 마이그레이션 완료
 
 ## 마이그레이션 체크리스트
 
 ### Phase 1: 핵심 서비스 (1주차) ✅
-- [x] AuthService ✅ (2025-01-08)
+- [x] AuthService ✅ (2025-07-08)
   - [x] auth.ts - 7개 console.error 마이그레이션 완료
-- [x] PatientService ✅ (2025-01-08)
+- [x] PatientService ✅ (2025-07-08)
   - [x] patient-management.ts - 23개 console.error 마이그레이션 완료
 - [ ] GoalService
 - [ ] AssessmentService
-- [x] DashboardService ✅ (2025-01-08)
+- [x] DashboardService ✅ (2025-07-08)
   - [x] dashboard-stats.ts - 28개 console.error 마이그레이션 완료
-- [x] AIRecommendationArchiveService ✅ (2025-01-08)
+- [x] AIRecommendationArchiveService ✅ (2025-07-08)
   - [x] ai-recommendation-archive.ts - 24개 console.error 마이그레이션 완료
-- [x] Supabase Lib ✅ (2025-01-08)
+- [x] Supabase Lib ✅ (2025-07-08)
   - [x] lib/supabase.ts - 20개 console.error 마이그레이션 완료
-- [x] SocialWorkerDashboard ✅ (2025-01-08)
+- [x] SocialWorkerDashboard ✅ (2025-07-08)
   - [x] socialWorkerDashboard.ts - 11개 console.error 마이그레이션 완료
-- [x] ProgressTracking ✅ (2025-01-08)
+- [x] ProgressTracking ✅ (2025-07-08)
   - [x] progress-tracking.ts - 8개 console.error 마이그레이션 완료
 
 ### Phase 1.5: 추가 핵심 페이지 및 서비스
-- [x] UserManagement 페이지 ✅ (2025-01-08)
+- [x] UserManagement 페이지 ✅ (2025-07-08)
   - [x] UserManagement.tsx - 11개 console.error 마이그레이션 완료
 
 ### Phase 2: 주요 컴포넌트 (2주차)
@@ -256,12 +263,12 @@ handleError(error, '메시지', {
    - 진행 상황 추적 핵심 기능
 
 ### 중간 우선순위
-4. **DashboardService** (src/services/dashboardService.ts) - 8개 ✅ (2025-01-08)
-5. **PermissionService** (src/services/permissionService.ts) - 7개 ✅ (2025-01-08)
-6. **GoalSetting 페이지** (src/pages/GoalSetting.tsx) - 7개 ✅ (2025-01-08)
-7. **RolePermissions 서비스** (src/services/rolePermissions.ts) - 6개 ✅ (2025-01-08)
-8. **Patients 서비스** (src/services/patients.ts) - 6개 ✅ (2025-01-08)
-9. **AI Recommendation 서비스** (src/services/goalSetting/aiRecommendationService.ts) - 6개 ✅ (2025-01-08)
+4. **DashboardService** (src/services/dashboardService.ts) - 8개 ✅ (2025-07-08)
+5. **PermissionService** (src/services/permissionService.ts) - 7개 ✅ (2025-07-08)
+6. **GoalSetting 페이지** (src/pages/GoalSetting.tsx) - 7개 ✅ (2025-07-08)
+7. **RolePermissions 서비스** (src/services/rolePermissions.ts) - 6개 ✅ (2025-07-08)
+8. **Patients 서비스** (src/services/patients.ts) - 6개 ✅ (2025-07-08)
+9. **AI Recommendation 서비스** (src/services/goalSetting/aiRecommendationService.ts) - 6개 ✅ (2025-07-08)
 
 ## 향후 개선사항
 

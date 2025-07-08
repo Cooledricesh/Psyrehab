@@ -5,6 +5,7 @@ import { supabase, getCurrentUser } from '@/lib/supabase'
 import { announcementService } from '@/services/announcements'
 import type { Announcement } from '@/types/announcement'
 import { getPriorityColor, getTypeEmoji } from '@/types/announcement'
+import { handleApiError } from '@/utils/error-handler'
 
 export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -64,8 +65,8 @@ export const Header = () => {
             initial: initial
           })
         }
-      } catch {
-        console.error("Error occurred")
+      } catch (error) {
+        handleApiError(error, 'Header.loadUserInfo')
       }
     }
 
@@ -87,7 +88,7 @@ export const Header = () => {
       const unread = activeAnnouncements.filter(a => !readAnnouncements.includes(a.id)).length
       setUnreadCount(unread)
     } catch (error) {
-      console.error('공지사항 로드 오류:', error)
+      handleApiError(error, 'Header.loadAnnouncements')
     }
   }
 
@@ -137,12 +138,12 @@ export const Header = () => {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error("Error occurred")
+        handleApiError(error, 'Header.handleLogout')
       } else {
         navigate('/auth/login')
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'Header.handleLogout.catch')
     }
   }
 
