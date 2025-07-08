@@ -7,6 +7,7 @@ import {
   useGenerateGoalsFromRecommendation,
   type ParsedGoal
 } from '@/hooks/useAIRecommendations'
+import { handleApiError } from '@/utils/error-handler'
 
 interface AIRecommendationDisplayProps {
   assessmentId: string
@@ -104,8 +105,8 @@ export function AIRecommendationDisplay({
       onGoalsGenerated?.()
       
       alert(`${result.goals.length}개의 재활 목표가 생성되었습니다!`)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AIRecommendationDisplay.handleGenerateGoals')
       alert('목표 생성 중 오류가 발생했습니다.')
     }
   }
@@ -117,8 +118,8 @@ export function AIRecommendationDisplay({
         isActive: false
       })
       alert('AI 추천이 거절되었습니다.')
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AIRecommendationDisplay.handleReject')
       alert('추천 거절 중 오류가 발생했습니다.')
     }
   }

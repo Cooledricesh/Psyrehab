@@ -36,6 +36,7 @@ import type { Patient, PatientStats } from '@/services/patient-management'
 import { supabase } from '@/lib/supabase'
 import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientWithGoal extends Patient {
   activeGoal?: {
@@ -93,7 +94,7 @@ export function PatientsDataTable() {
       const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
       setCanViewAssignee(managementRoles.includes(roleName))
     } catch (error) {
-      console.error('Error checking user role:', error)
+      handleApiError(error, 'PatientsDataTable.checkUserRole')
     }
   }
 
@@ -122,7 +123,7 @@ export function PatientsDataTable() {
           .order('start_date', { ascending: false })
         
         if (goalsError) {
-          console.error('목표 일괄 조회 실패:', goalsError)
+          handleApiError(goalsError, 'PatientsDataTable.fetchGoals')
         } else {
           activeGoals = goalsData || []
         }
@@ -150,7 +151,7 @@ export function PatientsDataTable() {
       setPatients(patientsWithGoals)
       setStats(statsResult)
     } catch (err) {
-      console.error('환자 데이터 로드 실패:', err)
+      handleApiError(err, 'PatientsDataTable.fetchData')
     } finally {
       setIsLoading(false)
     }
