@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
 import { getAuthErrorMessage } from '@/utils/auth'
+import { handleApiError } from '@/utils/error-handler'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -36,9 +37,9 @@ export default function LoginPage() {
         // 로그인 성공 시 메인 페이지로 리다이렉트
         navigate('/dashboard')
       }
-    } catch {
+    } catch (error) {
       setError('로그인 중 오류가 발생했습니다.')
-      console.error("Error occurred")
+      handleApiError(error, 'LoginPage.handleLogin')
     } finally {
       setIsLoading(false)
     }
