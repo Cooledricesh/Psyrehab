@@ -7,8 +7,8 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 61개 console.error (243개 마이그레이션 완료)
-- **완료율**: 79.9%
+- **현재 상태**: 51개 console.error (253개 마이그레이션 완료)
+- **완료율**: 83.2%
 - **최근 업데이트**: 2025-07-09
 
 ## 새로운 에러 처리 유틸리티
@@ -193,6 +193,9 @@ handleError(error, '메시지', {
 - [x] useAIPolling hook ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
 - [x] SocialWorkerAssignment component ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
 - [x] PatientEditModal component ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
+- [x] PatientDetailModal component ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
+- [x] ArchivedGoalSelection component ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
+- [x] useAssessmentForm hook ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
 
 ## 마이그레이션 체크리스트
 
@@ -219,7 +222,14 @@ handleError(error, '메시지', {
   - [x] UserManagement.tsx - 11개 console.error 마이그레이션 완료
 
 ### Phase 2: 주요 컴포넌트 (2주차)
-- [ ] 로그인/회원가입 폼
+- [x] 로그인/회원가입 폼 ✅ (2025-07-09)
+  - [x] LoginPage - 1개 console.error 마이그레이션 완료
+  - [x] ForgotPasswordPage - 1개 console.error 마이그레이션 완료
+  - [x] PendingApprovalPage - 1개 console.error 마이그레이션 완료
+  - [x] ResetPasswordPage - 1개 console.error 마이그레이션 완료
+- [x] 서비스 기록 컴포넌트 ✅ (2025-07-09)
+  - [x] ServiceRecordsList - 1개 console.error 마이그레이션 완료
+  - [x] ServiceRecordForm - 1개 console.error 마이그레이션 완료
 - [ ] 환자 관리 컴포넌트
 - [ ] 목표 관리 컴포넌트
 - [ ] 평가 관련 컴포넌트
