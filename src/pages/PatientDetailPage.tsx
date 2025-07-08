@@ -5,6 +5,7 @@ import { useDeletePatient } from '@/hooks/usePatients'
 import { PatientService } from '@/services/patients'
 import { AlertTriangle } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import { handleApiError } from '@/utils/error-handler'
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -59,7 +60,7 @@ export function PatientDetailPage() {
       setForceDelete(false)
       setShowDeleteDialog(true)
     } catch (err) {
-      console.error('연관 데이터 확인 실패:', err)
+      handleApiError(err, 'PatientDetailPage.checkRelatedData')
       toast({
         title: '오류',
         description: '연관 데이터 확인 중 오류가 발생했습니다.',
@@ -82,7 +83,7 @@ export function PatientDetailPage() {
       
       navigate('/patient-management')
     } catch (error: any) {
-      console.error('환자 삭제 중 오류 발생:', error)
+      handleApiError(error, 'PatientDetailPage.confirmDelete')
       
       // 연관 데이터 때문에 실패한 경우
       if (error.message?.includes('연결된 데이터가 있어')) {

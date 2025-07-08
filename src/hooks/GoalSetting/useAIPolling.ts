@@ -3,6 +3,7 @@ import { AIRecommendationService } from '@/services/goalSetting';
 import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
 import { supabase } from '@/lib/supabase';
 import { POLLING_INTERVAL, MAX_POLLING_ATTEMPTS, MESSAGES } from '@/utils/GoalSetting/constants';
+import { handleApiError } from '@/utils/error-handler';
 
 interface UseAIPollingProps {
   currentStep: number;
@@ -128,7 +129,7 @@ export const useAIPolling = ({
         stopPolling();
         
       } else if (recommendation && recommendation.n8n_processing_status === 'failed') {
-        console.error('❌ AI 처리 실패');
+        handleApiError(new Error('AI 처리 실패'), 'useAIPolling.checkAIStatus.failed');
         setPollingStatus('error');
         onError(MESSAGES.error.aiRecommendationFailed);
         stopPolling();
@@ -156,7 +157,7 @@ export const useAIPolling = ({
         setPollingAttempts(currentAttempts);
       }
     } catch (error) {
-      console.error('폴링 중 오류:', error);
+      handleApiError(error, 'useAIPolling.checkAIStatus');
       setPollingStatus('error');
       onError('폴링 중 오류가 발생했습니다.');
     }
