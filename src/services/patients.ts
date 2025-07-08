@@ -4,6 +4,7 @@ import {
 } from '@/lib/validations/patient-validation'
 import { parseError, logError } from '@/lib/error-handling'
 import type { TablesInsert, TablesUpdate } from '@/types/database'
+import { handleApiError } from '@/utils/error-handler'
 
 export interface PatientCreateData {
   full_name: string
@@ -345,7 +346,7 @@ export class PatientService {
         .eq('patient_id', patientId)
 
       if (error) {
-        console.error(`${table} 조회 실패:`, error)
+        handleApiError(error, `PatientService.checkPatientRelatedData.${table}`);
         continue
       }
 
@@ -418,7 +419,7 @@ export class PatientService {
           .in('status', ['active', 'pending'])
 
         if (goalsError) {
-          console.error('활성 목표 조회 중 오류:', goalsError)
+          handleApiError(goalsError, 'PatientService.updatePatientStatus.getActiveGoals');
         } else if (activeGoals && activeGoals.length > 0) {
           // 모든 미완료 목표를 삭제
           const { error: deleteError } = await supabase
@@ -427,7 +428,7 @@ export class PatientService {
             .in('id', activeGoals.map(goal => goal.id))
 
           if (deleteError) {
-            console.error('목표 삭제 중 오류:', deleteError)
+            handleApiError(deleteError, 'PatientService.updatePatientStatus.deleteGoals');
             throw new Error('퇴원 처리 중 목표 정리에 실패했습니다.')
           }
 
@@ -451,7 +452,7 @@ export class PatientService {
 
       return data
     } catch (err) {
-      console.error('updatePatientStatus 오류:', err)
+      handleApiError(err, 'PatientService.updatePatientStatus');
       throw err
     }
   }
@@ -509,7 +510,7 @@ export class PatientService {
             .limit(1)
 
           if (goalsError) {
-            console.error(`환자 ${patient.id}의 목표 조회 오류:`, goalsError)
+            handleApiError(goalsError, `PatientService.getPatientsWithoutActiveGoals.patient_${patient.id}`);
             return null
           }
 
@@ -521,7 +522,7 @@ export class PatientService {
       // null이 아닌 환자들만 필터링하여 반환
       return patientsWithGoalStatus.filter((patient) => patient !== null)
     } catch (error) {
-      console.error("Error occurred:", error)
+      handleApiError(error, 'PatientService.getPatientsWithoutActiveGoals');
       throw error
     }
   }

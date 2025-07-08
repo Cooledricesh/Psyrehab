@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 // 진행 추적 관련 타입 정의
 export interface ProgressStats {
@@ -49,7 +50,7 @@ export const getProgressStats = async (): Promise<ProgressStats> => {
       .select('id, status, actual_completion_rate')
     
     if (goalsError) {
-      console.error('Error fetching goals:', goalsError)
+      handleApiError(goalsError, 'ProgressTracking.getProgressStats.goals')
       return {
         averageProgress: 0,
         achievementRate: 0,
@@ -95,8 +96,8 @@ export const getProgressStats = async (): Promise<ProgressStats> => {
       participationRate,
       trend
     }
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'ProgressTracking.getProgressStats')
     return {
       averageProgress: 0,
       achievementRate: 0,
@@ -127,11 +128,11 @@ export const getPatientProgress = async (): Promise<PatientProgress[]> => {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'ProgressTracking.getPatientProgress')
       return []
     }
 
-    return data?.map((goal: unknown) => {
+    return data?.map((goal: any) => {
       // 진행률 기반 추세 계산 (실제로는 이전 기록과 비교해야 함)
       let trend: 'up' | 'down' | 'stable' = 'stable'
       const progress = goal.actual_completion_rate || 0
@@ -152,8 +153,8 @@ export const getPatientProgress = async (): Promise<PatientProgress[]> => {
         status: goal.status
       }
     }) || []
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'ProgressTracking.getPatientProgress')
     return []
   }
 }
@@ -184,14 +185,14 @@ export const getWeeklyActivities = async (): Promise<WeeklyActivity[]> => {
       .order('service_date_time', { ascending: true })
 
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'ProgressTracking.getWeeklyActivities')
       return []
     }
 
     // 날짜별로 그룹화
     const activitiesByDate: { [key: string]: WeeklyActivity } = {}
     
-    data?.forEach((record: unknown) => {
+    data?.forEach((record: any) => {
       const date = new Date(record.service_date_time).toLocaleDateString('ko-KR', {
         weekday: 'long'
       })
@@ -211,8 +212,8 @@ export const getWeeklyActivities = async (): Promise<WeeklyActivity[]> => {
     })
 
     return Object.values(activitiesByDate)
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'ProgressTracking.getWeeklyActivities')
     return []
   }
 }
@@ -247,7 +248,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     
     // 중복 제거를 위해 Map 사용
     const goalsNeedingEvaluation = new Map()
-    recentEvaluations?.forEach((evaluation: unknown) => {
+    recentEvaluations?.forEach((evaluation: any) => {
       if (!goalsNeedingEvaluation.has(evaluation.goal_id)) {
         const daysSinceEvaluation = Math.ceil((new Date().getTime() - new Date(evaluation.evaluation_date).getTime()) / (1000 * 60 * 60 * 24))
         goalsNeedingEvaluation.set(evaluation.goal_id, {
@@ -282,7 +283,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
       .lt('actual_completion_rate', 30)
       .eq('status', 'active')
     
-    lowProgressGoals?.forEach((goal: unknown) => {
+    lowProgressGoals?.forEach((goal: any) => {
       alerts.push({
         id: `low-progress-${goal.id}`,
         type: 'warning',
@@ -306,7 +307,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
       .gte('actual_completion_rate', 80)
       .eq('status', 'active')
     
-    highProgressGoals?.forEach((goal: unknown) => {
+    highProgressGoals?.forEach((goal: any) => {
       alerts.push({
         id: `high-progress-${goal.id}`,
         type: 'success',
@@ -320,8 +321,8 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     const priorityOrder = { high: 3, medium: 2, low: 1 }
     return alerts.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority])
     
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'ProgressTracking.getProgressAlerts')
     return []
   }
 }
@@ -342,8 +343,8 @@ export const getAllProgressData = async () => {
       weeklyActivities,
       alerts
     }
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'ProgressTracking.getAllProgressData')
     return {
       stats: {
         averageProgress: 0,
@@ -356,4 +357,4 @@ export const getAllProgressData = async () => {
       alerts: []
     }
   }
-} 
+}

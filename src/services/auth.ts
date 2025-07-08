@@ -455,13 +455,13 @@ export class AuthService {
       const { data: { user }, error } = await supabase.auth.getUser()
       
       if (error) {
-        console.error("Error occurred")
+        handleApiError(error, 'AuthService.getCurrentUser')
         return null
       }
 
       return user
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.getCurrentUser')
       return null
     }
   }
@@ -472,13 +472,13 @@ export class AuthService {
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (error) {
-        console.error("Error occurred")
+        handleApiError(error, 'AuthService.getCurrentSession')
         return null
       }
 
       return session
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.getCurrentSession')
       return null
     }
   }
@@ -754,13 +754,13 @@ export class AuthService {
         .single()
 
       if (error || !data) {
-        console.error("Error occurred")
+        handleApiError(error || new Error('No role data found'), 'AuthService.getRoleId')
         return null
       }
 
       return data.id
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.getRoleId')
       return null
     }
   }
@@ -859,8 +859,8 @@ export class AuthService {
 
       // Note: We can't delete the auth user from client side
       // This would need to be handled by a server function or admin action
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.cleanupFailedSignup')
     }
   }
 }

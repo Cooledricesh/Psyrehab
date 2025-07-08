@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Permission, UserRole } from '@/types/auth';
+import { handleApiError } from '@/utils/error-handler';
 
 export interface RolePermission {
   id: string;
@@ -24,7 +25,7 @@ export class RolePermissionsService {
 
       return data?.map(item => item.permission as Permission) || [];
     } catch (error) {
-      console.error('역할 권한 조회 오류:', error);
+      handleApiError(error, 'RolePermissionsService.getPermissionsForRole');
       return [];
     }
   }
@@ -53,7 +54,7 @@ export class RolePermissionsService {
 
       return grouped || {};
     } catch (error) {
-      console.error('전체 역할 권한 조회 오류:', error);
+      handleApiError(error, 'RolePermissionsService.getAllRolePermissions');
       return {} as Record<UserRole, Permission[]>;
     }
   }
@@ -87,7 +88,7 @@ export class RolePermissionsService {
 
       return true;
     } catch (error) {
-      console.error('역할 권한 업데이트 오류:', error);
+      handleApiError(error, 'RolePermissionsService.updateRolePermissions');
       return false;
     }
   }
@@ -116,7 +117,7 @@ export class RolePermissionsService {
 
       return !error && !!data;
     } catch (error) {
-      console.error('권한 확인 오류:', error);
+      handleApiError(error, 'RolePermissionsService.userHasPermission');
       return false;
     }
   }
@@ -142,7 +143,7 @@ export class RolePermissionsService {
 
       return !error && data && data.length > 0;
     } catch (error) {
-      console.error('권한 확인 오류:', error);
+      handleApiError(error, 'RolePermissionsService.userHasAnyPermission');
       return false;
     }
   }
@@ -168,7 +169,7 @@ export class RolePermissionsService {
 
       return !error && data && data.length === permissions.length;
     } catch (error) {
-      console.error('권한 확인 오류:', error);
+      handleApiError(error, 'RolePermissionsService.userHasAllPermissions');
       return false;
     }
   }

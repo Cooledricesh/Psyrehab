@@ -7,6 +7,7 @@ import useAIResponseParser from '@/hooks/useAIResponseParser';
 import { useAIRecommendationByAssessment } from '@/hooks/useAIRecommendations';
 import { ENV } from '@/lib/env';
 import { eventBus, EVENTS } from '@/lib/eventBus';
+import { handleApiError } from '@/utils/error-handler';
 
 // Components
 import PatientSelection from '@/components/GoalSetting/PatientSelection';
@@ -77,7 +78,7 @@ const GoalSetting: React.FC = () => {
           console.log(MESSAGES.info.alreadyLoggedIn, session.user?.email);
         }
       } catch (error) {
-        console.error('세션 확인 중 오류:', error);
+        handleApiError(error, 'GoalSetting.autoLogin.sessionCheck');
       }
     };
     
@@ -128,7 +129,7 @@ const GoalSetting: React.FC = () => {
       setIsProcessing(false);
     },
     onError: (error) => {
-      console.error('❌ AI 폴링 에러 콜백:', error);
+      handleApiError(error, 'GoalSetting.useAIPolling.onError');
       alert(error);
       setCurrentStep(2);
       setIsProcessing(false);
@@ -180,7 +181,7 @@ const GoalSetting: React.FC = () => {
       setCurrentAssessmentId(data.id);
     },
     onError: (error) => {
-      console.error('❌ 평가 데이터 저장 실패:', error);
+      handleApiError(error, 'GoalSetting.saveAssessmentMutation.onError');
       alert(error.message);
     }
   });
@@ -214,7 +215,7 @@ const GoalSetting: React.FC = () => {
       // 폴링은 useAIPolling 훅에서 자동으로 시작됨
       
     } catch (error) {
-      console.error('AI 추천 처리 중 오류:', error);
+      handleApiError(error, 'GoalSetting.handleGetAIRecommendation');
       alert(MESSAGES.error.aiRequestFailed);
       setCurrentStep(2); // 평가 단계로 되돌리기
       setIsProcessing(false);
@@ -291,7 +292,7 @@ const GoalSetting: React.FC = () => {
           setCurrentAssessmentId(savedAssessment.id);
           console.log('✅ 아카이빙 목표용 평가 저장 완료:', savedAssessment.id);
         } catch (error) {
-          console.error('평가 저장 실패:', error);
+          handleApiError(error, 'GoalSetting.handleSelectArchivedGoal.saveAssessment');
           // 평가 저장이 실패해도 계속 진행 (아카이빙된 목표는 평가 없이도 사용 가능)
         }
       }
@@ -301,7 +302,7 @@ const GoalSetting: React.FC = () => {
       setShowArchivedSelection(false);
       setCurrentStep(5); // 완료 단계로 이동
     } catch (error) {
-      console.error('아카이빙된 목표 변환 오류:', error);
+      handleApiError(error, 'GoalSetting.handleSelectArchivedGoal');
       alert(error instanceof Error ? error.message : '목표 데이터 변환 중 오류가 발생했습니다.');
     }
   };
@@ -442,7 +443,7 @@ const GoalSetting: React.FC = () => {
       refetch();
 
     } catch (error: unknown) {
-      console.error('목표 저장 중 오류:', error);
+      handleApiError(error, 'GoalSetting.handleSaveGoals');
       
       let errorMessage = MESSAGES.error.default;
       if (error instanceof Error && error.message) {

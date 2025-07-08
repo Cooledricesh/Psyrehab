@@ -7,8 +7,9 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 198개 console.error (106개 마이그레이션 완료)
-- **완료율**: 34.9%
+- **현재 상태**: 132개 console.error (172개 마이그레이션 완료)
+- **완료율**: 56.6%
+- **최근 업데이트**: 2025-01-08
 
 ## 새로운 에러 처리 유틸리티
 
@@ -168,8 +169,9 @@ handleError(error, '메시지', {
 
 ## 마이그레이션 체크리스트
 
-### Phase 1: 핵심 서비스 (1주차)
-- [ ] AuthService
+### Phase 1: 핵심 서비스 (1주차) ✅
+- [x] AuthService ✅ (2025-01-08)
+  - [x] auth.ts - 7개 console.error 마이그레이션 완료
 - [x] PatientService ✅ (2025-01-08)
   - [x] patient-management.ts - 23개 console.error 마이그레이션 완료
 - [ ] GoalService
@@ -182,6 +184,12 @@ handleError(error, '메시지', {
   - [x] lib/supabase.ts - 20개 console.error 마이그레이션 완료
 - [x] SocialWorkerDashboard ✅ (2025-01-08)
   - [x] socialWorkerDashboard.ts - 11개 console.error 마이그레이션 완료
+- [x] ProgressTracking ✅ (2025-01-08)
+  - [x] progress-tracking.ts - 8개 console.error 마이그레이션 완료
+
+### Phase 1.5: 추가 핵심 페이지 및 서비스
+- [x] UserManagement 페이지 ✅ (2025-01-08)
+  - [x] UserManagement.tsx - 11개 console.error 마이그레이션 완료
 
 ### Phase 2: 주요 컴포넌트 (2주차)
 - [ ] 로그인/회원가입 폼
@@ -241,11 +249,12 @@ handleError(error, '메시지', {
    - 진행 상황 추적 핵심 기능
 
 ### 중간 우선순위
-4. **DashboardService** (src/services/dashboardService.ts) - 8개
-5. **PermissionService** (src/services/permissionService.ts) - 7개
-6. **GoalSetting 페이지** (src/pages/GoalSetting.tsx) - 7개
-7. **Patients 서비스** (src/services/patients.ts) - 6개
-8. **AI Recommendation 서비스** (src/services/goalSetting/aiRecommendationService.ts) - 6개
+4. **DashboardService** (src/services/dashboardService.ts) - 8개 ✅ (2025-01-08)
+5. **PermissionService** (src/services/permissionService.ts) - 7개 ✅ (2025-01-08)
+6. **GoalSetting 페이지** (src/pages/GoalSetting.tsx) - 7개 ✅ (2025-01-08)
+7. **RolePermissions 서비스** (src/services/rolePermissions.ts) - 6개 ✅ (2025-01-08)
+8. **Patients 서비스** (src/services/patients.ts) - 6개 ✅ (2025-01-08)
+9. **AI Recommendation 서비스** (src/services/goalSetting/aiRecommendationService.ts) - 6개 ✅ (2025-01-08)
 
 ## 향후 개선사항
 
