@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { ENV } from '@/lib/env'
+import { handleApiError } from '@/utils/error-handler'
 
 // 새로운 AI 추천 데이터 타입 정의 (n8n이 직접 구조화된 데이터를 저장)
 export interface AIRecommendation {
@@ -174,7 +175,7 @@ export function useAIRecommendationByAssessment(
         .maybeSingle()
 
       if (error) {
-        console.error("Error occurred");
+        handleApiError(error, 'useAIRecommendations.useAIRecommendationByAssessment');
         throw new Error(error.message)
       }
 

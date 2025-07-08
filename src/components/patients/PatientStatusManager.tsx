@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useUpdatePatient } from '@/hooks/usePatients'
 import type { Patient } from '@/types/database'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientStatusManagerProps {
   patient: Patient
@@ -92,8 +93,8 @@ export function PatientStatusManager({ patient, onStatusChange }: PatientStatusM
       setStatusNote('')
       setShowConfirmation(false)
       onStatusChange?.()
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'PatientStatusManager.handleStatusChange')
     }
   }
 

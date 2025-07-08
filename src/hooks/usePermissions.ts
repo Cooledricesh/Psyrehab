@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { RolePermissionsService } from '@/services/rolePermissions';
 import type { Permission, UserRole } from '@/types/auth';
+import { handleApiError } from '@/utils/error-handler';
 
 export interface UsePermissionsReturn {
   permissions: Permission[];
@@ -87,7 +88,7 @@ export function usePermissions(): UsePermissionsReturn {
       const rolePermissions = await RolePermissionsService.getPermissionsForRole(profile.role as UserRole);
       setPermissions(rolePermissions);
     } catch (error) {
-      console.error('권한 로드 오류:', error);
+      handleApiError(error, 'usePermissions.loadUserPermissions');
       setPermissions([]);
     } finally {
       setLoading(false);
