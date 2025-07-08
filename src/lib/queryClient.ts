@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { supabase } from './supabase'
 import { AuthError } from '@supabase/supabase-js'
+import { handleApiError } from '@/utils/error-handler'
 
 /**
  * Authentication-aware query client configuration
@@ -41,7 +42,7 @@ export const queryClient = new QueryClient({
       },
       // Global error handling for mutations
       onError: (error) => {
-        console.error("Error occurred")
+        handleApiError(error, 'queryClient.mutations.onError')
         
         // Handle authentication errors globally
         if (isAuthError(error)) {
@@ -118,7 +119,7 @@ async function handleAuthError(error: unknown) {
     // Redirect to sign in (this would typically be handled by the auth context)
     // window.location.href = '/auth/signin'
   } catch (cleanupError) {
-    console.error('Error during auth cleanup:', cleanupError)
+    handleApiError(cleanupError, 'queryClient.handleAuthError.cleanup')
   }
 }
 

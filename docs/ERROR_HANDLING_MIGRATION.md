@@ -7,8 +7,8 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 37개 console.error (267개 마이그레이션 완료)
-- **완료율**: 87.8%
+- **현재 상태**: 1개 console.error (303개 마이그레이션 완료)
+- **완료율**: 99.7%
 - **최근 업데이트**: 2025-07-09
 
 ## 새로운 에러 처리 유틸리티
@@ -213,6 +213,21 @@ handleError(error, '메시지', {
 - [x] Sidebar component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
 - [x] GoalForm component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
 - [x] DevStatus component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+
+### Phase 2.7: 추가 마이그레이션 (8차~9차 배치)
+- [x] ComparisonManager component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] usePolling hook ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] AdminRecentActivity component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] UserModal component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] AdminProtectedRoute component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] ManagementProtectedRoute component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] SimpleProtectedRoute component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] DashboardTabs component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] SocialWorkerStatsChart component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] auth-utils lib ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
+- [x] queryClient lib ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
+- [x] env lib ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] cleanup-duplicate-goals script ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
 
 ## 마이그레이션 체크리스트
 

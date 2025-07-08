@@ -1,4 +1,6 @@
 // Environment variables helper with validation
+import { handleApiError } from '@/utils/error-handler'
+
 export const ENV = {
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -19,7 +21,7 @@ export function validateEnvironment() {
   }
   
   if (missing.length > 0) {
-    console.error('Missing required environment variables:', missing)
+    handleApiError(new Error(`Missing required environment variables: ${missing.join(', ')}`), 'env.validateEnvironment')
     console.log('\nPlease create a .env file in the project root with:')
     console.log('VITE_SUPABASE_URL=https://jsilzrsiieswiskzcriy.supabase.co')
     console.log('VITE_SUPABASE_ANON_KEY=your-supabase-anon-key')

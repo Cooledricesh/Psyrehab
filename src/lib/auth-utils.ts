@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 /**
  * 현재 로그인한 사용자 정보 가져오기
@@ -24,8 +25,8 @@ export const isCurrentUserAdmin = async (): Promise<boolean> => {
       .maybeSingle()
 
     return !!data && !error
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'auth-utils.isCurrentUserAdmin')
     return false
   }
 }
@@ -47,8 +48,8 @@ export const isAssignedWorker = async (patientId: string): Promise<boolean> => {
     if (error || !data) return false
 
     return data.primary_social_worker_id === user.id
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'auth-utils.isAssignedWorker')
     return false
   }
 }
