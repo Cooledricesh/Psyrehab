@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useCreatePatient } from '@/hooks/usePatients'
 import { Button, Input, Label, Select, Textarea } from '@/components/ui'
 import type { PatientCreateData } from '@/services/patients'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientRegistrationFormProps {
   onSuccess?: (patient: unknown) => void
@@ -138,8 +139,8 @@ export function PatientRegistrationForm({ onSuccess, onCancel }: PatientRegistra
 
       const result = await createPatientMutation.mutateAsync(patientData)
       onSuccess?.(result)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'PatientRegistrationForm.handleSubmit')
     }
   }
 

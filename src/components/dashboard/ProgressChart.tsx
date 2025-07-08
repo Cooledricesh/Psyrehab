@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CalendarDays, TrendingUp, Users } from 'lucide-react'
 import { getMonthlyPatientTrend } from '@/services/dashboard-stats'
+import { handleApiError } from '@/utils/error-handler'
 
 interface MonthlyData {
   month: string
@@ -31,7 +32,7 @@ export function ProgressChart() {
         const data = await getMonthlyPatientTrend(months)
         setChartData(data)
       } catch (error) {
-        console.error('Failed to fetch monthly patient trend:', error)
+        handleApiError(error, 'ProgressChart.fetchData')
       } finally {
         setIsLoading(false)
       }

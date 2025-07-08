@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import type { SocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
 import { eventBus, EVENTS } from '@/lib/eventBus'
+import { handleApiError } from '@/utils/error-handler'
 
 export function SimpleDashboard() {
   const [socialWorkerStats, setSocialWorkerStats] = useState<SocialWorkerDashboardStats | null>(null)
@@ -57,7 +58,7 @@ export function SimpleDashboard() {
         setError('이 대시보드에 접근할 권한이 없습니다.')
       }
     } catch (error) {
-      console.error("대시보드 데이터 로딩 오류:", error)
+      handleApiError(error, 'SimpleDashboard.fetchDashboardData')
       setError('대시보드 데이터를 불러오는데 실패했습니다.')
     } finally {
       setIsLoading(false)

@@ -21,6 +21,7 @@ import {
   CheckCircle2
 } from 'lucide-react'
 import { useUpdatePatient } from '@/hooks/usePatients'
+import { handleApiError } from '@/utils/error-handler'
 
 // 환자 정보 편집을 위한 스키마
 const patientEditSchema = z.object({
@@ -130,8 +131,8 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
       })
 
       onSuccess?.()
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'PatientEditForm.onSubmit')
     }
   }
 
