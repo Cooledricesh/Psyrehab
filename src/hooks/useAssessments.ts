@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { AssessmentData, CreateAssessmentData } from '@/types/assessment'
+import { handleApiError } from '@/utils/error-handler'
 
 // API functions (실제 구현에서는 Supabase 클라이언트 사용)
 const assessmentApi = {
@@ -135,7 +136,7 @@ export const useCreateAssessment = () => {
       )
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useCreateAssessment.onError')
     }
   })
 }
@@ -161,7 +162,7 @@ export const useUpdateAssessment = () => {
       )
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useUpdateAssessment.onError')
     }
   })
 }
@@ -181,7 +182,7 @@ export const useDeleteAssessment = () => {
       queryClient.removeQueries({ queryKey: assessmentKeys.detail(deletedId) })
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useDeleteAssessment.onError')
     }
   })
 }
@@ -205,7 +206,7 @@ export const useBulkDeleteAssessments = () => {
       })
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useBulkDeleteAssessments.onError')
     }
   })
 }

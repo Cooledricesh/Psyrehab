@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { useCallback, useEffect, useState } from 'react'
 import { parseError, AppError } from '@/lib/error-handling'
 import { extractFieldErrors } from '@/lib/validations/common-validation'
+import { handleApiError } from '@/utils/error-handler'
 
 export interface UseValidatedFormOptions<T extends FieldValues> extends Omit<UseFormProps<T>, 'resolver'> {
   schema: z.ZodType<T>
@@ -97,8 +98,8 @@ export function useValidatedForm<T extends FieldValues>({
         }
         return false
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'useValidatedForm.validateField')
       return false
     }
   }, [schema, form])
@@ -123,8 +124,8 @@ export function useValidatedForm<T extends FieldValues>({
         })
         return false
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'useValidatedForm.validateAllFields')
       return false
     }
   }, [schema, form, clearErrors])
@@ -259,8 +260,8 @@ export function useMultiStepValidation<T extends FieldValues>(
       })
 
       return isValid
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'useMultiStepValidation.validateStep')
       return false
     }
   }, [steps])
@@ -318,8 +319,8 @@ export function useAsyncValidation<T>(
       setIsValid(result)
       setLastValidatedValue(value)
       return result
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'useAsyncValidation.validate')
       setIsValid(false)
       return false
     } finally {

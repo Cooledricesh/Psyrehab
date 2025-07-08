@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
+import { handleApiError } from '@/utils/error-handler';
 
 interface SaveGoalsParams {
   selectedPatient: string | null;
@@ -53,7 +54,7 @@ export const useGoalSave = () => {
         .eq('plan_status', 'active');
 
       if (deactivateError) {
-        console.error('기존 계획 비활성화 실패:', deactivateError);
+        handleApiError(deactivateError, 'useGoalSave.deactivateExistingGoals');
         throw deactivateError;
       }
 
@@ -88,7 +89,7 @@ export const useGoalSave = () => {
           .eq('id', aiRecommendationId);
 
         if (updateError) {
-          console.error('AI 추천 상태 업데이트 실패:', updateError);
+          handleApiError(updateError, 'useGoalSave.updateAIRecommendationStatus');
         }
       }
 
@@ -184,7 +185,7 @@ export const useGoalSave = () => {
         .insert(goalsToInsert);
 
       if (goalsError) {
-        console.error('목표 저장 실패:', goalsError);
+        handleApiError(goalsError, 'useGoalSave.insertGoals');
         throw goalsError;
       }
 
@@ -195,7 +196,7 @@ export const useGoalSave = () => {
         .eq('id', selectedPatient);
 
       if (patientError) {
-        console.error('환자 상태 업데이트 실패:', patientError);
+        handleApiError(patientError, 'useGoalSave.updatePatientStatus');
         throw patientError;
       }
 
@@ -229,7 +230,7 @@ export const useGoalSave = () => {
       }
 
     } catch (error: unknown) {
-      console.error("Error occurred");
+      handleApiError(error, 'useGoalSave.saveGoals');
       
       // 구체적인 오류 메시지 표시
       let errorMessage = '목표 저장 중 오류가 발생했습니다.';

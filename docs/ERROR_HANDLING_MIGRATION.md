@@ -7,8 +7,8 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 117개 console.error (187개 마이그레이션 완료)
-- **완료율**: 61.5%
+- **현재 상태**: 107개 console.error (197개 마이그레이션 완료)
+- **완료율**: 64.8%
 - **최근 업데이트**: 2025-01-08
 
 ## 새로운 에러 처리 유틸리티
@@ -171,6 +171,8 @@ handleError(error, '메시지', {
 - [x] ApprovedSignUpPage ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
 - [x] AnnouncementsManagement ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
 - [x] usePatients hook ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
+- [x] useGoalSave hook ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
+- [x] useAIProcessing hook ✅ (2025-01-08) - 5개 console.error 마이그레이션 완료
 
 ## 마이그레이션 체크리스트
 
