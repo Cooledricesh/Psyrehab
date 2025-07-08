@@ -15,6 +15,7 @@ export const Header = () => {
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [showAllAnnouncements, setShowAllAnnouncements] = useState(false)
+  const [expandedAnnouncementId, setExpandedAnnouncementId] = useState<string | null>(null)
   const navigate = useNavigate()
   const profileDropdownRef = useRef<HTMLDivElement>(null)
   const notificationDropdownRef = useRef<HTMLDivElement>(null)
@@ -238,6 +239,9 @@ export const Header = () => {
                           className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${isInactive ? 'opacity-60' : ''}`}
                           onClick={() => {
                             markAsRead(announcement.id)
+                            setExpandedAnnouncementId(
+                              expandedAnnouncementId === announcement.id ? null : announcement.id
+                            )
                           }}
                         >
                           <div className="flex items-start gap-3">
@@ -258,9 +262,26 @@ export const Header = () => {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-gray-600 line-clamp-2">
+                              <p className={`text-sm text-gray-600 ${
+                                expandedAnnouncementId === announcement.id 
+                                  ? 'whitespace-pre-wrap' 
+                                  : 'line-clamp-2'
+                              }`}>
                                 {announcement.content}
                               </p>
+                              {announcement.content.split('\n').length > 2 || announcement.content.length > 100 ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setExpandedAnnouncementId(
+                                      expandedAnnouncementId === announcement.id ? null : announcement.id
+                                    )
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                                >
+                                  {expandedAnnouncementId === announcement.id ? '접기' : '더보기'}
+                                </button>
+                              ) : null}
                               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                                 <span className="flex items-center gap-1">
                                   <Clock size={12} />
