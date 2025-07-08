@@ -7,8 +7,8 @@
 ## 진행 상황
 
 - **시작 시점**: 304개 console.error
-- **현재 상태**: 51개 console.error (253개 마이그레이션 완료)
-- **완료율**: 83.2%
+- **현재 상태**: 37개 console.error (267개 마이그레이션 완료)
+- **완료율**: 87.8%
 - **최근 업데이트**: 2025-07-09
 
 ## 새로운 에러 처리 유틸리티
@@ -197,6 +197,23 @@ handleError(error, '메시지', {
 - [x] ArchivedGoalSelection component ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
 - [x] useAssessmentForm hook ✅ (2025-07-09) - 2개 console.error 마이그레이션 완료
 
+### Phase 2.6: 추가 마이그레이션 (5차~7차 배치)
+- [x] ai-recommendations service ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] usePermissions hook ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] useAIRecommendations hook ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] useAssessmentSave hook ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] PatientStatusManager component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] PatientRegistrationForm component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] PatientEditForm component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] SimpleDashboard component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] RehabStatsCards component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] ProgressChart component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] InlineDateEditor component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] PatientRegistrationModal component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] Sidebar component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] GoalForm component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+- [x] DevStatus component ✅ (2025-07-09) - 1개 console.error 마이그레이션 완료
+
 ## 마이그레이션 체크리스트
 
 ### Phase 1: 핵심 서비스 (1주차) ✅
@@ -230,8 +247,13 @@ handleError(error, '메시지', {
 - [x] 서비스 기록 컴포넌트 ✅ (2025-07-09)
   - [x] ServiceRecordsList - 1개 console.error 마이그레이션 완료
   - [x] ServiceRecordForm - 1개 console.error 마이그레이션 완료
-- [ ] 환자 관리 컴포넌트
-- [ ] 목표 관리 컴포넌트
+- [x] 환자 관리 컴포넌트 ✅ (2025-07-09)
+  - [x] PatientStatusManager - 1개 console.error 마이그레이션 완료
+  - [x] PatientRegistrationForm - 1개 console.error 마이그레이션 완료
+  - [x] PatientEditForm - 1개 console.error 마이그레이션 완료
+  - [x] PatientRegistrationModal - 1개 console.error 마이그레이션 완료
+- [x] 목표 관리 컴포넌트 ✅ (2025-07-09)
+  - [x] GoalForm - 1개 console.error 마이그레이션 완료
 - [ ] 평가 관련 컴포넌트
 
 ### Phase 3: 유틸리티 및 훅 (3주차)
@@ -240,9 +262,15 @@ handleError(error, '메시지', {
 - [ ] API 통신 레이어
 
 ### Phase 4: 나머지 컴포넌트 (4주차)
-- [ ] 대시보드 컴포넌트
+- [x] 대시보드 컴포넌트 ✅ (2025-07-09)
+  - [x] SimpleDashboard - 1개 console.error 마이그레이션 완료
+  - [x] RehabStatsCards - 1개 console.error 마이그레이션 완료
+  - [x] ProgressChart - 1개 console.error 마이그레이션 완료
 - [ ] 설정 관련 컴포넌트
-- [ ] 기타 UI 컴포넌트
+- [x] 기타 UI 컴포넌트 ✅ (2025-07-09)
+  - [x] InlineDateEditor - 1개 console.error 마이그레이션 완료
+  - [x] Sidebar - 1개 console.error 마이그레이션 완료
+  - [x] DevStatus - 1개 console.error 마이그레이션 완료
 
 ## 주의사항
 
