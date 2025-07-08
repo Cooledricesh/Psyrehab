@@ -71,33 +71,13 @@ const GoalSetting: React.FC = () => {
         
         if (!session) {
           console.log(MESSAGES.info.noSession);
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: 'admin@psyrehab.dev',
-            password: 'admin123!'
-          });
-          
-          if (error) {
-            console.log('⚠️ 자동 로그인 실패:', error.message);
-          } else {
-            console.log(MESSAGES.info.loginSuccess, data);
-          }
+          // 세션이 없는 경우 사용자에게 로그인하도록 안내
+          console.log('⚠️ 로그인이 필요합니다. 로그인 페이지로 이동해주세요.');
         } else {
           console.log(MESSAGES.info.alreadyLoggedIn, session.user?.email);
         }
       } catch (error) {
-        console.error('자동 로그인 중 오류:', error);
-        // 오류가 발생해도 강제로 로그인 시도
-        try {
-          const { error: forceError } = await supabase.auth.signInWithPassword({
-            email: 'admin@psyrehab.dev',
-            password: 'admin123!'
-          });
-          if (!forceError) {
-            console.log(MESSAGES.info.forceLoginSuccess);
-          }
-        } catch (e) {
-          console.error('강제 로그인도 실패:', e);
-        }
+        console.error('세션 확인 중 오류:', error);
       }
     };
     

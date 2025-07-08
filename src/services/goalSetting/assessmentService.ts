@@ -72,24 +72,6 @@ export class AssessmentService {
            error.hint?.includes('policy');
   }
 
-  /**
-   * Admin 계정으로 로그인
-   */
-  static async loginAsAdmin(): Promise<void> {
-    console.log('🔐 Admin 로그인 시도 중...');
-    
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email: 'admin@psyrehab.dev',
-      password: 'admin123!'
-    });
-    
-    if (loginError) {
-      console.log('⚠️ Admin 로그인 실패:', loginError.message);
-      throw new Error(`Admin 로그인 실패: ${loginError.message}`);
-    }
-    
-    console.log('✅ Admin 로그인 성공!');
-  }
 
   /**
    * 현재 사용자 ID 가져오기

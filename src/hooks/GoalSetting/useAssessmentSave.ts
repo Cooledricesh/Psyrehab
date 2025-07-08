@@ -21,7 +21,7 @@ export const useAssessmentSave = ({
 
   // Mutation 정의
   return useMutation({
-    mutationFn: async ({ formData, retryWithAdmin = false }: SaveAssessmentParams) => {
+    mutationFn: async ({ formData }: SaveAssessmentParams) => {
       if (!selectedPatient) {
         throw new Error('환자가 선택되지 않았습니다.');
       }
@@ -33,19 +33,15 @@ export const useAssessmentSave = ({
         // 평가 데이터 저장 시도
         return await AssessmentService.saveAssessment(formData, selectedPatient, userId);
       } catch (error: unknown) {
-        // RLS 에러이고 아직 재시도하지 않은 경우
-        if (AssessmentService.isRLSError(error) && !retryWithAdmin) {
-          console.log('🔄 RLS 오류 감지됨. Admin으로 재시도...');
-          
-          // Admin 로그인 후 재시도
-          await AssessmentService.loginAsAdmin();
-          const newUserId = await AssessmentService.getCurrentUserId();
-          
-          return await AssessmentService.saveAssessment(formData, selectedPatient, newUserId);
+        // RLS 에러인 경우 적절한 에러 메시지 표시
+        if (AssessmentService.isRLSError(error)) {
+          console.log('❌ RLS 오류: 권한이 없습니다.');
+          throw new Error('평가 데이터를 저장할 권한이 없습니다. 관리자에게 문의하세요.');
         }
         
-        // 다른 에러이거나 재시도 후에도 실패한 경우
-        throw new Error(`평가 데이터 저장 실패: ${error.message}`);
+        // 다른 에러인 경우
+        const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+        throw new Error(`평가 데이터 저장 실패: ${errorMessage}`);
       }
     },
     onSuccess: (data) => {
