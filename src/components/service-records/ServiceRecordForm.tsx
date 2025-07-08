@@ -38,6 +38,7 @@ import {
 } from '@/utils/service-constants'
 import { useCreateServiceRecord, useUpdateServiceRecord } from '@/hooks/service-records/useServiceRecords'
 import type { ServiceRecordWithDetails } from '@/types/database'
+import { handleApiError } from '@/utils/error-handler'
 
 // Form validation schema
 const serviceRecordSchema = z.object({
@@ -150,8 +151,8 @@ export function ServiceRecordForm({
         onSuccess?.(result)
         reset()
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'ServiceRecordForm.onSubmit')
     } finally {
       setIsSubmitting(false)
     }

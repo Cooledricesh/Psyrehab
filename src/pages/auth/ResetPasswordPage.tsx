@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Heart, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -79,7 +80,7 @@ export default function ResetPasswordPage() {
       }, 3000)
 
     } catch (err: unknown) {
-      console.error('Password reset error:', err)
+      handleApiError(err, 'ResetPasswordPage.handleResetPassword')
       setError(err.message || '비밀번호 변경 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)

@@ -72,6 +72,7 @@ import {
 } from '@/hooks/service-records/useServiceRecords'
 import { ServiceRecordForm } from './ServiceRecordForm'
 import type { ServiceRecordWithDetails } from '@/types/database'
+import { handleApiError } from '@/utils/error-handler'
 
 interface ServiceRecordsListProps {
   patientId?: string
@@ -170,8 +171,8 @@ export function ServiceRecordsList({
   const handleDelete = async (recordId: string) => {
     try {
       await deleteMutation.mutateAsync(recordId)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'ServiceRecordsList.handleDelete')
     }
   }
 
