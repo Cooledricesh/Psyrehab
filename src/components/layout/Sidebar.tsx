@@ -20,6 +20,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { ROLE_NAMES } from '@/types/auth'
 import type { UserRole } from '@/types/auth'
+import { handleApiError } from '@/utils/error-handler'
 
 interface SidebarLinkProps {
   to: string
@@ -130,8 +131,8 @@ export const Sidebar = () => {
           }
         }
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'Sidebar.checkUserRole')
     }
   }
 
