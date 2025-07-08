@@ -8,6 +8,7 @@ import {
 } from '../types'
 import { WEBHOOK_URL, POLLING_CONFIG } from '../constants'
 import { calculateAge, calculateDurationYears } from '../utils'
+import { handleApiError } from '@/utils/error-handler'
 
 export function useAssessmentForm(patientId?: string) {
   const { toast } = useToast()
@@ -49,8 +50,8 @@ export function useAssessmentForm(patientId?: string) {
 
       if (error) throw error
       setPatient(data)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'useAssessmentForm.loadPatientData')
       toast({
         title: '환자 정보 로딩 실패',
         description: '환자 정보를 불러오는 중 오류가 발생했습니다.',
@@ -167,8 +168,8 @@ export function useAssessmentForm(patientId?: string) {
       setShouldPoll(true)
       setPollingProgress({ current: 0, max: POLLING_CONFIG.maxAttempts })
 
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'useAssessmentForm.handleSubmit')
       toast({
         title: '제출 실패',
         description: '질문지 제출 중 오류가 발생했습니다.',

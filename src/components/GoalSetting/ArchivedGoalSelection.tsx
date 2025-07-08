@@ -6,6 +6,7 @@ import { AIRecommendationArchiveService, type ArchivedRecommendation } from '@/s
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
+import { handleApiError } from '@/utils/error-handler';
 
 interface ArchivedGoalSelectionProps {
   patientAge?: number;
@@ -79,7 +80,7 @@ export function ArchivedGoalSelection({
 
       setArchivedGoals(goals);
     } catch (err) {
-      console.error('아카이빙된 목표 조회 실패:', err);
+      handleApiError(err, 'ArchivedGoalSelection.fetchArchivedGoals');
       setError('아카이빙된 목표를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -99,7 +100,7 @@ export function ArchivedGoalSelection({
       
       // 스크롤 위치 조정 제거 - 자동 스크롤 방지
     } catch (err) {
-      console.error('전체 아카이빙된 목표 조회 실패:', err);
+      handleApiError(err, 'ArchivedGoalSelection.fetchAllArchivedGoals');
     } finally {
       setLoadingAll(false);
     }
