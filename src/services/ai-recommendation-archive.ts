@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { handleApiError } from '@/utils/error-handler';
 
 // 타입 정의
 export interface ArchivedGoalData {
@@ -112,7 +113,7 @@ export class AIRecommendationArchiveService {
           .single();
 
         if (error) {
-          console.error('❌ 목표 아카이빙 실패:', error);
+          handleApiError(error, 'AIRecommendationArchiveService.archiveUnselectedGoals')
           throw error;
         }
 
@@ -120,7 +121,7 @@ export class AIRecommendationArchiveService {
         archivedItems.push(data);
 
       } catch (error) {
-        console.error('❌ 개별 목표 아카이빙 실패:', error);
+        handleApiError(error, 'AIRecommendationArchiveService.archiveUnselectedGoals.individual')
         // 개별 실패는 전체 프로세스를 중단하지 않음
       }
     }
@@ -206,7 +207,7 @@ export class AIRecommendationArchiveService {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('❌ 아카이빙된 추천 조회 실패:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.getArchivedRecommendations')
       throw error;
     }
 
@@ -247,7 +248,7 @@ export class AIRecommendationArchiveService {
           .eq('title', sixMonthGoal);
         
         if (error) {
-          console.error('❌ 목표 조회 실패:', error);
+          handleApiError(error, 'AIRecommendationArchiveService.getGoalUsageStats.successfullyCompleted')
           return { usage_count: 0, completion_count: 0 };
         }
 
@@ -352,7 +353,7 @@ export class AIRecommendationArchiveService {
         average_completion_rate: averageCompletionRate
       };
     } catch (error) {
-      console.error('❌ 목표 사용 통계 계산 중 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.getGoalUsageStats')
       return { usage_count: 0, completion_count: 0 };
     }
   }
@@ -421,7 +422,7 @@ export class AIRecommendationArchiveService {
 
       return results;
     } catch (error) {
-      console.error('❌ 평가 기반 목표 검색 실패:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.searchArchivedGoalsByAssessment')
       throw error;
     }
   }
@@ -464,7 +465,7 @@ export class AIRecommendationArchiveService {
         .limit(params.limit);
 
       if (error) {
-        console.error('정확한 매칭 검색 오류:', error);
+        handleApiError(error, 'AIRecommendationArchiveService.searchExactMatch')
         return [];
       }
 
@@ -482,7 +483,7 @@ export class AIRecommendationArchiveService {
 
       return resultsWithMatchInfo;
     } catch (error) {
-      console.error('정확한 매칭 검색 중 예외:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.searchExactMatch.exception')
       return [];
     }
   }
@@ -534,7 +535,7 @@ export class AIRecommendationArchiveService {
         .limit(params.limit);
 
       if (error) {
-        console.error('유사 매칭 검색 오류:', error);
+        handleApiError(error, 'AIRecommendationArchiveService.searchSimilarMatch')
         return [];
       }
 
@@ -574,7 +575,7 @@ export class AIRecommendationArchiveService {
         };
       });
     } catch (error) {
-      console.error('유사 매칭 검색 중 예외:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.searchSimilarMatch.exception')
       return [];
     }
   }
@@ -605,7 +606,7 @@ export class AIRecommendationArchiveService {
       .limit(params.limit);
 
     if (error) {
-      console.error('연령대 검색 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.searchByAgeRange')
       return [];
     }
 
@@ -642,7 +643,7 @@ export class AIRecommendationArchiveService {
       .limit(params.limit);
 
     if (error) {
-      console.error('인기 목표 검색 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.searchPopularGoals')
       return [];
     }
 
@@ -701,7 +702,7 @@ export class AIRecommendationArchiveService {
       .limit(limit);
 
     if (error) {
-      console.error('❌ 아카이빙된 목표 검색 실패:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.searchArchivedGoalsByProfile')
       throw error;
     }
 
@@ -733,7 +734,7 @@ export class AIRecommendationArchiveService {
         .single();
 
       if (goalError || !sixMonthGoal) {
-        console.error('❌ 목표 조회 실패:', goalError);
+        handleApiError(goalError, 'AIRecommendationArchiveService.archiveCompletedGoal.goalQuery')
         return null;
       }
 
@@ -807,7 +808,7 @@ export class AIRecommendationArchiveService {
         .single();
 
       if (archiveError) {
-        console.error('❌ 아카이빙 실패:', archiveError);
+        handleApiError(archiveError, 'AIRecommendationArchiveService.archiveCompletedGoal.insert')
         throw archiveError;
       }
 
@@ -815,7 +816,7 @@ export class AIRecommendationArchiveService {
       return archived;
 
     } catch (error) {
-      console.error('❌ 완료된 목표 아카이빙 중 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.archiveCompletedGoal')
       return null;
     }
   }
@@ -892,7 +893,7 @@ export class AIRecommendationArchiveService {
       };
 
     } catch (error) {
-      console.error('❌ 아카이빙 통계 조회 실패:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.getArchiveStatistics')
       throw error;
     }
   }
@@ -912,7 +913,7 @@ export class AIRecommendationArchiveService {
         .eq('id', archiveId);
         
       if (error) {
-        console.error('❌ 아카이빙 삭제 실패:', error);
+        handleApiError(error, 'AIRecommendationArchiveService.deleteArchivedGoal')
         return { success: false, error: error.message };
       }
       
@@ -920,7 +921,7 @@ export class AIRecommendationArchiveService {
       return { success: true };
       
     } catch (error) {
-      console.error('❌ 아카이빙 삭제 중 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.deleteArchivedGoal.exception')
       return { 
         success: false, 
         error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
@@ -1113,7 +1114,7 @@ export class AIRecommendationArchiveService {
 
       return { patients };
     } catch (error) {
-      console.error('❌ 목표 완료 이력 조회 중 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.getGoalCompletionHistory')
       return { patients: [] };
     }
   }
@@ -1129,14 +1130,14 @@ export class AIRecommendationArchiveService {
         .rpc('update_archive_stats');
       
       if (error) {
-        console.error('❌ 통계 업데이트 실패:', error);
+        handleApiError(error, 'AIRecommendationArchiveService.updateAllArchiveStats')
         return { success: false, error: error.message };
       }
       
       console.log('✅ 전체 아카이빙 통계 업데이트 완료');
       return { success: true };
     } catch (error) {
-      console.error('❌ 통계 업데이트 중 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.updateAllArchiveStats.exception')
       return { 
         success: false, 
         error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
@@ -1155,14 +1156,14 @@ export class AIRecommendationArchiveService {
         .rpc('update_single_archive_stats', { archive_id: archiveId });
       
       if (error) {
-        console.error('❌ 개별 통계 업데이트 실패:', error);
+        handleApiError(error, 'AIRecommendationArchiveService.updateSingleArchiveStats')
         return { success: false, error: error.message };
       }
       
       console.log('✅ 개별 아카이빙 통계 업데이트 완료');
       return { success: true };
     } catch (error) {
-      console.error('❌ 개별 통계 업데이트 중 오류:', error);
+      handleApiError(error, 'AIRecommendationArchiveService.updateSingleArchiveStats.exception')
       return { 
         success: false, 
         error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
@@ -1227,4 +1228,4 @@ export class AIRecommendationArchiveService {
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }
-} 
+}
