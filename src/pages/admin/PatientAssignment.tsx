@@ -274,7 +274,7 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
                   <TableHead>환자명</TableHead>
                   <TableHead>상태</TableHead>
                   <TableHead>담당 사회복지사</TableHead>
-                  <TableHead className="text-right">작업</TableHead>
+                  <TableHead>작업</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -290,8 +290,8 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
                       <TableCell className="font-medium">{patient.patient_identifier}</TableCell>
                       <TableCell>{patient.full_name}</TableCell>
                       <TableCell>
-                        <Badge variant={patient.status === 'active' ? 'default' : 'secondary'}>
-                          {patient.status === 'active' ? '활성' : '비활성'}
+                        <Badge variant={patient.status === 'active' || patient.status === 'pending' ? 'default' : 'secondary'}>
+                          {patient.status === 'active' || patient.status === 'pending' ? '활성' : '비활성'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -301,7 +301,7 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
                           <span className="text-sm text-gray-500">미배정</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
                         <Select
                           value={patient.primary_social_worker_id || 'unassigned'}
                           onValueChange={(value) => {

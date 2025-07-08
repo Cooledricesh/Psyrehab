@@ -60,8 +60,8 @@ export function PatientList({ onPatientSelect, onPatientEdit, onPatientDelete }:
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       active: { label: '활성', className: 'bg-green-100 text-green-800' },
-      inactive: { label: '비활성', className: 'bg-gray-100 text-gray-800' },
-      discharged: { label: '퇴원', className: 'bg-blue-100 text-blue-800' },
+      pending: { label: '활성', className: 'bg-green-100 text-green-800' },
+      discharged: { label: '비활성', className: 'bg-gray-100 text-gray-800' },
     }
     
     const config = statusConfig[status as keyof typeof statusConfig] || 
@@ -124,8 +124,8 @@ export function PatientList({ onPatientSelect, onPatientEdit, onPatientDelete }:
             >
               <option value="">모든 상태</option>
               <option value="active">활성</option>
-              <option value="inactive">비활성</option>
-              <option value="discharged">퇴원</option>
+              <option value="pending">활성</option>
+              <option value="discharged">비활성</option>
             </Select>
           </div>
 
