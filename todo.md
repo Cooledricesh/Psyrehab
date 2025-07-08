@@ -29,26 +29,29 @@
 ## 🔧 P2 - 중기 개선 (1개월 내)
 
 ### 코드 정리
-- [ ] **레거시 백엔드 코드 제거**
-  - Express 관련 문서 정리 (`RATE_LIMITING.md`, Express 미들웨어 참조)
-  - `lib/security-logger.js` 등 사용하지 않는 서버 측 파일 삭제
-  - Winston 기반 보안 로거 모듈 제거
-  - `DBconnect.md`에서 Next.js App Router 백엔드 언급 수정
-  - 사용하지 않는 `VITE_API_URL` 환경 변수 제거
+- [x] **레거시 백엔드 코드 제거** ✅ (2025-01-08)
+  - ✅ Express 관련 문서 정리 (`RATE_LIMITING.md` 삭제)
+  - ✅ `lib/security-logger.js` 등 사용하지 않는 서버 측 파일 삭제
+  - ✅ Winston 기반 보안 로거 모듈 제거
+  - ✅ `DBconnect.md`에서 Next.js App Router 백엔드 언급 수정
+  - ✅ 사용하지 않는 `VITE_API_URL` 환경 변수 제거
+  - ✅ `vite.config.ts`에서 Express 프록시 설정 제거
+  - ✅ `HTTPS_SETUP.md`에서 Express 관련 내용 제거
 
-- [ ] **테스트 파일 정리**
-  - `archive_tests/` 디렉토리의 비활성화된 테스트 수정 또는 제거
-  - `.skip`으로 표시된 테스트들 재활성화
-  - 모든 테스트가 통과하도록 수정
+- [x] **테스트 파일 정리** ✅ (2025-01-08)
+  - ✅ `archive_tests/` 디렉토리 삭제 (오래된 테스트 파일들)
+  - ✅ 사용하지 않는 assessment-history 테스트 및 관련 코드 제거
+  - ✅ 빈 `__tests__` 및 `e2e` 디렉토리 삭제
+  - ✅ vitest 설정에서 존재하지 않는 setup 파일 참조 제거
 
 ### 의존성 관리
-- [ ] **보안 취약점 패치**
-  - `npm audit fix`로 brace-expansion 취약점 해결
-  - React 19 안정성 확인 (현재 실험 버전 사용 중)
+- [x] **보안 취약점 패치** ✅ (2025-01-08)
+  - ✅ `npm audit fix`로 brace-expansion 취약점 해결
+  - ✅ React 19 안정성 확인 (19.1.0 안정 버전 사용 중)
   
-- [ ] **Node 버전 고정**
-  - package.json에 engines 필드 추가
-  - `.nvmrc` 파일 생성 (Node 18.x)
+- [x] **Node 버전 고정** ✅ (2025-01-08)
+  - ✅ package.json에 engines 필드 추가 (Node 18-21, npm 9+)
+  - ✅ `.nvmrc` 파일 생성 (Node 18.20.0)
 
 ### 개발 프로세스
 - [ ] **기여 가이드라인 작성**

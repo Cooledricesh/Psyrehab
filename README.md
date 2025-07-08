@@ -58,15 +58,12 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key-here
 # n8n Webhook (for AI features)
 VITE_N8N_WEBHOOK_URL=your-n8n-webhook-url-here
 
-# API URL (optional, defaults to http://localhost:3001)
-VITE_API_URL=http://localhost:3001
 ```
 
 **환경변수 설명:**
 - `VITE_SUPABASE_URL`: Supabase 프로젝트 URL
 - `VITE_SUPABASE_ANON_KEY`: Supabase 익명 키 (공개 키)
 - `VITE_N8N_WEBHOOK_URL`: AI 기능을 위한 n8n 웹훅 URL
-- `VITE_API_URL`: 백엔드 API 서버 URL (선택사항)
 
 ### 3. 개발 서버 실행
 
