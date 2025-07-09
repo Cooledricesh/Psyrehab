@@ -8,16 +8,12 @@ interface GoalDetailDisplayProps {
   viewMode: 'monthly' | 'weekly';
   onViewModeChange: (mode: 'monthly' | 'weekly') => void;
   onGoalSelect: (goalId: string) => void;
-  patients: unknown[];
-  selectedPatient: string | null;
 }
 
 const GoalDetailDisplay: React.FC<GoalDetailDisplayProps> = ({
   detailedGoals,
   selectedGoal,
-  onGoalSelect,
-  patients,
-  selectedPatient
+  onGoalSelect
 }) => {
   const [expandedMonths, setExpandedMonths] = React.useState<Record<string, boolean>>({});
 

@@ -63,7 +63,7 @@ const useAIResponseParser = () => {
     if (!text) return [];
     
     // 패턴 1: ### 목표 N 형식
-    const sectionPattern = /###\s*목표\s*(\d+)[:\.]?\s*(.*?)(?=###\s*목표\s*\d+|$)/gs;
+    const sectionPattern = /###\s*목표\s*(\d+)[:.]?\s*(.*?)(?=###\s*목표\s*\d+|$)/gs;
     const matches = Array.from(text.matchAll(sectionPattern));
     
     if (matches.length >= 3) {
@@ -75,7 +75,7 @@ const useAIResponseParser = () => {
     }
 
     // 패턴 2: 목표 N: 형식
-    const basicPattern = /목표\s*(\d+)[:\.]?\s*(.*?)(?=목표\s*\d+|$)/gs;
+    const basicPattern = /목표\s*(\d+)[:.]?\s*(.*?)(?=목표\s*\d+|$)/gs;
     const basicMatches = Array.from(text.matchAll(basicPattern));
     
     if (basicMatches.length >= 3) {

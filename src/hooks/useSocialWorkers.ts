@@ -3,7 +3,6 @@ import {
   SocialWorkerService, 
   type SocialWorkerListParams 
 } from '@/services/social-workers'
-import type { SocialWorker } from '@/types/database'
 
 // Query Keys
 export const socialWorkerKeys = {
@@ -95,7 +94,7 @@ export function useAssignSocialWorker() {
   return useMutation({
     mutationFn: ({ patientId, socialWorkerId }: { patientId: string; socialWorkerId: string }) =>
       SocialWorkerService.assignSocialWorkerToPatient(patientId, socialWorkerId),
-    onSuccess: (_, { patientId, socialWorkerId }) => {
+    onSuccess: (_, { socialWorkerId }) => {
       // 관련 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       queryClient.invalidateQueries({ queryKey: socialWorkerKeys.all })
@@ -113,7 +112,7 @@ export function useUnassignSocialWorker() {
   return useMutation({
     mutationFn: (patientId: string) =>
       SocialWorkerService.unassignSocialWorkerFromPatient(patientId),
-    onSuccess: (_, patientId) => {
+    onSuccess: () => {
       // 관련 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       queryClient.invalidateQueries({ queryKey: socialWorkerKeys.all })

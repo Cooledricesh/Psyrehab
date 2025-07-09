@@ -3,6 +3,7 @@ import { AIRecommendationService } from '@/services/goalSetting';
 import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
 import { supabase } from '@/lib/supabase';
 import { POLLING_INTERVAL, MAX_POLLING_ATTEMPTS, MESSAGES } from '@/utils/GoalSetting/constants';
+import { handleApiError } from '@/utils/error-handler';
 
 interface UseAIPollingProps {
   currentStep: number;
@@ -67,7 +68,7 @@ export const useAIPolling = ({
             console.log('⚠️ 이미 아카이빙된 목표가 있어 중복 아카이빙 건너뛰기');
           } else {
             // 환자 정보 조회
-            const { data: assessmentData, error: assessmentError } = await supabase
+            const { data: assessmentData } = await supabase
               .from('assessments')
               .select('patient_id')
               .eq('id', currentAssessmentId)
@@ -85,9 +86,15 @@ export const useAIPolling = ({
               
 
             if (recommendation.recommendations && Array.isArray(recommendation.recommendations)) {
-              const allGoals = recommendation.recommendations.map((goal: any, index: number) => {
+              const allGoals = recommendation.recommendations.map((goal: {
+                title?: string
+                purpose?: string
+                sixMonthGoal?: string
+                monthlyGoals?: unknown[]
+                weeklyPlans?: unknown[]
+              }, index: number) => {
                 // 목표 제목에서 불필요한 말머리 제거
-                const cleanTitle = goal.title?.replace(/^목표\s*\d+[:\.]?\s*/i, '').trim() || goal.title;
+                const cleanTitle = goal.title?.replace(/^목표\s*\d+[:.]?\s*/i, '').trim() || goal.title;
                 
                 return {
                   plan_number: index + 1,
@@ -128,7 +135,7 @@ export const useAIPolling = ({
         stopPolling();
         
       } else if (recommendation && recommendation.n8n_processing_status === 'failed') {
-        console.error('❌ AI 처리 실패');
+        handleApiError(new Error('AI 처리 실패'), 'useAIPolling.checkAIStatus.failed');
         setPollingStatus('error');
         onError(MESSAGES.error.aiRecommendationFailed);
         stopPolling();
@@ -156,7 +163,7 @@ export const useAIPolling = ({
         setPollingAttempts(currentAttempts);
       }
     } catch (error) {
-      console.error('폴링 중 오류:', error);
+      handleApiError(error, 'useAIPolling.checkAIStatus');
       setPollingStatus('error');
       onError('폴링 중 오류가 발생했습니다.');
     }

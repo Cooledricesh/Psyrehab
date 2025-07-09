@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { ENV } from '@/lib/env';
 import { formatAssessmentData } from '@/utils/GoalSetting/helpers';
 import { eventBus, EVENTS } from '@/lib/eventBus';
+import { handleApiError } from '@/utils/error-handler';
 
 interface UseAIProcessingParams {
   selectedPatient: string | null;
@@ -50,7 +51,7 @@ export const useAIProcessing = ({
         .single();
 
       if (assessmentError) {
-        console.error('평가 저장 실패:', assessmentError);
+        handleApiError(assessmentError, 'useAIProcessing.saveAssessment');
         throw assessmentError;
       }
 
@@ -86,8 +87,9 @@ export const useAIProcessing = ({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("n8n webhook 오류:", errorText);
-        throw new Error(`n8n webhook 오류: ${response.status} - ${errorText}`);
+        const error = new Error(`n8n webhook 오류: ${response.status} - ${errorText}`);
+        handleApiError(error, 'useAIProcessing.n8nWebhook');
+        throw error;
       }
 
       const result = await response.json();
@@ -100,7 +102,7 @@ export const useAIProcessing = ({
       startPolling(data.assessmentId);
     },
     onError: (error) => {
-      console.error("Error occurred");
+      handleApiError(error, 'useAIProcessing.createAIMutation');
       setIsProcessing(false);
     }
   });
@@ -122,7 +124,7 @@ export const useAIProcessing = ({
         .maybeSingle();
 
       if (error) {
-        console.error("Error occurred");
+        handleApiError(error, 'useAIProcessing.polling');
         return;
       }
 
@@ -141,7 +143,8 @@ export const useAIProcessing = ({
         setPollingAttempts(prev => prev + 1);
         setTimeout(pollForResults, pollingInterval);
       } else {
-        console.error('❌ 폴링 타임아웃');
+        const timeoutError = new Error('폴링 타임아웃');
+        handleApiError(timeoutError, 'useAIProcessing.pollingTimeout');
         setIsProcessing(false);
         alert('AI 추천 생성에 시간이 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요.');
       }

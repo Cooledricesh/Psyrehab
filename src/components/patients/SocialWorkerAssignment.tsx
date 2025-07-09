@@ -12,6 +12,7 @@ import {
   useUnassignSocialWorker 
 } from '@/hooks/useSocialWorkers'
 import type { Patient, SocialWorker } from '@/types/database'
+import { handleApiError } from '@/utils/error-handler'
 
 interface SocialWorkerAssignmentProps {
   patient: Patient
@@ -41,8 +42,8 @@ export function SocialWorkerAssignment({ patient, onAssignmentChange }: SocialWo
       })
       setSelectedSocialWorkerId('')
       onAssignmentChange?.()
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'SocialWorkerAssignment.handleAssign')
     }
   }
 
@@ -50,8 +51,8 @@ export function SocialWorkerAssignment({ patient, onAssignmentChange }: SocialWo
     try {
       await unassignMutation.mutateAsync(patient.id)
       onAssignmentChange?.()
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'SocialWorkerAssignment.handleUnassign')
     }
   }
 

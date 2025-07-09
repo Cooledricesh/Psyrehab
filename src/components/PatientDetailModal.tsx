@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { getPatientById } from '@/services/patient-management'
 import type { Patient } from '@/services/patient-management'
 import { canEditPatient } from '@/lib/auth-utils'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientDetailModalProps {
   isOpen: boolean
@@ -44,7 +45,7 @@ export default function PatientDetailModal({
         setError('환자 정보를 찾을 수 없습니다.')
       }
     } catch (err: unknown) {
-      console.error('❌ 환자 상세 정보 로드 실패:', err)
+      handleApiError(err, 'PatientDetailModal.fetchPatientDetail')
       setError(err instanceof Error ? err.message : '환자 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
@@ -55,8 +56,8 @@ export default function PatientDetailModal({
     try {
       const hasPermission = await canEditPatient(patientId)
       setCanEdit(hasPermission)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'PatientDetailModal.checkEditPermission')
       setCanEdit(false)
     }
   }

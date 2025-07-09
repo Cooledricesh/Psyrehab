@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
+import { handleApiError } from '@/utils/error-handler';
 
 export async function fixGoalDatesSimple(patientId?: string) {
   try {
@@ -19,7 +20,7 @@ export async function fixGoalDatesSimple(patientId?: string) {
     const { data: sixMonthGoals, error: sixMonthError } = await sixMonthQuery;
 
     if (sixMonthError) {
-      console.error('6개월 목표 조회 오류:', sixMonthError);
+      handleApiError(sixMonthError, 'fixGoalDatesSimple.sixMonthGoals');
       return;
     }
 
@@ -28,7 +29,7 @@ export async function fixGoalDatesSimple(patientId?: string) {
       console.log(`   원본 시작일: ${sixMonthGoal.start_date}`);
       
       // 시작일을 Date 객체로 변환
-      let currentDate = new Date(sixMonthGoal.start_date + 'T00:00:00');
+      const currentDate = new Date(sixMonthGoal.start_date + 'T00:00:00');
       console.log(`   Date 객체: ${currentDate.toISOString()}`);
       
       // 2. 해당 6개월 목표의 월간 목표들 조회
@@ -40,7 +41,7 @@ export async function fixGoalDatesSimple(patientId?: string) {
         .order('sequence_number');
 
       if (monthlyError) {
-        console.error('월간 목표 조회 오류:', monthlyError);
+        handleApiError(monthlyError, 'fixGoalDatesSimple.monthlyGoals');
         continue;
       }
 
@@ -154,6 +155,6 @@ export async function fixGoalDatesSimple(patientId?: string) {
 
     console.log('\n🎉 모든 목표 날짜 수정 완료!');
   } catch (error) {
-    console.error('날짜 수정 중 오류:', error);
+    handleApiError(error, 'fixGoalDatesSimple');
   }
 }

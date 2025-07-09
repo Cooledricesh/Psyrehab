@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { AssessmentFormData, Patient } from '@/utils/GoalSetting/types';
+import type { AssessmentFormData } from '@/utils/GoalSetting/types';
 
 interface UseGoalSettingFlowReturn {
   // State

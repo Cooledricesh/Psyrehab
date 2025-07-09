@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 interface SimpleProtectedRouteProps {
   children: React.ReactNode
@@ -51,8 +52,8 @@ export function SimpleProtectedRoute({ children }: SimpleProtectedRouteProps) {
           console.log('No role, redirecting to pending approval')
           navigate('/auth/pending-approval')
         }
-      } catch {
-        console.error("Error occurred")
+      } catch (error) {
+        handleApiError(error, 'SimpleProtectedRoute.checkAuth')
         if (mounted) {
           navigate('/auth/login')
           setIsLoading(false)

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { ArchivedGoalData } from '@/services/ai-recommendation-archive';
-import { addWeeks, addMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { handleApiError } from '@/utils/error-handler';
 
 export interface GoalData {
   id: string;
@@ -39,7 +39,7 @@ export class GoalService {
       .eq('plan_status', 'active');
 
     if (error) {
-      console.error("Error occurred");
+      handleApiError(error, 'GoalService.deactivateExistingGoals');
       throw error;
     }
   }
@@ -173,7 +173,7 @@ export class GoalService {
       .insert(goals);
 
     if (error) {
-      console.error("Error occurred");
+      handleApiError(error, 'GoalService.saveGoals');
       throw error;
     }
   }
@@ -188,7 +188,7 @@ export class GoalService {
       .eq('id', patientId);
 
     if (error) {
-      console.error("Error occurred:", error);
+      handleApiError(error, 'GoalService.activatePatient');
       throw error;
     }
   }
@@ -235,8 +235,7 @@ export class GoalService {
   static async createGoalsFromArchived(
     archivedGoal: ArchivedGoalData,
     patientId: string,
-    userId: string,
-    originalArchiveId: string
+    userId: string
   ): Promise<void> {
     console.log('🔄 아카이빙된 목표를 활성 목표로 변환:', archivedGoal.title);
 

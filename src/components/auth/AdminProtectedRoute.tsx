@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
+import { handleApiError } from '@/utils/error-handler'
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode
@@ -35,8 +36,8 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
         .single()
 
       setIsAdmin(!!userRole)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AdminProtectedRoute.checkAdminAccess')
       setIsAdmin(false)
     } finally {
       setIsLoading(false)

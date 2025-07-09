@@ -47,6 +47,7 @@ import {
   // UpdateGoalRequest
 } from '@/types/goals';
 import { useGoals, useCreateGoal, useUpdateGoal, useGoalCategories } from '@/hooks/useGoals';
+import { handleApiError } from '@/utils/error-handler';
 
 const goalFormSchema = z.object({
   title: z.string().min(1, '목표 제목을 입력해주세요'),
@@ -145,8 +146,8 @@ export const GoalForm: React.FC<GoalFormProps> = ({
       await onSubmit(data);
       onClose();
       form.reset();
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'GoalForm.handleSubmit');
     }
   };
 

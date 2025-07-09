@@ -11,7 +11,7 @@ export const SystemLogs: React.FC = () => {
   const [filter, setFilter] = useState<LogFilter>(DEFAULT_LOG_FILTER)
   const [searchQuery, setSearchQuery] = useState('')
   const [pagination, setPagination] = useState<LogPagination>(DEFAULT_PAGINATION)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
 
   // 필터링된 로그 계산
   const filteredLogs = useMemo(() => {

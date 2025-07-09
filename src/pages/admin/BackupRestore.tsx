@@ -7,7 +7,7 @@ import { mockBackups, generateMockStats } from '@/utils/mockBackupData'
 export const BackupRestore: React.FC = () => {
   const [backups] = useState<BackupItem[]>(mockBackups)
   const [stats] = useState<BackupStats>(generateMockStats())
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'backups' | 'schedules' | 'restore'>('overview')
 
   // Mock 함수들

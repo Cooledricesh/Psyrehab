@@ -49,8 +49,7 @@ export function shouldRenderField(
  */
 export function getFieldOptions(
   field: AssessmentFieldConfig,
-  stepData: unknown,
-  formData: Partial<AssessmentData>
+  stepData: unknown
 ): Array<{ value: string; label: string; description?: string }> {
   if (!field.dependencies) return field.options || []
 

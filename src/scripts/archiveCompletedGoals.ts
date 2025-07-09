@@ -1,6 +1,7 @@
 // 기존 완료된 목표들을 일괄 아카이빙하는 스크립트
 import { supabase } from '../lib/supabase';
 import { AIRecommendationArchiveService } from '../services/ai-recommendation-archive';
+import { handleApiError } from '../utils/error-handler';
 
 async function archiveAllCompletedGoals() {
   console.log('🚀 기존 완료된 목표 아카이빙 시작...');
@@ -15,7 +16,7 @@ async function archiveAllCompletedGoals() {
       .order('completion_date', { ascending: false });
 
     if (error) {
-      console.error('❌ 완료된 목표 조회 실패:', error);
+      handleApiError(error, 'archiveCompletedGoals.queryCompletedGoals');
       return;
     }
 
@@ -44,7 +45,7 @@ async function archiveAllCompletedGoals() {
         }
       } catch (error) {
         failCount++;
-        console.error(`❌ 오류 발생 (${goal.title}):`, error);
+        handleApiError(error, `archiveCompletedGoals.archiveGoal.${goal.id}`);
       }
     }
 
@@ -54,13 +55,19 @@ async function archiveAllCompletedGoals() {
     console.log(`📦 총계: ${successCount + failCount}개`);
 
   } catch (error) {
-    console.error('❌ 스크립트 실행 중 오류:', error);
+    handleApiError(error, 'archiveCompletedGoals.script');
   }
 }
 
 // 브라우저 콘솔에서 실행할 수 있도록 전역 함수로 등록
+declare global {
+  interface Window {
+    archiveAllCompletedGoals: typeof archiveAllCompletedGoals;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  (window as any).archiveAllCompletedGoals = archiveAllCompletedGoals;
+  window.archiveAllCompletedGoals = archiveAllCompletedGoals;
   console.log('💡 archiveAllCompletedGoals() 함수를 실행하여 기존 완료된 목표들을 아카이빙할 수 있습니다.');
 }
 

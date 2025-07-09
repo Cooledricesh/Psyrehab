@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { UserRole, Permission } from '@/types/auth';
 import { ROLE_PERMISSIONS } from '@/types/auth';
+import { handleApiError } from '@/utils/error-handler';
 
 export class PermissionService {
   /**
@@ -13,7 +14,7 @@ export class PermissionService {
         .select('role_name, permission');
 
       if (error) {
-        console.error('권한 조회 오류:', error);
+        handleApiError(error, 'PermissionService.getRolePermissions');
         // 오류 시 기본 권한 반환
         return ROLE_PERMISSIONS;
       }
@@ -39,7 +40,7 @@ export class PermissionService {
         ...permissions
       } as Record<UserRole, Permission[]>;
     } catch (error) {
-      console.error('권한 조회 중 예외 발생:', error);
+      handleApiError(error, 'PermissionService.getRolePermissions');
       return ROLE_PERMISSIONS;
     }
   }
@@ -56,7 +57,7 @@ export class PermissionService {
         .neq('id', '00000000-0000-0000-0000-000000000000'); // 모든 레코드 삭제
 
       if (deleteError) {
-        console.error('기존 권한 삭제 오류:', deleteError);
+        handleApiError(deleteError, 'PermissionService.saveRolePermissions.delete');
       }
 
       // 2. 새 권한 삽입
@@ -83,7 +84,7 @@ export class PermissionService {
 
       return { success: true };
     } catch (error) {
-      console.error('권한 저장 중 오류:', error);
+      handleApiError(error, 'PermissionService.saveRolePermissions');
       return {
         success: false,
         error: error instanceof Error ? error.message : '권한 저장 중 오류가 발생했습니다.'
@@ -108,7 +109,7 @@ export class PermissionService {
         .single();
 
       if (roleError || !userRole?.roles?.role_name) {
-        console.error('사용자 역할 조회 오류:', roleError);
+        handleApiError(roleError || new Error('No role found'), 'PermissionService.getUserPermissions.role');
         return [];
       }
 
@@ -121,7 +122,7 @@ export class PermissionService {
         .eq('role_name', roleName);
 
       if (permError) {
-        console.error('권한 조회 오류:', permError);
+        handleApiError(permError, 'PermissionService.getUserPermissions.permissions');
         // DB 오류 시 기본 권한 반환
         return ROLE_PERMISSIONS[roleName] || [];
       }
@@ -133,7 +134,7 @@ export class PermissionService {
 
       return permissions.map(p => p.permission as Permission);
     } catch (error) {
-      console.error('사용자 권한 조회 중 예외 발생:', error);
+      handleApiError(error, 'PermissionService.getUserPermissions');
       return [];
     }
   }

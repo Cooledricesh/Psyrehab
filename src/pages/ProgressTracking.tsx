@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -10,8 +9,6 @@ import {
   Target, 
   Calendar,
   CheckCircle2,
-  Circle,
-  Clock,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -23,8 +20,6 @@ import {
   usePatientGoals, 
   useProgressStats
 } from '@/hooks/queries/useProgressTracking';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -42,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import { handleApiError } from '@/utils/error-handler';
 
 export default function ProgressTracking() {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
@@ -206,7 +202,7 @@ export default function ProgressTracking() {
         .eq('id', completedPatientId);
       
       if (error) {
-        console.error("Error occurred");
+        handleApiError(error, 'ProgressTracking.handleCongratulationClose');
         toast.error('환자 상태 업데이트에 실패했습니다.');
       } else {
         toast.success('모든 재활 목표를 완료했습니다! 새로운 목표를 설정해주세요.');
@@ -248,7 +244,7 @@ export default function ProgressTracking() {
       .eq('id', pendingGoalId);
     
     if (updateError) {
-      console.error('6개월 목표 완료 처리 실패:', updateError);
+      handleApiError(updateError, 'ProgressTracking.handleConfirmGoalComplete');
       toast.error('6개월 목표 완료 처리에 실패했습니다.');
       return;
     }
@@ -523,7 +519,7 @@ export default function ProgressTracking() {
                             
                             {/* 주간 목표들 */}
                             <div className="ml-6 space-y-2">
-                              {monthlyGoal.weeklyGoals?.map((weeklyGoal: any) => (
+                              {monthlyGoal.weeklyGoals?.map((weeklyGoal) => (
                                 <div
                                   key={weeklyGoal.id}
                                   className="p-2 bg-gray-50 rounded space-y-2"

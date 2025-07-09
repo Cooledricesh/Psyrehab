@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, Save, User, Mail, Shield, Building, AlertCircle } from 'lucide-react';
 import { UserRole } from '../../types/auth';
+import { handleApiError } from '@/utils/error-handler';
 
 export interface User {
   id: string;
@@ -179,8 +180,8 @@ export default function UserModal({
 
       await onSave(userData);
       onClose();
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'UserModal.handleSubmit');
       // Handle error (could set an error state here)
     } finally {
       setIsLoading(false);

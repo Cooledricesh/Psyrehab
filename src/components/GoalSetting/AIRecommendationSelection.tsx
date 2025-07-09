@@ -105,7 +105,7 @@ const AIRecommendationSelection: React.FC<AIRecommendationSelectionProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-medium text-gray-600">목표 {index + 1}</span>
                     <span className="text-lg font-semibold text-gray-900">
-                      {goal.title?.replace(/^목표\s*\d+[:\.]?\s*/i, '').trim() || `목표 ${index + 1}`}
+                      {goal.title?.replace(/^목표\s*\d+[:.]?\s*/i, '').trim() || `목표 ${index + 1}`}
                     </span>
                   </div>
                   

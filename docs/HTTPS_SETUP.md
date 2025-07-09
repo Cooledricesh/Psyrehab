@@ -11,19 +11,14 @@ This guide explains how to set up HTTPS for both development and production envi
    npm run setup-ssl
    ```
 
-2. **Start development servers with HTTPS:**
+2. **Start development server with HTTPS:**
    ```bash
    # Start Vite dev server with HTTPS
    npm run dev:https
-
-   # Start Express server (automatically detects SSL certificates)
-   npm run server:dev
    ```
 
 3. **Access your application:**
    - Frontend: https://localhost:5173
-   - Backend API: https://localhost:3443
-   - Fallback HTTP: http://localhost:3001
 
 ### Manual SSL Certificate Setup
 
@@ -52,8 +47,6 @@ If the automatic setup fails, you can manually generate certificates:
    # Add these lines to .env.local
    VITE_SSL_CERT=./certs/localhost.pem
    VITE_SSL_KEY=./certs/localhost-key.pem
-   EXPRESS_SSL_CERT=./certs/localhost.pem
-   EXPRESS_SSL_KEY=./certs/localhost-key.pem
    ```
 
 ## 🚀 Production Environment
@@ -93,12 +86,7 @@ For custom server deployments (AWS, DigitalOcean, etc.):
    # /etc/letsencrypt/live/yourdomain.com/
    ```
 
-3. **Update production environment variables:**
-   ```bash
-   NODE_ENV=production
-   EXPRESS_SSL_CERT=/etc/letsencrypt/live/yourdomain.com/fullchain.pem
-   EXPRESS_SSL_KEY=/etc/letsencrypt/live/yourdomain.com/privkey.pem
-   ```
+3. **Configure your web server (Nginx, Apache, etc.) to handle SSL**
 
 4. **Set up automatic certificate renewal:**
    ```bash

@@ -442,25 +442,6 @@ const ArchivedGoalRow: React.FC<{ item: ArchivedRecommendation }> = ({ item }) =
     item.archived_goal_data[0].sixMonthGoal || cleanTitle(item.archived_goal_data[0].title) || '목표 정보 없음' : 
     '목표 데이터 없음';
   
-  // 상태 배지 스타일 결정
-  const getStatusBadgeVariant = (reason: string) => {
-    switch (reason) {
-      case 'successfully_completed': return 'default';
-      case 'goal_not_selected': return 'secondary';
-      case 'initial_generation': return 'outline';
-      default: return 'destructive';
-    }
-  };
-  
-  const getStatusText = (reason: string) => {
-    switch (reason) {
-      case 'successfully_completed': return '성공 완료';
-      case 'goal_not_selected': return '미선택';
-      case 'initial_generation': return '생성됨';
-      case 'goal_selected_and_active': return '선택됨';
-      default: return '거절';
-    }
-  };
   
   // 진단 카테고리 한글화
   const getDiagnosisCategoryKorean = (category: string) => {

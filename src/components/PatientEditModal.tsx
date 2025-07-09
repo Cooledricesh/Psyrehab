@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { getPatientById, updatePatient } from '@/services/patient-management'
 import type { Patient, CreatePatientData } from '@/services/patient-management'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientEditModalProps {
   isOpen: boolean
@@ -69,7 +70,7 @@ export default function PatientEditModal({
         setError('환자 정보를 찾을 수 없습니다.')
       }
     } catch (err: unknown) {
-      console.error('❌ 환자 정보 로드 실패:', err)
+      handleApiError(err, 'PatientEditModal.fetchPatientDetail')
       setError(err.message || '환자 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
@@ -118,7 +119,7 @@ export default function PatientEditModal({
       }
       
     } catch (err: unknown) {
-      console.error('❌ 환자 정보 수정 실패:', err)
+      handleApiError(err, 'PatientEditModal.handleSubmit')
       setError(err.message || '환자 정보 수정 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)

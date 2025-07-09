@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Eye, EyeOff, Heart, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 interface SignUpRequestData {
   id: string
@@ -60,7 +61,7 @@ export default function ApprovedSignUpPage() {
       setSignUpRequest(request)
     } catch (err: unknown) {
       setError('가입 신청 확인 중 오류가 발생했습니다.')
-      console.error(err)
+      handleApiError(err, 'ApprovedSignUpPage.checkApprovedRequest')
     }
   }
 
@@ -128,7 +129,7 @@ export default function ApprovedSignUpPage() {
         })
 
       if (roleError) {
-        console.error('역할 할당 실패:', roleError)
+        handleApiError(roleError, 'ApprovedSignUpPage.handleSignUp.assignRole')
         // 에러가 발생해도 계속 진행 (이미 할당된 경우일 수 있음)
       }
 
@@ -146,7 +147,7 @@ export default function ApprovedSignUpPage() {
         })
 
       if (profileError) {
-        console.error('프로필 생성 실패:', profileError)
+        handleApiError(profileError, 'ApprovedSignUpPage.handleSignUp.createProfile')
         // 에러가 발생해도 계속 진행 (이미 생성된 경우일 수 있음)
       }
 
@@ -160,7 +161,7 @@ export default function ApprovedSignUpPage() {
         .eq('id', signUpRequest.id)
 
       if (updateError) {
-        console.error('신청서 업데이트 실패:', updateError)
+        handleApiError(updateError, 'ApprovedSignUpPage.handleSignUp.updateRequest')
       }
 
       setSuccess(true)
@@ -175,7 +176,7 @@ export default function ApprovedSignUpPage() {
       }, 3000)
 
     } catch (err: unknown) {
-      console.error('Sign up error:', err)
+      handleApiError(err, 'ApprovedSignUpPage.handleSignUp')
       if (err.message?.includes('already registered')) {
         setError('이미 등록된 이메일입니다. 로그인을 시도해주세요.')
       } else {

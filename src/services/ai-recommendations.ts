@@ -1,5 +1,6 @@
 // AI Goal Recommendations service functions
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 // Temporary types until Supabase types are properly generated
 type TablesInsert = Record<string, unknown>
@@ -124,7 +125,7 @@ export async function getAIRecommendationByAssessment(
     .single()
 
   if (error || !data) {
-    console.error("Error occurred")
+    handleApiError(error, 'ai-recommendations.getAIRecommendationByAssessment')
     return null
   }
 

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Heart, ArrowLeft, Mail, CheckCircle, AlertCircle } from 'lucide-react'
 import { resetPassword } from '@/services'
 import { toast } from 'sonner'
+import { handleApiError } from '@/utils/error-handler'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
         setError(result.error || '이메일 발송에 실패했습니다.')
       }
     } catch (error) {
-      console.error('Error occurred:', error)
+      handleApiError(error, 'ForgotPasswordPage.handleSubmit')
       setError('이메일 발송 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)

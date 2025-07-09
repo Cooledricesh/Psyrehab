@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { handleApiError } from '@/utils/error-handler';
 
 // 간단한 환자 수 가져오기 함수
 export const getPatientCount = async (): Promise<number> => {
@@ -6,8 +7,8 @@ export const getPatientCount = async (): Promise<number> => {
     const { data, error } = await supabase.from('patients').select('id');
     if (error) throw error;
     return data?.length || 0;
-  } catch {
-    console.error("Error occurred");
+  } catch (error) {
+    handleApiError(error, 'DashboardService.getPatientCount');
     return 0;
   }
 };
@@ -18,8 +19,8 @@ export const getActiveGoalsCount = async (): Promise<number> => {
     const { data, error } = await supabase.from('goals').select('id').eq('status', 'in_progress');
     if (error) throw error;
     return data?.length || 0;
-  } catch {
-    console.error("Error occurred");
+  } catch (error) {
+    handleApiError(error, 'DashboardService.getActiveGoalsCount');
     return 0;
   }
 };
@@ -79,8 +80,8 @@ export class DashboardService {
         data: stats,
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getDashboardStats');
       return {
         data: this.getMockStats(),
         success: false,
@@ -120,8 +121,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getPatients');
       // Return mock data on error
       return {
         data: {
@@ -168,8 +169,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getGoals');
       return {
         data: {
           data: this.getMockGoals(),
@@ -211,8 +212,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getSessions');
       return {
         data: {
           data: this.getMockSessions(),
@@ -238,8 +239,8 @@ export class DashboardService {
         data: chartData,
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getChartData');
       return {
         data: this.getMockChartData(),
         success: false,
@@ -265,8 +266,8 @@ export class DashboardService {
         data: data || [],
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getProgressData');
       return {
         data: this.getMockProgressData(patientId, goalId),
         success: false,
@@ -443,4 +444,4 @@ export const testSupabaseConnection = async () => {
   } catch {
     return false;
   }
-}; 
+};

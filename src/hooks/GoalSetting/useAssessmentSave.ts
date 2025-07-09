@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { AssessmentService } from '@/services/goalSetting';
 import type { AssessmentFormData } from '@/utils/GoalSetting/types';
+import { handleApiError } from '@/utils/error-handler';
 
 interface UseAssessmentSaveProps {
   selectedPatient: string | null;
@@ -49,7 +50,7 @@ export const useAssessmentSave = ({
       onSuccess(data);
     },
     onError: (error: Error) => {
-      console.error("Error occurred");
+      handleApiError(error, 'useAssessmentSave.onError');
       onError(error);
     },
   });

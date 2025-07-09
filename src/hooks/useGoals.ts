@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import * as goalService from '@/services/rehabilitation-goals';
 // Category system has been deprecated - all category-related imports removed
 import type { 
-  BaseGoal, 
   // GoalCategory, // Removed - deprecated category system
   CreateGoalRequest,
   UpdateGoalRequest,
@@ -79,10 +78,7 @@ export const useCreateGoal = () => {
 
   return useMutation({
     mutationFn: (goalData: CreateGoalRequest) => goalService.createGoal(goalData),
-    onSuccess: (newGoal, variables) => {
-      const patientId = variables.patient_id;
-      
-
+    onSuccess: (newGoal) => {
       // 새 목표를 상세 쿼리 캐시에 추가
       queryClient.setQueryData(GOAL_QUERY_KEYS.detail(newGoal.id), newGoal);
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { testSupabaseConnection } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 const APP_NAME = 'PsyRehab'
 const APP_VERSION = '1.0.0'
@@ -12,8 +13,8 @@ export default function DevStatus() {
       try {
         const isConnected = await testSupabaseConnection()
         setSupabaseStatus(isConnected ? 'connected' : 'error')
-      } catch {
-        console.error("Error occurred")
+      } catch (error) {
+        handleApiError(error, 'DevStatus.checkConnection')
         setSupabaseStatus('error')
       }
     }

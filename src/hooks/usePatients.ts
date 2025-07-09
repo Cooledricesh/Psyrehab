@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PatientService, type PatientCreateData, type PatientUpdateData, type PatientListParams } from '@/services/patients'
+import { handleApiError } from '@/utils/error-handler'
 
 // Query Keys
 export const patientQueryKeys = {
@@ -61,7 +62,7 @@ export function useCreatePatient() {
       )
     },
     onError: (error: Error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useCreatePatient.onError')
     },
   })
 }
@@ -87,7 +88,7 @@ export function useUpdatePatient() {
       )
     },
     onError: (error: Error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useUpdatePatient.onError')
     },
   })
 }
@@ -108,7 +109,7 @@ export function useDeletePatient() {
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.stats() })
     },
     onError: (error: Error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useDeletePatient.onError')
     },
   })
 }
@@ -128,7 +129,7 @@ export function useAssignSocialWorker() {
       queryClient.invalidateQueries({ queryKey: patientQueryKeys.lists() })
     },
     onError: (error: Error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useAssignSocialWorker.onError')
     },
   })
 }
@@ -150,7 +151,7 @@ export function useUpdatePatientStatus() {
       
     },
     onError: (error: Error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useUpdatePatientStatus.onError')
     },
   })
 }
@@ -179,4 +180,4 @@ export function usePrefetchPatient() {
       staleTime: 5 * 60 * 1000,
     })
   }
-} 
+}

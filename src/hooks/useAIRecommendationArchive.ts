@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
 import type { ArchivedRecommendation } from '@/services/ai-recommendation-archive';
+import { handleApiError } from '@/utils/error-handler';
 
 /**
  * 아카이빙된 AI 추천 목록 조회 훅
@@ -110,7 +111,7 @@ export const useRefreshArchiveData = () => {
       console.log('✅ 아카이빙 데이터 새로고침 완료');
     },
     onError: (error) => {
-      console.error('❌ 아카이빙 데이터 새로고침 실패:', error);
+      handleApiError(error, 'useRefreshArchiveData.onError');
     }
   });
 };
@@ -159,7 +160,7 @@ export const useExportArchiveData = () => {
       console.log('✅ 아카이빙 데이터 내보내기 완료');
     },
     onError: (error) => {
-      console.error('❌ 아카이빙 데이터 내보내기 실패:', error);
+      handleApiError(error, 'useExportArchiveData.onError');
     }
   });
 };
@@ -222,7 +223,7 @@ export const useDeleteArchivedGoal = () => {
       alert('아카이빙된 목표가 삭제되었습니다.');
     },
     onError: (error) => {
-      console.error('삭제 실패:', error);
+      handleApiError(error, 'useDeleteArchivedGoal.onError');
       alert(error instanceof Error ? error.message : '삭제에 실패했습니다.');
     }
   });

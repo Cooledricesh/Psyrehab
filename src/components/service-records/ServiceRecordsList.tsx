@@ -14,7 +14,6 @@ import {
   Trash2,
   Eye,
   Plus,
-  Download,
   RefreshCw,
   X
 } from 'lucide-react'
@@ -40,10 +39,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   AlertDialog,
@@ -72,6 +69,7 @@ import {
 } from '@/hooks/service-records/useServiceRecords'
 import { ServiceRecordForm } from './ServiceRecordForm'
 import type { ServiceRecordWithDetails } from '@/types/database'
+import { handleApiError } from '@/utils/error-handler'
 
 interface ServiceRecordsListProps {
   patientId?: string
@@ -113,7 +111,6 @@ export function ServiceRecordsList({
   const [filters, setFilters] = useState<Filters>(initialFilters)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(20)
-  const [selectedRecord, setSelectedRecord] = useState<ServiceRecordWithDetails | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingRecord, setEditingRecord] = useState<ServiceRecordWithDetails | null>(null)
 
@@ -170,13 +167,12 @@ export function ServiceRecordsList({
   const handleDelete = async (recordId: string) => {
     try {
       await deleteMutation.mutateAsync(recordId)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'ServiceRecordsList.handleDelete')
     }
   }
 
   const handleView = (record: ServiceRecordWithDetails) => {
-    setSelectedRecord(record)
     onRecordSelect?.(record)
   }
 

@@ -21,7 +21,7 @@ const SkipLink = ({ href, children, className }: SkipLinkProps) => {
         'focus:block',
         className
       )}
-      onFocus={(e) => {
+      onFocus={() => {
         // Announce to screen readers
         const announcement = `건너뛰기 링크: ${children}`
         const ariaLive = document.createElement('div')
