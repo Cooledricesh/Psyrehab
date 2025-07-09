@@ -29,7 +29,7 @@ export async function fixGoalDatesSimple(patientId?: string) {
       console.log(`   원본 시작일: ${sixMonthGoal.start_date}`);
       
       // 시작일을 Date 객체로 변환
-      let currentDate = new Date(sixMonthGoal.start_date + 'T00:00:00');
+      const currentDate = new Date(sixMonthGoal.start_date + 'T00:00:00');
       console.log(`   Date 객체: ${currentDate.toISOString()}`);
       
       // 2. 해당 6개월 목표의 월간 목표들 조회

@@ -430,7 +430,15 @@ export class AIRecommendationArchiveService {
   /**
    * 정확히 일치하는 평가 항목으로 검색
    */
-  private static async searchExactMatch(params: any): Promise<ArchivedRecommendation[]> {
+  private static async searchExactMatch(params: {
+    ageRange?: string;
+    focusTime?: string;
+    motivationLevel?: number;
+    pastSuccesses?: string[];
+    constraints?: string[];
+    socialPreference?: string;
+    limit: number;
+  }): Promise<ArchivedRecommendation[]> {
     try {
       // 먼저 매칭되는 평가를 찾기
       const { data: matchingAssessments, error: assessmentError } = await supabase
@@ -491,7 +499,19 @@ export class AIRecommendationArchiveService {
   /**
    * 유사한 평가 항목으로 검색
    */
-  private static async searchSimilarMatch(params: any): Promise<ArchivedRecommendation[]> {
+  private static async searchSimilarMatch(params: {
+    ageRange?: string;
+    focusTime?: string;
+    motivationLevel?: number;
+    pastSuccesses?: string[];
+    constraints?: string[];
+    socialPreference?: string;
+    limit: number;
+    excludeIds?: string[];
+    userFocusTime?: string;
+    userMotivationLevel?: number;
+    userSocialPreference?: string;
+  }): Promise<ArchivedRecommendation[]> {
     try {
       // motivation_level ±1 범위로 검색
       const motivationRange = params.motivationLevel 
@@ -583,7 +603,11 @@ export class AIRecommendationArchiveService {
   /**
    * 연령대만으로 검색
    */
-  private static async searchByAgeRange(params: any): Promise<ArchivedRecommendation[]> {
+  private static async searchByAgeRange(params: {
+    ageRange?: string;
+    limit: number;
+    excludeIds?: string[];
+  }): Promise<ArchivedRecommendation[]> {
     let query = supabase
       .from('ai_recommendation_archive')
       .select('*')
@@ -623,7 +647,10 @@ export class AIRecommendationArchiveService {
   /**
    * 인기 있는 목표 검색
    */
-  private static async searchPopularGoals(params: any): Promise<ArchivedRecommendation[]> {
+  private static async searchPopularGoals(params: {
+    limit: number;
+    excludeIds?: string[];
+  }): Promise<ArchivedRecommendation[]> {
     let query = supabase
       .from('ai_recommendation_archive')
       .select('*')
@@ -783,7 +810,17 @@ export class AIRecommendationArchiveService {
         : undefined;
 
       // 6. 아카이빙 실행
-      const archiveData: any = {
+      const archiveData: {
+        original_recommendation_id: string | null;
+        original_assessment_id: string;
+        archived_goal_data: ArchivedGoalData[];
+        patient_age_range: string | null;
+        patient_gender: string | null;
+        diagnosis_category: string | null;
+        archived_reason: string;
+        completion_rate?: number;
+        completion_date?: string;
+      } = {
         original_recommendation_id: sixMonthGoal.source_recommendation_id,
         original_assessment_id: sixMonthGoal.source_recommendation_id || crypto.randomUUID(),
         archived_goal_data: [archivedGoalData],
@@ -1086,7 +1123,15 @@ export class AIRecommendationArchiveService {
       }
 
       // 모든 완료 기록을 보존 (중복 제거하지 않음)
-      const patients = results.map((goal: any) => ({
+      const patients = results.map((goal: {
+        patient_id: string;
+        patients?: { full_name?: string };
+        completed_at?: string;
+        completion_date?: string;
+        actual_completion_rate?: number;
+        social_workers?: { full_name?: string };
+        status: string;
+      }) => ({
         patient_id: goal.patient_id,
         patient_name: goal.patients?.full_name || '알 수 없음',
         completed_date: goal.completed_at || goal.completion_date,
@@ -1200,7 +1245,7 @@ export class AIRecommendationArchiveService {
   /**
    * 필드별 그룹화
    */
-  private static groupByField(data: any[], field: string): Record<string, number> {
+  private static groupByField(data: Array<Record<string, unknown>>, field: string): Record<string, number> {
     const result: Record<string, number> = {};
     
     data?.forEach(item => {
@@ -1216,7 +1261,7 @@ export class AIRecommendationArchiveService {
   /**
    * 일별 트렌드 계산
    */
-  private static calculateDailyTrends(data: any[]): Array<{ date: string; count: number }> {
+  private static calculateDailyTrends(data: Array<{ archived_at: string }>): Array<{ date: string; count: number }> {
     const dailyCounts: Record<string, number> = {};
     
     data?.forEach(item => {

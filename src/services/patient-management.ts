@@ -185,55 +185,6 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
   }
 }
 
-// 환자 식별번호 자동 생성
-const generatePatientIdentifier = async (): Promise<string> => {
-  try {
-    const year = new Date().getFullYear()
-    const prefix = `P${year}`
-    
-    // 데이터베이스에서 가장 큰 번호 직접 조회
-    const { data, error } = await supabase
-      .from('patients')
-      .select('patient_identifier')
-      .like('patient_identifier', `${prefix}%`)
-      .order('patient_identifier', { ascending: false })
-
-    if (error) {
-      handleApiError(error, 'PatientManagement.generatePatientIdentifier')
-      // 에러 시 타임스탬프 기반 고유 번호 생성
-      const timestamp = Date.now().toString().slice(-6)
-      return `${prefix}${timestamp}`
-    }
-
-    if (!data || data.length === 0) {
-      console.log('첫 번째 환자 식별번호 생성: P2025001')
-      return `${prefix}001`
-    }
-
-    // 모든 번호 추출 및 정렬
-    const existingNumbers = data
-      .map(p => {
-        const match = p.patient_identifier.match(/^P\d{4}(\d{3,})$/)
-        return match ? parseInt(match[1]) : null
-      })
-      .filter(num => num !== null)
-      .sort((a, b) => b - a)
-
-    const highestNumber = existingNumbers[0] || 0
-    const nextNumber = highestNumber + 1
-    const paddedNumber = nextNumber.toString().padStart(3, '0')
-    
-    console.log(`환자 식별번호 자동 생성: 기존 최고값 ${highestNumber} → 새 번호 ${prefix}${paddedNumber}`)
-    
-    return `${prefix}${paddedNumber}`
-  } catch (err) {
-    handleApiError(err, 'PatientManagement.generatePatientIdentifier')
-    // 최후의 수단: 랜덤 번호
-    const random = Math.floor(Math.random() * 90000) + 10000
-    return `P${new Date().getFullYear()}${random}`
-  }
-}
-
 // 성별 매핑 함수 - 다양한 형태의 성별 값을 표준화
 const mapGender = (gender: any): string => {
   if (!gender) {

@@ -9,11 +9,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ServiceRecordsList, ServiceRecordForm, ServiceRecordDetail } from '@/components/service-records'
-import { useUser } from '@/hooks/auth/useUser'
 import type { ServiceRecordWithDetails } from '@/types/database'
 
 export default function ServiceRecordsPage() {
-  const { } = useUser()
   const [showForm, setShowForm] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<ServiceRecordWithDetails | null>(null)
   const [editingRecord, setEditingRecord] = useState<ServiceRecordWithDetails | null>(null)

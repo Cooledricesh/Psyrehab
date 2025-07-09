@@ -101,10 +101,10 @@ export class GoalBreakdownService {
         warnings: warnings.length > 0 ? warnings : undefined
       };
 
-    } catch {
+    } catch (error) {
       return {
         success: false,
-        errors: [`목표 분해 중 오류가 발생했습니다: ${""instanceOf Error ? "Error" : '알 수 없는 오류'}`]
+        errors: [`목표 분해 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`]
       };
     }
   }
@@ -184,10 +184,10 @@ export class GoalBreakdownService {
         warnings: warnings.length > 0 ? warnings : undefined
       };
 
-    } catch {
+    } catch (error) {
       return {
         success: false,
-        errors: [`목표 분해 중 오류가 발생했습니다: ${""instanceOf Error ? "Error" : '알 수 없는 오류'}`]
+        errors: [`목표 분해 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`]
       };
     }
   }

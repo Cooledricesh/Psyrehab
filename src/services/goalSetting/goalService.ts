@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase';
 import type { ArchivedGoalData } from '@/services/ai-recommendation-archive';
-import { addWeeks, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { handleApiError } from '@/utils/error-handler';
 
 export interface GoalData {
@@ -236,8 +235,7 @@ export class GoalService {
   static async createGoalsFromArchived(
     archivedGoal: ArchivedGoalData,
     patientId: string,
-    userId: string,
-    originalArchiveId: string
+    userId: string
   ): Promise<void> {
     console.log('🔄 아카이빙된 목표를 활성 목표로 변환:', archivedGoal.title);
 

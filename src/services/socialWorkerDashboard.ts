@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { startOfWeek, differenceInWeeks, subWeeks } from 'date-fns'
 import { handleApiError } from '@/utils/error-handler'
 
 // 캐시 저장소
@@ -30,7 +29,7 @@ interface PatientWithGoal extends Patient {
 }
 
 // 권한 체크 결과를 캐시
-let permissionCache = new Map<string, { canViewAll: boolean, timestamp: number }>()
+const permissionCache = new Map<string, { canViewAll: boolean, timestamp: number }>()
 const PERMISSION_CACHE_TTL = 300000 // 5분 캐시
 
 // 캐시 크기 관리 함수
@@ -71,7 +70,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
   } else {
     // 권한 체크 (캐시 없을 때만)
     try {
-      const { getUserProfile, hasPermission } = await import('@/lib/supabase')
+      const { hasPermission } = await import('@/lib/supabase')
       canViewAllData = await hasPermission(userId, 'view_all_data')
       
       // 권한 결과 캐시
@@ -274,7 +273,6 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
           
           if (allFailed) {
             // 연속 실패한 주차 정보 포함
-            const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
             const failureInfo = '4주 연속 목표 미달성'
             
             return {
@@ -409,7 +407,6 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
           
           if (allAchieved) {
             // 연속 달성한 주차 정보 포함
-            const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
             const achievementInfo = '4주 연속 목표 달성'
             
             return {

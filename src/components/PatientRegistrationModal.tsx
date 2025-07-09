@@ -37,15 +37,6 @@ export default function PatientRegistrationModal({
     if (error) setError(null) // 에러 있을 때 입력 시 제거
   }
 
-  const handleContactInfoChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      contact_info: {
-        ...prev.contact_info,
-        [field]: value
-      }
-    }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

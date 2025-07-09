@@ -119,7 +119,7 @@ export default function SignUpPage() {
       }
 
       // 2. Supabase Auth에 사용자 생성
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {

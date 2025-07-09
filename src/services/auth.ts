@@ -514,7 +514,7 @@ export class AuthService {
       const { role, ...profileUpdates } = updates
 
       switch (userRole) {
-        case 'social_worker':
+        case 'social_worker': {
           // Validate social worker specific fields
           if (updates.employee_id) {
             const empIdValidation = validateEmployeeId(updates.employee_id)
@@ -555,8 +555,9 @@ export class AuthService {
 
           result = { ...swData, role: 'social_worker' as UserRole }
           break
+        }
 
-        case 'administrator':
+        case 'administrator': {
           const { data: adminData, error: adminError } = await supabase
             .from('administrators')
             .update({
@@ -576,8 +577,9 @@ export class AuthService {
 
           result = { ...adminData, role: 'administrator' as UserRole }
           break
+        }
 
-        case 'patient':
+        case 'patient': {
           // Validate patient specific fields
           if (updates.date_of_birth) {
             const dobValidation = validateDateOfBirth(updates.date_of_birth)
@@ -608,6 +610,7 @@ export class AuthService {
 
           result = { ...patientData, role: 'patient' as UserRole }
           break
+        }
 
         default:
           return {
@@ -772,7 +775,7 @@ export class AuthService {
   }> {
     try {
       switch (formData.role) {
-        case 'social_worker':
+        case 'social_worker': {
           const { error: swError } = await supabase
             .from('social_workers')
             .insert({
@@ -791,8 +794,9 @@ export class AuthService {
             }
           }
           break
+        }
 
-        case 'administrator':
+        case 'administrator': {
           const { error: adminError } = await supabase
             .from('administrators')
             .insert({
@@ -809,8 +813,9 @@ export class AuthService {
             }
           }
           break
+        }
 
-        case 'patient':
+        case 'patient': {
           const { error: patientError } = await supabase
             .from('patients')
             .insert({
@@ -829,6 +834,7 @@ export class AuthService {
             }
           }
           break
+        }
 
         default:
           return {

@@ -1,5 +1,3 @@
-import { useToast } from '@/components/ui/use-toast'
-
 // Since we can't use hooks outside of React components, we'll create a toast function
 let toastFunction: ((options: any) => void) | null = null
 
@@ -29,7 +27,7 @@ export function handleError(
   } = options
 
   // 에러 메시지 추출
-  let errorMessage = message || '오류가 발생했습니다.'
+  const errorMessage = message || '오류가 발생했습니다.'
   let errorDetails = ''
 
   if (error instanceof Error) {

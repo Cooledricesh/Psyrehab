@@ -60,8 +60,14 @@ async function archiveAllCompletedGoals() {
 }
 
 // 브라우저 콘솔에서 실행할 수 있도록 전역 함수로 등록
+declare global {
+  interface Window {
+    archiveAllCompletedGoals: typeof archiveAllCompletedGoals;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  (window as any).archiveAllCompletedGoals = archiveAllCompletedGoals;
+  window.archiveAllCompletedGoals = archiveAllCompletedGoals;
   console.log('💡 archiveAllCompletedGoals() 함수를 실행하여 기존 완료된 목표들을 아카이빙할 수 있습니다.');
 }
 

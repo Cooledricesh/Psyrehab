@@ -259,9 +259,8 @@ export class PatientService {
 
   // 환자 삭제 (실제 삭제)
   static async deletePatient(id: string, forceDelete: boolean = false) {
-    try {
-      // 1. 연관된 데이터 확인
-      const relatedData = await this.checkPatientRelatedData(id)
+    // 1. 연관된 데이터 확인
+    const relatedData = await this.checkPatientRelatedData(id)
 
       // 2. 연관된 데이터가 있고 강제 삭제가 아닌 경우 에러
       if (relatedData.length > 0 && !forceDelete) {
@@ -323,9 +322,6 @@ export class PatientService {
       }
 
       return { success: true }
-    } catch (error) {
-      throw error
-    }
   }
 
   // 환자와 연관된 모든 데이터 확인

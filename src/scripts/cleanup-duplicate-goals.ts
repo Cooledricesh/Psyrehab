@@ -160,7 +160,8 @@ async function runWithConfirmation() {
   
   // Node.js 환경에서 실행 시
   if (typeof process !== 'undefined' && process.stdin) {
-    const readline = require('readline').createInterface({
+    const { createInterface } = await import('readline')
+    const readline = createInterface({
       input: process.stdin,
       output: process.stdout
     })
