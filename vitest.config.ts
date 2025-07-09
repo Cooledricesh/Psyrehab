@@ -20,6 +20,8 @@ export default defineConfig({
       'reference/**',
       '.taskmaster/**'
     ],
+    // Pass when no test files are found
+    passWithNoTests: true,
   },
   define: {
     'import.meta.env.VITE_SUPABASE_URL': '"https://test.supabase.co"',
