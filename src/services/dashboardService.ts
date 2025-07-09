@@ -16,7 +16,7 @@ export const getPatientCount = async (): Promise<number> => {
 // 간단한 활성 목표 수 가져오기 함수  
 export const getActiveGoalsCount = async (): Promise<number> => {
   try {
-    const { data, error } = await supabase.from('goals').select('id').eq('status', 'in_progress');
+    const { data, error } = await supabase.from('goals').select('id').eq('status', 'active');
     if (error) throw error;
     return data?.length || 0;
   } catch (error) {
@@ -51,7 +51,7 @@ export class DashboardService {
         const sessions = sessionsResult.status === 'fulfilled' ? sessionsResult.value.data || [] : [];
 
         const activePatients = patients.filter(p => p.status === 'active');
-        const activeGoals = goals.filter(g => g.status === 'in_progress');
+        const activeGoals = goals.filter(g => g.status === 'active');
         const completedGoals = goals.filter(g => g.status === 'completed');
         const thisWeekSessions = sessions.filter(s => {
           const sessionDate = new Date(s.date);
@@ -332,7 +332,7 @@ export class DashboardService {
         title: '인지 능력 향상',
         description: '기억력과 집중력 개선을 위한 훈련',
         category: 'cognitive',
-        status: 'in_progress',
+        status: 'active',
         priority: 'high',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-15',
@@ -344,7 +344,7 @@ export class DashboardService {
         title: '사회적 기술 개발',
         description: '대인관계 능력 향상',
         category: 'social',
-        status: 'in_progress',
+        status: 'active',
         priority: 'medium',
         createdAt: '2024-01-02',
         updatedAt: '2024-01-14',

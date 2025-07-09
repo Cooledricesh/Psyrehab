@@ -150,11 +150,10 @@ export const GoalHierarchyTree: React.FC<GoalHierarchyTreeProps> = ({
       },
       byStatus: {
         pending: goals.filter(g => g.status === 'pending').length,
-        in_progress: goals.filter(g => g.status === 'in_progress').length,
+        active: goals.filter(g => g.status === 'active').length,
         completed: goals.filter(g => g.status === 'completed').length,
         on_hold: goals.filter(g => g.status === 'on_hold').length,
-        cancelled: goals.filter(g => g.status === 'cancelled').length,
-        deferred: goals.filter(g => g.status === 'deferred').length
+        cancelled: goals.filter(g => g.status === 'cancelled').length
       },
       averageProgress: goals.length > 0 
         ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length)
@@ -227,7 +226,7 @@ export const GoalHierarchyTree: React.FC<GoalHierarchyTreeProps> = ({
         <div className="text-center">
           <div className="text-sm text-gray-500">진행중</div>
           <div className="text-lg font-semibold text-blue-600">
-            {treeStats.byStatus.in_progress}
+            {treeStats.byStatus.active}
           </div>
         </div>
         <div className="text-center">
@@ -246,12 +245,6 @@ export const GoalHierarchyTree: React.FC<GoalHierarchyTreeProps> = ({
           <div className="text-sm text-gray-500">취소</div>
           <div className="text-lg font-semibold text-red-600">
             {treeStats.byStatus.cancelled}
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm text-gray-500">연기</div>
-          <div className="text-lg font-semibold text-orange-600">
-            {treeStats.byStatus.deferred}
           </div>
         </div>
       </div>

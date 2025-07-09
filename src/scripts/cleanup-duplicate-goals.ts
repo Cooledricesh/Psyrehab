@@ -79,7 +79,7 @@ async function cleanupDuplicateGoals(): Promise<void> {
         } else if (patient.status === 'active') {
           // active 환자: 가장 최신 활성 목표 1개만 유지
           const activeGoals = nonCompletedGoals.filter(g => 
-            g.status === 'active' || g.status === 'in_progress'
+            g.status === 'active'
           )
           
           if (activeGoals.length > 0) {

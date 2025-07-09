@@ -298,12 +298,15 @@ export default function ProgressTracking() {
 
       if (goalsError) throw goalsError;
 
-      // 2. 모든 목표 삭제
+      // 2. 모든 목표를 'deleted' 상태로 변경 (soft delete)
       if (activeGoals && activeGoals.length > 0) {
         const goalIds = activeGoals.map(g => g.id);
         const { error: deleteError } = await supabase
           .from('rehabilitation_goals')
-          .delete()
+          .update({ 
+            status: 'deleted',
+            updated_at: new Date().toISOString()
+          })
           .in('id', goalIds);
 
         if (deleteError) throw deleteError;
@@ -343,6 +346,7 @@ export default function ProgressTracking() {
       await queryClient.invalidateQueries({ queryKey: ['activePatients'] });
       await queryClient.invalidateQueries({ queryKey: ['patientGoals'] });
       await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+      await queryClient.invalidateQueries({ queryKey: ['aiRecommendationArchive'] });
 
       // 8. 다이얼로그 닫기
       setShowStopGoalsDialog(false);
