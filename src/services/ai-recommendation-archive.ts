@@ -84,7 +84,7 @@ export class AIRecommendationArchiveService {
         // 목표 제목에서 불필요한 말머리 제거
         const cleanedGoal = {
           ...goal,
-          title: goal.title?.replace(/^목표\s*\d+[:\.]?\s*/i, '').trim() || goal.title
+          title: goal.title?.replace(/^목표\s*\d+[:.]?\s*/i, '').trim() || goal.title
         };
         
         const archiveData = {

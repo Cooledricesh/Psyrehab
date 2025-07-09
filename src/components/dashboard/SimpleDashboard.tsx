@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSocialWorkerDashboardStats, invalidateDashboardCache } from '@/services/socialWorkerDashboard'
-import { Loader2, Users, Target, Calendar, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import { Loader2, Target, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import type { SocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'

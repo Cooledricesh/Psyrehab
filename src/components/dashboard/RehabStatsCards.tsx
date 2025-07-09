@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { TrendingUp, Users, Target, Calendar, Clock } from 'lucide-react'
+import { TrendingUp, Users, Target, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { getDashboardStats } from '@/services/dashboard-stats'
 import { handleApiError } from '@/utils/error-handler'
 

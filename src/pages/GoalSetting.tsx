@@ -667,15 +667,4 @@ function simplifyDiagnosis(diagnosis: string): string {
   return 'other_disorder';
 }
 
-// 나이를 연령대로 변환
-function getAgeRange(age: number): string {
-  if (age < 20) return '0-19';
-  if (age < 30) return '20-29';
-  if (age < 40) return '30-39';
-  if (age < 50) return '40-49';
-  if (age < 60) return '50-59';
-  if (age < 70) return '60-69';
-  return '70+';
-}
-
 export default GoalSetting;

@@ -14,7 +14,6 @@ import {
   Trash2,
   Eye,
   Plus,
-  Download,
   RefreshCw,
   X
 } from 'lucide-react'
@@ -40,10 +39,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   AlertDialog,

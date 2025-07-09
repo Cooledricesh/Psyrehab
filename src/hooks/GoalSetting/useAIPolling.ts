@@ -88,7 +88,7 @@ export const useAIPolling = ({
             if (recommendation.recommendations && Array.isArray(recommendation.recommendations)) {
               const allGoals = recommendation.recommendations.map((goal: any, index: number) => {
                 // 목표 제목에서 불필요한 말머리 제거
-                const cleanTitle = goal.title?.replace(/^목표\s*\d+[:\.]?\s*/i, '').trim() || goal.title;
+                const cleanTitle = goal.title?.replace(/^목표\s*\d+[:.]?\s*/i, '').trim() || goal.title;
                 
                 return {
                   plan_number: index + 1,

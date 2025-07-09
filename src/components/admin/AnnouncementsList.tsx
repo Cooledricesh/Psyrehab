@@ -37,7 +37,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [sort, setSort] = useState<{
+  const [sort] = useState<{
     field: 'title' | 'createdAt' | 'publishAt' | 'readCount' | 'priority' | 'status';
     direction: 'asc' | 'desc';
   }>({

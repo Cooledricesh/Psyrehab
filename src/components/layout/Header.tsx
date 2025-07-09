@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Bell, /* User, */ ChevronDown, X, Clock, AlertCircle } from 'lucide-react'
+import { Search, Bell, /* User, */ ChevronDown, X, Clock } from 'lucide-react'
 import { supabase, getCurrentUser } from '@/lib/supabase'
 import { announcementService } from '@/services/announcements'
 import type { Announcement } from '@/types/announcement'

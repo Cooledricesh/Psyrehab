@@ -242,10 +242,10 @@ export class GoalBreakdownService {
         errors: allErrors.length > 0 ? allErrors : undefined
       };
 
-    } catch {
+    } catch (error) {
       return {
         success: false,
-        errors: [`전체 계층 분해 중 오류가 발생했습니다: ${""instanceOf Error ? "Error" : '알 수 없는 오류'}`]
+        errors: [`전체 계층 분해 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`]
       };
     }
   }

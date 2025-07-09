@@ -84,18 +84,19 @@ export function parseError(error: unknown): AppError {
   }
 
   // Supabase 에러
-  if (error?.code && supabaseErrorMessages[error.code]) {
+  if (typeof error === 'object' && error !== null && 'code' in error && typeof (error as any).code === 'string' && supabaseErrorMessages[(error as any).code]) {
+    const code = (error as any).code;
     return {
-      type: getErrorTypeFromCode(error.code),
-      message: supabaseErrorMessages[error.code],
-      code: error.code,
+      type: getErrorTypeFromCode(code),
+      message: supabaseErrorMessages[code],
+      code: code,
       details: error
     }
   }
 
   // HTTP 상태 코드 기반 에러
-  if (error?.status || error?.response?.status) {
-    const status = error.status || error.response.status
+  if (typeof error === 'object' && error !== null && ('status' in error || ('response' in error && typeof (error as any).response === 'object' && 'status' in (error as any).response))) {
+    const status = (error as any).status || (error as any).response?.status
     return {
       type: getErrorTypeFromStatus(status),
       message: getMessageFromStatus(status),
@@ -105,7 +106,7 @@ export function parseError(error: unknown): AppError {
   }
 
   // 네트워크 에러
-  if (error?.message && error.message.includes('fetch')) {
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string' && (error as any).message.includes('fetch')) {
     return {
       type: 'NETWORK_ERROR',
       message: '네트워크 연결을 확인해주세요',
@@ -114,19 +115,21 @@ export function parseError(error: unknown): AppError {
   }
 
   // 알려진 에러 메시지
-  const knownMessage = errorMessages[error?.message]
-  if (knownMessage) {
-    return {
-      type: 'UNKNOWN_ERROR',
-      message: knownMessage,
-      details: error
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+    const knownMessage = errorMessages[(error as any).message]
+    if (knownMessage) {
+      return {
+        type: 'UNKNOWN_ERROR',
+        message: knownMessage,
+        details: error
+      }
     }
   }
 
   // 기본 에러
   return {
     type: 'UNKNOWN_ERROR',
-    message: error?.message || '알 수 없는 오류가 발생했습니다',
+    message: (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') ? (error as any).message : '알 수 없는 오류가 발생했습니다',
     details: error
   }
 }
@@ -198,30 +201,23 @@ function getMessageFromStatus(status: number): string {
   }
 }
 
-// 에러 로깅 유틸리티 (deprecated - use logError from monitoring/error-logger.ts)
+// 에러 로깅 유틸리티
 export function logError(error: AppError, context?: string) {
-  // 새로운 로깅 시스템으로 리다이렉트
-  try {
-    const { logError: newLogError } = require('./monitoring/error-logger')
-    return newLogError(error, context)
-  } catch (importError) {
-    // 폴백: 기존 로깅 방식
-    const logData = {
-      timestamp: new Date().toISOString(),
-      context,
-      error: {
-        type: error.type,
-        message: error.message,
-        field: error.field,
-        code: error.code
-      },
-      details: error.details
-    }
+  const logData = {
+    timestamp: new Date().toISOString(),
+    context,
+    error: {
+      type: error.type,
+      message: error.message,
+      field: error.field,
+      code: error.code
+    },
+    details: error.details
+  }
 
-    // 개발 환경에서는 콘솔에 출력
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Application Error:', logData)
-    }
+  // 개발 환경에서는 콘솔에 출력
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Application Error:', logData)
   }
 }
 

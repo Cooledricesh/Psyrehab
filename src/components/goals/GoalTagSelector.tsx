@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { X, Plus, Search, Sparkles, Hash, Filter } from 'lucide-react'
+import { X, Plus, Search, Hash, Filter } from 'lucide-react'
 import { BaseGoal } from '@/types/goals'
 // import { GoalTagRecommendationSystem } from '@/utils/goal-categorization' // Removed - deprecated category system
 import { 

@@ -1,5 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { QueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import { AuthError } from '@supabase/supabase-js'
 import { handleApiError } from '@/utils/error-handler'

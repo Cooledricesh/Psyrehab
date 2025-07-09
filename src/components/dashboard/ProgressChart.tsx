@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 // Chart UI components removed - using basic recharts
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CalendarDays, TrendingUp, Users } from 'lucide-react'
+import { TrendingUp, Users } from 'lucide-react'
 import { getMonthlyPatientTrend } from '@/services/dashboard-stats'
 import { handleApiError } from '@/utils/error-handler'
 
