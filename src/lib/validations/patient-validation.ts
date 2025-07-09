@@ -186,7 +186,7 @@ export const safeValidatePatientData = {
 // 커스텀 검증 함수들
 export const customValidations = {
   // 환자 식별번호 중복 검사 (실제 구현에서는 서버에서 확인)
-  isPatientIdUnique: async (patientId: string, currentPatientId?: string): Promise<boolean> => {
+  isPatientIdUnique: async (): Promise<boolean> => {
     // 이것은 예시입니다. 실제로는 API 호출이 필요합니다.
     return true
   },

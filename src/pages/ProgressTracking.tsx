@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -10,8 +9,6 @@ import {
   Target, 
   Calendar,
   CheckCircle2,
-  Circle,
-  Clock,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -23,8 +20,6 @@ import {
   usePatientGoals, 
   useProgressStats
 } from '@/hooks/queries/useProgressTracking';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';

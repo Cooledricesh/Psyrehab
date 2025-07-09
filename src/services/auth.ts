@@ -511,7 +511,7 @@ export class AuthService {
       }
 
       let result
-      const { role, ...profileUpdates } = updates
+      const profileUpdates = { ...updates }
 
       switch (userRole) {
         case 'social_worker': {

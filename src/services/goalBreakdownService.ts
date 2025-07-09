@@ -2,12 +2,10 @@ import {
   BaseGoal, 
   SixMonthGoal, 
   MonthlyGoal, 
-  WeeklyGoal,
   GoalType,
-  GoalPriority,
   CreateGoalRequest 
 } from '@/types/goals';
-import { addMonths, addWeeks, format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { addMonths, addWeeks, format, endOfMonth, endOfWeek } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 export interface BreakdownConfig {

@@ -68,7 +68,7 @@ export const useAIPolling = ({
             console.log('⚠️ 이미 아카이빙된 목표가 있어 중복 아카이빙 건너뛰기');
           } else {
             // 환자 정보 조회
-            const { data: assessmentData, error: assessmentError } = await supabase
+            const { data: assessmentData } = await supabase
               .from('assessments')
               .select('patient_id')
               .eq('id', currentAssessmentId)

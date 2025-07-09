@@ -35,7 +35,6 @@ export function useValidatedForm<T extends FieldValues>({
   onSubmitSuccess,
   onSubmitError,
   enableRealTimeValidation = false,
-  debounceMs = 300,
   showSuccessMessage = true,
   ...formOptions
 }: UseValidatedFormOptions<T>): UseValidatedFormReturn<T> {
@@ -161,7 +160,7 @@ export function useValidatedForm<T extends FieldValues>({
         console.log('Form submitted successfully')
       }
 
-    } catch {
+    } catch (error) {
       const appError = parseError(error)
       setSubmitError(appError)
       

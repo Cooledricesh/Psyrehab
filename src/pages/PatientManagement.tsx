@@ -5,19 +5,12 @@ import { getPatients, getPatientStats, updatePatientStatus } from '@/services/pa
 import type { Patient, PatientStats } from '@/services/patient-management'
 import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
-import { GoalService } from '@/services/goalSetting';
 import { supabase } from '@/lib/supabase'
 import { handleApiError } from '@/utils/error-handler'
 
 export default function PatientManagement() {
   const navigate = useNavigate()
   const [patients, setPatients] = useState<Patient[]>([])
-  const [stats, setStats] = useState<PatientStats>({
-    totalPatients: 0,
-    activePatients: 0,
-    pendingPatients: 0,
-    dischargedPatients: 0
-  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [canViewAssignee, setCanViewAssignee] = useState(false)
@@ -69,7 +62,6 @@ export default function PatientManagement() {
       console.log('✅ 환자 통계 로드 성공:', statsResult)
 
       setPatients(patientsResult)
-      setStats(statsResult)
       setError(null)
     } catch (err: unknown) {
       handleApiError(err, 'PatientManagement.fetchData')

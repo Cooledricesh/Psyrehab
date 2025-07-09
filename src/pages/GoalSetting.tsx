@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronRight, Target, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PatientService } from '@/services/patients';
 import { supabase } from '@/lib/supabase';
 import useAIResponseParser from '@/hooks/useAIResponseParser';
 import { useAIRecommendationByAssessment } from '@/hooks/useAIRecommendations';
-import { ENV } from '@/lib/env';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { handleApiError } from '@/utils/error-handler';
 
 // Components
 import PatientSelection from '@/components/GoalSetting/PatientSelection';
 import StepIndicator from '@/components/GoalSetting/StepIndicator';
-import ProcessingModal from '@/components/GoalSetting/ProcessingModal';
 import AssessmentStep from '@/components/GoalSetting/AssessmentStep';
 import GoalDetailDisplay from '@/components/GoalSetting/GoalDetailDisplay';
 import PageHeader from '@/components/GoalSetting/PageHeader';
@@ -25,7 +23,7 @@ import { useGoalSettingFlow, useAIPolling, useAssessmentSave } from '@/hooks/Goa
 
 // Services
 import { AssessmentService, AIRecommendationService, GoalService } from '@/services/goalSetting';
-import { AIRecommendationArchiveService, type ArchivedRecommendation } from '@/services/ai-recommendation-archive';
+import { type ArchivedRecommendation } from '@/services/ai-recommendation-archive';
 
 // Utils and Constants
 import { MESSAGES } from '@/utils/GoalSetting/constants';

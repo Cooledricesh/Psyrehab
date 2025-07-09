@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
 import { handleApiError } from '@/utils/error-handler';
 
 interface SaveGoalsParams {
@@ -62,7 +61,7 @@ export const useGoalSave = () => {
       let aiRecommendationId = recommendationId;
       
       if (!aiRecommendationId && currentAssessmentId) {
-        const { data: aiRec, error: aiError } = await supabase
+        const { data: aiRec } = await supabase
           .from('ai_goal_recommendations')
           .select('id')
           .eq('assessment_id', currentAssessmentId)
@@ -259,32 +258,3 @@ export const useGoalSave = () => {
   };
 };
 
-/**
- * 진단명을 간소화된 카테고리로 변환
- */
-function simplifyDiagnosis(diagnosis: string): string {
-  const lowerDiagnosis = diagnosis.toLowerCase();
-  
-  // 키워드 기반 카테고리 매핑
-  const categoryMap = {
-    'cognitive_disorder': ['치매', '인지', '기억', '알츠하이머', 'dementia', 'cognitive'],
-    'mood_disorder': ['우울', '조울', '기분', 'depression', 'bipolar', 'mood'],
-    'anxiety_disorder': ['불안', '공황', 'anxiety', 'panic'],
-    'psychotic_disorder': ['조현병', '정신분열', 'schizophrenia', 'psychotic'],
-    'substance_disorder': ['중독', '알코올', '약물', 'addiction', 'substance'],
-    'developmental_disorder': ['자폐', '발달', 'autism', 'developmental'],
-    'neurological_disorder': ['뇌졸중', '파킨슨', '뇌손상', 'stroke', 'parkinson', 'neurological'],
-    'personality_disorder': ['성격', '인격', 'personality'],
-    'eating_disorder': ['섭식', '식이', 'eating'],
-    'trauma_disorder': ['외상', '트라우마', 'trauma', 'ptsd']
-  };
-
-  // 매칭되는 카테고리 찾기
-  for (const [category, keywords] of Object.entries(categoryMap)) {
-    if (keywords.some(keyword => lowerDiagnosis.includes(keyword))) {
-      return category;
-    }
-  }
-
-  return 'other_disorder';
-}

@@ -171,7 +171,7 @@ export default function InlineDateEditor({
                 mode="single"
                 selected={startDate}
                 onSelect={handleDateSelect}
-                disabled={(date) => false}
+                disabled={() => false}
                 initialFocus
                 locale={ko}
                 className="rounded-md border border-gray-200 bg-white"

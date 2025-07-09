@@ -184,7 +184,7 @@ export function clearUserDataFromCache() {
 /**
  * Utility function to prefetch user data
  */
-export async function prefetchUserData(userId: string) {
+export async function prefetchUserData() {
   // This would be implemented with actual query functions
   // await queryClient.prefetchQuery({
   //   queryKey: authQueryKeys.userProfile(userId),

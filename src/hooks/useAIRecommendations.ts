@@ -154,8 +154,7 @@ export function useAIRecommendationsByPatient(patientId: string | null) {
 
 // 평가의 AI 추천 조회 훅 - 평가 ID만으로 조회하도록 수정
 export function useAIRecommendationByAssessment(
-  assessmentId: string | null, 
-  patientId?: string | null
+  assessmentId: string | null
 ) {
   return useQuery({
     queryKey: ['ai-recommendation-by-assessment', assessmentId],
@@ -283,16 +282,6 @@ export function parseAIRecommendationGoals(data: unknown): ParsedGoal[] {
   return data as ParsedGoal[]
 }
 
-// 더 이상 사용하지 않는 파싱 헬퍼 함수들
-function extractMonthlyPlans(monthlySection: string): Array<{ month: number; goal: string }> {
-  console.warn('extractMonthlyPlans is deprecated. Data is now structured by n8n.')
-  return []
-}
-
-function extractWeeklyPlans(weeklySection: string): Array<{ week: number; month: number; plan: string }> {
-  console.warn('extractWeeklyPlans is deprecated. Data is now structured by n8n.')
-  return []
-}
 
 // AI 추천으로부터 재활 목표 생성 훅 (구조화된 데이터 사용)
 export function useGenerateGoalsFromRecommendation() {

@@ -5,10 +5,7 @@ import type {
   AssessmentData,
   AssessmentCreateRequest,
   AssessmentUpdateRequest,
-  AssessmentListParams,
-  AssessmentStats,
-  AssessmentComparison,
-  AssessmentVisualizationData
+  AssessmentListParams
 } from '@/types/assessment'
 
 // Query keys

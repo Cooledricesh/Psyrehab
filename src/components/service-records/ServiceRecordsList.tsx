@@ -111,7 +111,6 @@ export function ServiceRecordsList({
   const [filters, setFilters] = useState<Filters>(initialFilters)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(20)
-  const [selectedRecord, setSelectedRecord] = useState<ServiceRecordWithDetails | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingRecord, setEditingRecord] = useState<ServiceRecordWithDetails | null>(null)
 
@@ -174,7 +173,6 @@ export function ServiceRecordsList({
   }
 
   const handleView = (record: ServiceRecordWithDetails) => {
-    setSelectedRecord(record)
     onRecordSelect?.(record)
   }
 

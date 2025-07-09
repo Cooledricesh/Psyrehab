@@ -38,7 +38,6 @@ export function sanitizeHtml(
 
   const {
     allowedTags = [],
-    allowedAttributes = [],
     removeEmpty = true,
     trimWhitespace = true,
     maxLength,

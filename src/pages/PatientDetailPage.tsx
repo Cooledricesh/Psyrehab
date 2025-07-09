@@ -25,7 +25,6 @@ export function PatientDetailPage() {
   const [relatedData, setRelatedData] = useState<any[]>([])
   const [forceDelete, setForceDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [checkingData, setCheckingData] = useState(false)
   const deletePatient = useDeletePatient()
   const { toast } = useToast()
 
@@ -53,7 +52,6 @@ export function PatientDetailPage() {
 
   const handleDelete = async () => {
     try {
-      setCheckingData(true)
       // 연관 데이터 확인
       const related = await PatientService.checkPatientRelatedData(id)
       setRelatedData(related)
@@ -66,8 +64,6 @@ export function PatientDetailPage() {
         description: '연관 데이터 확인 중 오류가 발생했습니다.',
         variant: 'destructive'
       })
-    } finally {
-      setCheckingData(false)
     }
   }
 

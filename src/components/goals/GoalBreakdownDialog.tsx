@@ -70,7 +70,6 @@ export const GoalBreakdownDialog: React.FC<GoalBreakdownDialogProps> = ({
 
   // 목표 유형에 따른 설정
   const isSixMonthGoal = goal.goal_type === 'six_month';
-  const targetGoalType = isSixMonthGoal ? 'monthly' : 'weekly';
 
   // 스마트 제안 생성
   const smartSuggestions = GoalBreakdownService.generateSmartBreakdownSuggestions(goal);

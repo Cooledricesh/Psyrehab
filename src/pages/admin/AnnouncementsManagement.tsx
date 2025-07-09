@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import type { 
-  Announcement as AnnouncementType
-} from '../../types/announcement';
 import { 
   AnnouncementType as Type, 
   Priority, 
   Status,
   getTypeEmoji,
-  getPriorityColor,
-  getStatusColor,
   getTypeLabel,
-  getPriorityLabel,
-  getStatusLabel
+  getPriorityLabel
 } from '../../types/announcement';
 import { announcementService } from '../../services/announcements';
 import { handleApiError } from '@/utils/error-handler';

@@ -82,7 +82,7 @@ export async function testSupabaseConnection() {
     }
 
     // Use the simplest possible connection test
-    const { data, error } = await supabase.auth.getSession()
+    const { error } = await supabase.auth.getSession()
     
     // Even if there's no session, a successful response means connection is working
     if (error && error.message.includes('Failed to fetch')) {
@@ -124,91 +124,6 @@ export async function getCurrentSession() {
   } catch (error) {
     handleApiError(error, 'supabase.getCurrentSession')
     return null
-  }
-}
-
-// Helper function to create user role and profile for approved signup requests
-async function createUserRoleAndProfile(userId: string, signupRequest: any) {
-  try {
-    // 데이터베이스에서 직접 역할 ID 조회
-    const { data: roleData, error: roleQueryError } = await supabase
-      .from('roles')
-      .select('id')
-      .eq('role_name', signupRequest.requested_role)
-      .single()
-
-    if (roleQueryError || !roleData) {
-      handleApiError(roleQueryError, 'supabase.createUserRoleAndProfile.roleQuery')
-      return false
-    }
-
-    // 1. user_roles에 역할 할당
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: userId,
-        role_id: roleData.id
-      })
-
-    if (roleError && !roleError.message.includes('duplicate')) {
-      handleApiError(roleError, 'supabase.createUserRoleAndProfile.roleAssign')
-      return false
-    }
-
-    // 2. 프로필 생성 - 직급별로 social_workers 테이블에 생성
-    const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director']
-    
-    if (jobTitleRoles.includes(signupRequest.requested_role)) {
-      const { error: profileError } = await supabase
-        .from('social_workers')
-        .insert({
-          user_id: userId,
-          full_name: signupRequest.full_name,
-          employee_id: signupRequest.employee_id || null,
-          department: signupRequest.department || null,
-          contact_number: signupRequest.contact_number || null,
-          is_active: true
-        })
-
-      if (profileError && !profileError.message.includes('duplicate')) {
-        handleApiError(profileError, 'supabase.createUserRoleAndProfile.socialWorkerProfile')
-        return false
-      }
-    } else if (signupRequest.requested_role === 'administrator') {
-      const { error: profileError } = await supabase
-        .from('administrators')
-        .insert({
-          user_id: userId,
-          full_name: signupRequest.full_name,
-          employee_id: signupRequest.employee_id || null,
-          department: signupRequest.department || null,
-          contact_number: signupRequest.contact_number || null,
-          is_active: true
-        })
-
-      if (profileError && !profileError.message.includes('duplicate')) {
-        handleApiError(profileError, 'supabase.createUserRoleAndProfile.administratorProfile')
-        return false
-      }
-    }
-
-    // 3. signup_requests 업데이트
-    const { error: updateError } = await supabase
-      .from('signup_requests')
-      .update({
-        user_id: userId,
-        status: 'completed'
-      })
-      .eq('id', signupRequest.id)
-
-    if (updateError) {
-      handleApiError(updateError, 'supabase.createUserRoleAndProfile.updateSignupRequest')
-    }
-
-    return true
-  } catch (error) {
-    handleApiError(error, 'supabase.createUserRoleAndProfile')
-    return false
   }
 }
 

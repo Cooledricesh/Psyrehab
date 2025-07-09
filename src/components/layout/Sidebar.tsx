@@ -57,7 +57,6 @@ export const Sidebar = () => {
   const [canViewManagement, setCanViewManagement] = useState(false)
   const [adminMenuOpen, setAdminMenuOpen] = useState(false)
   const [userInfo, setUserInfo] = useState<{ name: string; role: string }>({ name: '사용자', role: '' })
-  const [userRole, setUserRole] = useState<string | null>(null)
   const sidebarRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -86,9 +85,6 @@ export const Sidebar = () => {
       if (userRoleData) {
         const roleName = (userRoleData as any).roles?.role_name
         console.log('User role:', roleName)
-        
-        // 역할 저장
-        setUserRole(roleName)
         
         // 관리자인지 확인
         setIsAdmin(roleName === 'administrator')

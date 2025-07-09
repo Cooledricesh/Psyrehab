@@ -59,9 +59,9 @@ export function GoalTagSelector({
   }, [selectedCategory, searchQuery, value])
 
   // AI 추천 태그 (deprecated - category system removed)
-  const recommendedTags = useMemo(() => {
-    return [] // AI recommendation system has been deprecated
-  }, [goal, value, showRecommendations])
+  // const recommendedTags = useMemo(() => {
+  //   return [] // AI recommendation system has been deprecated
+  // }, [goal, value, showRecommendations])
 
   const handleTagAdd = (tagId: string) => {
     if (value.length >= maxTags) return

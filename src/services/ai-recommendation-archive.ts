@@ -1171,7 +1171,7 @@ export class AIRecommendationArchiveService {
     try {
       console.log('📊 전체 아카이빙 통계 업데이트 시작...');
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .rpc('update_archive_stats');
       
       if (error) {
@@ -1197,7 +1197,7 @@ export class AIRecommendationArchiveService {
     try {
       console.log('📊 개별 아카이빙 통계 업데이트:', archiveId);
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .rpc('update_single_archive_stats', { archive_id: archiveId });
       
       if (error) {
