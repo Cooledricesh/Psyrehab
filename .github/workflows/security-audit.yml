@@ -64,7 +64,8 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    # Private 저장소에서는 GitHub Advanced Security가 필요하므로 비활성화
+    if: false
     
     steps:
       - name: Checkout Repository
