@@ -15,7 +15,7 @@ export function Toaster() {
   )
 }
 
-function ToastItem({ toast }: { toast: any }) {
+function ToastItem({ toast }: { toast: Toast }) {
   const { toast: toastFn } = useToast()
   
   useEffect(() => {

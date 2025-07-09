@@ -26,7 +26,12 @@ export function DashboardTabs() {
           .eq('user_id', user.id)
           .maybeSingle()
         
-        const roleName = (userRoleData as any)?.roles?.role_name
+        interface UserRoleData {
+          roles?: {
+            role_name: string
+          }
+        }
+        const roleName = (userRoleData as UserRoleData)?.roles?.role_name
         setUserRole(roleName)
       } catch (error) {
         handleApiError(error, 'DashboardTabs.fetchUserRole')

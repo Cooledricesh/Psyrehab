@@ -94,7 +94,7 @@ export function useAssignSocialWorker() {
   return useMutation({
     mutationFn: ({ patientId, socialWorkerId }: { patientId: string; socialWorkerId: string }) =>
       SocialWorkerService.assignSocialWorkerToPatient(patientId, socialWorkerId),
-    onSuccess: (_, { patientId, socialWorkerId }) => {
+    onSuccess: (_, { socialWorkerId }) => {
       // 관련 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       queryClient.invalidateQueries({ queryKey: socialWorkerKeys.all })

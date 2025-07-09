@@ -58,8 +58,8 @@ const GoalSetting: React.FC = () => {
   const [showArchivedSelection, setShowArchivedSelection] = useState<boolean>(false);
   const [selectedArchivedGoal, setSelectedArchivedGoal] = useState<ArchivedRecommendation | null>(null);
   
-  // AI 응답 파싱 훅
-  const { parseAIResponse } = useAIResponseParser();
+  // AI 응답 파싱 훅 (사용하지 않으므로 제거)
+  // const { parseAIResponse } = useAIResponseParser();
 
   // 개발용 자동 admin 로그인
   React.useEffect(() => {
@@ -118,7 +118,7 @@ const GoalSetting: React.FC = () => {
   );
 
   // AI 폴링 훅 사용
-  const { isPolling, pollingStatus, isExtendedPolling } = useAIPolling({
+  const { isExtendedPolling } = useAIPolling({
     currentStep,
     currentAssessmentId,
     onSuccess: () => {
@@ -208,7 +208,7 @@ const GoalSetting: React.FC = () => {
       
       // 2. AI 추천 요청
       console.log('🚀 AI 추천 요청 시작:', savedAssessment.id);
-      const aiResponse = await requestAIRecommendationMutation.mutateAsync(savedAssessment.id);
+      await requestAIRecommendationMutation.mutateAsync(savedAssessment.id);
       
       // 폴링은 useAIPolling 훅에서 자동으로 시작됨
       

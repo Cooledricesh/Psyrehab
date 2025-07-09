@@ -1,7 +1,13 @@
 // Since we can't use hooks outside of React components, we'll create a toast function
-let toastFunction: ((options: any) => void) | null = null
+interface ToastOptions {
+  title?: string
+  description?: string
+  variant?: 'default' | 'destructive'
+}
 
-export function setToastFunction(toast: (options: any) => void) {
+let toastFunction: ((options: ToastOptions) => void) | null = null
+
+export function setToastFunction(toast: (options: ToastOptions) => void) {
   toastFunction = toast
 }
 

@@ -149,7 +149,7 @@ export default function PermissionsPage() {
       const rolePermissions = await RolePermissionsService.getAllRolePermissions()
       setPermissions(rolePermissions)
       setOriginalPermissions(rolePermissions)
-    } catch (error) {
+    } catch {
       toast({
         title: '오류',
         description: '권한 설정을 불러오는 중 오류가 발생했습니다.',

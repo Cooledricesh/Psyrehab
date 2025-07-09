@@ -39,7 +39,12 @@ export function ManagementProtectedRoute({ children }: ManagementProtectedRouteP
         .single()
 
       if (userRole) {
-        const roleName = (userRole as any).roles?.role_name
+        interface UserRoleData {
+          roles?: {
+            role_name: string
+          }
+        }
+        const roleName = (userRole as UserRoleData).roles?.role_name
         // 계장 이상 직급 및 관리자
         const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
         setHasAccess(managementRoles.includes(roleName))

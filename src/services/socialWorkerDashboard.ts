@@ -305,7 +305,7 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 }
 
 // 목표 미설정 환자 조회
-export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]> {
+export async function getGoalsNotSetPatients(): Promise<Patient[]> {
   try {
     // pending 상태인 환자들을 조회 (목표 설정 대기)
     const { data: pendingPatients, error: patientsError } = await supabase

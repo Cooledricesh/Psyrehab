@@ -49,7 +49,14 @@ export function SocialWorkerStatsChart() {
           'assistant_manager': '주임',
           'section_chief': '계장'
         }
-        const roleName = roleMap[(ur.roles as any)?.role_name] || '알 수 없음'
+        // Type assertion for the user role data structure from Supabase
+        const userRoleData = ur as unknown as { 
+          user_id: string
+          roles: {
+            role_name: string
+          }
+        }
+        const roleName = roleMap[userRoleData.roles.role_name] || '알 수 없음'
 
         // 사용자 정보 조회 - social_workers 테이블에서 (활성 사용자만)
         const { data: userData, error: userError } = await supabase

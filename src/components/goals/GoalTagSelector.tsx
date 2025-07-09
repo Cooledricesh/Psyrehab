@@ -24,9 +24,7 @@ interface GoalTagSelectorProps {
 export function GoalTagSelector({
   value = [],
   onChange,
-  goal,
   maxTags = 10,
-  showRecommendations = true,
   placeholder = '태그를 선택하세요',
   disabled = false,
   className
