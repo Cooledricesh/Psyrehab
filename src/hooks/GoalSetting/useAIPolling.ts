@@ -86,7 +86,13 @@ export const useAIPolling = ({
               
 
             if (recommendation.recommendations && Array.isArray(recommendation.recommendations)) {
-              const allGoals = recommendation.recommendations.map((goal: any, index: number) => {
+              const allGoals = recommendation.recommendations.map((goal: {
+                title?: string
+                purpose?: string
+                sixMonthGoal?: string
+                monthlyGoals?: unknown[]
+                weeklyPlans?: unknown[]
+              }, index: number) => {
                 // 목표 제목에서 불필요한 말머리 제거
                 const cleanTitle = goal.title?.replace(/^목표\s*\d+[:.]?\s*/i, '').trim() || goal.title;
                 

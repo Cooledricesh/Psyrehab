@@ -28,7 +28,7 @@ export default function PatientUnifiedModal({
   const [showContextMenu, setShowContextMenu] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [relatedData, setRelatedData] = useState<any[]>([])
+  const [relatedData, setRelatedData] = useState<{ table: string; name: string; count: number }[]>([])
   const [forceDelete, setForceDelete] = useState(false)
   
   const [formData, setFormData] = useState<CreatePatientData>({
@@ -442,7 +442,7 @@ export default function PatientUnifiedModal({
                   </label>
                   <input
                     type="tel"
-                    value={(formData.contact_info as any)?.phone || ''}
+                    value={(formData.contact_info as Record<string, string>)?.phone || ''}
                     onChange={(e) => handleContactInfoChange('phone', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="010-1234-5678"

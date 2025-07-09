@@ -1,6 +1,44 @@
 import { supabase } from '@/lib/supabase'
 import { handleApiError } from '@/utils/error-handler'
 
+// Supabase response types
+interface GoalRow {
+  id: string
+  title: string
+  description?: string
+  status: string
+  actual_completion_rate?: number
+  updated_at: string
+  patients?: {
+    id: string
+    full_name: string
+  }
+}
+
+interface ServiceRecordRow {
+  id: string
+  service_date: string
+  patient_id: string
+  patients?: {
+    full_name: string
+  }
+}
+
+interface EvaluationRow {
+  id: string
+  evaluation_date: string
+  evaluation_type: string
+  goal_completion_rate?: number
+  patient_id: string
+  patients?: {
+    full_name: string
+  }
+  goal_id: string
+  rehabilitation_goals?: {
+    title: string
+  }
+}
+
 // 진행 추적 관련 타입 정의
 export interface ProgressStats {
   averageProgress: number
@@ -132,7 +170,7 @@ export const getPatientProgress = async (): Promise<PatientProgress[]> => {
       return []
     }
 
-    return data?.map((goal: any) => {
+    return data?.map((goal: GoalRow) => {
       // 진행률 기반 추세 계산 (실제로는 이전 기록과 비교해야 함)
       let trend: 'up' | 'down' | 'stable' = 'stable'
       const progress = goal.actual_completion_rate || 0
@@ -192,7 +230,7 @@ export const getWeeklyActivities = async (): Promise<WeeklyActivity[]> => {
     // 날짜별로 그룹화
     const activitiesByDate: { [key: string]: WeeklyActivity } = {}
     
-    data?.forEach((record: any) => {
+    data?.forEach((record: ServiceRecordRow) => {
       const date = new Date(record.service_date_time).toLocaleDateString('ko-KR', {
         weekday: 'long'
       })
@@ -248,7 +286,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
     
     // 중복 제거를 위해 Map 사용
     const goalsNeedingEvaluation = new Map()
-    recentEvaluations?.forEach((evaluation: any) => {
+    recentEvaluations?.forEach((evaluation: EvaluationRow) => {
       if (!goalsNeedingEvaluation.has(evaluation.goal_id)) {
         const daysSinceEvaluation = Math.ceil((new Date().getTime() - new Date(evaluation.evaluation_date).getTime()) / (1000 * 60 * 60 * 24))
         goalsNeedingEvaluation.set(evaluation.goal_id, {
@@ -283,7 +321,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
       .lt('actual_completion_rate', 30)
       .eq('status', 'active')
     
-    lowProgressGoals?.forEach((goal: any) => {
+    lowProgressGoals?.forEach((goal: GoalRow) => {
       alerts.push({
         id: `low-progress-${goal.id}`,
         type: 'warning',
@@ -307,7 +345,7 @@ export const getProgressAlerts = async (): Promise<ProgressAlert[]> => {
       .gte('actual_completion_rate', 80)
       .eq('status', 'active')
     
-    highProgressGoals?.forEach((goal: any) => {
+    highProgressGoals?.forEach((goal: GoalRow) => {
       alerts.push({
         id: `high-progress-${goal.id}`,
         type: 'success',

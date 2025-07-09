@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { handleApiError } from '@/utils/error-handler'
 
 // 캐시 저장소
-const cache = new Map<string, { data: any, timestamp: number }>()
+const cache = new Map<string, { data: unknown, timestamp: number }>()
 const CACHE_TTL = 30000 // 30초 캐시
 const MAX_CACHE_SIZE = 100 // 최대 캐시 크기
 const MAX_PERMISSION_CACHE_SIZE = 50 // 권한 캐시 최대 크기

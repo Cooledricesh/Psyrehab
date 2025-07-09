@@ -140,7 +140,7 @@ export default function UserManagement() {
       }
 
       // 환자가 할당된 직원은 삭제할 수 없음
-      if (jobTitleRoles.includes(selectedUser.role as any) && selectedUser.patientCount && selectedUser.patientCount > 0) {
+      if (selectedUser.role !== 'pending' && jobTitleRoles.includes(selectedUser.role) && selectedUser.patientCount && selectedUser.patientCount > 0) {
         toast({
           title: '삭제 불가',
           description: `담당 환자가 ${selectedUser.patientCount}명 있는 직원은 삭제할 수 없습니다. 먼저 환자를 다른 직원에게 이관해주세요.`,
@@ -194,7 +194,7 @@ export default function UserManagement() {
           // 409 에러 처리
           if (profileError.code === '23503' || profileError.message.includes('violates foreign key constraint')) {
             // 관련 데이터 확인
-            if (jobTitleRoles.includes(selectedUser.role as any)) {
+            if (selectedUser.role !== 'pending' && jobTitleRoles.includes(selectedUser.role)) {
               const relatedData = []
               
               // 평가 기록 확인

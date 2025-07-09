@@ -22,7 +22,7 @@ export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [relatedData, setRelatedData] = useState<any[]>([])
+  const [relatedData, setRelatedData] = useState<{ table: string; name: string; count: number }[]>([])
   const [forceDelete, setForceDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const deletePatient = useDeletePatient()
@@ -78,11 +78,12 @@ export function PatientDetailPage() {
       })
       
       navigate('/patient-management')
-    } catch (error: any) {
+    } catch (error) {
       handleApiError(error, 'PatientDetailPage.confirmDelete')
       
       // 연관 데이터 때문에 실패한 경우
-      if (error.message?.includes('연결된 데이터가 있어')) {
+      const errorMessage = error instanceof Error ? error.message : '환자 삭제 중 오류가 발생했습니다.'
+      if (errorMessage.includes('연결된 데이터가 있어')) {
         // 강제 삭제 옵션 활성화
         setForceDelete(false)
       } else {
@@ -91,7 +92,7 @@ export function PatientDetailPage() {
       
       toast({
         title: '삭제 실패',
-        description: error.message || '환자 삭제 중 오류가 발생했습니다.',
+        description: errorMessage,
         variant: 'destructive'
       })
     } finally {

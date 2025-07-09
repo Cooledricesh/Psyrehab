@@ -3,7 +3,6 @@ import { Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PatientService } from '@/services/patients';
 import { supabase } from '@/lib/supabase';
-import useAIResponseParser from '@/hooks/useAIResponseParser';
 import { useAIRecommendationByAssessment } from '@/hooks/useAIRecommendations';
 import { eventBus, EVENTS } from '@/lib/eventBus';
 import { handleApiError } from '@/utils/error-handler';

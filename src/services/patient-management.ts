@@ -1,6 +1,37 @@
 import { supabase } from '@/lib/supabase'
 import { handleApiError } from '@/utils/error-handler'
 
+// Supabase response types
+interface PatientRow {
+  id?: string
+  full_name?: string
+  date_of_birth?: string
+  gender?: string
+  patient_identifier?: string
+  contact_info?: Record<string, unknown>
+  emergency_contact?: string
+  additional_info?: Record<string, unknown>
+  created_at?: string
+  updated_at?: string
+  status?: string
+  primary_social_worker_id?: string
+  admission_date?: string
+  doctor?: string
+  rehabilitation_goals?: Array<{
+    id: string
+    title: string
+    description?: string
+    category_id?: string
+    goal_type: string
+    plan_status: string
+    status: string
+  }>
+  social_worker?: {
+    user_id: string
+    full_name: string
+  }
+}
+
 // 환자 관리 관련 타입 정의
 export interface Patient {
   id: string
@@ -37,8 +68,8 @@ export interface CreatePatientData {
   gender?: string
   primary_diagnosis?: string
   doctor?: string
-  contact_info?: any
-  additional_info?: any
+  contact_info?: Record<string, unknown>
+  additional_info?: Record<string, unknown>
   status?: string
 }
 
@@ -73,9 +104,9 @@ export const getPatients = async (): Promise<Patient[]> => {
 
     // 디버깅: 원본 데이터 구조 확인
 
-    return data?.map((patient: any) => {
+    return data?.map((patient: PatientRow) => {
       // 활성 6개월 목표가 있는지 확인
-      const hasActiveGoal = patient.rehabilitation_goals?.some((goal: any) => 
+      const hasActiveGoal = patient.rehabilitation_goals?.some((goal) => 
         goal.goal_type === 'six_month' && 
         goal.plan_status === 'active' && 
         goal.status === 'active'
@@ -186,7 +217,7 @@ export const createPatient = async (patientData: CreatePatientData): Promise<Pat
 }
 
 // 성별 매핑 함수 - 다양한 형태의 성별 값을 표준화
-const mapGender = (gender: any): string => {
+const mapGender = (gender: string | undefined): string => {
   if (!gender) {
     console.log('🚫 성별 정보 없음 (null/undefined)')
     return '정보 없음'
@@ -218,7 +249,7 @@ const mapGender = (gender: any): string => {
 }
 
 // 진단 정보 추출 함수 - 여러 소스에서 진단 정보 찾기
-const extractDiagnosis = (patient: any): string => {
+const extractDiagnosis = (patient: PatientRow): string => {
   // 진단 정보 추출
   
   // 1. 직접 컬럼들 확인
@@ -263,7 +294,7 @@ const extractDiagnosis = (patient: any): string => {
   
   // 3. 재활 목표에서 유추하기
   if (patient.rehabilitation_goals && patient.rehabilitation_goals.length > 0) {
-    const goalTitles = patient.rehabilitation_goals.map((g: any) => g.title).join(', ')
+    const goalTitles = patient.rehabilitation_goals.map((g) => g.title).join(', ')
     console.log(`🎯 재활 목표에서 유추: ${goalTitles}`)
     
     // 일반적인 정신건강 진단명 패턴 찾기
@@ -430,7 +461,7 @@ export const updatePatient = async (patientId: string, patientData: CreatePatien
     console.log('🔄 환자 정보 수정 시작:', patientId, patientData)
 
     // 업데이트할 데이터 준비 (status 제외 - 별도 관리)
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     if (patientData.full_name) updateData.full_name = patientData.full_name
     if (patientData.date_of_birth !== undefined) updateData.date_of_birth = patientData.date_of_birth

@@ -519,7 +519,7 @@ export default function ProgressTracking() {
                             
                             {/* 주간 목표들 */}
                             <div className="ml-6 space-y-2">
-                              {monthlyGoal.weeklyGoals?.map((weeklyGoal: any) => (
+                              {monthlyGoal.weeklyGoals?.map((weeklyGoal) => (
                                 <div
                                   key={weeklyGoal.id}
                                   className="p-2 bg-gray-50 rounded space-y-2"

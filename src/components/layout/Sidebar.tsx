@@ -83,7 +83,7 @@ export const Sidebar = () => {
         .maybeSingle()
 
       if (userRoleData) {
-        const roleName = (userRoleData as any).roles?.role_name
+        const roleName = userRoleData.roles?.role_name
         console.log('User role:', roleName)
         
         // 관리자인지 확인
@@ -96,7 +96,7 @@ export const Sidebar = () => {
 
       // 프로필 정보 가져오기
       if (userRoleData) {
-        const roleName = (userRoleData as any).roles?.role_name
+        const roleName = userRoleData.roles?.role_name
         
         // 관리자 테이블에서 정보 찾기
         const { data: adminInfo } = await supabase

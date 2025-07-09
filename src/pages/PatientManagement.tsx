@@ -38,7 +38,7 @@ export default function PatientManagement() {
         .eq('user_id', user.id)
         .single()
       
-      const roleName = (userRoleData as any)?.roles?.role_name
+      const roleName = userRoleData?.roles?.role_name
       // 계장 이상 직급인지 확인
       const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
       setCanViewAssignee(managementRoles.includes(roleName))
@@ -65,7 +65,7 @@ export default function PatientManagement() {
       setError(null)
     } catch (err: unknown) {
       handleApiError(err, 'PatientManagement.fetchData')
-      setError((err as any).message || '환자 데이터를 불러오는 중 오류가 발생했습니다.')
+      setError(err instanceof Error ? err.message : '환자 데이터를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }

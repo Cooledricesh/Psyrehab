@@ -7,11 +7,19 @@ import type { Announcement } from '@/types/announcement'
 import { getPriorityColor, getTypeEmoji } from '@/types/announcement'
 import { handleApiError } from '@/utils/error-handler'
 
+interface CurrentUser {
+  id: string
+  email: string
+  name: string
+  role: string
+  initial: string
+}
+
 export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [currentUser, setCurrentUser] = useState<unknown>(null)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -328,10 +336,10 @@ export const Header = () => {
             aria-haspopup="true"
           >
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              {(currentUser as any)?.initial || 'U'}
+              {currentUser?.initial || 'U'}
             </div>
             <span className="text-gray-700 font-medium text-sm hidden md:block">
-              {(currentUser as any)?.name || '로딩...'}님
+              {currentUser?.name || '로딩...'}님
             </span>
             <ChevronDown
               size={16}

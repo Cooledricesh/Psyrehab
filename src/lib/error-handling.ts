@@ -70,6 +70,25 @@ export function formatZodError(error: ZodError): AppError[] {
   }))
 }
 
+// Helper type guards
+function isErrorWithCode(error: unknown): error is { code: string } {
+  return typeof error === 'object' && error !== null && 'code' in error && typeof (error as { code: unknown }).code === 'string'
+}
+
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string'
+}
+
+function isErrorWithStatus(error: unknown): error is { status: number } | { response: { status: number } } {
+  if (typeof error !== 'object' || error === null) return false
+  if ('status' in error && typeof (error as { status: unknown }).status === 'number') return true
+  if ('response' in error && typeof (error as { response: unknown }).response === 'object' && 
+      (error as { response: unknown }).response !== null && 
+      'status' in (error as { response: { status: unknown } }).response &&
+      typeof (error as { response: { status: unknown } }).response.status === 'number') return true
+  return false
+}
+
 // 일반 에러를 AppError로 변환
 export function parseError(error: unknown): AppError {
   // Zod 검증 에러
@@ -84,19 +103,18 @@ export function parseError(error: unknown): AppError {
   }
 
   // Supabase 에러
-  if (typeof error === 'object' && error !== null && 'code' in error && typeof (error as any).code === 'string' && supabaseErrorMessages[(error as any).code]) {
-    const code = (error as any).code;
+  if (isErrorWithCode(error) && supabaseErrorMessages[error.code]) {
     return {
-      type: getErrorTypeFromCode(code),
-      message: supabaseErrorMessages[code],
-      code: code,
+      type: getErrorTypeFromCode(error.code),
+      message: supabaseErrorMessages[error.code],
+      code: error.code,
       details: error
     }
   }
 
   // HTTP 상태 코드 기반 에러
-  if (typeof error === 'object' && error !== null && ('status' in error || ('response' in error && typeof (error as any).response === 'object' && 'status' in (error as any).response))) {
-    const status = (error as any).status || (error as any).response?.status
+  if (isErrorWithStatus(error)) {
+    const status = 'status' in error ? error.status : error.response.status
     return {
       type: getErrorTypeFromStatus(status),
       message: getMessageFromStatus(status),
@@ -106,7 +124,7 @@ export function parseError(error: unknown): AppError {
   }
 
   // 네트워크 에러
-  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string' && (error as any).message.includes('fetch')) {
+  if (isErrorWithMessage(error) && error.message.includes('fetch')) {
     return {
       type: 'NETWORK_ERROR',
       message: '네트워크 연결을 확인해주세요',
@@ -115,8 +133,8 @@ export function parseError(error: unknown): AppError {
   }
 
   // 알려진 에러 메시지
-  if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
-    const knownMessage = errorMessages[(error as any).message]
+  if (isErrorWithMessage(error)) {
+    const knownMessage = errorMessages[error.message]
     if (knownMessage) {
       return {
         type: 'UNKNOWN_ERROR',
@@ -129,7 +147,7 @@ export function parseError(error: unknown): AppError {
   // 기본 에러
   return {
     type: 'UNKNOWN_ERROR',
-    message: (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') ? (error as any).message : '알 수 없는 오류가 발생했습니다',
+    message: isErrorWithMessage(error) ? error.message : '알 수 없는 오류가 발생했습니다',
     details: error
   }
 }

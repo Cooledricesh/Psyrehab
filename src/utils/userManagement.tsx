@@ -16,7 +16,7 @@ export const jobTitleRoles = [
 
 // 사용자가 어떤 테이블에 속하는지 확인
 export const getUserTable = (role: string): 'social_workers' | 'administrators' => {
-  return jobTitleRoles.includes(role as any) ? 'social_workers' : 'administrators'
+  return jobTitleRoles.includes(role) ? 'social_workers' : 'administrators'
 }
 
 // 역할별 배지 표시

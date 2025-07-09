@@ -35,7 +35,7 @@ export function UserTable({ users, onEdit, onDelete, onApprove }: UserTableProps
             <TableCell>{user.department || '-'}</TableCell>
             <TableCell>{getStatusBadge(user.isActive)}</TableCell>
             <TableCell>
-              {jobTitleRoles.includes(user.role as any) ? `${user.patientCount || 0}명` : '-'}
+              {user.role !== 'pending' && jobTitleRoles.includes(user.role) ? `${user.patientCount || 0}명` : '-'}
             </TableCell>
             <TableCell>{new Date(user.createdAt).toLocaleDateString('ko-KR')}</TableCell>
             <TableCell className="text-right">

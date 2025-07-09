@@ -168,7 +168,8 @@ export function sanitizeFilename(
   // 위험한 문자 제거/대체
   name = name
     // 제어 문자 제거
-    .replace(/[\x00-\x1f\x7f-\x9f]/g, '')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x1f\x7f-\x9f]/gu, '')
     // 파일시스템에서 금지된 문자 대체
     .replace(/[<>:"/\\|?*]/g, replacement)
     // 점으로 시작하는 파일명 방지

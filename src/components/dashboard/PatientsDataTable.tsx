@@ -90,7 +90,7 @@ export function PatientsDataTable() {
         .eq('user_id', user.id)
         .single()
       
-      const roleName = (userRoleData as any)?.roles?.role_name
+      const roleName = userRoleData?.roles?.role_name
       const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
       setCanViewAssignee(managementRoles.includes(roleName))
     } catch (error) {
@@ -112,7 +112,13 @@ export function PatientsDataTable() {
       const patientIds = patientsResult.map(p => p.id)
       
       // 한 번의 쿼리로 모든 활성 6개월 목표 가져오기
-      let activeGoals: any[] = []
+      let activeGoals: {
+        id: string
+        title: string
+        start_date: string
+        goal_type: string
+        patient_id: string
+      }[] = []
       if (patientIds.length > 0) {
         const { data: goalsData, error: goalsError } = await supabase
           .from('rehabilitation_goals')
@@ -140,7 +146,12 @@ export function PatientsDataTable() {
           }
         }
         return acc
-      }, {} as Record<string, any>)
+      }, {} as Record<string, {
+        id: string
+        title: string
+        start_date: string
+        goal_type: 'weekly' | 'monthly' | 'six_month'
+      }>)
       
       // 환자 데이터와 목표 결합
       const patientsWithGoals = patientsResult.map(patient => ({
