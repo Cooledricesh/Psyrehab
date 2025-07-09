@@ -38,8 +38,8 @@ export interface PatientUpdateData {
   patient_identifier?: string
   date_of_birth?: string
   gender?: string
-  contact_info?: object
-  additional_info?: object
+  doctor?: string
+  contact_info?: any
   primary_social_worker_id?: string
   admission_date?: string
   status?: string
@@ -216,14 +216,19 @@ export class PatientService {
 
       // 환자 식별번호 중복 확인 (자신 제외)
       if (updateData.patient_identifier) {
-        const { data: existingPatient } = await supabase
+        const { data: existingPatients, error: checkError } = await supabase
           .from('patients')
           .select('id')
           .eq('patient_identifier', updateData.patient_identifier)
           .neq('id', id)
-          .single()
 
-        if (existingPatient) {
+        if (checkError) {
+          const appError = parseError(checkError)
+          logError(appError, 'PatientService.updatePatient - duplicate check error')
+          throw new Error(`환자 식별번호 중복 확인 중 오류가 발생했습니다: ${checkError.message}`)
+        }
+
+        if (existingPatients && existingPatients.length > 0) {
           const error = new Error('이미 존재하는 환자 식별번호입니다.')
           const appError = parseError(error)
           logError(appError, 'PatientService.updatePatient - duplicate identifier')

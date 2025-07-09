@@ -13,7 +13,8 @@ import {
   TrendingDown,
   Minus,
   User,
-  Activity
+  Activity,
+  XCircle
 } from 'lucide-react';
 import { 
   useActivePatients, 
@@ -35,6 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { handleApiError } from '@/utils/error-handler';
@@ -46,6 +48,7 @@ export default function ProgressTracking() {
   const [completedPatientId, setCompletedPatientId] = useState<string | null>(null);
   const [showConfirmComplete, setShowConfirmComplete] = useState(false);
   const [pendingGoalId, setPendingGoalId] = useState<string | null>(null);
+  const [showStopGoalsDialog, setShowStopGoalsDialog] = useState(false);
   const queryClient = useQueryClient();
 
   // 데이터 조회
@@ -205,6 +208,18 @@ export default function ProgressTracking() {
         handleApiError(error, 'ProgressTracking.handleCongratulationClose');
         toast.error('환자 상태 업데이트에 실패했습니다.');
       } else {
+        // 다음 환자 선택 (쿼리 새로고침 전에 수행)
+        if (patients && patients.length > 1) {
+          const nextPatient = patients.find(p => p.id !== completedPatientId);
+          if (nextPatient) {
+            setSelectedPatient(nextPatient.id);
+          } else {
+            setSelectedPatient(null);
+          }
+        } else {
+          setSelectedPatient(null);
+        }
+        
         toast.success('모든 재활 목표를 완료했습니다! 새로운 목표를 설정해주세요.');
         
         // 이벤트 발생
@@ -217,14 +232,6 @@ export default function ProgressTracking() {
         await queryClient.invalidateQueries({ queryKey: ['activePatients'] });
         await queryClient.invalidateQueries({ queryKey: ['patientGoals'] });
         await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
-        
-        // 다음 환자 선택
-        if (patients && patients.length > 1) {
-          const nextPatient = patients.find(p => p.id !== completedPatientId);
-          if (nextPatient) {
-            setSelectedPatient(nextPatient.id);
-          }
-        }
       }
     }
     
@@ -276,6 +283,73 @@ export default function ProgressTracking() {
     setShowConfirmComplete(false);
     setPendingGoalId(null);
     toast.info('6개월 목표는 아직 진행 중입니다.');
+  };
+
+  const handleStopGoals = async () => {
+    if (!selectedPatient) return;
+
+    try {
+      // 1. 모든 활성 목표 조회
+      const { data: activeGoals, error: goalsError } = await supabase
+        .from('rehabilitation_goals')
+        .select('id')
+        .eq('patient_id', selectedPatient)
+        .in('status', ['active', 'pending']);
+
+      if (goalsError) throw goalsError;
+
+      // 2. 모든 목표 삭제
+      if (activeGoals && activeGoals.length > 0) {
+        const goalIds = activeGoals.map(g => g.id);
+        const { error: deleteError } = await supabase
+          .from('rehabilitation_goals')
+          .delete()
+          .in('id', goalIds);
+
+        if (deleteError) throw deleteError;
+      }
+
+      // 3. 환자 상태를 pending으로 변경
+      const { error: updateError } = await supabase
+        .from('patients')
+        .update({ status: 'pending' })
+        .eq('id', selectedPatient);
+
+      if (updateError) throw updateError;
+
+      // 4. 다음 환자 선택 (쿼리 새로고침 전에 수행)
+      const currentPatientId = selectedPatient;
+      if (patients && patients.length > 1) {
+        const nextPatient = patients.find(p => p.id !== currentPatientId);
+        if (nextPatient) {
+          setSelectedPatient(nextPatient.id);
+        } else {
+          setSelectedPatient(null);
+        }
+      } else {
+        setSelectedPatient(null);
+      }
+
+      // 5. 성공 메시지 표시
+      toast.success('목표가 중단되었습니다. 환자가 목표 설정 대기 상태로 변경되었습니다.');
+
+      // 6. 이벤트 발생
+      eventBus.emit(EVENTS.PATIENT_STATUS_CHANGED, {
+        patientId: currentPatientId,
+        newStatus: 'pending'
+      });
+
+      // 7. 쿼리 새로고침
+      await queryClient.invalidateQueries({ queryKey: ['activePatients'] });
+      await queryClient.invalidateQueries({ queryKey: ['patientGoals'] });
+      await queryClient.invalidateQueries({ queryKey: ['progressStats'] });
+
+      // 8. 다이얼로그 닫기
+      setShowStopGoalsDialog(false);
+    } catch (error) {
+      handleApiError(error, 'ProgressTracking.handleStopGoals');
+      toast.error('목표 중단 처리 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -399,7 +473,20 @@ export default function ProgressTracking() {
         {/* 목표 계층 구조 */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>목표 계층 구조</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>목표 계층 구조</CardTitle>
+              {selectedPatient && patientGoals?.sixMonthGoal && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowStopGoalsDialog(true)}
+                  className="gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  목표 중단
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {selectedPatient ? (
@@ -598,6 +685,28 @@ export default function ProgressTracking() {
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction onClick={handleCongratulationClose} className="bg-green-600 hover:bg-green-700">
               확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 목표 중단 확인 대화상자 */}
+      <AlertDialog open={showStopGoalsDialog} onOpenChange={setShowStopGoalsDialog}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>목표 중단 확인</AlertDialogTitle>
+            <AlertDialogDescription>
+              현재 환자의 모든 목표를 중단하고 목표 설정 대기 상태로 변경하시겠습니까?<br />
+              <span className="text-red-600 font-medium">이 작업은 되돌릴 수 없습니다.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleStopGoals}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              목표 중단
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
