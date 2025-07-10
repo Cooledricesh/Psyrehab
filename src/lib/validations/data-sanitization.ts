@@ -1,22 +1,15 @@
 // =============================================================================
-// DATA SANITIZATION UTILITIES
+// TYPE DEFINITIONS
 // =============================================================================
 
-/**
- * 데이터 정화 옵션 인터페이스
- */
 export interface SanitizationOptions {
   allowedTags?: string[]
-  allowedAttributes?: string[]
   removeEmpty?: boolean
   trimWhitespace?: boolean
   maxLength?: number
   preserveLineBreaks?: boolean
 }
 
-/**
- * 파일명 정화 옵션
- */
 export interface FilenameSanitizationOptions {
   replacement?: string
   maxLength?: number
@@ -51,34 +44,95 @@ export function sanitizeHtml(
     sanitized = sanitized.substring(0, maxLength)
   }
 
-  // 2. 위험한 HTML 태그 제거 (허용된 태그 제외)
-  if (allowedTags.length === 0) {
-    // 모든 HTML 태그 제거 - 반복적으로 수행하여 중첩된 태그도 제거
-    let previousLength = 0
-    while (previousLength !== sanitized.length) {
-      previousLength = sanitized.length
-      sanitized = sanitized.replace(/<[^>]+>/g, '')
-    }
-  } else {
-    // 허용되지 않은 태그만 제거 - 반복적으로 수행
-    let previousLength = 0
-    while (previousLength !== sanitized.length) {
-      previousLength = sanitized.length
-      const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g
-      sanitized = sanitized.replace(tagPattern, (match, tagName) => {
-        return allowedTags.includes(tagName.toLowerCase()) ? match : ''
-      })
-    }
+  // 2. 모든 위험한 패턴 제거 (반복 실행으로 중첩된 패턴도 제거)
+  let previousValue = ''
+  let iterations = 0
+  const maxIterations = 10 // 무한 루프 방지
+  
+  while (previousValue !== sanitized && iterations < maxIterations) {
+    previousValue = sanitized
+    iterations++
+    
+    // 스크립트 관련 패턴 제거
+    sanitized = sanitized
+      // 스크립트 태그 (대소문자 무시, 줄바꿈 포함)
+      .replace(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '')
+      .replace(/<\s*script[^>]*>/gi, '')
+      // 스타일 태그 (CSS 인젝션 방지)
+      .replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '')
+      // 이벤트 핸들러 속성
+      .replace(/\s+on[a-z]+\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s+on[a-z]+\s*=\s*[^\s>]*/gi, '')
+      // 위험한 프로토콜
+      .replace(/javascript\s*:/gi, '')
+      .replace(/vbscript\s*:/gi, '')
+      .replace(/data\s*:\s*[^,]*,/gi, '')
+      // 이스케이프된 스크립트 패턴
+      .replace(/\\x3cscript/gi, '')
+      .replace(/\\u003cscript/gi, '')
+      .replace(/%3cscript/gi, '')
+      .replace(/&lt;script/gi, '')
   }
 
-  // 3. 특수 문자 이스케이프
-  sanitized = sanitized
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
+  // 3. HTML 인코딩 처리
+  if (allowedTags.length === 0) {
+    // 모든 HTML을 인코딩
+    sanitized = sanitized
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;')
+  } else {
+    // 허용된 태그만 보존
+    const placeholder = `__SAFE_TAG_${Date.now()}_`
+    const safeTags: Array<{ placeholder: string; original: string }> = []
+    
+    // 허용된 태그를 플레이스홀더로 교체
+    allowedTags.forEach((tag) => {
+      // 여는 태그
+      const openTagRegex = new RegExp(`<(${tag})(\\s+[^>]*)?\\s*>`, 'gi')
+      sanitized = sanitized.replace(openTagRegex, (match, tagName, attributes) => {
+        // 속성에서 위험한 패턴 제거
+        const safeAttributes = attributes ? 
+          attributes.replace(/\s+on[a-z]+\s*=\s*["'][^"']*["']/gi, '')
+                   .replace(/javascript\s*:/gi, '') : ''
+        const safeTag = `<${tagName}${safeAttributes}>`
+        const id = safeTags.length
+        safeTags.push({ 
+          placeholder: `${placeholder}${id}__`, 
+          original: safeTag 
+        })
+        return `${placeholder}${id}__`
+      })
+      
+      // 닫는 태그
+      const closeTagRegex = new RegExp(`<\\s*\\/\\s*${tag}\\s*>`, 'gi')
+      sanitized = sanitized.replace(closeTagRegex, (match) => {
+        const id = safeTags.length
+        safeTags.push({ 
+          placeholder: `${placeholder}${id}__`, 
+          original: match 
+        })
+        return `${placeholder}${id}__`
+      })
+    })
+    
+    // 나머지 모든 HTML 인코딩
+    sanitized = sanitized
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;')
+    
+    // 안전한 태그 복원
+    safeTags.forEach(({ placeholder, original }) => {
+      sanitized = sanitized.replace(placeholder, original)
+    })
+  }
 
   // 4. 줄바꿈 처리
   if (!preserveLineBreaks) {
@@ -105,20 +159,27 @@ export function removeScripts(input: string): string {
   if (typeof input !== 'string') return ''
 
   let sanitized = input
-  let previousLength = 0
+  let previousValue = ''
+  let iterations = 0
+  const maxIterations = 10 // 무한 루프 방지
   
   // 반복적으로 위험한 패턴 제거
-  while (previousLength !== sanitized.length) {
-    previousLength = sanitized.length
+  while (previousValue !== sanitized && iterations < maxIterations) {
+    previousValue = sanitized
+    iterations++
     
-    // 스크립트 태그 제거
-    sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gis, '')
-    // 이벤트 핸들러 제거
-    sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '')
-    // 자바스크립트 URL 제거
-    sanitized = sanitized.replace(/javascript\s*:/gi, '')
-    // 데이터 URL 스키마 제거 (위험한 경우)
-    sanitized = sanitized.replace(/data\s*:[^;]*;base64/gi, '')
+    // 스크립트 태그 제거 (다양한 변형 포함)
+    sanitized = sanitized
+      .replace(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '')
+      .replace(/<\s*script[^>]*>/gi, '')
+      // 이벤트 핸들러 제거
+      .replace(/\s+on[a-z]+\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s+on[a-z]+\s*=\s*[^\s>]*/gi, '')
+      // 자바스크립트 URL 제거
+      .replace(/javascript\s*:/gi, '')
+      .replace(/vbscript\s*:/gi, '')
+      // 데이터 URL 스키마 제거
+      .replace(/data\s*:\s*[^,;]*[,;]/gi, '')
   }
   
   return sanitized
@@ -148,19 +209,41 @@ export function sanitizeSql(input: string): string {
 }
 
 // =============================================================================
+// PATH TRAVERSAL PREVENTION
+// =============================================================================
+
+/**
+ * 파일 경로 정화 (Path Traversal 공격 방지)
+ */
+export function sanitizePath(input: string): string {
+  if (typeof input !== 'string') return ''
+
+  return input
+    // 상위 디렉토리 접근 방지
+    .replace(/\.\./g, '')
+    // 절대 경로 방지
+    .replace(/^\//, '')
+    .replace(/^[a-zA-Z]:/, '')
+    // 특수 문자 제거
+    .replace(/[<>"|?*]/g, '')
+    // 연속된 슬래시 정리
+    .replace(/\/+/g, '/')
+    // 공백 제거
+    .trim()
+}
+
+// =============================================================================
 // FILENAME SANITIZATION
 // =============================================================================
 
 /**
- * 파일명 정화 (보안 및 호환성)
+ * 파일명 정화
  */
 export function sanitizeFilename(
-  filename: string,
+  input: string,
   options: FilenameSanitizationOptions = {}
 ): string {
-  if (typeof filename !== 'string' || filename.trim() === '') {
-    return 'unnamed_file'
-  }
+  if (typeof input !== 'string') return ''
 
   const {
     replacement = '_',
@@ -168,240 +251,129 @@ export function sanitizeFilename(
     preserveExtension = true
   } = options
 
-  const sanitized = filename.trim()
+  let filename = input
+  let extension = ''
 
   // 확장자 분리
-  let name = sanitized
-  let extension = ''
-  
   if (preserveExtension) {
-    const lastDot = sanitized.lastIndexOf('.')
+    const lastDot = filename.lastIndexOf('.')
     if (lastDot > 0) {
-      name = sanitized.substring(0, lastDot)
-      extension = sanitized.substring(lastDot)
+      extension = filename.substring(lastDot)
+      filename = filename.substring(0, lastDot)
     }
   }
 
-  // 위험한 문자 제거/대체
-  name = name
-    // 제어 문자 제거
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\x00-\x1f\x7f-\x9f]/gu, '')
-    // 파일시스템에서 금지된 문자 대체
-    .replace(/[<>:"/\\|?*]/g, replacement)
-    // 점으로 시작하는 파일명 방지
+  // 위험한 문자 제거
+  filename = filename
+    // Windows 예약어 제거
+    .replace(/^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i, replacement)
+    // 특수 문자 제거
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, replacement)
+    // 시작/끝 점 제거
     .replace(/^\.+/, '')
-    // 연속된 점 제거
-    .replace(/\.{2,}/g, '.')
-    // 공백을 언더스코어로 대체
-    .replace(/\s+/g, replacement)
-    // 연속된 대체 문자 정리
-    .replace(new RegExp(`\\${replacement}+`, 'g'), replacement)
-    // 시작/끝 대체 문자 제거
-    .replace(new RegExp(`^\\${replacement}+|\\${replacement}+$`, 'g'), '')
+    .replace(/\.+$/, '')
+    // 공백 정리
+    .trim()
 
-  // 예약된 파일명 처리 (Windows)
-  const reservedNames = [
-    'CON', 'PRN', 'AUX', 'NUL',
-    'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
-    'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
-  ]
-  
-  if (reservedNames.includes(name.toUpperCase())) {
-    name = `${name}_file`
+  // 빈 파일명 처리
+  if (!filename) {
+    filename = 'unnamed'
   }
 
   // 길이 제한
-  const totalLength = name.length + extension.length
-  if (totalLength > maxLength) {
-    const availableLength = maxLength - extension.length
-    name = name.substring(0, Math.max(1, availableLength))
+  const extensionLength = extension.length
+  if (filename.length + extensionLength > maxLength) {
+    filename = filename.substring(0, maxLength - extensionLength)
   }
 
-  // 빈 이름 방지
-  if (name === '') {
-    name = 'file'
-  }
-
-  return name + extension
+  return filename + extension
 }
 
 // =============================================================================
-// DATA TYPE SPECIFIC SANITIZATION
+// KOREAN TEXT VALIDATION AND SANITIZATION
 // =============================================================================
 
 /**
- * 이메일 주소 정화
+ * 한글 텍스트 검증 및 정화
  */
-export function sanitizeEmail(email: string): string {
-  if (typeof email !== 'string') return ''
+export function sanitizeKoreanText(input: string): string {
+  if (typeof input !== 'string') return ''
 
-  return email
-    .toLowerCase()
+  return input
+    // 완성된 한글만 허용 (자음/모음 단독 제거)
+    .replace(/[ㄱ-ㅎㅏ-ㅣ]/g, '')
+    // 특수 공백 문자를 일반 공백으로
+    .replace(/[\u00A0\u2002-\u200B\u3000]/g, ' ')
+    // 연속된 공백 정리
+    .replace(/\s+/g, ' ')
     .trim()
-    .replace(/[^\w.@+-]/g, '') // 허용된 문자만 유지
-    .replace(/\.{2,}/g, '.') // 연속된 점 제거
-    .replace(/^\.+|\.+$/g, '') // 시작/끝 점 제거
+}
+
+// =============================================================================
+// NUMBER SANITIZATION
+// =============================================================================
+
+/**
+ * 숫자 문자열 정화
+ */
+export function sanitizeNumber(input: string): string {
+  if (typeof input !== 'string') return ''
+
+  // 숫자와 소수점, 음수 기호만 허용
+  return input.replace(/[^0-9.-]/g, '')
 }
 
 /**
  * 전화번호 정화
  */
-export function sanitizePhone(phone: string): string {
-  if (typeof phone !== 'string') return ''
+export function sanitizePhoneNumber(input: string): string {
+  if (typeof input !== 'string') return ''
 
-  return phone
-    .replace(/[^\d-+() ]/g, '') // 숫자와 기본 기호만 유지
-    .replace(/\s+/g, ' ') // 공백 정리
-    .trim()
-}
-
-/**
- * URL 정화
- */
-export function sanitizeUrl(url: string): string {
-  if (typeof url !== 'string') return ''
-
-  // 기본 정화
-  let sanitized = url.trim()
-
-  // 위험한 프로토콜 차단
-  const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:']
-  const hasProtocol = /^[a-zA-Z][a-zA-Z0-9+.-]*:/
-  
-  if (hasProtocol.test(sanitized)) {
-    const protocol = sanitized.split(':')[0].toLowerCase() + ':'
-    if (dangerousProtocols.includes(protocol)) {
-      return ''
-    }
-  }
-
-  // HTTP/HTTPS가 아닌 경우 기본 프로토콜 추가
-  if (!sanitized.startsWith('http://') && !sanitized.startsWith('https://')) {
-    sanitized = 'https://' + sanitized.replace(/^\/+/, '')
-  }
-
-  return sanitized
-}
-
-/**
- * 환자 식별번호 정화
- */
-export function sanitizePatientId(patientId: string): string {
-  if (typeof patientId !== 'string') return ''
-
-  return patientId
-    .toUpperCase()
-    .replace(/[^A-Z0-9-]/g, '') // 영문 대문자, 숫자, 하이픈만 허용
-    .replace(/-{2,}/g, '-') // 연속된 하이픈 제거
-    .replace(/^-+|-+$/g, '') // 시작/끝 하이픈 제거
+  // 숫자와 일부 구분자만 허용
+  return input.replace(/[^0-9+\-().\s]/g, '')
 }
 
 // =============================================================================
-// OBJECT SANITIZATION
+// GENERAL PURPOSE SANITIZATION
 // =============================================================================
 
 /**
- * 객체의 모든 문자열 필드 정화
+ * 범용 문자열 정화 (기본적인 XSS 방어)
+ */
+export function sanitizeInput(input: unknown): string {
+  if (typeof input !== 'string') return ''
+
+  return sanitizeHtml(input, { allowedTags: [] })
+}
+
+/**
+ * 객체의 모든 문자열 속성 정화
  */
 export function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
-  fieldRules: Record<keyof T, (value: unknown) => unknown> = {}
+  options: SanitizationOptions = {}
 ): T {
-  if (!obj || typeof obj !== 'object') return obj
+  if (typeof obj !== 'object' || obj === null) {
+    return obj
+  }
 
-  const sanitized = { ...obj }
+  const sanitized: Record<keyof T, (value: unknown) => unknown> = {} as any
 
-  for (const [key, value] of Object.entries(sanitized)) {
-    if (fieldRules[key]) {
-      // 특정 필드 규칙 적용
-      sanitized[key] = fieldRules[key](value)
-    } else if (typeof value === 'string') {
-      // 기본 문자열 정화
-      sanitized[key] = sanitizeHtml(value, { removeEmpty: false })
-    } else if (Array.isArray(value)) {
-      // 배열 요소 정화
-      sanitized[key] = value.map(item =>
-        typeof item === 'string' 
-          ? sanitizeHtml(item, { removeEmpty: false })
-          : item
-      )
-    } else if (value && typeof value === 'object') {
-      // 중첩 객체 재귀 정화
-      sanitized[key] = sanitizeObject(value, {})
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const value = obj[key]
+
+      if (typeof value === 'string') {
+        (sanitized as any)[key] = sanitizeHtml(value, options)
+      } else if (typeof value === 'object' && value !== null) {
+        (sanitized as any)[key] = sanitizeObject(value as Record<string, unknown>, options)
+      } else {
+        (sanitized as any)[key] = value
+      }
     }
   }
 
-  return sanitized
-}
-
-// =============================================================================
-// FORM DATA SANITIZATION
-// =============================================================================
-
-/**
- * 환자 데이터 정화
- */
-export function sanitizePatientData(data: unknown) {
-  return sanitizeObject(data, {
-    name: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 100 }),
-    email: sanitizeEmail,
-    phone: sanitizePhone,
-    patient_identifier: sanitizePatientId,
-    address: (value: string) => sanitizeHtml(value, { 
-      trimWhitespace: true, 
-      maxLength: 500,
-      preserveLineBreaks: true 
-    }),
-    medical_history: (value: string) => sanitizeHtml(value, { 
-      trimWhitespace: true,
-      preserveLineBreaks: true,
-      maxLength: 5000
-    }),
-    notes: (value: string) => sanitizeHtml(value, { 
-      preserveLineBreaks: true,
-      maxLength: 2000
-    })
-  })
-}
-
-/**
- * 서비스 기록 데이터 정화
- */
-export function sanitizeServiceData(data: unknown) {
-  return sanitizeObject(data, {
-    service_title: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 200 }),
-    service_description: (value: string) => sanitizeHtml(value, { 
-      preserveLineBreaks: true,
-      maxLength: 2000
-    }),
-    service_notes: (value: string) => sanitizeHtml(value, { 
-      preserveLineBreaks: true,
-      maxLength: 5000
-    }),
-    service_location: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 200 })
-  })
-}
-
-/**
- * 목표 데이터 정화
- */
-export function sanitizeGoalData(data: unknown) {
-  return sanitizeObject(data, {
-    title: (value: string) => sanitizeHtml(value, { trimWhitespace: true, maxLength: 200 }),
-    description: (value: string) => sanitizeHtml(value, { 
-      preserveLineBreaks: true,
-      maxLength: 1000
-    }),
-    success_criteria: (value: string) => sanitizeHtml(value, { 
-      preserveLineBreaks: true,
-      maxLength: 500
-    }),
-    notes: (value: string) => sanitizeHtml(value, { 
-      preserveLineBreaks: true,
-      maxLength: 2000
-    })
-  })
+  return sanitized as T
 }
 
 // =============================================================================
@@ -409,55 +381,36 @@ export function sanitizeGoalData(data: unknown) {
 // =============================================================================
 
 /**
- * 정화된 데이터가 원본과 다른지 확인
+ * 안전한 HTML 태그인지 검증
  */
-export function hasDataChanged(original: unknown, sanitized: unknown): boolean {
-  return JSON.stringify(original) !== JSON.stringify(sanitized)
+export function isSafeHtmlTag(tag: string): boolean {
+  const safeTags = [
+    'p', 'div', 'span', 'strong', 'em', 'b', 'i', 'u',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li', 'br', 'hr',
+    'a', 'img', 'blockquote', 'code', 'pre'
+  ]
+  return safeTags.includes(tag.toLowerCase())
 }
 
 /**
- * 정화 결과 보고서 생성
+ * URL이 안전한지 검증
  */
-export function generateSanitizationReport(original: unknown, sanitized: unknown) {
-  const changes: Array<{
-    field: string
-    original: unknown
-    sanitized: unknown
-    changed: boolean
-  }> = []
-
-  function compareObjects(orig: unknown, san: unknown, path: string = '') {
-    if (typeof orig !== typeof san) {
-      changes.push({
-        field: path,
-        original: orig,
-        sanitized: san,
-        changed: true
-      })
-      return
-    }
-
-    if (typeof orig === 'object' && orig !== null) {
-      for (const key of new Set([...Object.keys(orig || {}), ...Object.keys(san || {})])) {
-        compareObjects(orig?.[key], san?.[key], path ? `${path}.${key}` : key)
-      }
-    } else {
-      const changed = orig !== san
-      changes.push({
-        field: path,
-        original: orig,
-        sanitized: san,
-        changed
-      })
-    }
+export function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    const safeProtocols = ['http:', 'https:', 'mailto:']
+    return safeProtocols.includes(parsed.protocol)
+  } catch {
+    return false
   }
+}
 
-  compareObjects(original, sanitized)
+// =============================================================================
+// EXPORT ALL
+// =============================================================================
 
-  return {
-    totalFields: changes.length,
-    changedFields: changes.filter(c => c.changed).length,
-    changes: changes.filter(c => c.changed),
-    hasChanges: changes.some(c => c.changed)
-  }
-} 
+export {
+  sanitizeHtml as default,
+  sanitizeHtml as sanitize
+}
