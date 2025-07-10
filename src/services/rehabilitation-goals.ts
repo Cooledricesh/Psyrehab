@@ -120,13 +120,6 @@ export async function getRehabilitationGoalWithDetails(goalId: string): Promise<
         employee_id,
         department
       ),
-      category:goal_categories!rehabilitation_goals_category_id_fkey(
-        id,
-        name,
-        description,
-        color,
-        icon
-      ),
       sub_goals:rehabilitation_goals!parent_goal_id(
         id,
         title,
@@ -569,7 +562,6 @@ export const GOAL_TYPE_LABELS = {
 export const GOAL_STATUSES = {
   PENDING: 'pending',
   ACTIVE: 'active',
-  ACTIVE: 'active',
   COMPLETED: 'completed',
   ON_HOLD: 'on_hold',
   CANCELLED: 'cancelled',
@@ -579,7 +571,6 @@ export const GOAL_STATUSES = {
 export const GOAL_STATUS_LABELS = {
   [GOAL_STATUSES.PENDING]: '대기 중',
   [GOAL_STATUSES.ACTIVE]: '활성',
-  [GOAL_STATUSES.IN_PROGRESS]: '진행 중',
   [GOAL_STATUSES.COMPLETED]: '완료',
   [GOAL_STATUSES.ON_HOLD]: '보류',
   [GOAL_STATUSES.CANCELLED]: '취소',
@@ -597,7 +588,6 @@ export const getGoalStatusColor = (status: string) => {
   const colors = {
     [GOAL_STATUSES.PENDING]: '#6B7280',
     [GOAL_STATUSES.ACTIVE]: '#3B82F6',
-    [GOAL_STATUSES.IN_PROGRESS]: '#F59E0B',
     [GOAL_STATUSES.COMPLETED]: '#10B981',
     [GOAL_STATUSES.ON_HOLD]: '#8B5CF6',
     [GOAL_STATUSES.CANCELLED]: '#EF4444',
