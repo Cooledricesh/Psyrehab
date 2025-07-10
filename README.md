@@ -151,7 +151,7 @@ src/
 
 3. **6개월 목표 완료**:
    - 모든 목표 완료 시 축하 메시지 표시
-   - 환자 status를 'inactive'로 변경 (목표 설정 대기 상태)
+   - 환자 status를 'pending'으로 변경 (목표 설정 대기 상태)
 
 ### 2. 달성률 계산
 
@@ -180,7 +180,7 @@ src/
 ### 주요 테이블
 - `users` - 사용자 정보 (Supabase Auth)
 - `social_workers` - 사회복지사 프로필
-- `patients` - 환자 정보 (status: active, inactive, discharged, transferred, on_hold)
+- `patients` - 환자 정보 (status: active, pending, discharged)
 - `assessments` - 평가 기록
 - `rehabilitation_goals` - 재활 목표 (계층 구조, status: active, completed, cancelled)
 - `goal_evaluations` - 목표 평가
@@ -198,7 +198,7 @@ src/
 ### Row Level Security (RLS)
 - 모든 테이블에 RLS 정책 적용
 - 역할 기반 접근 제어 (RBAC)
-- 관리자/사회복지사/환자별 권한 분리
+- 관리자/사회복지사 권한 분리
 
 ### 역할별 권한 체계
 

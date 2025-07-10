@@ -2,7 +2,7 @@
 
 ## 변경 사항
 - `inactive` → `pending`: 목표 설정 대기 상태
-- `complete`/`completed` → `discharged`: 입원 중 상태
+- `complete`/`completed` → `discharged`: 퇴원 상태
 
 ## 데이터베이스 마이그레이션
 1. `migrations/update_patient_status_mapping.sql` 파일 실행

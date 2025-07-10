@@ -4,7 +4,6 @@ import {
   Clock, 
   Play, 
   CheckCircle, 
-  Pause, 
   X, 
   AlertCircle 
 } from 'lucide-react';

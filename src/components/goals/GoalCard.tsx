@@ -10,8 +10,7 @@ import {
   CheckCircleIcon,
   CircleIcon,
   PauseCircleIcon,
-  XCircleIcon,
-  AlertCircleIcon
+  XCircleIcon
 } from 'lucide-react'
 import { BaseGoal, GoalLevel, GoalStatus, GoalCategory, GoalPriority } from '@/types/goals'
 import { cn } from '@/lib/utils'
