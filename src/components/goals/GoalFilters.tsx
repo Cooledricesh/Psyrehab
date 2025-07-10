@@ -21,15 +21,13 @@ interface AdvancedGoalFilters {
   hasSubGoals?: boolean
   hasAttachments?: boolean
 }
-import { useGoalCategories } from '@/hooks/goal-categories/useGoalCategories'
-import { 
-  ALL_GOAL_TAGS,
-  // getTagById,
-  getCategoryIcon,
-  GOAL_STATUS_COLORS,
-  GOAL_PRIORITY_COLORS,
-  GOAL_TYPE_COLORS
-} from '@/constants/goal-categories'
+// Temporarily define colors locally until constants file is found
+const GOAL_STATUS_COLORS = {
+  pending: '#9CA3AF',
+  active: '#3B82F6',
+  completed: '#10B981',
+  deleted: '#EF4444'
+}
 import { cn } from '@/lib/utils'
 
 interface GoalFiltersProps {
@@ -213,7 +211,7 @@ export function GoalFilters({
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">상태</label>
         <div className="grid grid-cols-2 gap-2">
-          {(['pending', 'active', 'completed', 'on_hold', 'cancelled'] as GoalStatus[]).map((status) => (
+          {(['pending', 'active', 'completed'] as GoalStatus[]).map((status) => (
             <button
               key={status}
               onClick={() => toggleArrayValue('statusList', status)}
@@ -230,9 +228,7 @@ export function GoalFilters({
               />
               <span>
                 {status === 'pending' ? '대기' :
-                 status === 'active' ? '진행중' :
-                 status === 'completed' ? '완료' :
-                 status === 'on_hold' ? '보류' : '취소'}
+                 status === 'active' ? '진행중' : '완료'}
               </span>
             </button>
           ))}

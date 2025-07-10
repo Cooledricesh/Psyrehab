@@ -51,19 +51,11 @@ export const GoalStatusBadge: React.FC<GoalStatusBadgeProps> = ({
           variant: 'default' as const,
           className: 'bg-green-100 text-green-700 hover:bg-green-200'
         };
-      case 'on_hold':
+      case 'deleted':
         return {
-          label: '보류',
-          icon: Pause,
-          iconLabel: '보류된 목표',
-          variant: 'secondary' as const,
-          className: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-        };
-      case 'cancelled':
-        return {
-          label: '취소',
+          label: '삭제됨',
           icon: X,
-          iconLabel: '취소된 목표',
+          iconLabel: '삭제된 목표',
           variant: 'destructive' as const,
           className: 'bg-red-100 text-red-700 hover:bg-red-200'
         };

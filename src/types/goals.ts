@@ -2,7 +2,7 @@
 export type GoalType = 'six_month' | 'monthly' | 'weekly'
 
 // 목표 상태 타입 정의  
-export type GoalStatus = 'pending' | 'active' | 'completed' | 'on_hold' | 'cancelled'
+export type GoalStatus = 'pending' | 'active' | 'completed' | 'deleted'
 
 // 목표 우선순위 타입 정의
 export type GoalPriority = 'high' | 'medium' | 'low'

@@ -165,8 +165,7 @@ export const GoalForm: React.FC<GoalFormProps> = ({
       case 'pending': return '대기';
       case 'active': return '진행 중';
       case 'completed': return '완료';
-      case 'on_hold': return '보류';
-      case 'cancelled': return '취소';
+      case 'deleted': return '삭제됨';
       default: return status;
     }
   };
@@ -503,8 +502,6 @@ export const GoalForm: React.FC<GoalFormProps> = ({
                         <SelectItem value="pending">{getStatusLabel('pending')}</SelectItem>
                         <SelectItem value="active">{getStatusLabel('active')}</SelectItem>
                         <SelectItem value="completed">{getStatusLabel('completed')}</SelectItem>
-                        <SelectItem value="on_hold">{getStatusLabel('on_hold')}</SelectItem>
-                        <SelectItem value="cancelled">{getStatusLabel('cancelled')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
