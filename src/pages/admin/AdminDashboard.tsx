@@ -12,6 +12,16 @@ import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
+interface UserLoginData {
+  id: string
+  user_id: string
+  email?: string
+  last_sign_in_at?: string
+  created_at?: string
+  full_name?: string
+  role_name?: string
+}
+
 export default function AdminDashboard() {
   const [period, setPeriod] = useState<'week' | 'month' | 'quarter'>('month')
   
@@ -36,7 +46,7 @@ export default function AdminDashboard() {
     queryKey: ['loginStats', period],
     queryFn: async () => {
       const now = new Date()
-      let startDate = new Date()
+      const startDate = new Date()
       
       switch (period) {
         case 'week':
@@ -59,7 +69,7 @@ export default function AdminDashboard() {
       }
       
       const allUsers = loginData || []
-      const activeUsers = allUsers.filter((user: any) => 
+      const activeUsers = allUsers.filter((user: UserLoginData) => 
         user.last_sign_in_at && new Date(user.last_sign_in_at) >= startDate
       )
 
@@ -156,7 +166,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loginHistory?.filter((user: any) => {
+                    {loginHistory?.filter((user: UserLoginData) => {
                       if (!user.last_sign_in_at) return false
                       // UTC 시간을 한국 시간으로 변환
                       const lastLogin = new Date(user.last_sign_in_at)
@@ -191,7 +201,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {loginHistory?.slice(0, 10).map((user: any) => (
+                      {loginHistory?.slice(0, 10).map((user: UserLoginData) => (
                         <div key={user.id} className="flex items-center justify-between py-2 border-b last:border-0">
                           <div>
                             <p className="font-medium">{user.full_name}</p>

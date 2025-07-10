@@ -39,7 +39,7 @@ export interface PatientUpdateData {
   date_of_birth?: string
   gender?: string
   doctor?: string
-  contact_info?: any
+  contact_info?: Record<string, unknown>
   primary_social_worker_id?: string
   admission_date?: string
   status?: string
