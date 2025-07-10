@@ -298,13 +298,13 @@ export default function ProgressTracking() {
 
       if (goalsError) throw goalsError;
 
-      // 2. 모든 목표를 'deleted' 상태로 변경 (soft delete)
+      // 2. 모든 목표를 'cancelled' 상태로 변경
       if (activeGoals && activeGoals.length > 0) {
         const goalIds = activeGoals.map(g => g.id);
         const { error: deleteError } = await supabase
           .from('rehabilitation_goals')
           .update({ 
-            status: 'deleted',
+            status: 'cancelled',
             updated_at: new Date().toISOString()
           })
           .in('id', goalIds);
