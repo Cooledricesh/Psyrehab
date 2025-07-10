@@ -53,14 +53,22 @@ export function sanitizeHtml(
 
   // 2. 위험한 HTML 태그 제거 (허용된 태그 제외)
   if (allowedTags.length === 0) {
-    // 모든 HTML 태그 제거
-    sanitized = sanitized.replace(/<[^>]*>/g, '')
+    // 모든 HTML 태그 제거 - 반복적으로 수행하여 중첩된 태그도 제거
+    let previousLength = 0
+    while (previousLength !== sanitized.length) {
+      previousLength = sanitized.length
+      sanitized = sanitized.replace(/<[^>]+>/g, '')
+    }
   } else {
-    // 허용되지 않은 태그만 제거
-    const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g
-    sanitized = sanitized.replace(tagPattern, (match, tagName) => {
-      return allowedTags.includes(tagName.toLowerCase()) ? match : ''
-    })
+    // 허용되지 않은 태그만 제거 - 반복적으로 수행
+    let previousLength = 0
+    while (previousLength !== sanitized.length) {
+      previousLength = sanitized.length
+      const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g
+      sanitized = sanitized.replace(tagPattern, (match, tagName) => {
+        return allowedTags.includes(tagName.toLowerCase()) ? match : ''
+      })
+    }
   }
 
   // 3. 특수 문자 이스케이프
@@ -96,15 +104,24 @@ export function sanitizeHtml(
 export function removeScripts(input: string): string {
   if (typeof input !== 'string') return ''
 
-  return input
+  let sanitized = input
+  let previousLength = 0
+  
+  // 반복적으로 위험한 패턴 제거
+  while (previousLength !== sanitized.length) {
+    previousLength = sanitized.length
+    
     // 스크립트 태그 제거
-    .replace(/<script[^>]*>.*?<\/script>/gis, '')
+    sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gis, '')
     // 이벤트 핸들러 제거
-    .replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '')
+    sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '')
     // 자바스크립트 URL 제거
-    .replace(/javascript\s*:/gi, '')
+    sanitized = sanitized.replace(/javascript\s*:/gi, '')
     // 데이터 URL 스키마 제거 (위험한 경우)
-    .replace(/data\s*:[^;]*;base64/gi, '')
+    sanitized = sanitized.replace(/data\s*:[^;]*;base64/gi, '')
+  }
+  
+  return sanitized
 }
 
 // =============================================================================
