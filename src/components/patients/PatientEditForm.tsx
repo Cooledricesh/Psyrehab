@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
@@ -16,11 +16,12 @@ import {
   X, 
   User, 
   Phone, 
-  Heart,
   AlertCircle,
   CheckCircle2
 } from 'lucide-react'
 import { useUpdatePatient } from '@/hooks/usePatients'
+import { handleApiError } from '@/utils/error-handler'
+import type { Patient } from '@/services/patient-management'
 
 // 환자 정보 편집을 위한 스키마
 const patientEditSchema = z.object({
@@ -28,6 +29,7 @@ const patientEditSchema = z.object({
   patient_identifier: z.string().min(1, '환자 식별번호는 필수입니다'),
   date_of_birth: z.string().optional(),
   gender: z.string().optional(),
+  doctor: z.string().optional(),
   
   // 연락처 정보 (contact_info JSONB)
   phone: z.string().optional(),
@@ -35,27 +37,31 @@ const patientEditSchema = z.object({
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
   emergency_contact_relationship: z.string().optional(),
-  
-  // 추가 정보 (additional_info JSONB)
-  medical_history: z.string().optional(),
-  allergies: z.array(z.string()).optional(),
-  medications: z.array(z.string()).optional(),
-  special_needs: z.string().optional(),
-  notes: z.string().optional(),
 })
 
 type PatientEditFormData = z.infer<typeof patientEditSchema>
 
 interface PatientEditFormProps {
-  patient: any
+  patient: Patient & {
+    full_name?: string
+    patient_identifier?: string
+    date_of_birth?: string
+    doctor?: string
+    contact_info?: {
+      phone?: string
+      address?: string
+      emergency_contact?: {
+        name?: string
+        phone?: string
+        relationship?: string
+      }
+    }
+  }
   onSuccess?: () => void
   onCancel?: () => void
 }
 
 export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFormProps) {
-  const [allergiesInput, setAllergiesInput] = useState('')
-  const [medicationsInput, setMedicationsInput] = useState('')
-
   const updatePatientMutation = useUpdatePatient()
 
   const form = useForm<PatientEditFormData>({
@@ -65,47 +71,23 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
       patient_identifier: patient.patient_identifier || '',
       date_of_birth: patient.date_of_birth || '',
       gender: patient.gender || '',
+      doctor: patient.doctor || '',
       phone: patient.contact_info?.phone || '',
       address: patient.contact_info?.address || '',
       emergency_contact_name: patient.contact_info?.emergency_contact?.name || '',
       emergency_contact_phone: patient.contact_info?.emergency_contact?.phone || '',
       emergency_contact_relationship: patient.contact_info?.emergency_contact?.relationship || '',
-      medical_history: patient.additional_info?.medical_history || '',
-      allergies: patient.additional_info?.allergies || [],
-      medications: patient.additional_info?.medications || [],
-      special_needs: patient.additional_info?.special_needs || '',
-      notes: patient.additional_info?.notes || '',
     }
   })
 
-  // 알레르기와 약물 목록을 문자열로 초기화
-  useEffect(() => {
-    if (patient.additional_info?.allergies) {
-      setAllergiesInput(patient.additional_info.allergies.join(', '))
-    }
-    if (patient.additional_info?.medications) {
-      setMedicationsInput(patient.additional_info.medications.join(', '))
-    }
-  }, [patient])
-
   const onSubmit = async (data: PatientEditFormData) => {
     try {
-      // 알레르기와 약물 목록을 배열로 변환
-      const allergiesArray = allergiesInput
-        .split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0)
-
-      const medicationsArray = medicationsInput
-        .split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0)
-
       const updateData = {
         full_name: data.full_name,
         patient_identifier: data.patient_identifier,
         date_of_birth: data.date_of_birth || null,
         gender: data.gender || null,
+        doctor: data.doctor || null,
         contact_info: {
           phone: data.phone || null,
           address: data.address || null,
@@ -114,13 +96,6 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
             phone: data.emergency_contact_phone || '',
             relationship: data.emergency_contact_relationship || ''
           } : null
-        },
-        additional_info: {
-          medical_history: data.medical_history || null,
-          allergies: allergiesArray,
-          medications: medicationsArray,
-          special_needs: data.special_needs || null,
-          notes: data.notes || null
         }
       }
 
@@ -130,8 +105,8 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
       })
 
       onSuccess?.()
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'PatientEditForm.onSubmit')
     }
   }
 
@@ -153,7 +128,7 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
           환자 정보 편집
         </CardTitle>
         <CardDescription>
-          환자의 기본 정보와 의료 정보를 수정할 수 있습니다.
+          환자의 기본 정보와 연락처 정보를 수정할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -184,7 +159,7 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
                 <Input
                   id="patient_identifier"
                   {...form.register('patient_identifier')}
-                  placeholder="P2024001"
+                  placeholder="101860"
                 />
                 {form.formState.errors.patient_identifier && (
                   <p className="text-sm text-red-500 mt-1">
@@ -217,6 +192,15 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
                     <SelectItem value="other">기타</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="doctor">주치의</Label>
+                <Input
+                  id="doctor"
+                  {...form.register('doctor')}
+                  placeholder="주치의 이름"
+                />
               </div>
             </div>
           </div>
@@ -298,68 +282,7 @@ export function PatientEditForm({ patient, onSuccess, onCancel }: PatientEditFor
             </div>
           </div>
 
-          <Separator />
 
-          {/* 의료 정보 */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Heart className="h-5 w-5" />
-              의료 정보
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="medical_history">병력</Label>
-                <Textarea
-                  id="medical_history"
-                  {...form.register('medical_history')}
-                  placeholder="기존 병력이나 질환을 입력하세요"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="allergies">알레르기 (쉼표로 구분)</Label>
-                  <Input
-                    id="allergies"
-                    value={allergiesInput}
-                    onChange={(e) => setAllergiesInput(e.target.value)}
-                    placeholder="예: 페니실린, 견과류, 새우"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="medications">복용 약물 (쉼표로 구분)</Label>
-                  <Input
-                    id="medications"
-                    value={medicationsInput}
-                    onChange={(e) => setMedicationsInput(e.target.value)}
-                    placeholder="예: 아스피린, 혈압약, 당뇨약"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="special_needs">특별 요구사항</Label>
-                <Textarea
-                  id="special_needs"
-                  {...form.register('special_needs')}
-                  placeholder="특별한 요구사항이나 주의사항을 입력하세요"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="notes">기타 메모</Label>
-                <Textarea
-                  id="notes"
-                  {...form.register('notes')}
-                  placeholder="추가적인 메모나 특이사항을 입력하세요"
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
 
           {/* 에러 메시지 */}
           {updatePatientMutation.error && (

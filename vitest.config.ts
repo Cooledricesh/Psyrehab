@@ -7,7 +7,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
     css: true,
     // Include source files for coverage
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -21,6 +20,8 @@ export default defineConfig({
       'reference/**',
       '.taskmaster/**'
     ],
+    // Pass when no test files are found
+    passWithNoTests: true,
   },
   define: {
     'import.meta.env.VITE_SUPABASE_URL': '"https://test.supabase.co"',

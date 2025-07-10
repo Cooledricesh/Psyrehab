@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getPatientCompletedGoals, getGoalStatusColor } from '@/services/rehabilitation-goals'
+import { getPatientCompletedGoals } from '@/services/rehabilitation-goals'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CalendarDays, CheckCircle2, Trophy } from 'lucide-react'

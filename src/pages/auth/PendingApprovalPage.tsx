@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Clock, CheckCircle, Mail, Phone, Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 export default function PendingApprovalPage() {
   const [userInfo, setUserInfo] = useState<{
@@ -46,7 +47,7 @@ export default function PendingApprovalPage() {
         }
       }
     } catch (error) {
-      console.error('사용자 상태 확인 오류:', error)
+      handleApiError(error, 'PendingApprovalPage.checkUserStatus')
     } finally {
       setIsLoading(false)
     }

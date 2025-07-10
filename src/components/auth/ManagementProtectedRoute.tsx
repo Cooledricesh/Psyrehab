@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
+import { handleApiError } from '@/utils/error-handler'
 
 interface ManagementProtectedRouteProps {
   children: React.ReactNode
@@ -38,15 +39,20 @@ export function ManagementProtectedRoute({ children }: ManagementProtectedRouteP
         .single()
 
       if (userRole) {
-        const roleName = (userRole as any).roles?.role_name
+        interface UserRoleData {
+          roles?: {
+            role_name: string
+          }
+        }
+        const roleName = (userRole as UserRoleData).roles?.role_name
         // 계장 이상 직급 및 관리자
         const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
         setHasAccess(managementRoles.includes(roleName))
       } else {
         setHasAccess(false)
       }
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'ManagementProtectedRoute.checkManagementAccess')
       setHasAccess(false)
     } finally {
       setIsLoading(false)

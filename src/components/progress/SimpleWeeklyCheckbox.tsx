@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { eventBus, EVENTS } from '@/lib/eventBus';
+import { handleApiError } from '@/utils/error-handler';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -168,7 +169,7 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       });
     },
     onError: (error) => {
-      console.error("Error occurred");
+      handleApiError(error, 'SimpleWeeklyCheckbox.updateGoalStatus');
       toast.error('목표 상태 업데이트에 실패했습니다.');
     }
   });
@@ -239,7 +240,7 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       .eq('id', pendingGoalId);
     
     if (updateError) {
-      console.error(`${pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표 완료 처리 실패:`, updateError);
+      handleApiError(updateError, `SimpleWeeklyCheckbox.handleConfirmGoalComplete.${pendingGoalType}`);
       toast.error(`${pendingGoalType === 'monthly' ? '월간' : '6개월'} 목표 완료 처리에 실패했습니다.`);
       return;
     }
@@ -251,7 +252,7 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
         await AIRecommendationArchiveService.archiveCompletedGoal(pendingGoalId);
         console.log('✅ 완료된 6개월 목표 자동 아카이빙 성공');
       } catch (error) {
-        console.error('⚠️ 목표 아카이빙 실패 (메인 플로우는 계속):', error);
+        handleApiError(error, 'SimpleWeeklyCheckbox.archiveCompletedGoal');
       }
     }
     
@@ -315,7 +316,7 @@ export default function SimpleWeeklyCheckbox({ weeklyGoal, patientId }: SimpleWe
       .eq('id', patientId);
     
     if (error) {
-      console.error("Error occurred");
+      handleApiError(error, 'SimpleWeeklyCheckbox.handleCongratulationClose');
       toast.error('환자 상태 업데이트에 실패했습니다.');
     } else {
       toast.success('모든 재활 목표를 완료했습니다! 새로운 목표를 설정해주세요.');

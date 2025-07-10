@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Users, UserCheck, UserX, Search, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { handleApiError } from '@/utils/error-handler'
 import {
   Table,
   TableBody,
@@ -128,7 +129,7 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
       setSocialWorkers(workersWithCount || [])
 
     } catch (error: unknown) {
-      console.error("Error occurred")
+      handleApiError(error, 'PatientAssignment.loadData')
       toast.error('데이터를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
@@ -152,7 +153,7 @@ export default function PatientAssignment() {  const [patients, setPatients] = u
       await loadData()
 
     } catch (error: unknown) {
-      console.error("Error occurred")
+      handleApiError(error, 'PatientAssignment.assignPatient')
       toast.error('배정 중 오류가 발생했습니다.')
     } finally {
       setAssigningPatientId(null)

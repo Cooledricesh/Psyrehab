@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase'
-import { startOfWeek, differenceInWeeks, subWeeks } from 'date-fns'
+import { handleApiError } from '@/utils/error-handler'
 
 // 캐시 저장소
-const cache = new Map<string, { data: any, timestamp: number }>()
+const cache = new Map<string, { data: unknown, timestamp: number }>()
 const CACHE_TTL = 30000 // 30초 캐시
 const MAX_CACHE_SIZE = 100 // 최대 캐시 크기
 const MAX_PERMISSION_CACHE_SIZE = 50 // 권한 캐시 최대 크기
@@ -29,7 +29,7 @@ interface PatientWithGoal extends Patient {
 }
 
 // 권한 체크 결과를 캐시
-let permissionCache = new Map<string, { canViewAll: boolean, timestamp: number }>()
+const permissionCache = new Map<string, { canViewAll: boolean, timestamp: number }>()
 const PERMISSION_CACHE_TTL = 300000 // 5분 캐시
 
 // 캐시 크기 관리 함수
@@ -70,7 +70,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
   } else {
     // 권한 체크 (캐시 없을 때만)
     try {
-      const { getUserProfile, hasPermission } = await import('@/lib/supabase')
+      const { hasPermission } = await import('@/lib/supabase')
       canViewAllData = await hasPermission(userId, 'view_all_data')
       
       // 권한 결과 캐시
@@ -82,7 +82,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
       // 캐시 크기 관리
       manageCacheSize(permissionCache, MAX_PERMISSION_CACHE_SIZE)
     } catch (error) {
-      console.error('Permission check failed:', error)
+      handleApiError(error, 'socialWorkerDashboard.getAssignedPatients.permissionCheck')
       canViewAllData = false
     }
   }
@@ -100,7 +100,7 @@ async function getAssignedPatients(userId: string): Promise<string[]> {
   const { data, error } = await query
 
   if (error) {
-    console.error('Error fetching patients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getAssignedPatients')
     return []
   }
   
@@ -179,7 +179,7 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
             start_date: pendingGoal.start_date
           }
         } catch (error) {
-          console.error(`Error processing patient ${patientId}:`, error)
+          handleApiError(error, `socialWorkerDashboard.getWeeklyCheckPendingPatients.patient.${patientId}`)
           return null
         }
       })
@@ -190,7 +190,7 @@ export async function getWeeklyCheckPendingPatients(userId: string): Promise<Pat
 
     return pendingPatients
   } catch (error) {
-    console.error('Error in getWeeklyCheckPendingPatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getWeeklyCheckPendingPatients')
     return []
   }
 }
@@ -273,7 +273,6 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
           
           if (allFailed) {
             // 연속 실패한 주차 정보 포함
-            const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
             const failureInfo = '4주 연속 목표 미달성'
             
             return {
@@ -289,7 +288,7 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 
           return null
         } catch (error) {
-          console.error(`Error processing patient ${patientId}:`, error)
+          handleApiError(error, `socialWorkerDashboard.getConsecutiveFailurePatients.patient.${patientId}`)
           return null
         }
       })
@@ -300,13 +299,13 @@ export async function getConsecutiveFailurePatients(userId: string): Promise<Pat
 
     return consecutiveFailures
   } catch (error) {
-    console.error('Error in getConsecutiveFailurePatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getConsecutiveFailurePatients')
     return []
   }
 }
 
 // 목표 미설정 환자 조회
-export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]> {
+export async function getGoalsNotSetPatients(): Promise<Patient[]> {
   try {
     // pending 상태인 환자들을 조회 (목표 설정 대기)
     const { data: pendingPatients, error: patientsError } = await supabase
@@ -315,7 +314,7 @@ export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]>
       .eq('status', 'pending')
 
     if (patientsError || !pendingPatients) {
-      console.error('Error fetching patients:', patientsError)
+      handleApiError(patientsError, 'socialWorkerDashboard.getGoalsNotSetPatients')
       return []
     }
 
@@ -325,7 +324,7 @@ export async function getGoalsNotSetPatients(userId: string): Promise<Patient[]>
       patient_identifier: p.patient_identifier
     }))
   } catch (error) {
-    console.error('Error in getGoalsNotSetPatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.getGoalsNotSetPatients')
     return []
   }
 }
@@ -408,7 +407,6 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
           
           if (allAchieved) {
             // 연속 달성한 주차 정보 포함
-            const weekNumbers = recentFourWeeks.map(g => g.sequence_number).filter(n => n !== null).sort((a, b) => a - b)
             const achievementInfo = '4주 연속 목표 달성'
             
             return {
@@ -424,7 +422,7 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
 
           return null
         } catch (error) {
-          console.error(`Error processing patient ${patientId}:`, error)
+          handleApiError(error, `socialWorkerDashboard.get4WeeksAchievedPatients.patient.${patientId}`)
           return null
         }
       })
@@ -435,7 +433,7 @@ export async function get4WeeksAchievedPatients(userId: string): Promise<Patient
 
     return fourWeeksAchieved
   } catch (error) {
-    console.error('Error in get4WeeksAchievedPatients:', error)
+    handleApiError(error, 'socialWorkerDashboard.get4WeeksAchievedPatients')
     return []
   }
 }
@@ -507,7 +505,7 @@ export async function getSocialWorkerDashboardStats(userId: string): Promise<Soc
     
     return result
   } catch (error) {
-    console.error('Error in getSocialWorkerDashboardStats:', error)
+    handleApiError(error, 'socialWorkerDashboard.getSocialWorkerDashboardStats')
     return {
       weeklyCheckPending: [],
       consecutiveFailures: [],

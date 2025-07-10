@@ -21,6 +21,7 @@ import {
   getAuthErrorMessage
 } from '@/utils/auth'
 import { AUTH_ERROR_CODES, AUTH_FLOW_CONFIG } from '@/constants/auth'
+import { handleError, handleApiError } from '@/utils/error-handler'
 
 // Enhanced Authentication service class
 export class AuthService {
@@ -90,7 +91,10 @@ export class AuthService {
         .maybeSingle()
 
       if (requestError) {
-        console.error('승인 상태 확인 실패:', requestError)
+        handleError(requestError, '승인 상태 확인에 실패했습니다.', { 
+          context: 'AuthService.signIn',
+          showToast: false // 내부 오류는 토스트 표시하지 않음
+        })
       }
 
       // Not approved yet
@@ -138,6 +142,14 @@ export class AuthService {
       }
     } catch (error: unknown) {
       recordAttempt('signin', credentials.email, false)
+      
+      // Log error for debugging in development
+      handleError(error, '로그인 중 오류가 발생했습니다.', { 
+        context: 'AuthService.signIn',
+        showToast: false,
+        logToConsole: true
+      })
+      
       return {
         success: false,
         error: getAuthErrorMessage(error)
@@ -443,13 +455,13 @@ export class AuthService {
       const { data: { user }, error } = await supabase.auth.getUser()
       
       if (error) {
-        console.error("Error occurred")
+        handleApiError(error, 'AuthService.getCurrentUser')
         return null
       }
 
       return user
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.getCurrentUser')
       return null
     }
   }
@@ -460,13 +472,13 @@ export class AuthService {
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (error) {
-        console.error("Error occurred")
+        handleApiError(error, 'AuthService.getCurrentSession')
         return null
       }
 
       return session
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.getCurrentSession')
       return null
     }
   }
@@ -499,10 +511,10 @@ export class AuthService {
       }
 
       let result
-      const { role, ...profileUpdates } = updates
+      const profileUpdates = { ...updates }
 
       switch (userRole) {
-        case 'social_worker':
+        case 'social_worker': {
           // Validate social worker specific fields
           if (updates.employee_id) {
             const empIdValidation = validateEmployeeId(updates.employee_id)
@@ -543,8 +555,9 @@ export class AuthService {
 
           result = { ...swData, role: 'social_worker' as UserRole }
           break
+        }
 
-        case 'administrator':
+        case 'administrator': {
           const { data: adminData, error: adminError } = await supabase
             .from('administrators')
             .update({
@@ -564,8 +577,9 @@ export class AuthService {
 
           result = { ...adminData, role: 'administrator' as UserRole }
           break
+        }
 
-        case 'patient':
+        case 'patient': {
           // Validate patient specific fields
           if (updates.date_of_birth) {
             const dobValidation = validateDateOfBirth(updates.date_of_birth)
@@ -596,6 +610,7 @@ export class AuthService {
 
           result = { ...patientData, role: 'patient' as UserRole }
           break
+        }
 
         default:
           return {
@@ -742,13 +757,13 @@ export class AuthService {
         .single()
 
       if (error || !data) {
-        console.error("Error occurred")
+        handleApiError(error || new Error('No role data found'), 'AuthService.getRoleId')
         return null
       }
 
       return data.id
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.getRoleId')
       return null
     }
   }
@@ -760,7 +775,7 @@ export class AuthService {
   }> {
     try {
       switch (formData.role) {
-        case 'social_worker':
+        case 'social_worker': {
           const { error: swError } = await supabase
             .from('social_workers')
             .insert({
@@ -779,8 +794,9 @@ export class AuthService {
             }
           }
           break
+        }
 
-        case 'administrator':
+        case 'administrator': {
           const { error: adminError } = await supabase
             .from('administrators')
             .insert({
@@ -797,8 +813,9 @@ export class AuthService {
             }
           }
           break
+        }
 
-        case 'patient':
+        case 'patient': {
           const { error: patientError } = await supabase
             .from('patients')
             .insert({
@@ -817,6 +834,7 @@ export class AuthService {
             }
           }
           break
+        }
 
         default:
           return {
@@ -847,8 +865,8 @@ export class AuthService {
 
       // Note: We can't delete the auth user from client side
       // This would need to be handled by a server function or admin action
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'AuthService.cleanupFailedSignup')
     }
   }
 }

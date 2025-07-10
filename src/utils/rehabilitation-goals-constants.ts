@@ -1,20 +1,18 @@
 
 export const REHAB_GOAL_STATUS = {
   PENDING: 'pending',
-  IN_PROGRESS: 'in_progress',
+  ACTIVE: 'active',
   COMPLETED: 'completed',
   ON_HOLD: 'on_hold',
   CANCELLED: 'cancelled',
-  DEFERRED: 'deferred',
 } as const
 
 export const REHAB_GOAL_STATUS_LABELS = {
   [REHAB_GOAL_STATUS.PENDING]: '대기 중',
-  [REHAB_GOAL_STATUS.IN_PROGRESS]: '진행 중',
+  [REHAB_GOAL_STATUS.ACTIVE]: '진행 중',
   [REHAB_GOAL_STATUS.COMPLETED]: '완료',
   [REHAB_GOAL_STATUS.ON_HOLD]: '보류',
   [REHAB_GOAL_STATUS.CANCELLED]: '취소',
-  [REHAB_GOAL_STATUS.DEFERRED]: '연기',
 } as const
 
 export const REHAB_GOAL_TYPES = {

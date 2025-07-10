@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/types/auth';
+import { handleApiError } from '@/utils/error-handler';
 
 export interface UpdateUserRoleParams {
   userId: string;
@@ -169,7 +170,7 @@ export class UserManagementService {
       return { success: true, users: uniqueUsers }
 
     } catch (error) {
-      console.error("Error in loadUsers:", error)
+      handleApiError(error, 'UserManagementService.loadUsers')
       return { 
         success: false, 
         error: error instanceof Error ? error.message : '사용자 목록을 불러오는 중 오류가 발생했습니다.' 
@@ -232,7 +233,7 @@ export class UserManagementService {
       return { success: true };
 
     } catch (error) {
-      console.error('❌ 역할 변경 중 오류:', error);
+      handleApiError(error, 'UserManagementService.updateUserRole');
       return { 
         success: false, 
         error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
@@ -307,7 +308,7 @@ export class UserManagementService {
       return { success: true };
 
     } catch (error) {
-      console.error('❌ 사용자 삭제 중 오류:', error);
+      handleApiError(error, 'UserManagementService.deleteUser');
       return { 
         success: false, 
         error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 

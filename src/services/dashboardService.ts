@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { handleApiError } from '@/utils/error-handler';
 
 // 간단한 환자 수 가져오기 함수
 export const getPatientCount = async (): Promise<number> => {
@@ -6,8 +7,8 @@ export const getPatientCount = async (): Promise<number> => {
     const { data, error } = await supabase.from('patients').select('id');
     if (error) throw error;
     return data?.length || 0;
-  } catch {
-    console.error("Error occurred");
+  } catch (error) {
+    handleApiError(error, 'DashboardService.getPatientCount');
     return 0;
   }
 };
@@ -15,11 +16,11 @@ export const getPatientCount = async (): Promise<number> => {
 // 간단한 활성 목표 수 가져오기 함수  
 export const getActiveGoalsCount = async (): Promise<number> => {
   try {
-    const { data, error } = await supabase.from('goals').select('id').eq('status', 'in_progress');
+    const { data, error } = await supabase.from('goals').select('id').eq('status', 'active');
     if (error) throw error;
     return data?.length || 0;
-  } catch {
-    console.error("Error occurred");
+  } catch (error) {
+    handleApiError(error, 'DashboardService.getActiveGoalsCount');
     return 0;
   }
 };
@@ -50,7 +51,7 @@ export class DashboardService {
         const sessions = sessionsResult.status === 'fulfilled' ? sessionsResult.value.data || [] : [];
 
         const activePatients = patients.filter(p => p.status === 'active');
-        const activeGoals = goals.filter(g => g.status === 'in_progress');
+        const activeGoals = goals.filter(g => g.status === 'active');
         const completedGoals = goals.filter(g => g.status === 'completed');
         const thisWeekSessions = sessions.filter(s => {
           const sessionDate = new Date(s.date);
@@ -79,8 +80,8 @@ export class DashboardService {
         data: stats,
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getDashboardStats');
       return {
         data: this.getMockStats(),
         success: false,
@@ -120,8 +121,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getPatients');
       // Return mock data on error
       return {
         data: {
@@ -168,8 +169,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getGoals');
       return {
         data: {
           data: this.getMockGoals(),
@@ -211,8 +212,8 @@ export class DashboardService {
         },
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getSessions');
       return {
         data: {
           data: this.getMockSessions(),
@@ -238,8 +239,8 @@ export class DashboardService {
         data: chartData,
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getChartData');
       return {
         data: this.getMockChartData(),
         success: false,
@@ -265,8 +266,8 @@ export class DashboardService {
         data: data || [],
         success: true,
       };
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'DashboardService.getProgressData');
       return {
         data: this.getMockProgressData(patientId, goalId),
         success: false,
@@ -331,7 +332,7 @@ export class DashboardService {
         title: '인지 능력 향상',
         description: '기억력과 집중력 개선을 위한 훈련',
         category: 'cognitive',
-        status: 'in_progress',
+        status: 'active',
         priority: 'high',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-15',
@@ -343,7 +344,7 @@ export class DashboardService {
         title: '사회적 기술 개발',
         description: '대인관계 능력 향상',
         category: 'social',
-        status: 'in_progress',
+        status: 'active',
         priority: 'medium',
         createdAt: '2024-01-02',
         updatedAt: '2024-01-14',
@@ -443,4 +444,4 @@ export const testSupabaseConnection = async () => {
   } catch {
     return false;
   }
-}; 
+};

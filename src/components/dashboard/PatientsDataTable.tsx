@@ -36,6 +36,7 @@ import type { Patient, PatientStats } from '@/services/patient-management'
 import { supabase } from '@/lib/supabase'
 import PatientRegistrationModal from '@/components/PatientRegistrationModal'
 import { eventBus, EVENTS } from '@/lib/eventBus'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientWithGoal extends Patient {
   activeGoal?: {
@@ -53,7 +54,7 @@ export function PatientsDataTable() {
     totalPatients: 0,
     activePatients: 0,
     pendingPatients: 0,
-    completedPatients: 0
+    dischargedPatients: 0
   })
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -89,11 +90,11 @@ export function PatientsDataTable() {
         .eq('user_id', user.id)
         .single()
       
-      const roleName = (userRoleData as any)?.roles?.role_name
+      const roleName = userRoleData?.roles?.role_name
       const managementRoles = ['section_chief', 'manager_level', 'department_head', 'vice_director', 'director', 'administrator']
       setCanViewAssignee(managementRoles.includes(roleName))
     } catch (error) {
-      console.error('Error checking user role:', error)
+      handleApiError(error, 'PatientsDataTable.checkUserRole')
     }
   }
 
@@ -111,7 +112,13 @@ export function PatientsDataTable() {
       const patientIds = patientsResult.map(p => p.id)
       
       // 한 번의 쿼리로 모든 활성 6개월 목표 가져오기
-      let activeGoals: any[] = []
+      let activeGoals: {
+        id: string
+        title: string
+        start_date: string
+        goal_type: string
+        patient_id: string
+      }[] = []
       if (patientIds.length > 0) {
         const { data: goalsData, error: goalsError } = await supabase
           .from('rehabilitation_goals')
@@ -122,7 +129,7 @@ export function PatientsDataTable() {
           .order('start_date', { ascending: false })
         
         if (goalsError) {
-          console.error('목표 일괄 조회 실패:', goalsError)
+          handleApiError(goalsError, 'PatientsDataTable.fetchGoals')
         } else {
           activeGoals = goalsData || []
         }
@@ -139,7 +146,12 @@ export function PatientsDataTable() {
           }
         }
         return acc
-      }, {} as Record<string, any>)
+      }, {} as Record<string, {
+        id: string
+        title: string
+        start_date: string
+        goal_type: 'weekly' | 'monthly' | 'six_month'
+      }>)
       
       // 환자 데이터와 목표 결합
       const patientsWithGoals = patientsResult.map(patient => ({
@@ -150,7 +162,7 @@ export function PatientsDataTable() {
       setPatients(patientsWithGoals)
       setStats(statsResult)
     } catch (err) {
-      console.error('환자 데이터 로드 실패:', err)
+      handleApiError(err, 'PatientsDataTable.fetchData')
     } finally {
       setIsLoading(false)
     }
@@ -166,9 +178,9 @@ export function PatientsDataTable() {
       if (statusFilter === 'active') {
         matchesStatus = patient.hasActiveGoal === true
       } else if (statusFilter === 'pending') {
-        matchesStatus = patient.hasActiveGoal === false && patient.status !== 'completed'
-      } else if (statusFilter === 'completed') {
-        matchesStatus = patient.status === 'completed'
+        matchesStatus = patient.hasActiveGoal === false && patient.status !== 'discharged'
+      } else if (statusFilter === 'discharged') {
+        matchesStatus = patient.status === 'discharged'
       }
     }
     
@@ -176,8 +188,8 @@ export function PatientsDataTable() {
   })
 
   const getStatusBadge = (patient: PatientWithGoal) => {
-    if (patient.status === 'completed') {
-      return <Badge variant="outline" className="bg-blue-100 text-blue-800">입원 중</Badge>
+    if (patient.status === 'discharged') {
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800">퇴원</Badge>
     } else if (patient.hasActiveGoal) {
       return <Badge variant="default" className="bg-green-100 text-green-800">목표 진행 중</Badge>
     } else {
@@ -286,7 +298,7 @@ export function PatientsDataTable() {
             />
           </div>
           <div className="flex gap-2">
-            {['all', 'active', 'pending', 'completed'].map((status) => (
+            {['all', 'active', 'pending', 'discharged'].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? "default" : "outline"}
@@ -295,7 +307,7 @@ export function PatientsDataTable() {
               >
                 {status === 'all' ? '전체' :
                  status === 'active' ? '목표 진행 중' :
-                 status === 'pending' ? '목표 설정 대기' : '입원 중'}
+                 status === 'pending' ? '목표 설정 대기' : '퇴원'}
               </Button>
             ))}
           </div>
@@ -376,7 +388,7 @@ export function PatientsDataTable() {
                             <Edit className="mr-2 h-4 w-4" />
                             정보수정
                           </DropdownMenuItem>
-                          {!patient.hasActiveGoal && patient.status !== 'completed' && (
+                          {!patient.hasActiveGoal && patient.status !== 'discharged' && (
                             <DropdownMenuItem onClick={() => handleGoalSetting(patient.id)}>
                               <Target className="mr-2 h-4 w-4" />
                               목표 설정
@@ -414,9 +426,9 @@ export function PatientsDataTable() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {stats.completedPatients}
+                {stats.dischargedPatients}
               </div>
-              <div className="text-sm text-gray-500">입원 중</div>
+              <div className="text-sm text-gray-500">퇴원</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientGoalCleanupResult {
   patientId: string
@@ -78,7 +79,7 @@ async function cleanupDuplicateGoals(): Promise<void> {
         } else if (patient.status === 'active') {
           // active 환자: 가장 최신 활성 목표 1개만 유지
           const activeGoals = nonCompletedGoals.filter(g => 
-            g.status === 'active' || g.status === 'in_progress'
+            g.status === 'active'
           )
           
           if (activeGoals.length > 0) {
@@ -145,7 +146,7 @@ async function cleanupDuplicateGoals(): Promise<void> {
     console.log('결과 데이터:', reportContent)
     
   } catch (error) {
-    console.error('❌ 스크립트 실행 중 오류:', error)
+    handleApiError(error, 'cleanup-duplicate-goals.cleanupDuplicateGoals')
   }
 }
 
@@ -159,7 +160,8 @@ async function runWithConfirmation() {
   
   // Node.js 환경에서 실행 시
   if (typeof process !== 'undefined' && process.stdin) {
-    const readline = require('readline').createInterface({
+    const { createInterface } = await import('readline')
+    const readline = createInterface({
       input: process.stdin,
       output: process.stdout
     })

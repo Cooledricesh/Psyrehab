@@ -17,7 +17,7 @@
 
 ### 핵심 아키텍처
 - **Frontend**: React + TypeScript + Tailwind CSS (Vite)
-- **Backend**: Next.js App Router API
+- **Backend**: Supabase (직접 연결, 별도 백엔드 서버 없음)
 - **Database**: Supabase (PostgreSQL)
 - **AI Processing**: n8n workflow + External AI Services
 - **External Integration**: Webhook 기반 AI 처리

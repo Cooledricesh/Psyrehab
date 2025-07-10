@@ -422,7 +422,7 @@ export interface ProtectedRouteProps {
   redirectTo?: string
 }
 
-export interface UseAuthReturn extends AuthContextType {}
+export type UseAuthReturn = AuthContextType
 
 export interface UsePermissionsReturn {
   hasPermission: (permission: Permission) => boolean

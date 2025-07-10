@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { TrendingUp, Users, Target, Calendar, Clock } from 'lucide-react'
+import { TrendingUp, Users, Target, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { getDashboardStats } from '@/services/dashboard-stats'
+import { handleApiError } from '@/utils/error-handler'
 
 interface RehabStats {
   totalPatients: number
@@ -47,7 +48,7 @@ export function RehabStatsCards() {
           avgSessionsPerWeek: Math.round(basicStats.thisWeekSessions / 4 * 10) / 10 // 목업: 단순 계산
         })
       } catch (error) {
-        console.error('통계 데이터 로드 실패:', error)
+        handleApiError(error, 'RehabStatsCards.fetchStats')
       } finally {
         setIsLoading(false)
       }

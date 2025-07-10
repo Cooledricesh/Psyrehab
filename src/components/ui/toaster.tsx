@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useToast } from '@/components/ui/use-toast'
-import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react'
+import { CheckCircle, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Toaster() {
@@ -15,7 +15,7 @@ export function Toaster() {
   )
 }
 
-function ToastItem({ toast }: { toast: any }) {
+function ToastItem({ toast }: { toast: Toast }) {
   const { toast: toastFn } = useToast()
   
   useEffect(() => {

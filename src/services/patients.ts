@@ -4,6 +4,7 @@ import {
 } from '@/lib/validations/patient-validation'
 import { parseError, logError } from '@/lib/error-handling'
 import type { TablesInsert, TablesUpdate } from '@/types/database'
+import { handleApiError } from '@/utils/error-handler'
 
 export interface PatientCreateData {
   full_name: string
@@ -37,8 +38,8 @@ export interface PatientUpdateData {
   patient_identifier?: string
   date_of_birth?: string
   gender?: string
-  contact_info?: object
-  additional_info?: object
+  doctor?: string
+  contact_info?: Record<string, unknown>
   primary_social_worker_id?: string
   admission_date?: string
   status?: string
@@ -215,14 +216,19 @@ export class PatientService {
 
       // 환자 식별번호 중복 확인 (자신 제외)
       if (updateData.patient_identifier) {
-        const { data: existingPatient } = await supabase
+        const { data: existingPatients, error: checkError } = await supabase
           .from('patients')
           .select('id')
           .eq('patient_identifier', updateData.patient_identifier)
           .neq('id', id)
-          .single()
 
-        if (existingPatient) {
+        if (checkError) {
+          const appError = parseError(checkError)
+          logError(appError, 'PatientService.updatePatient - duplicate check error')
+          throw new Error(`환자 식별번호 중복 확인 중 오류가 발생했습니다: ${checkError.message}`)
+        }
+
+        if (existingPatients && existingPatients.length > 0) {
           const error = new Error('이미 존재하는 환자 식별번호입니다.')
           const appError = parseError(error)
           logError(appError, 'PatientService.updatePatient - duplicate identifier')
@@ -258,9 +264,8 @@ export class PatientService {
 
   // 환자 삭제 (실제 삭제)
   static async deletePatient(id: string, forceDelete: boolean = false) {
-    try {
-      // 1. 연관된 데이터 확인
-      const relatedData = await this.checkPatientRelatedData(id)
+    // 1. 연관된 데이터 확인
+    const relatedData = await this.checkPatientRelatedData(id)
 
       // 2. 연관된 데이터가 있고 강제 삭제가 아닌 경우 에러
       if (relatedData.length > 0 && !forceDelete) {
@@ -322,9 +327,6 @@ export class PatientService {
       }
 
       return { success: true }
-    } catch (error) {
-      throw error
-    }
   }
 
   // 환자와 연관된 모든 데이터 확인
@@ -345,7 +347,7 @@ export class PatientService {
         .eq('patient_id', patientId)
 
       if (error) {
-        console.error(`${table} 조회 실패:`, error)
+        handleApiError(error, `PatientService.checkPatientRelatedData.${table}`);
         continue
       }
 
@@ -418,7 +420,7 @@ export class PatientService {
           .in('status', ['active', 'pending'])
 
         if (goalsError) {
-          console.error('활성 목표 조회 중 오류:', goalsError)
+          handleApiError(goalsError, 'PatientService.updatePatientStatus.getActiveGoals');
         } else if (activeGoals && activeGoals.length > 0) {
           // 모든 미완료 목표를 삭제
           const { error: deleteError } = await supabase
@@ -427,7 +429,7 @@ export class PatientService {
             .in('id', activeGoals.map(goal => goal.id))
 
           if (deleteError) {
-            console.error('목표 삭제 중 오류:', deleteError)
+            handleApiError(deleteError, 'PatientService.updatePatientStatus.deleteGoals');
             throw new Error('퇴원 처리 중 목표 정리에 실패했습니다.')
           }
 
@@ -451,7 +453,7 @@ export class PatientService {
 
       return data
     } catch (err) {
-      console.error('updatePatientStatus 오류:', err)
+      handleApiError(err, 'PatientService.updatePatientStatus');
       throw err
     }
   }
@@ -509,7 +511,7 @@ export class PatientService {
             .limit(1)
 
           if (goalsError) {
-            console.error(`환자 ${patient.id}의 목표 조회 오류:`, goalsError)
+            handleApiError(goalsError, `PatientService.getPatientsWithoutActiveGoals.patient_${patient.id}`);
             return null
           }
 
@@ -521,7 +523,7 @@ export class PatientService {
       // null이 아닌 환자들만 필터링하여 반환
       return patientsWithGoalStatus.filter((patient) => patient !== null)
     } catch (error) {
-      console.error("Error occurred:", error)
+      handleApiError(error, 'PatientService.getPatientsWithoutActiveGoals');
       throw error
     }
   }

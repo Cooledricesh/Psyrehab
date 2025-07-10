@@ -70,6 +70,25 @@ export function formatZodError(error: ZodError): AppError[] {
   }))
 }
 
+// Helper type guards
+function isErrorWithCode(error: unknown): error is { code: string } {
+  return typeof error === 'object' && error !== null && 'code' in error && typeof (error as { code: unknown }).code === 'string'
+}
+
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string'
+}
+
+function isErrorWithStatus(error: unknown): error is { status: number } | { response: { status: number } } {
+  if (typeof error !== 'object' || error === null) return false
+  if ('status' in error && typeof (error as { status: unknown }).status === 'number') return true
+  if ('response' in error && typeof (error as { response: unknown }).response === 'object' && 
+      (error as { response: unknown }).response !== null && 
+      'status' in (error as { response: { status: unknown } }).response &&
+      typeof (error as { response: { status: unknown } }).response.status === 'number') return true
+  return false
+}
+
 // 일반 에러를 AppError로 변환
 export function parseError(error: unknown): AppError {
   // Zod 검증 에러
@@ -84,7 +103,7 @@ export function parseError(error: unknown): AppError {
   }
 
   // Supabase 에러
-  if (error?.code && supabaseErrorMessages[error.code]) {
+  if (isErrorWithCode(error) && supabaseErrorMessages[error.code]) {
     return {
       type: getErrorTypeFromCode(error.code),
       message: supabaseErrorMessages[error.code],
@@ -94,8 +113,8 @@ export function parseError(error: unknown): AppError {
   }
 
   // HTTP 상태 코드 기반 에러
-  if (error?.status || error?.response?.status) {
-    const status = error.status || error.response.status
+  if (isErrorWithStatus(error)) {
+    const status = 'status' in error ? error.status : error.response.status
     return {
       type: getErrorTypeFromStatus(status),
       message: getMessageFromStatus(status),
@@ -105,7 +124,7 @@ export function parseError(error: unknown): AppError {
   }
 
   // 네트워크 에러
-  if (error?.message && error.message.includes('fetch')) {
+  if (isErrorWithMessage(error) && error.message.includes('fetch')) {
     return {
       type: 'NETWORK_ERROR',
       message: '네트워크 연결을 확인해주세요',
@@ -114,19 +133,21 @@ export function parseError(error: unknown): AppError {
   }
 
   // 알려진 에러 메시지
-  const knownMessage = errorMessages[error?.message]
-  if (knownMessage) {
-    return {
-      type: 'UNKNOWN_ERROR',
-      message: knownMessage,
-      details: error
+  if (isErrorWithMessage(error)) {
+    const knownMessage = errorMessages[error.message]
+    if (knownMessage) {
+      return {
+        type: 'UNKNOWN_ERROR',
+        message: knownMessage,
+        details: error
+      }
     }
   }
 
   // 기본 에러
   return {
     type: 'UNKNOWN_ERROR',
-    message: error?.message || '알 수 없는 오류가 발생했습니다',
+    message: isErrorWithMessage(error) ? error.message : '알 수 없는 오류가 발생했습니다',
     details: error
   }
 }
@@ -198,30 +219,23 @@ function getMessageFromStatus(status: number): string {
   }
 }
 
-// 에러 로깅 유틸리티 (deprecated - use logError from monitoring/error-logger.ts)
+// 에러 로깅 유틸리티
 export function logError(error: AppError, context?: string) {
-  // 새로운 로깅 시스템으로 리다이렉트
-  try {
-    const { logError: newLogError } = require('./monitoring/error-logger')
-    return newLogError(error, context)
-  } catch (importError) {
-    // 폴백: 기존 로깅 방식
-    const logData = {
-      timestamp: new Date().toISOString(),
-      context,
-      error: {
-        type: error.type,
-        message: error.message,
-        field: error.field,
-        code: error.code
-      },
-      details: error.details
-    }
+  const logData = {
+    timestamp: new Date().toISOString(),
+    context,
+    error: {
+      type: error.type,
+      message: error.message,
+      field: error.field,
+      code: error.code
+    },
+    details: error.details
+  }
 
-    // 개발 환경에서는 콘솔에 출력
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Application Error:', logData)
-    }
+  // 개발 환경에서는 콘솔에 출력
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Application Error:', logData)
   }
 }
 

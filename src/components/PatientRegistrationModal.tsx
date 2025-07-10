@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { createPatient } from '@/services/patient-management'
 import type { CreatePatientData } from '@/services/patient-management'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientRegistrationModalProps {
   isOpen: boolean
@@ -36,15 +37,6 @@ export default function PatientRegistrationModal({
     if (error) setError(null) // 에러 있을 때 입력 시 제거
   }
 
-  const handleContactInfoChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      contact_info: {
-        ...prev.contact_info,
-        [field]: value
-      }
-    }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,7 +98,7 @@ export default function PatientRegistrationModal({
         })
       }
     } catch (err: unknown) {
-      console.error('❌ 환자 등록 실패:', err)
+      handleApiError(err, 'PatientRegistrationModal.handleSubmit')
       const errorMessage = err instanceof Error ? err.message : '환자 등록 중 오류가 발생했습니다.'
       setError(errorMessage)
     } finally {

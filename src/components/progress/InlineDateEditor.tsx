@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { format, addMonths, addWeeks } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import type { GoalType } from '@/types/goals';
 import { fixGoalDatesSimple } from '@/services/fix-goal-dates-simple';
+import { handleApiError } from '@/utils/error-handler';
 
 interface InlineDateEditorProps {
   goalId: string;
@@ -102,7 +102,7 @@ export default function InlineDateEditor({
       }, 100);
       
     } catch (error) {
-      console.error('날짜 업데이트 실패:', error);
+      handleApiError(error, 'InlineDateEditor.handleDateSelect');
       toast.error('날짜 업데이트에 실패했습니다.');
     }
   };
@@ -171,7 +171,7 @@ export default function InlineDateEditor({
                 mode="single"
                 selected={startDate}
                 onSelect={handleDateSelect}
-                disabled={(date) => false}
+                disabled={() => false}
                 initialFocus
                 locale={ko}
                 className="rounded-md border border-gray-200 bg-white"

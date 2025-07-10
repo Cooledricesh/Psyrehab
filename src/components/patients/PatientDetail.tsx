@@ -202,6 +202,19 @@ export function PatientDetail({ patientId, onEdit, onDelete, onBack }: PatientDe
           </section>
         )}
 
+        {/* 주치의 정보 */}
+        <section>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">주치의 정보</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">주치의</label>
+              <p className="text-gray-900">
+                {patient.doctor || '미지정'}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* 담당 사회복지사 */}
         <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">담당 사회복지사</h2>

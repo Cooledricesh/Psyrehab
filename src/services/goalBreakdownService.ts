@@ -2,12 +2,10 @@ import {
   BaseGoal, 
   SixMonthGoal, 
   MonthlyGoal, 
-  WeeklyGoal,
   GoalType,
-  GoalPriority,
   CreateGoalRequest 
 } from '@/types/goals';
-import { addMonths, addWeeks, format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { addMonths, addWeeks, format, endOfMonth, endOfWeek } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 export interface BreakdownConfig {
@@ -101,10 +99,10 @@ export class GoalBreakdownService {
         warnings: warnings.length > 0 ? warnings : undefined
       };
 
-    } catch {
+    } catch (error) {
       return {
         success: false,
-        errors: [`목표 분해 중 오류가 발생했습니다: ${""instanceOf Error ? "Error" : '알 수 없는 오류'}`]
+        errors: [`목표 분해 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`]
       };
     }
   }
@@ -184,10 +182,10 @@ export class GoalBreakdownService {
         warnings: warnings.length > 0 ? warnings : undefined
       };
 
-    } catch {
+    } catch (error) {
       return {
         success: false,
-        errors: [`목표 분해 중 오류가 발생했습니다: ${""instanceOf Error ? "Error" : '알 수 없는 오류'}`]
+        errors: [`목표 분해 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`]
       };
     }
   }
@@ -242,10 +240,10 @@ export class GoalBreakdownService {
         errors: allErrors.length > 0 ? allErrors : undefined
       };
 
-    } catch {
+    } catch (error) {
       return {
         success: false,
-        errors: [`전체 계층 분해 중 오류가 발생했습니다: ${""instanceOf Error ? "Error" : '알 수 없는 오류'}`]
+        errors: [`전체 계층 분해 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`]
       };
     }
   }

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { ENV } from '@/lib/env';
+import { handleApiError } from '@/utils/error-handler';
 
 export interface AIRecommendationRequest {
   assessmentId: string;
@@ -31,8 +32,9 @@ export class AIRecommendationService {
     console.log('🔗 AI 추천 요청 시작:', assessmentId);
     
     if (!ENV.N8N_WEBHOOK_URL) {
-      console.error('❌ N8N webhook URL이 설정되지 않았습니다');
-      throw new Error('N8N webhook URL이 설정되지 않았습니다');
+      const error = new Error('N8N webhook URL이 설정되지 않았습니다');
+      handleApiError(error, 'AIRecommendationService.requestRecommendation.webhookURL');
+      throw error;
     }
     
     console.log('📍 n8n webhook URL:', ENV.N8N_WEBHOOK_URL);
@@ -55,7 +57,7 @@ export class AIRecommendationService {
       .single();
 
     if (fetchError || !assessment) {
-      console.error('❌ Assessment 조회 실패:', fetchError);
+      handleApiError(fetchError || new Error('Assessment not found'), 'AIRecommendationService.requestRecommendation.fetchAssessment');
       throw new Error('Assessment를 찾을 수 없습니다');
     }
 
@@ -104,8 +106,9 @@ export class AIRecommendationService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ n8n Webhook Error Response:', errorText);
-      throw new Error(`AI 추천 요청 실패: ${response.status} - ${errorText}`);
+      const error = new Error(`AI 추천 요청 실패: ${response.status} - ${errorText}`);
+      handleApiError(error, 'AIRecommendationService.requestRecommendation.webhookResponse');
+      throw error;
     }
 
     const result = await response.json();
@@ -134,7 +137,7 @@ export class AIRecommendationService {
       .maybeSingle();
 
     if (error) {
-      console.error('❌ AI 추천 상태 조회 실패:', error);
+      handleApiError(error, 'AIRecommendationService.checkRecommendationStatus');
       throw error;
     }
 
@@ -160,7 +163,7 @@ export class AIRecommendationService {
       .eq('id', recommendationId);
 
     if (error) {
-      console.error('AI 추천 상태 업데이트 실패:', error);
+      handleApiError(error, 'AIRecommendationService.updateRecommendationStatus');
       // 실패해도 계속 진행하도록 에러를 throw하지 않음
     }
   }
@@ -180,7 +183,7 @@ export class AIRecommendationService {
       .maybeSingle();
       
     if (error) {
-      console.error('AI 추천 ID 조회 실패:', error);
+      handleApiError(error, 'AIRecommendationService.getRecommendationIdByAssessment');
       return null;
     }
     

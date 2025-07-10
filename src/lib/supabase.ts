@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { ENV, validateEnvironment } from './env'
+import { handleApiError } from '@/utils/error-handler'
 
 // Validate environment variables on import
 validateEnvironment()
@@ -76,23 +77,23 @@ export async function testSupabaseConnection() {
   try {
     // First check if environment variables are available
     if (!ENV.SUPABASE_URL || !ENV.SUPABASE_ANON_KEY) {
-      console.error('Supabase environment variables not found')
+      handleApiError(new Error('Supabase environment variables not found'), 'supabase.testSupabaseConnection')
       return false
     }
 
     // Use the simplest possible connection test
-    const { data, error } = await supabase.auth.getSession()
+    const { error } = await supabase.auth.getSession()
     
     // Even if there's no session, a successful response means connection is working
     if (error && error.message.includes('Failed to fetch')) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.testSupabaseConnection.getSession')
       return false
     }
     
     console.log('✅ Supabase connection successful')
     return true
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.testSupabaseConnection')
     return false
   }
 }
@@ -102,12 +103,12 @@ export async function getCurrentUser() {
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.getCurrentUser')
       return null
     }
     return user
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.getCurrentUser')
     return null
   }
 }
@@ -116,98 +117,13 @@ export async function getCurrentSession() {
   try {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.getCurrentSession')
       return null
     }
     return session
-  } catch {
-    console.error("Error occurred")
-    return null
-  }
-}
-
-// Helper function to create user role and profile for approved signup requests
-async function createUserRoleAndProfile(userId: string, signupRequest: any) {
-  try {
-    // 데이터베이스에서 직접 역할 ID 조회
-    const { data: roleData, error: roleQueryError } = await supabase
-      .from('roles')
-      .select('id')
-      .eq('role_name', signupRequest.requested_role)
-      .single()
-
-    if (roleQueryError || !roleData) {
-      console.error('역할 조회 실패:', roleQueryError)
-      return false
-    }
-
-    // 1. user_roles에 역할 할당
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: userId,
-        role_id: roleData.id
-      })
-
-    if (roleError && !roleError.message.includes('duplicate')) {
-      console.error('역할 할당 실패:', roleError)
-      return false
-    }
-
-    // 2. 프로필 생성 - 직급별로 social_workers 테이블에 생성
-    const jobTitleRoles = ['staff', 'assistant_manager', 'section_chief', 'manager_level', 'department_head', 'vice_director', 'director']
-    
-    if (jobTitleRoles.includes(signupRequest.requested_role)) {
-      const { error: profileError } = await supabase
-        .from('social_workers')
-        .insert({
-          user_id: userId,
-          full_name: signupRequest.full_name,
-          employee_id: signupRequest.employee_id || null,
-          department: signupRequest.department || null,
-          contact_number: signupRequest.contact_number || null,
-          is_active: true
-        })
-
-      if (profileError && !profileError.message.includes('duplicate')) {
-        console.error('프로필 생성 실패:', profileError)
-        return false
-      }
-    } else if (signupRequest.requested_role === 'administrator') {
-      const { error: profileError } = await supabase
-        .from('administrators')
-        .insert({
-          user_id: userId,
-          full_name: signupRequest.full_name,
-          employee_id: signupRequest.employee_id || null,
-          department: signupRequest.department || null,
-          contact_number: signupRequest.contact_number || null,
-          is_active: true
-        })
-
-      if (profileError && !profileError.message.includes('duplicate')) {
-        console.error('프로필 생성 실패:', profileError)
-        return false
-      }
-    }
-
-    // 3. signup_requests 업데이트
-    const { error: updateError } = await supabase
-      .from('signup_requests')
-      .update({
-        user_id: userId,
-        status: 'completed'
-      })
-      .eq('id', signupRequest.id)
-
-    if (updateError) {
-      console.error('신청서 업데이트 실패:', updateError)
-    }
-
-    return true
   } catch (error) {
-    console.error('사용자 역할 및 프로필 생성 중 오류:', error)
-    return false
+    handleApiError(error, 'supabase.getCurrentSession')
+    return null
   }
 }
 
@@ -225,13 +141,13 @@ export async function getUserRole(userId: string): Promise<string | null> {
       .single()
 
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'supabase.getUserRole')
       return null
     }
 
     return data?.roles?.role_name || null
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.getUserRole')
     return null
   }
 }
@@ -259,7 +175,7 @@ export async function getUserProfile(userId: string) {
         .single()
       
       if (swError) {
-        console.error('Error fetching social worker profile:', swError.message)
+        handleApiError(swError, 'supabase.getUserProfile.socialWorker')
         return null
       }
       
@@ -272,7 +188,7 @@ export async function getUserProfile(userId: string) {
         .single()
       
       if (adminError) {
-        console.error('Error fetching administrator profile:', adminError.message)
+        handleApiError(adminError, 'supabase.getUserProfile.administrator')
         return null
       }
       
@@ -285,7 +201,7 @@ export async function getUserProfile(userId: string) {
         .single()
       
       if (patientError) {
-        console.error('Error fetching patient profile:', patientError.message)
+        handleApiError(patientError, 'supabase.getUserProfile.patient')
         return null
       }
       
@@ -296,8 +212,8 @@ export async function getUserProfile(userId: string) {
     }
 
     return profile
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.getUserProfile')
     return null
   }
 }
@@ -407,8 +323,8 @@ export async function hasPermission(userId: string, permission: string): Promise
     }
 
     return rolePermissions[role]?.includes(permission) || false
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'supabase.hasPermission')
     return false
   }
 }
@@ -453,4 +369,4 @@ export function getEnvironmentConfig() {
     isDevelopment: import.meta.env.DEV,
     isProduction: import.meta.env.PROD
   }
-} 
+}

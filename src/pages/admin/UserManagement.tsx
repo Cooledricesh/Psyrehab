@@ -16,6 +16,7 @@ import { UserDeleteDialog } from '@/components/admin/UserDeleteDialog'
 import { UserTable } from '@/components/admin/UserTable'
 import { UserFilter } from '@/components/admin/UserFilter'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+import { handleApiError } from '@/utils/error-handler'
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
@@ -39,7 +40,7 @@ export default function UserManagement() {
     if (result.success && result.users) {
       setUsers(result.users)
     } else {
-      console.error("Error occurred")
+      handleApiError(new Error(result.error || 'Failed to load users'), 'UserManagement.loadUsers')
       toast({
         title: '오류',
         description: result.error || '사용자 목록을 불러오는 중 오류가 발생했습니다.',
@@ -108,7 +109,7 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error) {
-      console.error("사용자 업데이트 오류:", error)
+      handleApiError(error, 'UserManagement.handleUpdateUser')
       toast({
         title: '오류',
         description: error instanceof Error ? error.message : '사용자 정보 업데이트 중 오류가 발생했습니다.',
@@ -139,7 +140,7 @@ export default function UserManagement() {
       }
 
       // 환자가 할당된 직원은 삭제할 수 없음
-      if (jobTitleRoles.includes(selectedUser.role as any) && selectedUser.patientCount && selectedUser.patientCount > 0) {
+      if (selectedUser.role !== 'pending' && jobTitleRoles.includes(selectedUser.role) && selectedUser.patientCount && selectedUser.patientCount > 0) {
         toast({
           title: '삭제 불가',
           description: `담당 환자가 ${selectedUser.patientCount}명 있는 직원은 삭제할 수 없습니다. 먼저 환자를 다른 직원에게 이관해주세요.`,
@@ -162,7 +163,7 @@ export default function UserManagement() {
           .eq('id', selectedUser.id)  // pending 사용자는 signup_requests의 id를 사용
 
         if (requestError) {
-          console.error("signup_requests 삭제 오류:", requestError)
+          handleApiError(requestError, 'UserManagement.handleDeleteUser.signupRequests')
           throw new Error(`신청서 삭제 실패: ${requestError.message}`)
         }
       } else {
@@ -173,7 +174,7 @@ export default function UserManagement() {
           .eq('user_id', selectedUser.id)
 
         if (requestError && !requestError.message.includes('No rows')) {
-          console.error("signup_requests 삭제 오류:", requestError)
+          handleApiError(requestError, 'UserManagement.handleDeleteUser.signupRequests.cleanup')
         }
       }
 
@@ -188,12 +189,12 @@ export default function UserManagement() {
           .delete()
           .eq('user_id', selectedUser.id)
         if (profileError) {
-          console.error(`${table} 삭제 오류:`, profileError)
+          handleApiError(profileError, `UserManagement.handleDeleteUser.profile.${table}`)
           
           // 409 에러 처리
           if (profileError.code === '23503' || profileError.message.includes('violates foreign key constraint')) {
             // 관련 데이터 확인
-            if (jobTitleRoles.includes(selectedUser.role as any)) {
+            if (selectedUser.role !== 'pending' && jobTitleRoles.includes(selectedUser.role)) {
               const relatedData = []
               
               // 평가 기록 확인
@@ -248,7 +249,7 @@ export default function UserManagement() {
         .eq('user_id', selectedUser.id)
 
       if (roleError && !roleError.message.includes('No rows')) {
-        console.error("user_roles 삭제 오류:", roleError)
+        handleApiError(roleError, 'UserManagement.handleDeleteUser.userRoles')
         throw new Error(`역할 삭제 실패: ${roleError.message}`)
       }
 
@@ -259,7 +260,7 @@ export default function UserManagement() {
             const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(selectedUser.id)
             
             if (authDeleteError) {
-              console.error("Auth 계정 삭제 오류:", authDeleteError)
+              handleApiError(authDeleteError, 'UserManagement.handleDeleteUser.authAccount')
               // Auth 삭제 실패해도 다른 삭제는 성공했으므로 경고 메시지로 처리
               toast({
                 title: '부분 삭제 완료',
@@ -273,7 +274,7 @@ export default function UserManagement() {
               })
             }
           } catch (authError) {
-            console.error("Auth 삭제 중 예외:", authError)
+            handleApiError(authError, 'UserManagement.handleDeleteUser.authAccount.exception')
             toast({
               title: '부분 삭제 완료', 
               description: `${selectedUser.fullName}님의 프로필은 삭제되었지만, Auth 계정 삭제 중 오류가 발생했습니다.`,
@@ -300,7 +301,7 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error: unknown) {
-      console.error("삭제 중 오류 발생:", error)
+      handleApiError(error, 'UserManagement.handleDeleteUser')
       
       const errorMessage = error instanceof Error ? error.message : '사용자 삭제 중 오류가 발생했습니다.'
       
@@ -350,7 +351,7 @@ export default function UserManagement() {
           .eq('id', request.id)
 
         if (updateUserIdError) {
-          console.error('user_id 업데이트 실패:', updateUserIdError)
+          handleApiError(updateUserIdError, 'UserManagement.handleApproveUser.updateUserId')
         }
       }
 
@@ -425,7 +426,7 @@ export default function UserManagement() {
       loadUsers()
 
     } catch (error) {
-      console.error("Error occurred:", error)
+      handleApiError(error, 'UserManagement.handleApproveUser')
       toast({
         title: '오류',
         description: error instanceof Error ? error.message : '사용자 승인 중 오류가 발생했습니다.',

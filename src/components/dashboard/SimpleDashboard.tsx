@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { getSocialWorkerDashboardStats, invalidateDashboardCache } from '@/services/socialWorkerDashboard'
-import { Loader2, Users, Target, Calendar, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import { Loader2, Target, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import type { SocialWorkerDashboardStats } from '@/services/socialWorkerDashboard'
 import { eventBus, EVENTS } from '@/lib/eventBus'
+import { handleApiError } from '@/utils/error-handler'
 
 export function SimpleDashboard() {
   const [socialWorkerStats, setSocialWorkerStats] = useState<SocialWorkerDashboardStats | null>(null)
@@ -32,7 +33,12 @@ export function SimpleDashboard() {
         .eq('user_id', user.id)
         .maybeSingle()
       
-      const roleName = (userRoleData as any)?.roles?.role_name
+      interface UserRoleData {
+        roles?: {
+          role_name: string
+        }
+      }
+      const roleName = (userRoleData as UserRoleData)?.roles?.role_name
       setUserRole(roleName)
       
       // 역할에 따라 다른 데이터 로드
@@ -57,7 +63,7 @@ export function SimpleDashboard() {
         setError('이 대시보드에 접근할 권한이 없습니다.')
       }
     } catch (error) {
-      console.error("대시보드 데이터 로딩 오류:", error)
+      handleApiError(error, 'SimpleDashboard.fetchDashboardData')
       setError('대시보드 데이터를 불러오는데 실패했습니다.')
     } finally {
       setIsLoading(false)

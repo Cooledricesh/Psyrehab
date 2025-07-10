@@ -298,7 +298,7 @@ export async function updateGoalCompletionRate(goalId: string, completionRate: n
     updates.status = 'completed'
     updates.completion_date = new Date().toISOString().split('T')[0]
   } else if (completionRate > 0) {
-    updates.status = 'in_progress'
+    updates.status = 'active'
   }
 
   if (notes) {
@@ -341,7 +341,7 @@ export async function getGoalStatistics(filters?: {
     return {
       total_goals: 0,
       completed_goals: 0,
-      in_progress_goals: 0,
+      active_goals: 0,
       pending_goals: 0,
       on_hold_goals: 0,
       average_completion_rate: 0,
@@ -356,7 +356,7 @@ export async function getGoalStatistics(filters?: {
   const stats = {
     total_goals: data.length,
     completed_goals: data.filter(g => g.status === 'completed').length,
-    in_progress_goals: data.filter(g => g.status === 'in_progress').length,
+    active_goals: data.filter(g => g.status === 'active').length,
     pending_goals: data.filter(g => g.status === 'pending').length,
     on_hold_goals: data.filter(g => g.status === 'on_hold').length,
     average_completion_rate: Math.round(
@@ -405,7 +405,7 @@ export async function getActiveGoalsForPatient(patientId: string) {
       )
     `)
     .eq('patient_id', patientId)
-    .in('status', ['active', 'in_progress'])
+    .in('status', ['active'])
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -430,7 +430,7 @@ export async function getOverdueGoals(socialWorkerId?: string) {
       )
     `)
     .lt('end_date', today)
-    .in('status', ['active', 'in_progress', 'pending'])
+    .in('status', ['active', 'pending'])
 
   if (socialWorkerId) {
     query = query.eq('created_by_social_worker_id', socialWorkerId)
@@ -456,7 +456,7 @@ export async function getPatientActiveGoals(patientId: string) {
       )
     `)
     .eq('patient_id', patientId)
-    .in('status', ['active', 'in_progress'])
+    .in('status', ['active'])
     .eq('goal_type', 'six_month')
     .order('created_at', { ascending: false })
 
@@ -569,7 +569,7 @@ export const GOAL_TYPE_LABELS = {
 export const GOAL_STATUSES = {
   PENDING: 'pending',
   ACTIVE: 'active',
-  IN_PROGRESS: 'in_progress',
+  ACTIVE: 'active',
   COMPLETED: 'completed',
   ON_HOLD: 'on_hold',
   CANCELLED: 'cancelled',

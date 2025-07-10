@@ -4,6 +4,7 @@ import { getPatientById, updatePatient, deletePatient, checkPatientRelatedData }
 import type { Patient, CreatePatientData } from '@/services/patient-management'
 import { canEditPatient } from '@/lib/auth-utils'
 import { MoreVertical, Edit, Trash2, AlertTriangle } from 'lucide-react'
+import { handleApiError } from '@/utils/error-handler'
 
 interface PatientUnifiedModalProps {
   isOpen: boolean
@@ -27,7 +28,7 @@ export default function PatientUnifiedModal({
   const [showContextMenu, setShowContextMenu] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [relatedData, setRelatedData] = useState<any[]>([])
+  const [relatedData, setRelatedData] = useState<{ table: string; name: string; count: number }[]>([])
   const [forceDelete, setForceDelete] = useState(false)
   
   const [formData, setFormData] = useState<CreatePatientData>({
@@ -76,7 +77,7 @@ export default function PatientUnifiedModal({
         setError('환자 정보를 찾을 수 없습니다.')
       }
     } catch (err: unknown) {
-      console.error('❌ 환자 상세 정보 로드 실패:', err)
+      handleApiError(err, 'PatientUnifiedModal.fetchPatientDetail')
       setError(err instanceof Error ? err.message : '환자 정보를 불러오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
@@ -87,8 +88,8 @@ export default function PatientUnifiedModal({
     try {
       const hasPermission = await canEditPatient(patientId)
       setCanEdit(hasPermission)
-    } catch {
-      console.error("Error occurred")
+    } catch (error) {
+      handleApiError(error, 'PatientUnifiedModal.checkEditPermission')
       setCanEdit(false)
     }
   }
@@ -157,7 +158,7 @@ export default function PatientUnifiedModal({
       }
       
     } catch (err: unknown) {
-      console.error('❌ 환자 정보 수정 실패:', err)
+      handleApiError(err, 'PatientUnifiedModal.handleSubmit')
       setError(err instanceof Error ? err.message : '환자 정보 수정 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
@@ -174,7 +175,7 @@ export default function PatientUnifiedModal({
       setForceDelete(false)
       setShowDeleteConfirm(true)
     } catch (err) {
-      console.error('연관 데이터 확인 실패:', err)
+      handleApiError(err, 'PatientUnifiedModal.handleDeleteMode')
       setError('연관 데이터 확인 중 오류가 발생했습니다.')
     }
   }
@@ -195,7 +196,7 @@ export default function PatientUnifiedModal({
       handleClose() // 모달 닫기
       
     } catch (err: unknown) {
-      console.error('❌ 환자 삭제 실패:', err)
+      handleApiError(err, 'PatientUnifiedModal.handleDeleteConfirm')
       setError(err instanceof Error ? err.message : '환자 삭제 중 오류가 발생했습니다.')
       
       // 연관 데이터 때문에 실패한 경우 강제 삭제 옵션 제공
@@ -441,7 +442,7 @@ export default function PatientUnifiedModal({
                   </label>
                   <input
                     type="tel"
-                    value={(formData.contact_info as any)?.phone || ''}
+                    value={(formData.contact_info as Record<string, string>)?.phone || ''}
                     onChange={(e) => handleContactInfoChange('phone', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="010-1234-5678"

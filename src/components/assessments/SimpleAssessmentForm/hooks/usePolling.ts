@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { POLLING_CONFIG } from '../constants'
+import { handleApiError } from '@/utils/error-handler'
 
 interface UsePollingProps {
   shouldPoll: boolean
@@ -25,10 +26,11 @@ export function usePolling({
 
     let attempts = 0
     const maxAttempts = POLLING_CONFIG.maxAttempts
-    let intervalId: NodeJS.Timeout
     let isMounted = true
 
     console.log(`Starting polling for patient ${patientId}...`)
+
+    let intervalId: NodeJS.Timeout | undefined = undefined
 
     const poll = async () => {
       try {
@@ -55,7 +57,7 @@ export function usePolling({
             })
             onComplete?.(aiResponse.id)
           }
-          clearInterval(intervalId)
+          if (intervalId) clearInterval(intervalId)
           return
         }
 
@@ -69,7 +71,7 @@ export function usePolling({
 
         if (attempts >= maxAttempts) {
           console.log('Max polling attempts reached')
-          clearInterval(intervalId)
+          if (intervalId) clearInterval(intervalId)
           
           if (isMounted) {
             const totalMinutes = Math.ceil((maxAttempts * POLLING_CONFIG.intervalMs) / 60000)
@@ -80,11 +82,11 @@ export function usePolling({
             })
           }
         }
-      } catch {
-        console.error("Error occurred")
+      } catch (error) {
+        handleApiError(error, 'usePolling.poll')
         attempts++
         if (attempts >= maxAttempts) {
-          clearInterval(intervalId)
+          if (intervalId) clearInterval(intervalId)
         }
       }
     }
@@ -94,7 +96,7 @@ export function usePolling({
 
     return () => {
       isMounted = false
-      clearInterval(intervalId)
+      if (intervalId) clearInterval(intervalId)
       console.log('Assessment polling cleanup executed')
     }
   }, [shouldPoll, hasSubmittedAssessment, patientId, toast, onComplete, onProgressUpdate])

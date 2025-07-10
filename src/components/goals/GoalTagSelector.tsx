@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { X, Plus, Search, Sparkles, Hash, Filter } from 'lucide-react'
+import { X, Plus, Search, Hash, Filter } from 'lucide-react'
 import { BaseGoal } from '@/types/goals'
 // import { GoalTagRecommendationSystem } from '@/utils/goal-categorization' // Removed - deprecated category system
 import { 
@@ -24,9 +24,7 @@ interface GoalTagSelectorProps {
 export function GoalTagSelector({
   value = [],
   onChange,
-  goal,
   maxTags = 10,
-  showRecommendations = true,
   placeholder = '태그를 선택하세요',
   disabled = false,
   className
@@ -59,9 +57,9 @@ export function GoalTagSelector({
   }, [selectedCategory, searchQuery, value])
 
   // AI 추천 태그 (deprecated - category system removed)
-  const recommendedTags = useMemo(() => {
-    return [] // AI recommendation system has been deprecated
-  }, [goal, value, showRecommendations])
+  // const recommendedTags = useMemo(() => {
+  //   return [] // AI recommendation system has been deprecated
+  // }, [goal, value, showRecommendations])
 
   const handleTagAdd = (tagId: string) => {
     if (value.length >= maxTags) return

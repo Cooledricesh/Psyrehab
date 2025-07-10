@@ -322,13 +322,23 @@ export function getAuthErrorMessage(error: unknown): string {
     return error
   }
   
-  if (error?.code && AUTH_ERROR_MESSAGES[error.code as AuthErrorCode]) {
+  // Handle network errors
+  if (error instanceof TypeError && error.message === 'Failed to fetch') {
+    return '네트워크 연결을 확인해주세요.'
+  }
+  
+  if (error && typeof error === 'object' && 'code' in error && AUTH_ERROR_MESSAGES[error.code as AuthErrorCode]) {
     return AUTH_ERROR_MESSAGES[error.code as AuthErrorCode]
   }
   
-  if (error?.message) {
+  if (error && typeof error === 'object' && 'message' in error) {
     // Map common Supabase errors
-    const message = error.message.toLowerCase()
+    const message = String(error.message).toLowerCase()
+    
+    // Network related errors
+    if (message.includes('failed to fetch') || message.includes('network') || message.includes('err_internet_disconnected')) {
+      return '네트워크 연결을 확인해주세요.'
+    }
     
     if (message.includes('invalid login credentials') || message.includes('invalid credentials')) {
       return AUTH_ERROR_MESSAGES[AUTH_ERROR_CODES.INVALID_CREDENTIALS]
@@ -350,7 +360,7 @@ export function getAuthErrorMessage(error: unknown): string {
       return AUTH_ERROR_MESSAGES[AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS]
     }
     
-    return error.message
+    return String(error.message)
   }
   
   return AUTH_ERROR_MESSAGES[AUTH_ERROR_CODES.UNKNOWN_ERROR]

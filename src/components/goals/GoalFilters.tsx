@@ -69,7 +69,7 @@ export function GoalFilters({
   }
 
   // 활성 필터 개수 계산
-  const activeFiltersCount = Object.entries(filters).filter(([_key, value]) => {
+  const activeFiltersCount = Object.entries(filters).filter(([, value]) => {
     if (Array.isArray(value)) return value.length > 0
     if (typeof value === 'object' && value !== null) return true
     return value !== undefined && value !== ''

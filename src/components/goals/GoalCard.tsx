@@ -10,8 +10,7 @@ import {
   CheckCircleIcon,
   CircleIcon,
   PauseCircleIcon,
-  XCircleIcon,
-  AlertCircleIcon
+  XCircleIcon
 } from 'lucide-react'
 import { BaseGoal, GoalLevel, GoalStatus, GoalCategory, GoalPriority } from '@/types/goals'
 import { cn } from '@/lib/utils'
@@ -64,15 +63,12 @@ const StatusIcon: React.FC<{ status: GoalStatus, className?: string }> = ({ stat
   switch (status) {
     case 'completed':
       return <CheckCircleIcon {...iconProps} className={cn(iconProps.className, 'text-green-600')} />
-    case 'in_progress':
     case 'active':
       return <CircleIcon {...iconProps} className={cn(iconProps.className, 'text-blue-600')} />
     case 'on_hold':
       return <PauseCircleIcon {...iconProps} className={cn(iconProps.className, 'text-yellow-600')} />
     case 'cancelled':
       return <XCircleIcon {...iconProps} className={cn(iconProps.className, 'text-red-600')} />
-    case 'deferred':
-      return <AlertCircleIcon {...iconProps} className={cn(iconProps.className, 'text-orange-600')} />
     default:
       return <CircleIcon {...iconProps} className={cn(iconProps.className, 'text-gray-400')} />
   }
@@ -102,12 +98,10 @@ const priorityLabels: Record<GoalPriority, string> = {
 // 상태 한글 변환
 const statusLabels: Record<GoalStatus, string> = {
   pending: '대기',
-  active: '활성',
-  in_progress: '진행중',
+  active: '진행중',
   completed: '완료',
   on_hold: '보류',
-  cancelled: '취소',
-  deferred: '연기'
+  cancelled: '취소'
 }
 
 export const GoalCard: React.FC<GoalCardProps> = ({
@@ -320,7 +314,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onStatusChange(goal.id, 'in_progress')}
+              onClick={() => onStatusChange(goal.id, 'active')}
               className="text-blue-600 hover:text-blue-700"
             >
               시작하기

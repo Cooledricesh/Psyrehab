@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { AIRecommendationArchiveService } from '@/services/ai-recommendation-archive';
+import { handleApiError } from '@/utils/error-handler';
 
 interface SaveGoalsParams {
   selectedPatient: string | null;
@@ -53,7 +53,7 @@ export const useGoalSave = () => {
         .eq('plan_status', 'active');
 
       if (deactivateError) {
-        console.error('기존 계획 비활성화 실패:', deactivateError);
+        handleApiError(deactivateError, 'useGoalSave.deactivateExistingGoals');
         throw deactivateError;
       }
 
@@ -61,7 +61,7 @@ export const useGoalSave = () => {
       let aiRecommendationId = recommendationId;
       
       if (!aiRecommendationId && currentAssessmentId) {
-        const { data: aiRec, error: aiError } = await supabase
+        const { data: aiRec } = await supabase
           .from('ai_goal_recommendations')
           .select('id')
           .eq('assessment_id', currentAssessmentId)
@@ -88,7 +88,7 @@ export const useGoalSave = () => {
           .eq('id', aiRecommendationId);
 
         if (updateError) {
-          console.error('AI 추천 상태 업데이트 실패:', updateError);
+          handleApiError(updateError, 'useGoalSave.updateAIRecommendationStatus');
         }
       }
 
@@ -184,7 +184,7 @@ export const useGoalSave = () => {
         .insert(goalsToInsert);
 
       if (goalsError) {
-        console.error('목표 저장 실패:', goalsError);
+        handleApiError(goalsError, 'useGoalSave.insertGoals');
         throw goalsError;
       }
 
@@ -195,7 +195,7 @@ export const useGoalSave = () => {
         .eq('id', selectedPatient);
 
       if (patientError) {
-        console.error('환자 상태 업데이트 실패:', patientError);
+        handleApiError(patientError, 'useGoalSave.updatePatientStatus');
         throw patientError;
       }
 
@@ -229,7 +229,7 @@ export const useGoalSave = () => {
       }
 
     } catch (error: unknown) {
-      console.error("Error occurred");
+      handleApiError(error, 'useGoalSave.saveGoals');
       
       // 구체적인 오류 메시지 표시
       let errorMessage = '목표 저장 중 오류가 발생했습니다.';
@@ -258,32 +258,3 @@ export const useGoalSave = () => {
   };
 };
 
-/**
- * 진단명을 간소화된 카테고리로 변환
- */
-function simplifyDiagnosis(diagnosis: string): string {
-  const lowerDiagnosis = diagnosis.toLowerCase();
-  
-  // 키워드 기반 카테고리 매핑
-  const categoryMap = {
-    'cognitive_disorder': ['치매', '인지', '기억', '알츠하이머', 'dementia', 'cognitive'],
-    'mood_disorder': ['우울', '조울', '기분', 'depression', 'bipolar', 'mood'],
-    'anxiety_disorder': ['불안', '공황', 'anxiety', 'panic'],
-    'psychotic_disorder': ['조현병', '정신분열', 'schizophrenia', 'psychotic'],
-    'substance_disorder': ['중독', '알코올', '약물', 'addiction', 'substance'],
-    'developmental_disorder': ['자폐', '발달', 'autism', 'developmental'],
-    'neurological_disorder': ['뇌졸중', '파킨슨', '뇌손상', 'stroke', 'parkinson', 'neurological'],
-    'personality_disorder': ['성격', '인격', 'personality'],
-    'eating_disorder': ['섭식', '식이', 'eating'],
-    'trauma_disorder': ['외상', '트라우마', 'trauma', 'ptsd']
-  };
-
-  // 매칭되는 카테고리 찾기
-  for (const [category, keywords] of Object.entries(categoryMap)) {
-    if (keywords.some(keyword => lowerDiagnosis.includes(keyword))) {
-      return category;
-    }
-  }
-
-  return 'other_disorder';
-}

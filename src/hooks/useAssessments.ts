@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { AssessmentData, CreateAssessmentData } from '@/types/assessment'
+import { handleApiError } from '@/utils/error-handler'
 
 // API functions (실제 구현에서는 Supabase 클라이언트 사용)
 const assessmentApi = {
@@ -11,13 +12,13 @@ const assessmentApi = {
   },
 
   // 특정 평가 조회
-  getById: async (id: string): Promise<AssessmentData | null> => {
+  getById: async (): Promise<AssessmentData | null> => {
     // 실제 구현에서는 Supabase에서 특정 ID의 데이터를 가져옴
     return null
   },
 
   // 환자별 평가 조회
-  getByPatientId: async (patientId: string): Promise<AssessmentData[]> => {
+  getByPatientId: async (): Promise<AssessmentData[]> => {
     // 실제 구현에서는 환자 ID로 필터링된 데이터를 가져옴
     return []
   },
@@ -53,7 +54,7 @@ const assessmentApi = {
   },
 
   // 날짜 범위별 평가 조회
-  getByDateRange: async (startDate: string, endDate: string): Promise<AssessmentData[]> => {
+  getByDateRange: async (): Promise<AssessmentData[]> => {
     // 실제 구현에서는 날짜 범위로 필터링된 데이터를 가져옴
     return []
   }
@@ -135,7 +136,7 @@ export const useCreateAssessment = () => {
       )
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useCreateAssessment.onError')
     }
   })
 }
@@ -161,7 +162,7 @@ export const useUpdateAssessment = () => {
       )
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useUpdateAssessment.onError')
     }
   })
 }
@@ -181,7 +182,7 @@ export const useDeleteAssessment = () => {
       queryClient.removeQueries({ queryKey: assessmentKeys.detail(deletedId) })
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useDeleteAssessment.onError')
     }
   })
 }
@@ -205,7 +206,7 @@ export const useBulkDeleteAssessments = () => {
       })
     },
     onError: (error) => {
-      console.error("Error occurred")
+      handleApiError(error, 'useBulkDeleteAssessments.onError')
     }
   })
 }

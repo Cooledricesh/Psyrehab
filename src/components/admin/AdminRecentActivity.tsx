@@ -13,6 +13,7 @@ import {
   Clock,
   RefreshCw
 } from 'lucide-react';
+import { handleApiError } from '@/utils/error-handler';
 
 interface Activity {
   id: string;
@@ -153,8 +154,8 @@ export const AdminRecentActivity: React.FC = () => {
       
       const mockData = generateMockActivities();
       setActivities(mockData);
-    } catch {
-      console.error("Error occurred");
+    } catch (error) {
+      handleApiError(error, 'AdminRecentActivity.loadActivities');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

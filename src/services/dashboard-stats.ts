@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { handleApiError } from '@/utils/error-handler'
 
 // 대시보드 통계 타입 정의
 export interface DashboardStats {
@@ -24,13 +25,13 @@ export const getTotalPatients = async (): Promise<number> => {
       .neq('status', 'discharged')
     
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'DashboardStats.getTotalPatients')
       return 0
     }
     
     return count || 0
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'DashboardStats.getTotalPatients')
     return 0
   }
 }
@@ -44,13 +45,13 @@ export const getActiveGoals = async (): Promise<number> => {
       .in('status', ['pending'])
     
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'DashboardStats.getActiveGoals')
       return 0
     }
     
     return count || 0
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'DashboardStats.getActiveGoals')
     return 0
   }
 }
@@ -72,13 +73,13 @@ export const getThisWeekSessions = async (): Promise<number> => {
       .gte('service_date_time', mondayDate.toISOString())
     
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'DashboardStats.getThisWeekSessions')
       return 0
     }
     
     return count || 0
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'DashboardStats.getThisWeekSessions')
     return 0
   }
 }
@@ -92,7 +93,7 @@ export const getCompletionRate = async (): Promise<number> => {
       .select('*', { count: 'exact', head: true })
     
     if (totalError) {
-      console.error('Error fetching total goals:', totalError)
+      handleApiError(totalError, 'DashboardStats.getCompletionRate.totalGoals')
       return 0
     }
     
@@ -103,7 +104,7 @@ export const getCompletionRate = async (): Promise<number> => {
       .eq('status', 'completed')
     
     if (completedError) {
-      console.error('Error fetching completed goals:', completedError)
+      handleApiError(completedError, 'DashboardStats.getCompletionRate.completedGoals')
       return 0
     }
     
@@ -112,8 +113,8 @@ export const getCompletionRate = async (): Promise<number> => {
     }
     
     return Math.round(((completedGoals || 0) / totalGoals) * 100)
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'DashboardStats.getCompletionRate')
     return 0
   }
 }
@@ -127,13 +128,13 @@ export const getPendingPatients = async (): Promise<number> => {
       .eq('status', 'pending')
     
     if (error) {
-      console.error("Error occurred")
+      handleApiError(error, 'DashboardStats.getPendingPatients')
       return 0
     }
     
     return count || 0
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'DashboardStats.getPendingPatients')
     return 0
   }
 }
@@ -155,7 +156,7 @@ export const getPatientChangeFromLastMonth = async (): Promise<number> => {
       .neq('status', 'discharged')
     
     if (lastMonthError) {
-      console.error("Error fetching last month patients:", lastMonthError)
+      handleApiError(lastMonthError, 'DashboardStats.getPatientChangeFromLastMonth.lastMonth')
       return 0
     }
     
@@ -167,7 +168,7 @@ export const getPatientChangeFromLastMonth = async (): Promise<number> => {
     
     return change
   } catch (error) {
-    console.error("Error in getPatientChangeFromLastMonth:", error)
+    handleApiError(error, 'DashboardStats.getPatientChangeFromLastMonth')
     return 0
   }
 }
@@ -182,13 +183,13 @@ export const getCompletedSixMonthGoals = async (): Promise<number> => {
       .eq('status', 'completed')
     
     if (error) {
-      console.error("Error fetching completed six month goals:", error)
+      handleApiError(error, 'DashboardStats.getCompletedSixMonthGoals')
       return 0
     }
     
     return count || 0
   } catch (error) {
-    console.error("Error in getCompletedSixMonthGoals:", error)
+    handleApiError(error, 'DashboardStats.getCompletedSixMonthGoals')
     return 0
   }
 }
@@ -213,7 +214,7 @@ export const getTotalWeeklyCheckPending = async (): Promise<number> => {
       .neq('patients.status', 'discharged')
     
     if (error) {
-      console.error("Error fetching weekly pending goals:", error)
+      handleApiError(error, 'DashboardStats.getTotalWeeklyCheckPending')
       return 0
     }
     
@@ -222,7 +223,7 @@ export const getTotalWeeklyCheckPending = async (): Promise<number> => {
     
     return uniquePatients.size
   } catch (error) {
-    console.error("Error in getTotalWeeklyCheckPending:", error)
+    handleApiError(error, 'DashboardStats.getTotalWeeklyCheckPending')
     return 0
   }
 }
@@ -243,7 +244,7 @@ export const getAvgPatientsPerWorker = async (): Promise<number> => {
       .in('roles.role_name', ['assistant_manager', 'staff'])
     
     if (workerError) {
-      console.error("Error fetching workers:", workerError)
+      handleApiError(workerError, 'DashboardStats.getAvgPatientsPerWorker.workers')
       return 0
     }
     
@@ -261,7 +262,7 @@ export const getAvgPatientsPerWorker = async (): Promise<number> => {
     
     return average
   } catch (error) {
-    console.error("Error in getAvgPatientsPerWorker:", error)
+    handleApiError(error, 'DashboardStats.getAvgPatientsPerWorker')
     return 0
   }
 }
@@ -300,10 +301,10 @@ export const getMonthlyPatientTrend = async (months: number = 3) => {
         .lte('created_at', lastDay.toISOString())
       
       if (totalError) {
-        console.error(`Error fetching total patients for ${monthKey}:`, totalError)
+        handleApiError(totalError, `DashboardStats.getMonthlyPatientTrend.total.${monthKey}`)
       }
       if (newError) {
-        console.error(`Error fetching new patients for ${monthKey}:`, newError)
+        handleApiError(newError, `DashboardStats.getMonthlyPatientTrend.new.${monthKey}`)
       }
       
       chartData.push({
@@ -315,7 +316,7 @@ export const getMonthlyPatientTrend = async (months: number = 3) => {
     
     return chartData
   } catch (error) {
-    console.error("Error in getMonthlyPatientTrend:", error)
+    handleApiError(error, 'DashboardStats.getMonthlyPatientTrend')
     return []
   }
 }
@@ -333,7 +334,7 @@ export const getFourWeeksAchievedCount = async (): Promise<number> => {
       .neq('status', 'discharged')
     
     if (patientsError || !activePatients) {
-      console.error('Error fetching active patients:', patientsError)
+      handleApiError(patientsError, 'DashboardStats.getFourWeeksAchievedCount.patients')
       return 0
     }
     
@@ -395,7 +396,7 @@ export const getFourWeeksAchievedCount = async (): Promise<number> => {
           
           return allAchieved
         } catch (error) {
-          console.error(`Error processing patient ${patient.id}:`, error)
+          handleApiError(error, `DashboardStats.getFourWeeksAchievedCount.patient.${patient.id}`)
           return false
         }
       })
@@ -406,7 +407,7 @@ export const getFourWeeksAchievedCount = async (): Promise<number> => {
     
     return fourWeeksAchievedCount
   } catch (error) {
-    console.error("Error in getFourWeeksAchievedCount:", error)
+    handleApiError(error, 'DashboardStats.getFourWeeksAchievedCount')
     return 0
   }
 }
@@ -427,13 +428,13 @@ export const getNewPatientsThisMonth = async (): Promise<number> => {
       .gte('created_at', firstDayOfMonth.toISOString())
     
     if (error) {
-      console.error("Error fetching new patients this month:", error)
+      handleApiError(error, 'DashboardStats.getNewPatientsThisMonth')
       return 0
     }
     
     return count || 0
   } catch (error) {
-    console.error("Error in getNewPatientsThisMonth:", error)
+    handleApiError(error, 'DashboardStats.getNewPatientsThisMonth')
     return 0
   }
 }
@@ -468,8 +469,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       fourWeeksAchievedCount,
       newPatientsThisMonth
     }
-  } catch {
-    console.error("Error occurred")
+  } catch (error) {
+    handleApiError(error, 'DashboardStats.getDashboardStats')
     return {
       totalPatients: 0,
       activeGoals: 0,
@@ -484,4 +485,4 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       newPatientsThisMonth: 0
     }
   }
-} 
+}

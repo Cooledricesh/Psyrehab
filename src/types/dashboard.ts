@@ -17,7 +17,7 @@ export interface Goal {
   title: string;
   description: string;
   category: 'cognitive' | 'social' | 'daily_living' | 'vocational' | 'other';
-  status: 'pending' | 'in_progress' | 'completed' | 'paused';
+  status: 'pending' | 'active' | 'completed' | 'on_hold' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
   targetDate?: string;
   createdAt: string;

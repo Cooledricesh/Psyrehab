@@ -6,8 +6,8 @@ const phoneRegex = /^(\+82-?)?0?1[0-9]-?\d{3,4}-?\d{4}$/
 // 이메일 검증
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// 환자 식별번호 정규식 (예: P2024001, PAT-2024-001)
-const patientIdRegex = /^(P|PAT)[-]?20\d{2}[-]?\d{3,6}$/
+// 환자 식별번호 정규식 (숫자만 허용: 101860)
+const patientIdRegex = /^\d+$/
 
 // 기본 환자 정보 스키마
 export const patientBaseSchema = z.object({
@@ -21,7 +21,7 @@ export const patientBaseSchema = z.object({
     .string()
     .min(1, '환자 식별번호는 필수입니다')
     .max(20, '환자 식별번호는 20자를 초과할 수 없습니다')
-    .regex(patientIdRegex, '올바른 환자 식별번호 형식이 아닙니다 (예: P2024001)'),
+    .regex(patientIdRegex, '환자 식별번호는 숫자만 입력할 수 있습니다 (예: 101860)'),
   
   date_of_birth: z
     .string()
@@ -186,7 +186,7 @@ export const safeValidatePatientData = {
 // 커스텀 검증 함수들
 export const customValidations = {
   // 환자 식별번호 중복 검사 (실제 구현에서는 서버에서 확인)
-  isPatientIdUnique: async (patientId: string, currentPatientId?: string): Promise<boolean> => {
+  isPatientIdUnique: async (): Promise<boolean> => {
     // 이것은 예시입니다. 실제로는 API 호출이 필요합니다.
     return true
   },

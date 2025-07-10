@@ -5,6 +5,7 @@ import { useDeletePatient } from '@/hooks/usePatients'
 import { PatientService } from '@/services/patients'
 import { AlertTriangle } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import { handleApiError } from '@/utils/error-handler'
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -21,10 +22,9 @@ export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [relatedData, setRelatedData] = useState<any[]>([])
+  const [relatedData, setRelatedData] = useState<{ table: string; name: string; count: number }[]>([])
   const [forceDelete, setForceDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [checkingData, setCheckingData] = useState(false)
   const deletePatient = useDeletePatient()
   const { toast } = useToast()
 
@@ -52,21 +52,18 @@ export function PatientDetailPage() {
 
   const handleDelete = async () => {
     try {
-      setCheckingData(true)
       // 연관 데이터 확인
       const related = await PatientService.checkPatientRelatedData(id)
       setRelatedData(related)
       setForceDelete(false)
       setShowDeleteDialog(true)
     } catch (err) {
-      console.error('연관 데이터 확인 실패:', err)
+      handleApiError(err, 'PatientDetailPage.checkRelatedData')
       toast({
         title: '오류',
         description: '연관 데이터 확인 중 오류가 발생했습니다.',
         variant: 'destructive'
       })
-    } finally {
-      setCheckingData(false)
     }
   }
 
@@ -81,11 +78,12 @@ export function PatientDetailPage() {
       })
       
       navigate('/patient-management')
-    } catch (error: any) {
-      console.error('환자 삭제 중 오류 발생:', error)
+    } catch (error) {
+      handleApiError(error, 'PatientDetailPage.confirmDelete')
       
       // 연관 데이터 때문에 실패한 경우
-      if (error.message?.includes('연결된 데이터가 있어')) {
+      const errorMessage = error instanceof Error ? error.message : '환자 삭제 중 오류가 발생했습니다.'
+      if (errorMessage.includes('연결된 데이터가 있어')) {
         // 강제 삭제 옵션 활성화
         setForceDelete(false)
       } else {
@@ -94,7 +92,7 @@ export function PatientDetailPage() {
       
       toast({
         title: '삭제 실패',
-        description: error.message || '환자 삭제 중 오류가 발생했습니다.',
+        description: errorMessage,
         variant: 'destructive'
       })
     } finally {

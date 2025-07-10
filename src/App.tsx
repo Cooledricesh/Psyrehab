@@ -7,6 +7,7 @@ import { SimpleProtectedRoute } from '@/components/auth/SimpleProtectedRoute'
 import { AdminProtectedRoute } from '@/components/auth/AdminProtectedRoute'
 import { ManagementProtectedRoute } from '@/components/auth/ManagementProtectedRoute'
 import { Toaster } from '@/components/ui/toaster'
+import { ErrorHandlerProvider } from '@/components/providers/ErrorHandlerProvider'
 
 // 실제 페이지 컴포넌트들
 import GoalSetting from '@/pages/GoalSetting'
@@ -50,8 +51,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Toaster />
-        <Routes>
+        <ErrorHandlerProvider>
+          <Toaster />
+          <Routes>
           {/* 루트 경로 리다이렉트 */}
           <Route path="/" element={<RedirectToAbout />} />
           
@@ -105,6 +107,7 @@ function App() {
             </SimpleProtectedRoute>
           } />
         </Routes>
+        </ErrorHandlerProvider>
       </Router>
     </QueryClientProvider>
   )
