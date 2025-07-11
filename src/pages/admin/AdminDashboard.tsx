@@ -1,9 +1,6 @@
 'use client'
 
-import { RehabStatsCards } from '@/components/dashboard/RehabStatsCards'
-import { ProgressChart } from '@/components/dashboard/ProgressChart'
-import { PatientsDataTable } from '@/components/dashboard/PatientsDataTable'
-import { QuickActions } from '@/components/dashboard/QuickActions'
+import { UserLoginHistory } from '@/components/admin/UserLoginHistory'
 
 export default function AdminDashboard() {
   return (
@@ -11,26 +8,15 @@ export default function AdminDashboard() {
       {/* 헤더 */}
       <div className="px-4 lg:px-6 mb-6">
         <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
-        <p className="text-gray-600 mt-2">재활 프로그램 현황 및 통계를 한눈에 확인하세요</p>
+        <p className="text-gray-600 mt-2">시스템 관리 및 사용자 활동을 모니터링하세요</p>
       </div>
 
       <div className="flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          {/* 통계 카드 섹션 */}
-          <RehabStatsCards />
-          
-          {/* 차트 섹션 */}
+          {/* 사용자 로그인 이력 */}
           <div className="px-4 lg:px-6">
-            <ProgressChart />
+            <UserLoginHistory />
           </div>
-          
-          {/* 빠른 작업 섹션 */}
-          <div className="px-4 lg:px-6">
-            <QuickActions />
-          </div>
-          
-          {/* 환자 데이터 테이블 */}
-          <PatientsDataTable />
         </div>
       </div>
     </div>

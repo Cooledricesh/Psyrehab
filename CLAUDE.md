@@ -178,11 +178,6 @@ nohup npm run dev > /dev/null 2>&1 &
 sleep 3 && curl -s http://localhost:5173 > /dev/null && echo "Server running"
 ```
 
-### Lint Error Management
-- **Current baseline**: ~995 errors (as of 2025-01-19)
-- **Categories**: unused variables (~280), any types (~500), hooks deps (~100), const/let (~50)
-- **Safe fixes**: Single unused imports, obvious typos
-- **Risky fixes**: Large function removals, multiple file changes, hook dependencies
 
 ### Emergency Rollback
 If system becomes unstable:
@@ -222,3 +217,8 @@ git checkout <last-stable-commit>  # Full rollback
 
 ### Updates
 - 주간 체크인 이제 안씀
+
+## Warnings and Restrictions
+
+### Hardcoded Data Warnings
+- 앞으로 하드코딩된 데이터 넣기전에 반드시 허락 구해라.
