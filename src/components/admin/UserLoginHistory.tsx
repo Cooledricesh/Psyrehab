@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { supabase } from '@/lib/supabase'
-import { UserCheck, Clock } from 'lucide-react'
+import { UserCheck } from 'lucide-react'
 
 interface AuthUser {
   id: string
@@ -33,7 +33,14 @@ export function UserLoginHistory() {
       if (error) throw error
 
       // Edge Function에서 이미 full_name을 포함해서 보내줌
-      return data?.users?.map((user: any) => ({
+      return data?.users?.map((user: {
+        id: string
+        email: string
+        created_at: string
+        last_sign_in_at: string | null
+        full_name?: string
+        role?: string
+      }) => ({
         ...user,
         raw_user_meta_data: { role: user.role }
       })) as AuthUser[]
